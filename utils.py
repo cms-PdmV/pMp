@@ -1,5 +1,6 @@
 #! /usr/bin/python
 
+from datetime import datetime
 import json
 import os
 import pycurl
@@ -20,6 +21,7 @@ class Config():
         self.exclude_list = re.split(", ", parser.get('exclude', 'requests'))
         self.last_seq = parser.get('urls', 'last_seq')
         self.pmp_db = parser.get('urls', 'pmp_db')
+        self.remove_list = re.split(", ", parser.get('remove_params', 'list'))
         self.url_mcm = parser.get('urls', 'mcm')
         self.url_requests = self.url_mcm + self.db_requests
         self.url_requests_changes = (self.url_requests +
@@ -35,6 +37,9 @@ class Utils():
     def get_cookie(self, url, path):
         call(["cern-get-sso-cookie", "--krb", "--nocertverify", "-u", url,
               "-o", path])
+    
+    def get_time(self):
+        return datetime.now()
 
     def rm(self, file):
         if self.is_file(file):
