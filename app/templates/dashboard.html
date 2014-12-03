@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="css/bootstrap.min.css" rel="stylesheet"/>
     <link href="css/pmp.css" rel="stylesheet"/>
+    <link href="http://fonts.googleapis.com/css?family=Roboto:900,400,400italic" rel="stylesheet" type="text/css">
     <script type="text/javascript" src="lib/underscore/underscore-min.js"></script>
     <script type="text/javascript" src="lib/jquery/jquery-2.1.1.min.js"></script>
     <script type="text/javascript" src="lib/angular/angular.min.js"></script>
@@ -14,65 +15,77 @@
   </head>
 
   <body>
+
+    <nav class="navbar navbar-inverse z" role="navigation">
+      <div class="container-fluid">
+        <ul class="nav navbar-nav col-xs-12 col-sm-6 col-md-6 col-lg-6">
+          <li class="hidden-xs"><a class="navbar-brand" href="#">PMP</a></li>
+          <li><a href="#">Campaigns</a></li>
+          <li><a href="#">Something</a></li>
+        </ul>
+      </div>
+    </nav>
+    
     <div class="container">
 
       <div class="row">
         <div class="hidden-xs hidden-sm col-md-12 col-lg-12">
-          <h1 class="pull-right">
-            Statistics of campaigns
+          <h1 class="pull-right white">
+            <strong>Statistics of campaigns</strong>
           </h1>
         </div>
         <div class="col-xs-12 col-sm-12 hidden-md hidden-lg">
-          <h4 class="pull-right">
-            Statistics of campaigns
-          </h4>
-        </div>
-      </div>
-
-      <div class="well">
-
-        <div class="row spacing">
-
-          <div class="col-xs-12 col-sm-12 col-md-9 col-lg-9 spacing">
-            <input class="form-control" type="text" placeholder="Campaign Name">
-          </div>
-          <div class="col-xs-12 col-sm-12 col-md-3 col-lg-3">
-            <div class="hidden-xs hidden-sm">
-              <button type="button" class="btn btn-danger">
-                See
-              </button>
-              <button type="button" class="btn btn-danger">
-                Add
-              </button>
-              <button type="button" class="btn btn-danger">Load <strong>all</strong></button>
-            </div>
-            <div class="hidden-md hidden-lg text-center">
-              <button type="button" class="btn btn-danger">
-                See
-              </button>
-              <button type="button" class="btn btn-danger">
-                Add
-              </button>
-              <button type="button" class="btn btn-danger">Load <strong>all</strong></button>
-            </div>
-
-          </div>
-        </div>
-        
-        <div class="row sr-only"> 
-          <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-            <a class="text-uppercase" data-toggle="collapse" href="#advancedOptions">
-              <small>Show Advanced</small>
-            </a>
-          </div>
-          <div id="advancedOptions" class="collapse col-xs-12 col-sm-12 col-md-12 col-lg-12">
-            Some advanced tricks
-          </div>
+          <h3 class="pull-right white">
+            <strong>Statistics of campaigns</strong>
+          </h3>
         </div>
       </div>
 
       <div class="row">
-        graph
+        <div class="well">
+          <div class="row spacing">
+            <div class="col-xs-12 col-sm-12 col-md-9 col-lg-9 spacing">
+              <input class="form-control" type="text" placeholder="Campaign Name">
+            </div>
+            <div class="col-xs-12 col-sm-12 col-md-3 col-lg-3">
+              <div class="hidden-xs hidden-sm">
+                <button type="button" class="btn btn-danger">
+                  See
+                </button>
+                <button type="button" class="btn btn-danger">
+                  Append
+                </button>
+                <button type="button" class="btn btn-danger">Load <strong>all</strong></button>
+              </div>
+              <div class="hidden-md hidden-lg text-center">
+                <button type="button" class="btn btn-danger">
+                  See
+                </button>
+                <button type="button" class="btn btn-danger">
+                  Append
+                </button>
+                <button type="button" class="btn btn-danger">Load <strong>all</strong></button>
+              </div>
+            </div>
+          </div>
+          
+          <div class="row"> 
+            <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+              <a class="text-uppercase" data-toggle="collapse" href="#advancedOptions">
+                <small>Show Advanced</small>
+              </a>
+            </div>
+            <div id="advancedOptions" class="collapse col-xs-12 col-sm-12 col-md-12 col-lg-12">
+              Some advanced tricks
+            </div>
+          </div>
+        </div>
+      </div>
+        
+      <div class="row">
+        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+          graph
+        </div>
       </div>
       
     </div>
