@@ -1,20 +1,26 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" ng-app="pmpApp" id="ng-app">
 
   <head>
     <title>Dashboard</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="css/mcm.css" rel="stylesheet"/>
     <link href="css/pmp.css" rel="stylesheet"/>
-    <link href="http://fonts.googleapis.com/css?family=Roboto:900,400,400italic" rel="stylesheet" type="text/css">
+    <link href="http://fonts.googleapis.com/css?family=Roboto:900,400,400italic"
+          rel="stylesheet" type="text/css">
     <script type="text/javascript" src="lib/underscore/underscore-min.js"></script>
     <script type="text/javascript" src="lib/jquery/jquery-2.1.1.min.js"></script>
     <script type="text/javascript" src="lib/angular/angular.min.js"></script>
     <script type="text/javascript" src="lib/bootstrap/bootstrap.min.js"></script>
     <script type="text/javascript" src="lib/d3/d3.min.js"></script>
+
+    <script src="js/app.js"></script>
+    <script src="js/controllers.js"></script>
+
   </head>
 
-  <body>
+  <body ng-controller="resultsCtrl">
 
     <nav class="navbar navbar-inverse z" role="navigation">
       <div class="container-fluid">
@@ -49,13 +55,17 @@
             </div>
             <div class="col-xs-12 col-sm-12 col-md-3 col-lg-3">
               <div class="hidden-xs hidden-sm">
-                <button type="button" class="btn btn-danger">
+                <button type="button" class="btn btn-danger"
+                        ng-click="get_stats('member_of_campaign='+dashboard_stats_campaign, false)">
                   See
                 </button>
-                <button type="button" class="btn btn-danger">
+                <button type="button" class="btn btn-danger"
+                         ng-click="get_stats('member_of_campaign='+dashboard_stats_campaign, true)">
                   Append
                 </button>
-                <button type="button" class="btn btn-danger">Load <strong>all</strong></button>
+                <button type="button" class="btn btn-danger" ng-click="get_stats('')">
+                  Load <strong>all</strong>
+                </button>
               </div>
               <div class="hidden-md hidden-lg text-center">
                 <button type="button" class="btn btn-danger">
@@ -84,7 +94,19 @@
         
       <div class="row">
         <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-          graph
+
+          <mcm-customizable-chart chart-type="'mcm-column-chart'" chart-title="Requests chart"
+                                  radio="requests.radio" settings="requests.settings"
+                                  selections="requests.selections" options="requests.options"
+                                  chart-data="allRequestData">
+          </mcm-customizable-chart>
+
+          <multiple-pie-charts color-domain="piecharts.domain" table-title="Campaigns"
+                               data="allRequestData" full-terms="piecharts.fullTerms"
+                               compact-terms="piecharts.compactTerms" sum-by="piecharts.sum"
+                               nest-by="piecharts.nestBy">
+          </multiple-pie-charts>
+
         </div>
       </div>
       

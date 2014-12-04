@@ -12,6 +12,10 @@ def index():
 def dashboard():
     return make_response(open('app/templates/dashboard.html').read())
 
+@app.route('/search')
+def search():
+    return make_response(open('app/templates/res.html').read())
+
 """
 @app.route('/about')
 def about():
