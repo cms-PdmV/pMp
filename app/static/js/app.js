@@ -1,1 +1,1 @@
-var pmpApp = angular.module('pmpApp', []);
+var pmpApp = angular.module('pmpApp', ['mcm.charts']);

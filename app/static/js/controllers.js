@@ -7,7 +7,6 @@ function resultsCtrl($scope, $http){
     $scope.requests.options={grouping:['member_of_campaign'], value:"total_events", stacking:[], coloring:"status" };
     $scope.requests.settings={duration:1000, legend:true, sort:true};
     $scope.requests.radio={'scale':["linear", "log"], 'operation':["sum", "count"]};
-
     $scope.piecharts = {};
     $scope.piecharts.sum = "total_events";
     $scope.piecharts.fullTerms = ["new", "validation", "defined", "approved", "submitted", "done"];
