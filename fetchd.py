@@ -27,6 +27,24 @@ def get_changes(utl, cfg):
         last_seq = 0
         logging.warning('%s Cannot get last sequence. Stauts %s' %
                         (utl.get_time(), status))
+        #create index
+        r, s = utl.curl('PUT', cfg.pmp_db_index)
+
+        if s == 200:
+            logging.info('%s Index created' % (utl.get_time()))
+        else:
+            logging.warning('%s Index not created %s' %
+                            (utl.get_time(), r))
+
+        #mapping
+        r, s = utl.curl('PUT', (cfg.pmp_db + '_mapping'),
+                        json.loads(cfg.mapping))
+        if s == 200:
+            logging.info('%s Pushed mapping' % (utl.get_time()))
+        else:
+            logging.warning('%s Mapping not implemented %s' %
+                            (utl.get_time(), r))
+
 
     res, status = utl.curl('GET',
                            '%s=%s' % (cfg.url_requests_changes, last_seq),

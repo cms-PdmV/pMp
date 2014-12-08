@@ -20,7 +20,9 @@ class Config():
         self.db_requests = parser.get('urls', 'requests_db')
         self.exclude_list = re.split(", ", parser.get('exclude', 'requests'))
         self.last_seq = parser.get('urls', 'last_seq')
+        self.mapping = parser.get('db', 'mapping')
         self.pmp_db = parser.get('urls', 'pmp_db')
+        self.pmp_db_index = parser.get('urls', 'pmp_db_index')
         self.remove_list = re.split(", ", parser.get('remove_params', 'list'))
         self.url_mcm = parser.get('urls', 'mcm')
         self.url_requests = self.url_mcm + self.db_requests
