@@ -87,8 +87,8 @@
     // Therefore it might not be the container, that actually contains the item.
     onDragStart: function ($item, container, _super, event) {
       $item.css({
-        height: $item.height(),
-        width: $item.width()
+        //height: $item.height(),
+        //width: $item.width()
       })
       $item.addClass("dragged")
       $("body").addClass("dragging")

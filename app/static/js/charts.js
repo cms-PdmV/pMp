@@ -1038,28 +1038,27 @@ angular.module('mcm.charts', [])
 
                 var innerHtml = "<style>.nav.dnd {margin-bottom: 0;}</style>";
                 innerHtml += "<div class='row' align='middle'><h4>{{title}}</h4></div>";
-                innerHtml += "<div class='row'>";
-                innerHtml += "<ul id='possible-selections' class='nav nav-pills dnd col-md-4 inline' style='min-height:27px'>";
-                innerHtml += "<li class='col-md-4 nav-header'>selections</li>";
-                innerHtml += "<li class='btn btn-default btn-inverse btn-xs' ng-repeat='value in selections'>{{value}}</li>";
-                innerHtml += "</ul>";
+                innerHtml += "<div class='row'><div class='col-md-6'><span class='col-md-3 nav-header'>selections</span>";
+                innerHtml += "<ul id='possible-selections' class='nav nav-pills dnd col-md-9 inline' style='min-height:27px'>";
+                innerHtml += "<li class='btn btn-default btn-xs' ng-repeat='value in selections'>{{value}}</li>";
+                innerHtml += "</ul></div>";
                 // options for drag and drop
                 for(var key in scope.options) {
                     var value = scope.options[key];
                     if(value instanceof Array) {
-                        innerHtml+="<ul id='"+key+"' class='nav nav-pills dnd col-md-4 inline' style='min-height:27px'>";
-                        innerHtml += "<li class='col-md-4 nav-header'>" + key + "</li>";
+                        innerHtml += "<div class='col-md-6'><span class='col-md-3 nav-header'>"+key+"</span>";
+                        innerHtml+="<ul id='"+key+"' class='nav nav-pills dnd col-md-9 inline' style='min-height:27px'>";
                         for(var i=0;i<value.length;i++) {
-                            innerHtml+="<li class='btn btn-default btn-inverse btn-xs'>"+value[i]+"</li>";
+                            innerHtml+="<li class='btn btn-default btn-xs'>"+value[i]+"</li>";
                         }
-                        innerHtml+="</ul>";
+                        innerHtml+="</ul></div>";
                     } else {
-                        innerHtml+="<ul id='"+key+"' class='nav nav-pills dnd single col-md-4 inline' style='min-height:27px'>";
-                        innerHtml += "<li class='col-md-4 nav-header'>" + key + "</li>";
+                        innerHtml += "<div class='col-md-6'><span class='col-md-3 nav-header'>"+key+"</span>";
+                        innerHtml+="<ul id='"+key+"' class='nav nav-pills dnd single col-md-9 inline' style='min-height:27px'>";
                         if(value!="") {
-                            innerHtml+="<li class='btn btn-default btn-inverse btn-xs'>" + value + "</li>";
+                            innerHtml+="<li class='btn btn-default btn-xs'>" + value + "</li>";
                         }
-                        innerHtml+="</ul>";
+                        innerHtml+="</ul></div>";
                     }
                 }
                 innerHtml +="</div>";
@@ -1068,16 +1067,19 @@ angular.module('mcm.charts', [])
                 scope.radiovalue = {};
                 for(key in scope.radio) {
 
-                    innerHtml += "<ul class='nav nav-pills inline col-md-4'>";
-                    innerHtml += "<li class='col-md-4 nav-header'>" + key + "</li>";
+                    innerHtml += "<div class='col-md-6'>";
+                    innerHtml += "<span class='col-md-3 nav-header'>" + key + "</span>";
+
+                    innerHtml += "<ul class='nav nav-pills inline col-md-9'>";
                     scope.radiovalue[key] = scope.radio[key][0];
                     innerHtml += "<li>";
+
                     innerHtml += "<div class='btn-group'>";
                     innerHtml += "<button ng-repeat='value in radio." + key + "' type='button' class='btn btn-defualt btn-xs' ng-model='radiovalue." + key + "' btn-radio='value'>{{value}}</button>";
                     innerHtml += "</div>";
-//                    innerHtml +="<select style='height:24px' class='btn btn-defualt btn-inverse btn-xs col-md-2' ng-model='radio"+key+"' ng-options='v for v in radio[\"" + key + "\"]'></select>";
+//                    innerHtml +="<select style='height:24px' class='btn btn-defualt btn-xs col-md-2' ng-model='radio"+key+"' ng-options='v for v in radio[\"" + key + "\"]'></select>";
                     innerHtml +="</li>";
-                    innerHtml +="</ul>";
+                    innerHtml +="</ul></div>";
 
                 }
                 innerHtml +="</div>";
@@ -1105,8 +1107,8 @@ angular.module('mcm.charts', [])
                     group: group_rand,
                     nested: false,
                     vertical: false,
-                    exclude: '.nav-header',
-                    title: '.nav-header',
+                    exclude: 'nav-header',
+                    title: 'nav-header',
                     pullPlaceholder:false,
                     isValidTarget: function($item, container) {
                         return !($(container.el[0]).hasClass("single") && container.items.length > 1);
@@ -1116,13 +1118,13 @@ angular.module('mcm.charts', [])
                             scope.addOption(container.el[0].id, $item[0].textContent, $(container.el[0].children).index($item[0]));
                         }
                         _super($item, container);
-                    },
-                    onDragStart: function($item, container, _super) {
+                        },
+                            onDragStart: function($item, container, _super) {
                         if(container.el[0].id!='possible-selections') {
                             scope.removeOption(container.el[0].id, $item[0].textContent);
                         }
                         _super($item, container);
-                    }
+                        }
                 });
 
             }
