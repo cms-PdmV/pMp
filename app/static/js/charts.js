@@ -1038,23 +1038,23 @@ angular.module('mcm.charts', [])
 
                 var innerHtml = "<style>.nav.dnd {margin-bottom: 0;}</style>";
                 innerHtml += "<div class='row' align='middle'><h4>{{title}}</h4></div>";
-                innerHtml += "<div class='row'><div class='col-md-6'><span class='col-md-3 nav-header'>selections</span>";
-                innerHtml += "<ul id='possible-selections' class='nav nav-pills dnd col-md-9 inline' style='min-height:27px'>";
+                innerHtml += "<div class='row'><div class='col-lg-6 col-md-12 col-sm-12'><span class='col-lg-3 col-md-2 col-sm-2 nav-header'>selections</span>";
+                innerHtml += "<ul id='possible-selections' class='nav nav-pills dnd col-lg-9 col-md-10 col-sm-10 inline' style='min-height:27px'>";
                 innerHtml += "<li class='btn btn-default btn-xs' ng-repeat='value in selections'>{{value}}</li>";
                 innerHtml += "</ul></div>";
                 // options for drag and drop
                 for(var key in scope.options) {
                     var value = scope.options[key];
                     if(value instanceof Array) {
-                        innerHtml += "<div class='col-md-6'><span class='col-md-3 nav-header'>"+key+"</span>";
-                        innerHtml+="<ul id='"+key+"' class='nav nav-pills dnd col-md-9 inline' style='min-height:27px'>";
+                        innerHtml += "<div class='col-lg-6 col-md-12 col-sm-12'><span class='col-lg-3 col-md-2 col-sm-2 nav-header'>"+key+"</span>";
+                        innerHtml+="<ul id='"+key+"' class='nav nav-pills dnd col-lg-9 col-md-10 col-sm-10 inline' style='min-height:27px'>";
                         for(var i=0;i<value.length;i++) {
                             innerHtml+="<li class='btn btn-default btn-xs'>"+value[i]+"</li>";
                         }
                         innerHtml+="</ul></div>";
                     } else {
-                        innerHtml += "<div class='col-md-6'><span class='col-md-3 nav-header'>"+key+"</span>";
-                        innerHtml+="<ul id='"+key+"' class='nav nav-pills dnd single col-md-9 inline' style='min-height:27px'>";
+                        innerHtml += "<div class='col-lg-6 col-md-12 col-sm-12'><span class='col-lg-3 col-md-2 col-sm-2 nav-header'>"+key+"</span>";
+                        innerHtml+="<ul id='"+key+"' class='nav nav-pills dnd single col-lg-9 col-md-10 col-sm-10 inline' style='min-height:27px'>";
                         if(value!="") {
                             innerHtml+="<li class='btn btn-default btn-xs'>" + value + "</li>";
                         }
@@ -1067,17 +1067,17 @@ angular.module('mcm.charts', [])
                 scope.radiovalue = {};
                 for(key in scope.radio) {
 
-                    innerHtml += "<div class='col-md-6'>";
-                    innerHtml += "<span class='col-md-3 nav-header'>" + key + "</span>";
+                    innerHtml += "<div class='col-lg-6 col-md-6 col-sm-6'>";
+                    innerHtml += "<span class='col-lg-3 col-md-4 col-sm-4 nav-header'>" + key + "</span>";
 
-                    innerHtml += "<ul class='nav nav-pills inline col-md-9'>";
+                    innerHtml += "<ul class='nav nav-pills inline col-lg-9 col-md-8 col-sm-8'>";
                     scope.radiovalue[key] = scope.radio[key][0];
                     innerHtml += "<li>";
 
                     innerHtml += "<div class='btn-group'>";
                     innerHtml += "<button ng-repeat='value in radio." + key + "' type='button' class='btn btn-defualt btn-xs' ng-model='radiovalue." + key + "' btn-radio='value'>{{value}}</button>";
                     innerHtml += "</div>";
-//                    innerHtml +="<select style='height:24px' class='btn btn-defualt btn-xs col-md-2' ng-model='radio"+key+"' ng-options='v for v in radio[\"" + key + "\"]'></select>";
+//                    innerHtml +="<select style='height:24px' class='btn btn-defualt btn-xs col-lg-2 col-md-2' ng-model='radio"+key+"' ng-options='v for v in radio[\"" + key + "\"]'></select>";
                     innerHtml +="</li>";
                     innerHtml +="</ul></div>";
 
@@ -1246,10 +1246,10 @@ angular.module('mcm.charts', [])
 
                var innerHtml = '<mcm-donut-chart ng-repeat="(key, terms) in current_data" data="terms.data" outer-radius="100" inner-radius="40" inner-title="{{key}}" on-click-title="changeChart" domain="domain"></mcm-donut-chart>';
                if(showTable) {
-                   innerHtml += '<table class="table table-bordered col-md-10">';
-                   innerHtml += '<thead><tr><th>{{tableTitle}}</th>';
+                   innerHtml += '<table class="table table-bordered col-lg-10 col-md-10 col-sm-10">';
+                   innerHtml += '<thead><tr><th class="text-center">{{tableTitle}}</th>';
                    for(i=0; i<fullTerms.length; i++) {
-                       innerHtml += '<th>' + fullTerms[i] + '</th>'
+                       innerHtml += '<th class="text-center">' + fullTerms[i] + '</th>'
                    }
                    innerHtml +=  '</tr></thead>';
                    innerHtml += '<tbody><tr ng-repeat="(key, terms) in piechart_data_full">';
