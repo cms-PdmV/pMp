@@ -1,8 +1,27 @@
+import json
+
 from flask import Flask
 from flask import make_response
 from flask import render_template
 
+from pyelasticsearch import ElasticSearch
+
 app = Flask(__name__, static_url_path='')
+es = ElasticSearch('http://localhost:9200/')
+
+def get_request(r):
+    return json.dumps(es.get('requests', 'request', r))
+
+
+def search(campaign):
+    print campaign
+    response = {}
+    response['results'] = []
+    for s in es.search(('member_of_campaingn=%s' % campaign),
+                       index='requests')['hits']['hits']:
+        response['results'].append(s['_source'])
+    return make_response(json.dumps(response))
+
 
 @app.route('/')
 def index():
@@ -12,10 +31,10 @@ def index():
 def dashboard():
     return make_response(open('app/templates/dashboard.html').read())
 
-@app.route('/search')
-def search():
-    return make_response(open('app/templates/res.html').read())
-
+@app.route('/api/<member_of_campaign>')
+def api(member_of_campaign):
+    print member_of_campaign
+    return make_response(search(member_of_campaign))
 """
 @app.route('/about')
 def about():
