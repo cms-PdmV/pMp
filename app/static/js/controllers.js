@@ -36,7 +36,6 @@ function resultsCtrl($scope, $http) {
             }
             $scope.loadingData = false;
             $scope.allRequestData = data.data.results;
-            console.log(data.data.results)
         }, function () {
             alert("Error getting requests");
             $scope.loadingData = false;

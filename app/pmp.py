@@ -6,6 +6,7 @@ from flask import render_template
 
 from pyelasticsearch import ElasticSearch
 
+overflow = 100000
 app = Flask(__name__, static_url_path='')
 es = ElasticSearch('http://localhost:9200/')
 
@@ -14,11 +15,12 @@ def get_request(r):
 
 
 def search(campaign):
-    print campaign
     response = {}
     response['results'] = []
-    for s in es.search(('member_of_campaingn=%s' % campaign),
-                       index='requests')['hits']['hits']:
+    if campaign == 'all':
+        campaign = '*'
+    for s in es.search(('member_of_campaign:%s' % campaign),
+                       index='requests', size=overflow)['hits']['hits']:
         response['results'].append(s['_source'])
     return make_response(json.dumps(response))
 
@@ -33,7 +35,6 @@ def dashboard():
 
 @app.route('/api/<member_of_campaign>')
 def api(member_of_campaign):
-    print member_of_campaign
     return make_response(search(member_of_campaign))
 """
 @app.route('/about')
