@@ -1,1 +1,27 @@
-get_stats
+<div class="row">
+  <div class="well">
+    <div class="row spacing">
+      <div class="col-xs-10 col-sm-10 col-md-11 col-lg-11 spacing">
+        <input ng-model="campaign" class="form-control" type="text"
+               placeholder="Campaign Name">
+      </div>
+      <div class="col-xs-2 col-sm-2 col-md-1 col-lg-1">
+        <button type="button" class="btn btn-danger"
+                ng-click="load( campaign, false)">
+          See
+        </button>
+      </div>
+    </div>
+    
+    <div class="row"> 
+      <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+        <a class="text-uppercase" data-toggle="collapse" href="#advancedOptions">
+          <small>Show Advanced</small>
+        </a>
+      </div>
+      <div id="advancedOptions" class="collapse col-xs-12 col-sm-12 col-md-12 col-lg-12">
+        Some advanced tricks
+      </div>
+    </div>
+  </div>
+</div>
