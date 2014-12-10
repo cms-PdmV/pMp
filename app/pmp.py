@@ -29,9 +29,10 @@ def search(campaign):
 def index():
     return make_response(open('app/templates/index.html').read())
 
+@app.route('/get_stats')
 @app.route('/dashboard')
 def dashboard():
-    return make_response(open('app/templates/dashboard.html').read())
+    return make_response(open('app/templates/graph.html').read())
 
 @app.route('/api/<member_of_campaign>')
 def api(member_of_campaign):

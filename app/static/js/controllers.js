@@ -1,4 +1,6 @@
-function resultsCtrl($scope, $http) {
+'use strict';
+
+function MainController($scope, $http) {
 
     $scope.allRequestData = [];
 
