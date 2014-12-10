@@ -1,7 +1,8 @@
 'use strict';
 
-function MainController($scope, $http) {
+pmpApp.controller('MainController', function($scope, $http) {
 
+    $scope.title = '';
     $scope.allRequestData = [];
 
     $scope.requests = {};
@@ -28,19 +29,33 @@ function MainController($scope, $http) {
     $scope.piecharts.fullTerms = ["new", "validation", "defined", "approved", "submitted", "done"];
     $scope.piecharts.nestBy = ["member_of_campaign", "status"];
     $scope.piecharts.sum = "total_events";
+});
 
-    $scope.get_stats = function (query, add) {
+pmpApp.controller('CampaignsController', function($scope, $http) {
+    $scope.$parent.title = 'Statistics of Campaigns';
+    $scope.$parent.allRequestData = [];
+
+    $scope.load = function(query, add) {
         $scope.loadingData = true;
         var promise = $http.get("api/" + query);
-        promise.then(function (data) {
+        promise.then(function(data) {
             if (query !== '' && add) {
                 data.data.results.push.apply(data.data.results, $scope.allRequestData);
             }
             $scope.loadingData = false;
-            $scope.allRequestData = data.data.results;
-        }, function () {
+            $scope.$parent.allRequestData = data.data.results;
+        }, function() {
             alert("Error getting requests");
             $scope.loadingData = false;
         });
     };
-}
+});
+
+pmpApp.controller('ChainsController', function($scope) {
+    $scope.$parent.title = 'Statistics Within Chains';
+    $scope.$parent.allRequestData = [];
+
+    $scope.load = function(query, add) {
+        console.log("Chain")
+    }
+});

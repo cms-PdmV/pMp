@@ -4,11 +4,13 @@ var pmpApp = angular.module('pmpApp', ['ngRoute', 'mcm.charts'])
     .config(['$routeProvider', '$locationProvider',
         function($routeProvider, $locationProvider) {
             $routeProvider
-                .when('/dashboard', {
-                    templateUrl: 'partials/dashboard.html'
+                .when('/campaign', {
+                    templateUrl: 'partials/campaign.html',
+                    controller: 'CampaignsController'
                 })
-                .when('/get_stats', {
-                    templateUrl: 'partials/get_stats.html'
+                .when('/chain', {
+                    templateUrl: 'partials/chain.html',
+                    controller: 'ChainsController'
                 });
             $locationProvider.html5Mode(true);
         }

@@ -29,8 +29,8 @@ def search(campaign):
 def index():
     return make_response(open('app/templates/index.html').read())
 
-@app.route('/get_stats')
-@app.route('/dashboard')
+@app.route('/campaign')
+@app.route('/chain')
 def dashboard():
     return make_response(open('app/templates/graph.html').read())
 
