@@ -2,9 +2,6 @@
 
 pmpApp.controller('MainController', function($scope, $http) {
 
-    $scope.title = '';
-    $scope.allRequestData = [];
-
     $scope.requests = {};
     $scope.requests.options = {
         grouping: ['member_of_campaign'],
@@ -35,11 +32,11 @@ pmpApp.controller('CampaignsController', function($scope, $http) {
     $scope.$parent.title = 'Statistics of Campaigns';
     $scope.$parent.allRequestData = [];
 
-    $scope.load = function(query, add) {
+    $scope.load = function(campaign, add) {
         $scope.loadingData = true;
-        var promise = $http.get("api/" + query);
+        var promise = $http.get("api/" + campaign + "/simple");
         promise.then(function(data) {
-            if (query !== '' && add) {
+            if (campaign !== '' && add) {
                 data.data.results.push.apply(data.data.results, $scope.allRequestData);
             }
             $scope.loadingData = false;
@@ -51,11 +48,20 @@ pmpApp.controller('CampaignsController', function($scope, $http) {
     };
 });
 
-pmpApp.controller('ChainsController', function($scope) {
+pmpApp.controller('ChainsController', function($scope, $http) {
     $scope.$parent.title = 'Statistics Within Chains';
     $scope.$parent.allRequestData = [];
 
-    $scope.load = function(query, add) {
-        console.log("Chain")
-    }
+    $scope.load = function(campaign) {
+        $scope.loadingData = true;
+        var promise = $http.get("api/" + campaign + "/chain");
+        promise.then(function(data) {
+            $scope.loadingData = false;
+            $scope.$parent.allRequestData = data.data.results;
+            console.log(data.data.TODO);
+        }, function() {
+            $scope.loadingData = false;
+            alert("Error getting requests");
+        });
+    };
 });

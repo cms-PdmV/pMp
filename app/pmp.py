@@ -14,7 +14,7 @@ def get_request(r):
     return json.dumps(es.get('requests', 'request', r))
 
 
-def search(campaign):
+def search_simple(campaign):
     response = {}
     response['results'] = []
     if campaign == 'all':
@@ -24,6 +24,8 @@ def search(campaign):
         response['results'].append(s['_source'])
     return make_response(json.dumps(response))
 
+def search_chain(campaign):
+    return '{"TODO": "response"}'
 
 @app.route('/')
 def index():
@@ -34,9 +36,12 @@ def index():
 def dashboard():
     return make_response(open('app/templates/graph.html').read())
 
-@app.route('/api/<member_of_campaign>')
-def api(member_of_campaign):
-    return make_response(search(member_of_campaign))
+@app.route('/api/<member_of_campaign>/<typeof>')
+def api(member_of_campaign, typeof):
+    if typeof == 'simple':
+        return make_response(search_simple(member_of_campaign))
+    elif typeof == 'chain':
+        return make_response(search_chain(member_of_campaign))
 """
 @app.route('/about')
 def about():
