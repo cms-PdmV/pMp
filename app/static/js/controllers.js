@@ -23,7 +23,7 @@ pmpApp.controller('MainController', function($scope, $http) {
     $scope.piecharts = {};
     $scope.piecharts.compactTerms = ["done", "to do"];
     $scope.piecharts.domain = ["new", "validation", "done", "approved", "submitted", "nothing", "defined", "to do"];
-    $scope.piecharts.fullTerms = ["new", "validation", "defined", "approved", "submitted", "done"];
+    $scope.piecharts.fullTerms = ["new", "validation", "defined", "approved", "submitted", "done", "upcoming"];
     $scope.piecharts.nestBy = ["member_of_campaign", "status"];
     $scope.piecharts.sum = "total_events";
 });
@@ -52,13 +52,14 @@ pmpApp.controller('ChainsController', function($scope, $http) {
     $scope.$parent.title = 'Statistics Within Chains';
     $scope.$parent.allRequestData = [];
 
+
+
     $scope.load = function(campaign) {
         $scope.loadingData = true;
         var promise = $http.get("api/" + campaign + "/chain");
         promise.then(function(data) {
             $scope.loadingData = false;
             $scope.$parent.allRequestData = data.data.results;
-            console.log(data.data.TODO);
         }, function() {
             $scope.loadingData = false;
             alert("Error getting requests");
