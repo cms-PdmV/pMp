@@ -4,9 +4,10 @@ import json
 import logging
 import time
 import utils
+import sys
 
 # logging.basicConfig(filename='info.log', level=logging.INFO)
-logging.basicConfig(level=logging.WARNING)
+logging.basicConfig(level=logging.INFO)
 
 
 def parse(data, rlist):
@@ -47,7 +48,7 @@ def get_changes(utl, cfg):
 
 
     res, status = utl.curl('GET',
-                           '%s=%s' % (cfg.url_requests_changes, last_seq),
+                           '%s=%s' % (cfg.url_db_changes, last_seq),
                            cookie=cfg.cookie)
     if status == 200:
 
@@ -66,14 +67,14 @@ def get_changes(utl, cfg):
 
     else:
         logging.error('%s Status %s while getting list of changes' %
-                      (utl.get_time, status))
+                      (utl.get_time(), status))
 
 
 if __name__ == "__main__":
 
     utl = utils.Utils()
     logging.info('%s Getting configuration' % utl.get_time())
-    cfg = utils.Config()
+    cfg = utils.Config(sys.argv[1])
 
     if not utl.is_file(cfg.cookie):
         logging.info('%s Getting SSO Cookie' % utl.get_time())
@@ -91,7 +92,7 @@ if __name__ == "__main__":
                     logging.warning('%s Request indexed at %s was not deleted'
                                     % (utl.get_time(), r))
             else:
-                url = str(cfg.url_requests + r)
+                url = str(cfg.url_db + r)
                 data, status = utl.curl('GET', url, cookie=cfg.cookie)
                 
                 data = parse(data, cfg.remove_list)

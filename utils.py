@@ -12,23 +12,25 @@ from subprocess import call
 
 class Config():
 
-    def __init__(self):
+    def __init__(self, typeof):
         parser = SafeConfigParser()
         parser.read('dev.conf')
 
-        self.cookie = os.environ['HOME'] + parser.get('paths', 'cookie')
-        self.db_requests = parser.get('urls', 'requests_db')
-        self.exclude_list = re.split(", ", parser.get('exclude', 'requests'))
-        self.last_seq = parser.get('urls', 'last_seq')
-        self.mapping = parser.get('db', 'mapping')
-        self.pmp_db = parser.get('urls', 'pmp_db')
-        self.pmp_db_index = parser.get('urls', 'pmp_db_index')
+        self.cookie = os.environ['HOME'] + parser.get('cookie', 'path')
+        self.exclude_list = re.split(", ", parser.get('exclude', 'list'))
         self.remove_list = re.split(", ", parser.get('remove_params', 'list'))
-        self.url_mcm = parser.get('urls', 'mcm')
-        self.url_requests = self.url_mcm + self.db_requests
-        self.url_requests_changes = (self.url_requests +
-                                     parser.get('urls',
-                                                'requests_db_query_changes'))
+
+        self.url_mcm = parser.get('general', 'mcm')
+        self.db = parser.get(typeof, 'db')
+        self.url_db = self.url_mcm + self.db
+        self.url_db_changes = (self.url_db +
+                               parser.get('general', 'db_query_changes'))
+
+        self.url_pmp = parser.get('general', 'pmp')
+        self.pmp_db_index = self.url_pmp + parser.get(typeof, 'pmp_db_index')
+        self.pmp_db = self.pmp_db_index + parser.get(typeof, 'pmp_db')
+        self.last_seq = self.pmp_db_index + parser.get(typeof, 'last_seq')
+        self.mapping = parser.get(typeof, 'mapping')
 
 
 class Utils():
