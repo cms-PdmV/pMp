@@ -41,7 +41,7 @@ class Utils():
     def get_cookie(self, url, path):
         call(["cern-get-sso-cookie", "--krb", "--nocertverify", "-u", url,
               "-o", path])
-    
+
     def get_time(self):
         return datetime.now()
 

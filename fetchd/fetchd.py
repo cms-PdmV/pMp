@@ -28,7 +28,7 @@ def get_changes(utl, cfg):
         last_seq = 0
         logging.warning('%s Cannot get last sequence. Stauts %s' %
                         (utl.get_time(), status))
-        #create index
+        # create index
         r, s = utl.curl('PUT', cfg.pmp_db_index)
 
         if s == 200:
@@ -36,8 +36,7 @@ def get_changes(utl, cfg):
         else:
             logging.warning('%s Index not created %s' %
                             (utl.get_time(), r))
-
-        #mapping
+        # mapping
         r, s = utl.curl('PUT', (cfg.pmp_db + '_mapping'),
                         json.loads(cfg.mapping))
         if s == 200:
@@ -45,18 +44,15 @@ def get_changes(utl, cfg):
         else:
             logging.warning('%s Mapping not implemented %s' %
                             (utl.get_time(), r))
-
-
     res, status = utl.curl('GET',
                            '%s=%s' % (cfg.url_db_changes, last_seq),
                            cookie=cfg.cookie)
     if status == 200:
-
         if len(res['results']):
             for r in res['results']:
                 if r['seq'] == res['last_seq']:
-                    _, s = utl.curl('PUT', cfg.last_seq, json.loads(
-                            '{"val": %s}' % res['last_seq']))
+                    _, s = utl.curl('PUT', cfg.last_seq,
+                                    json.loads({"val": res['last_seq']}))
                     if s not in [200, 201]:
                         logging.error('%s Cannot update last_seq' %
                                       utl.get_time())
@@ -64,7 +60,6 @@ def get_changes(utl, cfg):
         else:
             logging.info('%s Nothing to do. No changes since last update.' %
                          utl.get_time())
-
     else:
         logging.error('%s Status %s while getting list of changes' %
                       (utl.get_time(), status))
@@ -82,7 +77,6 @@ if __name__ == "__main__":
 
     for r, deleted in get_changes(utl, cfg):
         if r not in cfg.exclude_list:
-
             if deleted:
                 _, s = utl.curl('DELETE', '%s%s' % (cfg.pmp_db, r))
                 if s == 200:
@@ -94,9 +88,7 @@ if __name__ == "__main__":
             else:
                 url = str(cfg.url_db + r)
                 data, status = utl.curl('GET', url, cookie=cfg.cookie)
-                
                 data = parse(data, cfg.remove_list)
-
                 if status == 200:
                     reason, s = utl.curl('PUT', '%s%s' % (cfg.pmp_db, r), data)
                     if s in [200, 201]:
@@ -110,6 +102,5 @@ if __name__ == "__main__":
                 else:
                     logging.error('%s Failed to receive information about %s' %
                                   (utl.get_time(), r))
-
     logging.info('%s Removing SSO Cookie' % utl.get_time())
     utl.rm(cfg.cookie)
