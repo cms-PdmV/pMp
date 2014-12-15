@@ -23,7 +23,6 @@
     <script src="js/directives.js"></script>
 
   </head>
-
   <body ng-controller="MainController">
 
     <nav class="navbar navbar-inverse" role="navigation">
@@ -37,7 +36,6 @@
     </nav>
     
     <div class="container">
-
       <div class="row">
         <div class="hidden-xs hidden-sm col-md-12 col-lg-12">
           <h1 class="pull-right white">
@@ -53,7 +51,7 @@
 
       <div ng-view></div>
 
-      <div class="row">
+      <div class="row" ng-show="allRequestData.length">
         <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 text-center">
 
           <mcm-customizable-chart chart-type="'mcm-column-chart'" chart-title="Requests chart"
@@ -70,7 +68,6 @@
 
         </div>
       </div>
-      
     </div>
   </body>
 </html>

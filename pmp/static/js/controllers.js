@@ -26,6 +26,10 @@ pmpApp.controller('MainController', function($scope, $http) {
     $scope.piecharts.fullTerms = ["new", "validation", "defined", "approved", "submitted", "done", "upcoming"];
     $scope.piecharts.nestBy = ["member_of_campaign", "status"];
     $scope.piecharts.sum = "total_events";
+
+    $scope.showDetails = function() {
+        return allRequestedData.length;
+    }
 });
 
 pmpApp.controller('CampaignsController', function($scope, $http) {
@@ -51,8 +55,6 @@ pmpApp.controller('CampaignsController', function($scope, $http) {
 pmpApp.controller('ChainsController', function($scope, $http) {
     $scope.$parent.title = 'Statistics Within Chains';
     $scope.$parent.allRequestData = [];
-
-
 
     $scope.load = function(campaign) {
         $scope.loadingData = true;
