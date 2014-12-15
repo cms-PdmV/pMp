@@ -1,4 +1,4 @@
-from flask import make_response
+from flask import make_response, redirect
 from pmp import app, models
 
 
@@ -9,7 +9,7 @@ def index():
 
 @app.route('/about')
 def about():
-    return 'About'
+    return redirect('https://twiki.cern.ch/twiki/bin/viewauth/CMS/PdmVpMp', code=302)
 
 
 @app.route('/campaign')
