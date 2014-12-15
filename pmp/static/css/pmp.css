@@ -11,6 +11,12 @@ body {
     color: white;
 }
 
+.brand-adjust {
+    height: 30px;
+    margin: 10px;
+    float: left;
+}
+
 .nav-header {
     font-weight: bold;
     text-align: right;
