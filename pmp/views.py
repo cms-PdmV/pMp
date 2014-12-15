@@ -2,16 +2,11 @@ from flask import make_response, redirect
 from pmp import app, models
 
 
-@app.route('/')
-def index():
-    return make_response(open('pmp/templates/index.html').read())
-
-
 @app.route('/about')
 def about():
     return redirect('https://twiki.cern.ch/twiki/bin/viewauth/CMS/PdmVpMp', code=302)
 
-
+@app.route('/')
 @app.route('/campaign')
 @app.route('/chain')
 def dashboard():

@@ -27,7 +27,6 @@ pmpApp.controller('MainController', function($scope, $http) {
 
 pmpApp.controller('CampaignsController', function($scope, $http) {
     $scope.$parent.title = 'Statistics of Campaigns';
-
     $scope.$parent.allRequestData = [];
     $scope.$parent.piecharts.fullTerms = ["new", "validation", "defined", "approved", "submitted", "done"];
 
@@ -48,7 +47,6 @@ pmpApp.controller('CampaignsController', function($scope, $http) {
 });
 
 pmpApp.controller('ChainsController', function($scope, $http) {
-
     $scope.$parent.title = 'Statistics Within Chains';
     $scope.$parent.allRequestData = [];
     $scope.$parent.piecharts.fullTerms = ["new", "validation", "defined", "approved", "submitted", "done", "upcoming"];
@@ -64,4 +62,8 @@ pmpApp.controller('ChainsController', function($scope, $http) {
             alert("Error getting requests");
         });
     };
+});
+
+pmpApp.controller('IndexController', function($scope) {
+    $scope.$parent.title = '';
 });

@@ -17,6 +17,10 @@ body {
     float: left;
 }
 
+.line {
+  border-color: #888;
+}
+
 .nav-header {
     font-weight: bold;
     text-align: right;

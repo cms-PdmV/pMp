@@ -11,6 +11,10 @@ var pmpApp = angular.module('pmpApp', ['ngRoute', 'mcm.charts'])
                 .when('/chain', {
                     templateUrl: 'partials/chain.html',
                     controller: 'ChainsController'
+                })
+                .when('/', {
+                    templateUrl: 'partials/index.html',
+                    controller: 'IndexController'
                 });
             $locationProvider.html5Mode(true);
         }
