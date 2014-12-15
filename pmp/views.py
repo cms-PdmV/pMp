@@ -1,6 +1,9 @@
-from flask import make_response, redirect
+from flask import make_response, redirect, render_template
 from pmp import app, models
 
+@app.route('/404')
+def four_oh_four():
+    return render_template('page_not_found.html'), 404
 
 @app.route('/about')
 def about():
