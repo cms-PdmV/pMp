@@ -38,8 +38,8 @@ class GetChain():
             for arg in arg_list:
                 if not arg.startswith('chain'):
                     # this is a flow, or a campaign: not matter for the query
-                    css = [s['_source'] for s in
-                           self.es.search(('campaigns:%s' % a_cc),
+                    ccs = [s['_source'] for s in
+                           self.es.search(('campaigns:%s' % arg),
                                           index='chained_campaigns',
                                           size=self.overflow)['hits']['hits']]
                     arg_list.extend(map(lambda cc: cc['prepid'], ccs))
