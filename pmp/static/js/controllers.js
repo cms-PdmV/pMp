@@ -1,7 +1,6 @@
 'use strict';
 
 pmpApp.controller('MainController', function($scope, $http) {
-
     $scope.requests = {};
     $scope.requests.options = {
         grouping: ['member_of_campaign'],
@@ -19,22 +18,18 @@ pmpApp.controller('MainController', function($scope, $http) {
         legend: true,
         sort: true
     };
-
     $scope.piecharts = {};
     $scope.piecharts.compactTerms = ["done", "to do"];
     $scope.piecharts.domain = ["new", "validation", "done", "approved", "submitted", "nothing", "defined", "to do"];
-    $scope.piecharts.fullTerms = ["new", "validation", "defined", "approved", "submitted", "done", "upcoming"];
     $scope.piecharts.nestBy = ["member_of_campaign", "status"];
     $scope.piecharts.sum = "total_events";
-
-    $scope.showDetails = function() {
-        return allRequestedData.length;
-    }
 });
 
 pmpApp.controller('CampaignsController', function($scope, $http) {
     $scope.$parent.title = 'Statistics of Campaigns';
+
     $scope.$parent.allRequestData = [];
+    $scope.$parent.piecharts.fullTerms = ["new", "validation", "defined", "approved", "submitted", "done"];
 
     $scope.load = function(campaign, add) {
         $scope.loadingData = true;
@@ -53,8 +48,10 @@ pmpApp.controller('CampaignsController', function($scope, $http) {
 });
 
 pmpApp.controller('ChainsController', function($scope, $http) {
+
     $scope.$parent.title = 'Statistics Within Chains';
     $scope.$parent.allRequestData = [];
+    $scope.$parent.piecharts.fullTerms = ["new", "validation", "defined", "approved", "submitted", "done", "upcoming"];
 
     $scope.load = function(campaign) {
         $scope.loadingData = true;

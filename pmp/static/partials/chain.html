@@ -25,3 +25,22 @@
     </div>
   </div>
 </div>
+
+<div class="row" ng-show="allRequestData.length">
+  <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 text-center">
+    
+    <mcm-customizable-chart chart-type="'mcm-column-chart'" chart-title="Requests chart"
+                            radio="requests.radio" settings="requests.settings"
+                            selections="requests.selections" options="requests.options"
+                            chart-data="allRequestData">
+    </mcm-customizable-chart>
+    
+    <multiple-pie-charts color-domain="piecharts.domain" table-title="Campaigns"
+                         data="allRequestData" full-terms="piecharts.fullTerms"
+                         compact-terms="piecharts.compactTerms" sum-by="piecharts.sum"
+                         nest-by="piecharts.nestBy">
+    </multiple-pie-charts>
+    
+  </div>
+</div>
+
