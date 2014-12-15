@@ -26,3 +26,14 @@ body {
     text-align: right;
     text-transform: uppercase;
 }
+
+.ng-hide-remove {
+    -webkit-animation: fadeIn 1.5s;
+    animation: fadeIn 1.5s;
+}
+ 
+.ng-hide-add {
+    -webkit-animation: fadeOut 1.0s;
+    animation: fadeOut 1.0s;
+    display: block !important;
+}

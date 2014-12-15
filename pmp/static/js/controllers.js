@@ -1,6 +1,6 @@
 'use strict';
 
-pmpApp.controller('MainController', function($scope, $http) {
+pmpApp.controller('MainController', function($location, $scope, $timeout, $http) {
     $scope.requests = {};
     $scope.requests.options = {
         grouping: ['member_of_campaign'],
@@ -23,9 +23,16 @@ pmpApp.controller('MainController', function($scope, $http) {
     $scope.piecharts.domain = ["new", "validation", "done", "approved", "submitted", "nothing", "defined", "to do"];
     $scope.piecharts.nestBy = ["member_of_campaign", "status"];
     $scope.piecharts.sum = "total_events";
+
+    $scope.nav = function(where) {
+        $scope.showview = !$scope.showview;
+        if (!$scope.showview) {
+            $timeout(function() {$location.path(where);}, 1100);
+        }
+    };
 });
 
-pmpApp.controller('CampaignsController', function($scope, $http) {
+pmpApp.controller('CampaignsController', function($scope, $http, $timeout) {
     $scope.$parent.title = 'Statistics of Campaigns';
     $scope.$parent.allRequestData = [];
     $scope.$parent.piecharts.fullTerms = ["new", "validation", "defined", "approved", "submitted", "done"];
@@ -44,9 +51,11 @@ pmpApp.controller('CampaignsController', function($scope, $http) {
             $scope.loadingData = false;
         });
     };
+    $scope.$parent.showview = false;
+    $timeout(function() {$scope.nav('');}, 100);
 });
 
-pmpApp.controller('ChainsController', function($scope, $http) {
+pmpApp.controller('ChainsController', function($scope, $http, $timeout) {
     $scope.$parent.title = 'Statistics Within Chains';
     $scope.$parent.allRequestData = [];
     $scope.$parent.piecharts.fullTerms = ["new", "validation", "defined", "approved", "submitted", "done", "upcoming"];
@@ -62,8 +71,11 @@ pmpApp.controller('ChainsController', function($scope, $http) {
             alert("Error getting requests");
         });
     };
+    $scope.$parent.showview = false;
+    $timeout(function() {$scope.nav('');}, 100);
 });
 
-pmpApp.controller('IndexController', function($scope) {
-    $scope.$parent.title = '';
+pmpApp.controller('IndexController', function($scope, $timeout) {
+    $scope.$parent.showview = false;
+    $timeout(function() {$scope.nav('');}, 100);
 });

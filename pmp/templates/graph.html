@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="css/bootstrap.min.css" rel="stylesheet"/>
     <link href="lib/font-awesome/css/font-awesome.min.css" rel="stylesheet"/>
+    <link href="lib/animate/animate.min.css" rel="stylesheet"/>
     <link href="css/mcm.css" rel="stylesheet"/>
     <link href="css/pmp.css" rel="stylesheet"/>
     <link href="http://fonts.googleapis.com/css?family=Roboto:900,400,400italic"
@@ -15,6 +16,7 @@
     <script type="text/javascript" src="lib/jquery/jquery-2.1.1.min.js"></script>
     <script type="text/javascript" src="lib/jquery-sortable/jquery-sortable.js"></script>
     <script type="text/javascript" src="lib/angular/angular.min.js"></script>
+    <script type="text/javascript" src="lib/angular/angular-animate.min.js"></script>
     <script type="text/javascript" src="lib/angular/angular-route.js"></script>
     <script type="text/javascript" src="lib/bootstrap/bootstrap.min.js"></script>
     <script type="text/javascript" src="lib/d3/d3.min.js"></script>
@@ -29,34 +31,19 @@
   <body ng-controller="MainController">
     <nav class="navbar navbar-inverse" role="navigation">
       <div class="container-fluid">
-        <a class="" href="/">
+        <a href="#" ng-click="nav('/')">
           <img src="/img/ic_fav.png" class="brand-adjust" alt="PMP"/>
         </a>
         <ul class="nav navbar-header navbar-nav col-xs-12 col-sm-6 col-md-6 col-lg-6">
-          <li><a href="/campaign">Campaign Stats</a></li>
-          <li><a href="/chain">Chain Stats</a></li>
+          <li><a href="#" ng-click="nav('/campaign')">Campaign Stats</a></li>
+          <li><a href="#" ng-click="nav('/chain')">Chain Stats</a></li>
           <li><a href="https://twiki.cern.ch/twiki/bin/viewauth/CMS/PdmVpMp"
                  target="_blank">About</a></li>
         </ul>
       </div>
     </nav>
-
     <div class="container">
-      <div class="row">
-        <div class="hidden-xs hidden-sm col-md-12 col-lg-12">
-          <h1 class="pull-right white">
-            <strong>{{title}}</strong>
-          </h1>
-        </div>
-        <div class="col-xs-12 col-sm-12 hidden-md hidden-lg">
-          <h3 class="pull-right white">
-            <strong>{{title}}</strong>
-          </h3>
-        </div>
-      </div>
-
-      <div ng-view></div>
-
+      <div ng-view ng-show="showview"></div>
     </div>
   </body>
 </html>
