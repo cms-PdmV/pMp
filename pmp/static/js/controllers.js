@@ -33,6 +33,7 @@ pmpApp.controller('MainController', function($location, $scope, $timeout, $http)
 });
 
 pmpApp.controller('CampaignsController', function($scope, $http, $timeout) {
+    $scope.url = 'https://some.url'
     $scope.$parent.title = 'Statistics of Campaigns';
     $scope.$parent.allRequestData = [];
     $scope.$parent.piecharts.fullTerms = ["new", "validation", "defined", "approved", "submitted", "done"];
