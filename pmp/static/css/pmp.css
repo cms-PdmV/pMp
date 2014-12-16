@@ -3,22 +3,10 @@ body {
     font-family: 'Roboto', sans-serif;
 }
 
-.spacing {
-    margin-bottom: 10px;
-}
-
-.white {
-    color: white;
-}
-
 .brand-adjust {
     height: 30px;
     margin: 10px;
     float: left;
-}
-
-.line {
-  border-color: #888;
 }
 
 .nav-header {
@@ -36,4 +24,16 @@ body {
     -webkit-animation: fadeOut 1.0s;
     animation: fadeOut 1.0s;
     display: block !important;
+}
+
+.line {
+    border-color: #888;
+}
+
+.spacing {
+    margin-bottom: 10px;
+}
+
+.white {
+    color: white;
 }

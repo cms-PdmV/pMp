@@ -1,50 +1,62 @@
-<div class="row">
-  <div class="hidden-xs hidden-sm col-md-12 col-lg-12">
-    <h1 class="pull-right white">
-      <strong>{{title}}</strong>
-    </h1>
-  </div>
-  <div class="col-xs-12 col-sm-12 hidden-md hidden-lg">
-    <h3 class="pull-right white">
-      <strong>{{title}}</strong>
-          </h3>
-  </div>
-</div>
-
-<div class="row">
-  <div class="well">
-    <div class="input-group spacing col-lg-12 col-md-12 col-sm-12">
-      <input ng-model="campaign" class="form-control" type="text"
-             placeholder="Campaign Name">
-      <span class="input-group-btn">
-        <button type="button" class="btn btn-danger"
-                ng-click="load(campaign, false)">
-          See
-        </button>
-        <button type="button" class="btn btn-danger"
-                ng-click="load(campaign, true)">
-          Append
-        </button>
-        <button type="button" class="btn btn-danger" ng-click="load('all')">
-          Load <strong>all</strong>
-        </button>
-      </span>
+<div class="row spacing">
+  <div class="col-lg-9 col-md-9 col-sm-9">
+    <div class="row">
+      <h1 class="pull-right white">
+        <strong>{{title}}</strong>
+      </h1>
     </div>
-    <div class="row"> 
-      <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-        <a class="text-uppercase" data-toggle="collapse" href="#advancedOptions">
-          <small>Show Advanced</small>
-        </a>
-      </div>
-      <div id="advancedOptions" class="collapse col-xs-12 col-sm-12 col-md-12 col-lg-12">
-        Some advanced tricks
+    <div class="row">
+      <div class="well spacing">
+        <div class="row">
+          <div class="col-lg-11">
+            <div class="input-group spacing">
+              <input ng-model="campaign" class="form-control" type="text"
+                     placeholder="Campaign Name">
+              <span class="input-group-btn">
+                <button type="button" class="btn btn-danger"
+                    ng-click="load(campaign, false)">
+                  See
+                </button>
+                <button type="button" class="btn btn-danger"
+                        ng-click="load(campaign, true)">
+                  Append
+                </button>
+            <button type="button" class="btn btn-danger" ng-click="load('all')">
+              Load <strong>all</strong>
+            </button>
+              </span>
+            </div>
+          </div>
+          <div class="col-lg-1" ng-show="loadingData">
+            <i class="fa fa-spinner fa-spin fa-3x"></i>
+          </div>
+        </div>
       </div>
     </div>
   </div>
-</div>
 
-<div class="row text-center" ng-show="loadingData">
-  <i class="fa fa-spinner fa-spin fa-5x"></i>
+  <div class="col-lg-3 col-md-3 col-sm-3">
+    <div class="row">
+      <a class="btn btn-sm text-uppercase" data-toggle="collapse" data-target="#advanced">
+        <small><i class="fa fa-cog"></i> Advanced</small>
+      </a>
+      <a class="btn btn-sm text-uppercase" data-toggle="collapse" data-target="#share">
+        <small><i class="fa fa-share"></i> Share</small>
+      </a>
+      <div id="advanced" class="collapse col-xs-12 col-sm-12 col-md-12 col-lg-12 spacing">
+        Some advanced tricks<br>
+        More advanced tricks<br>
+        And some more advanced tricks
+      </div>
+      <div id="share" class="collapse col-xs-12 col-sm-12 col-md-12 col-lg-12">
+        <div class="input-group input-group-sm">
+          <span class="hidden-sm input-group-addon text-uppercase">Share</span>
+          <input type="text" class="form-control" placeholder="URL">
+          <span class="input-group-addon"><i class="fa fa-copy"></i></span>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <div class="row" ng-show="allRequestData.length">
