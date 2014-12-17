@@ -54,6 +54,14 @@ pmpApp.controller('CampaignsController', function($scope, $http, $timeout) {
     };
     $scope.$parent.showview = false;
     $timeout(function() {$scope.nav('');}, 100);
+
+    new ZeroClipboard(document.getElementById("copy"), {
+        moviePath: '/lib/zeroclipboard/ZeroClipboard.swf'
+    }).on("ready", function(readyEvent) {
+        this.on("aftercopy", function(client, args) {
+            console.log("Text copied");
+        });
+    });
 });
 
 pmpApp.controller('ChainsController', function($scope, $http, $timeout) {
