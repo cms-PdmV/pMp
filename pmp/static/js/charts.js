@@ -384,10 +384,11 @@ angular.module('mcm.charts', [])
 
                     //main Y scale
                     y_scale = d3.scale;
-                    if(yScaleType=="log")
+                    if (yScaleType=="log") {
                         y_scale = y_scale.log();
-                    else
+                    } else {
                         y_scale = y_scale.linear();
+                    }
                     y_scale = y_scale.range([height, 0]);
 
                     //calculate axes
@@ -690,12 +691,14 @@ angular.module('mcm.charts', [])
                             nested_data = [{values: nested_data, key: "All"}];
                         }
                     }
-                    if(yScaleType=="log"){
+                    if (yScaleType=="log"){
+                        scope.$parent.$parent.setScaleAndOperation(1, 1);
                         sums = sums.filter(function(el) {
                             return el!=0;
                         });
                         sums.push(d3.min(sums)-d3.min(sums)/5); // for nicer formatting of data
                     } else {
+                        scope.$parent.$parent.setScaleAndOperation(1, 0);
                         sums.push(0);
                     }
                 }
@@ -834,8 +837,10 @@ angular.module('mcm.charts', [])
                     function setTitle(d) {
                         var string_to_show;
                         if(valueOperation == "sum") {
+                            scope.$parent.$parent.setScaleAndOperation(0, 0);
                             string_to_show = value;
                         } else if(valueOperation == "count") {
+                            scope.$parent.$parent.setScaleAndOperation(0, 1);
                             string_to_show = "#(items)";
                         }
                         string_to_show += ": " + d[value].toLocaleString();
@@ -1016,6 +1021,7 @@ angular.module('mcm.charts', [])
                 scope.settings = scope.settings || {};
 
                 scope.removeOption = function(optionName, optionValue) {
+                    scope.$parent.setURL('selections', optionValue);
                     if(scope.options[optionName] instanceof Array) {
                         var index = scope.options[optionName].indexOf(optionValue);
                         if(index > -1) {
@@ -1028,6 +1034,7 @@ angular.module('mcm.charts', [])
                 };
 
                 scope.addOption = function(optionName, optionValue, optionIndex) {
+                    scope.$parent.setURL(optionName, optionValue);
                     if(scope.options[optionName] instanceof Array) {
                         scope.options[optionName].splice(optionIndex-1, 0, optionValue);
                     } else {
