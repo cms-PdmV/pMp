@@ -14,14 +14,15 @@
                      placeholder="Campaign Name">
               <span class="input-group-btn">
                 <button type="button" class="btn btn-danger"
-                    ng-click="load(campaign, false)">
+                    ng-click="load(campaign, false)" ng-disabled="loadingData">
                   See
                 </button>
                 <button type="button" class="btn btn-danger"
-                        ng-click="load(campaign, true)">
+                        ng-click="load(campaign, true)" ng-disabled="loadingData">
                   Append
                 </button>
-            <button type="button" class="btn btn-danger" ng-click="load('all')">
+            <button type="button" class="btn btn-danger"
+                    ng-click="load('all')" ng-disabled="loadingData">
               Load <strong>all</strong>
             </button>
               </span>

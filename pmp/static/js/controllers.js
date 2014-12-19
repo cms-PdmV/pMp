@@ -97,13 +97,13 @@ pmpApp.controller('CampaignsController', function($http, $location, $scope, $tim
     $scope.$parent.piecharts.fullTerms = ["new", "validation", "defined", "approved", "submitted", "done"];
     $scope.load = function(campaign, add) {
         if (!campaign) {
-            $scope.showPopUp('warning', 'Your request is empty');   
+            $scope.showPopUp('warning', 'Your request parameters are empty');   
         } else {
             $scope.loadingData = true;
             var promise = $http.get("api/" + campaign + "/simple");
             promise.then(function(data) {
                 if (!data.data.results.length) {
-                    $scope.showPopUp('warning', 'No such request');   
+                    $scope.showPopUp('warning', 'No results for this request parameters');   
                 } else {
                     if (campaign !== '' && add) {
                         data.data.results.push.apply(data.data.results, $scope.allRequestData);
