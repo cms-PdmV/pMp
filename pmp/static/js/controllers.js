@@ -50,7 +50,7 @@ pmpApp.controller('MainController', function($location, $scope, $timeout, $http)
     };
     $scope.requests.radio = {
         'scale': ["linear", "log"],
-        'operation': ["sum", "count"]
+        'mode': ["number of events", "number of requests"]
     };
     $scope.requests.selections = ['prepid', 'priority', 'pwg'];
     $scope.requests.settings = {
