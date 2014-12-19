@@ -73,7 +73,7 @@ angular.module('mcm.charts', [])
                 function setTitleForTitle() {
                     var data = "";
                     for(var i=0; i<scope.data.terms.length; i++) {
-                        data += "\n" + scope.data.terms[i].term + ": " + scope.data.terms[i].count.toLocaleString();
+                        data += "\n" + scope.data.terms[i].term + ": " + scope.data.terms[i].count;//.toLocaleString();
                     }
                     return scope.innerTitle + data;
                 }
@@ -174,7 +174,8 @@ angular.module('mcm.charts', [])
                                     .each(function(d) { this._current = {data:d.data, startAngle: d.startAngle, endAngle: d.startAngle, value:0}; })
                                 .append('title')
                                 .text(function(d){
-                                    return d.data.term + "\n" + d.value.toLocaleString() + " (" + ((d.value/sum)*100).toFixed(1) + "%)";
+                                    return d.data.term + "\n" + d.value + " (" + ((d.value/sum)*100).toFixed(1) + "%)";
+                                    //return d.data.term + "\n" + d.value.toLocaleString() + " (" + ((d.value/sum)*100).toFixed(1) + "%)";
                                 });
 
                             if(scope.onClick) {
@@ -600,12 +601,12 @@ angular.module('mcm.charts', [])
                     }
 
                     // reprint axes
-                    if(valueOperation=="number of requests") {
+                    /*if(valueOperation=="number of requests") {
                         yAxis.tickFormat(d3.format(",d")).tickSubdivide(0);
                     } else {
                         yAxis.tickFormat(d3.format(",f"));
-                    }
-//                    yAxis.tickFormat(d3.format(",f"));
+                        }*/
+                    yAxis.tickFormat(d3.format(""));
                     if(yScaleType == "log" && ( columns || grouping.length ) && data.length) {
                         function prepareTicks(minimalValue, maximalTick, minimalTick) {
                             var retList = [];
@@ -663,7 +664,7 @@ angular.module('mcm.charts', [])
                                         function(d){
                                             return d[value];
                                         });
-                                    string_to_show += ": " + sum_value.toLocaleString();
+                                    string_to_show += ": " + sum_value;//.toLocaleString();
                                     return d+"\n"+string_to_show;
                                 });
                         })
@@ -844,7 +845,7 @@ angular.module('mcm.charts', [])
                         } else if(valueOperation == "number of requests") {
                             string_to_show = "Number of requests";
                         }
-                        string_to_show += ": " + d[value].toLocaleString();
+                        string_to_show += ": " + d[value];//.toLocaleString();
                         if(d.tooltipInfoAttribute){
                             string_to_show += d.tooltipInfoAttribute;
                         }
@@ -956,7 +957,7 @@ angular.module('mcm.charts', [])
                                         function(d){
                                             return d[value];
                                         });
-                                    string_to_show += ": " + sum_value.toLocaleString();
+                                    string_to_show += ": " + sum_value;//.toLocaleString();
                                     return d+"\n"+string_to_show;
                                 });
 
@@ -1258,7 +1259,7 @@ angular.module('mcm.charts', [])
                    for(i=0; i<fullTerms.length; i++) {
                        innerHtml += '<th class="text-center">' + fullTerms[i] + '</th>'
                    }
-                   innerHtml +=  '</tr></thead><tbody><tr ng-repeat="(key, terms) in piechart_data_full"><td class="text-left">{{key}}</td> <td class="text-right" ng-repeat="element in terms.terms">{{element.count | number}}</td></tr></tbody></table>';
+                   innerHtml +=  '</tr></thead><tbody><tr ng-repeat="(key, terms) in piechart_data_full"><td class="text-left">{{key}}</td> <td class="text-right" ng-repeat="element in terms.terms">{{element.count}}</td></tr></tbody></table>';
                }
                element.append($compile(innerHtml)(scope));
            }
