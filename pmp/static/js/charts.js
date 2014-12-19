@@ -562,8 +562,10 @@ angular.module('mcm.charts', [])
                                 t.columnsXDomainAttribute = filtered_leaves[i].column;
                                 t.tooltipInfoAttribute = filtered_leaves[i].info_attribute;
                                 if(valueOperation == "sum") {
+                                    scope.$parent.$parent.setScaleAndOperation(0, 0);
                                     t[value] = d3.sum(filtered_leaves[i].values, function(d) {return d[value]});
                                 } else if(valueOperation == "count") {
+                                    scope.$parent.$parent.setScaleAndOperation(0, 1);
                                     t[value] = filtered_leaves[i].values.length;
                                     if(value.length && valueOperation!="count") {
                                         t.tooltipInfoAttribute += "\n" + value + ": " + filtered_leaves[i].values[0][value];
@@ -837,10 +839,8 @@ angular.module('mcm.charts', [])
                     function setTitle(d) {
                         var string_to_show;
                         if(valueOperation == "sum") {
-                            scope.$parent.$parent.setScaleAndOperation(0, 0);
                             string_to_show = value;
                         } else if(valueOperation == "count") {
-                            scope.$parent.$parent.setScaleAndOperation(0, 1);
                             string_to_show = "#(items)";
                         }
                         string_to_show += ": " + d[value].toLocaleString();
