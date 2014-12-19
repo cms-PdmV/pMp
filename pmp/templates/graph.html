@@ -43,7 +43,46 @@
         </ul>
       </div>
     </nav>
+
     <div class="container">
+      <div class="row">
+        <div class="row">
+          <div class="col-lg-offset-9 col-lg-3 col-md-offset-9 col-md-3 col-sm-offset-9 col-sm-3">
+
+            <div class="panel panel-success popup" ng-show="showSuccess">
+              <div class="panel-heading text-uppercase">
+                <i class="fa fa-check spacing-r"></i> 
+                <strong>Success</strong>
+              </div>
+              <div class="panel-body">
+                <small>{{popUpMessage}}</small>
+              </div>
+            </div>
+
+            <div class="panel panel-danger popup" ng-show="showError">
+              <div class="panel-heading text-uppercase">
+                <i class="fa fa-frown-o spacing-r"></i> 
+                <strong>Error</strong>
+              </div>
+              <div class="panel-body">
+                <small>{{popUpMessage}}</small>
+              </div>
+            </div>
+            
+            <div class="panel panel-warning popup" ng-show="showWarning">
+              <div class="panel-heading text-uppercase">
+                <i class="fa fa-exclamation-triangle spacing-r"></i> 
+                <strong>Warning</strong>
+              </div>
+              <div class="panel-body">
+                <small>{{popUpMessage}}</small>
+              </div>
+            </div>
+            
+          </div>
+        </div>
+      </div>
+      
       <div ng-view ng-show="showview"></div>
     </div>
   </body>

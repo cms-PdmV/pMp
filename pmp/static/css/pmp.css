@@ -34,8 +34,18 @@ body {
     cursor: pointer;
 }
 
+.popup {
+    position: absolute;
+    width: 83%;
+    z-index: 2001;
+}
+
 .spacing {
     margin-bottom: 10px;
+}
+
+.spacing-r {
+    margin-right: 10px;
 }
 
 .white {
