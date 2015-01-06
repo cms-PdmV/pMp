@@ -51,3 +51,20 @@ body {
 .white {
     color: white;
 }
+/*hack for fuelux*/
+.glyphicon-close-sign:before {
+    content: "\e083";
+}
+.glyphicon-close-circle:before {
+    content: "\e088";
+}
+.glyphicon-close:before {
+    content: "\e014";
+}
+.pill{
+    margin: 0 5px;
+}
+.pill-group {
+    padding: 0;
+}
+/*end*/
