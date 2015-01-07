@@ -70,8 +70,6 @@ pmpApp.controller('MainController', function($location, $scope, $timeout, $http)
             $timeout(function() {$location.path(where);}, 1100);
         }
     };
-
-    $('#campaignPillbox').pillbox();
 });
 
 pmpApp.controller('CampaignsController', function($http, $location, $scope, $timeout) {
@@ -112,13 +110,12 @@ pmpApp.controller('CampaignsController', function($http, $location, $scope, $tim
                         $scope.arrCampaigns.push(campaign);
                     } else {
                         $scope.arrCampaigns = [campaign];
-                        $('#campaignPillbox').pillbox('removeItems');
                     }
-                    $('#campaignPillbox').pillbox('addItems', -1, [{ text: campaign, value: campaign}]);
+                    fooo(campaign);
+                    tags.addTag(campaign);
                 }
                 $scope.loadingData = false;
                 $scope.$parent.allRequestData = data.data.results;
-                console.log($scope.$parent.allRequestData);
                 $scope.setURL('', '');
             }, function() {
                 $scope.showPopUp('error', 'Error getting requests');

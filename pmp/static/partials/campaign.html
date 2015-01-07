@@ -63,10 +63,7 @@
 
 <div class="row" ng-show="allRequestData.length">
   <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
-    <div class="pillbox" data-initialize="pillbox" id="campaignPillbox">
-      <ul class="clearfix pill-group">
-      </ul>
-    </div>
+    <div id="campaignList"></div>
   </div>
   
   <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 text-center">
@@ -86,4 +83,15 @@
   </div>
 </div>
 
+<script>
 
+    var fooo = function(a) {
+    console.log(a);
+    }
+
+    var tags = $('#campaignList').tags({
+    tagClass: "btn btn-lg btn-primary",
+    readOnly: false,
+    afterDeletingTag: function(tag){console.log(this.getTags());}
+    });
+</script>
