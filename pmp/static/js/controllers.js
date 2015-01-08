@@ -93,10 +93,11 @@ pmpApp.controller('CampaignsController', function($http, $location, $scope, $tim
         }
         $scope.$parent.allRequestData = data;
         $scope.loadingData = false;
+        $scope.setURL();
     }
 
     $scope.setURL = function(optionName, optionValue){
-        if (optionName != '' && optionValue != '') {
+        if (typeof optionName != undefined && typeof optionValue != undefined) {
             $scope.arrRequestOptionsValues[$scope.arrOptionValues.indexOf(optionValue)] = $scope.arrOptionNames.indexOf(optionName);
         }
         var shareDetails = ''
@@ -109,7 +110,7 @@ pmpApp.controller('CampaignsController', function($http, $location, $scope, $tim
     $scope.setScaleAndOperation = function(i, value) {
         if ($scope.arrRequestRadioValues[i] != value) {
             $scope.arrRequestRadioValues[i] = value;
-            $scope.setURL('', '');
+            $scope.setURL();
         }
     }
 
@@ -158,7 +159,7 @@ pmpApp.controller('CampaignsController', function($http, $location, $scope, $tim
                 }
                 $scope.loadingData = false;
                 $scope.$parent.allRequestData = data.data.results;
-                $scope.setURL('', '');
+                $scope.setURL();
             }, function() {
                 $scope.showPopUp('error', 'Error getting requests');
                 $scope.loadingData = false;
@@ -171,7 +172,7 @@ pmpApp.controller('CampaignsController', function($http, $location, $scope, $tim
     new ZeroClipboard(document.getElementById("copy"), {
         moviePath: '/lib/zeroclipboard/ZeroClipboard.swf'
     });
-    $scope.setURL('', '');
+    $scope.setURL();
 });
 
 pmpApp.controller('ChainsController', function($scope, $http, $timeout) {

@@ -1058,14 +1058,14 @@ angular.module('mcm.charts', [])
                         innerHtml += "<div class='col-lg-6 col-md-12 col-sm-12'><span class='col-lg-3 col-md-2 col-sm-2 nav-header'>"+key+"</span>";
                         innerHtml+="<ul id='"+key+"' class='nav nav-pills dnd col-lg-9 col-md-10 col-sm-10 inline' style='min-height:27px'>";
                         for(var i=0;i<value.length;i++) {
-                            innerHtml+="<li class='btn btn-default btn-xs text-uppercase'>"+value[i].replace(/_/g, ' ')+"</li>";
+                            innerHtml+="<li class='btn btn-default btn-xs text-uppercase'>"+value[i]+"</li>";
                         }
                         innerHtml+="</ul></div>";
                     } else {
                         innerHtml += "<div class='col-lg-6 col-md-12 col-sm-12'><span class='col-lg-3 col-md-2 col-sm-2 nav-header'>"+key+"</span>";
                         innerHtml+="<ul id='"+key+"' class='nav nav-pills dnd single col-lg-9 col-md-10 col-sm-10 inline' style='min-height:27px'>";
                         if(value!="") {
-                            innerHtml+="<li class='btn btn-default btn-xs text-uppercase'>" + value.replace(/_/g, ' ') + "</li>";
+                            innerHtml+="<li class='btn btn-default btn-xs text-uppercase'>" + value + "</li>";
                         }
                         innerHtml+="</ul></div>";
                     }
