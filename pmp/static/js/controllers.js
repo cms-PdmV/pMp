@@ -81,6 +81,9 @@ pmpApp.controller('CampaignsController', function($http, $location, $scope, $tim
     });
 
     $scope.tagsChanged = function(tag){
+        if (tag == 'NULL') {
+            tag = '';
+        }
         $scope.loadingData = true;
         var data = []
         for (var i = 0; i < $scope.$parent.allRequestData.length; i++) {
@@ -115,11 +118,8 @@ pmpApp.controller('CampaignsController', function($http, $location, $scope, $tim
     $scope.$parent.allRequestData = [];
     $scope.$parent.piecharts.fullTerms = ["new", "validation", "defined", "approved", "submitted", "done"];
 
-
-
     $scope.load = function(campaign, add) {
         if (!campaign) {
-            $scope.$parent.allRequestData = [{"status": "new", "time_event": 15.0, "total_events": 15000, "process_string": "", "keep_output": [true], "size_event": -1, "mcdb_id": -1, "reqmgr_name": [], "priority": 0, "pwg": "BPH", "member_of_chain": [], "output_dataset": [], "memory": 2300, "prepid": "BPH-Summer12-00132", "name_of_fragment": "", "pileup_dataset_name": "", "member_of_campaign": "Summer12", "completed_events": -1}]
             $scope.showPopUp('warning', 'Your request parameters are empty');
         }
         else if(add & $scope.tags.hasTag(campaign)) {
@@ -132,6 +132,7 @@ pmpApp.controller('CampaignsController', function($http, $location, $scope, $tim
                 if (!data.data.results.length) {
                     $scope.showPopUp('warning', 'No results for this request parameters');   
                 } else {
+
                     if (add) {
                         data.data.results.push.apply(data.data.results, $scope.allRequestData);
                     } else {
@@ -139,7 +140,21 @@ pmpApp.controller('CampaignsController', function($http, $location, $scope, $tim
                             $scope.tags.removeTag($scope.tags.getTags()[i]);
                         }
                     }
-                    $scope.tags.addTag(campaign);
+
+                    if (campaign == 'all') {
+                        for (var i = 0; i < data.data.results.length; i++) {
+                            if (! $scope.tags.hasTag(data.data.results[i]['member_of_campaign'])) {
+                                if (data.data.results[i]['member_of_campaign'] == ''){
+                                    $scope.tags.addTag('NULL');
+                                } else {
+                                    $scope.tags.addTag(data.data.results[i]['member_of_campaign']);
+                                }
+                            }
+                        }
+                    } else {
+                        $scope.tags.addTag(campaign);
+                    }
+
                 }
                 $scope.loadingData = false;
                 $scope.$parent.allRequestData = data.data.results;
