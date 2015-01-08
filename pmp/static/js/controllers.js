@@ -1,6 +1,6 @@
 'use strict';
 
-pmpApp.controller('MainController', function($location, $scope, $timeout, $http) {
+pmpApp.controller('MainController', function($location, $scope, $timeout) {
     $scope.popUpMessage = '';
     $scope.showPopUp = function(type, text) {
         switch (type) {
@@ -23,7 +23,6 @@ pmpApp.controller('MainController', function($location, $scope, $timeout, $http)
                 $scope.showError = false;
                 $scope.showWarning = false;
                 $scope.showSuccess = true;
-                console.log($scope.showSuccess)
                 $timeout(function() {$scope.showPopUp('', '');}, 2000);
                 break;
             default:
@@ -37,7 +36,6 @@ pmpApp.controller('MainController', function($location, $scope, $timeout, $http)
 
     $scope.arrRequestOptionsValues = [1,2,4,0,0,0];
     $scope.arrRequestRadioValues = [0, 0];
-    $scope.arrCampaigns = [];
     $scope.arrOptionNames = ['selections', 'grouping', 'value', 'stacking', 'coloring'];
     $scope.arrOptionValues = ['member_of_campaign', 'total_events', 'status', 'prepid', 'priority', 'pwg'];
 
@@ -72,6 +70,7 @@ pmpApp.controller('MainController', function($location, $scope, $timeout, $http)
     };
 });
 
+
 pmpApp.controller('CampaignsController', function($http, $location, $scope, $timeout) {
 
     $scope.setURL = function(optionName, optionValue){
@@ -79,11 +78,12 @@ pmpApp.controller('CampaignsController', function($http, $location, $scope, $tim
             $scope.arrRequestOptionsValues[$scope.arrOptionValues.indexOf(optionValue)] = $scope.arrOptionNames.indexOf(optionName);
         }
         var shareDetails = ''
-        if ($scope.arrCampaigns.length) {
-            shareDetails = $scope.arrRequestOptionsValues.join('/') + '/' + $scope.arrRequestRadioValues.join('/') + '/' + $scope.arrCampaigns.join(',');
+        if (tags.getTags().length) {
+            shareDetails = $scope.arrRequestOptionsValues.join('/') + '/' + $scope.arrRequestRadioValues.join('/') + '/' + tags.getTags().join(',');
         }
         $scope.url = $location.$$protocol + '://' + $location.$$host + '/share/' + $scope.typeOfGraph + '/' + shareDetails;
-    };
+    }
+
     $scope.setScaleAndOperation = function(i, value) {
         if ($scope.arrRequestRadioValues[i] != value) {
             $scope.arrRequestRadioValues[i] = value;
@@ -95,23 +95,28 @@ pmpApp.controller('CampaignsController', function($http, $location, $scope, $tim
     $scope.$parent.title = 'Statistics of Campaigns';
     $scope.$parent.allRequestData = [];
     $scope.$parent.piecharts.fullTerms = ["new", "validation", "defined", "approved", "submitted", "done"];
+
     $scope.load = function(campaign, add) {
         if (!campaign) {
-            $scope.showPopUp('warning', 'Your request parameters are empty');   
-        } else {
+            $scope.showPopUp('warning', 'Your request parameters are empty');
+        }
+        else if(add & tags.hasTag(campaign)) {
+            $scope.showPopUp('warning', 'Your request is already loaded');
+        }
+        else {
             $scope.loadingData = true;
             var promise = $http.get("api/" + campaign + "/simple");
             promise.then(function(data) {
                 if (!data.data.results.length) {
                     $scope.showPopUp('warning', 'No results for this request parameters');   
                 } else {
-                    if (campaign !== '' && add) {
+                    if (add) {
                         data.data.results.push.apply(data.data.results, $scope.allRequestData);
-                        $scope.arrCampaigns.push(campaign);
                     } else {
-                        $scope.arrCampaigns = [campaign];
+                        for (var i = 0; i < tags.getTags().length; i++) {
+                            tags.removeTag(tags.getTags()[i]);
+                        }
                     }
-                    fooo(campaign);
                     tags.addTag(campaign);
                 }
                 $scope.loadingData = false;
