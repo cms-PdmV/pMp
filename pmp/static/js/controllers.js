@@ -73,13 +73,32 @@ pmpApp.controller('MainController', function($location, $scope, $timeout) {
 
 pmpApp.controller('CampaignsController', function($http, $location, $scope, $timeout) {
 
+    $scope.tags = angular.element('#campaignList').tags({
+        tagClass: "btn btn-lg btn-primary",
+        beforeDeletingTag: function(tag){
+            $scope.tagsChanged(tag);
+        }
+    });
+
+    $scope.tagsChanged = function(tag){
+        $scope.loadingData = true;
+        var data = []
+        for (var i = 0; i < $scope.$parent.allRequestData.length; i++) {
+            if ($scope.$parent.allRequestData[i]['member_of_campaign'] !== tag) {
+                data.push($scope.$parent.allRequestData[i]);
+            }
+        }
+        $scope.$parent.allRequestData = data;
+        $scope.loadingData = false;
+    }
+
     $scope.setURL = function(optionName, optionValue){
         if (optionName != '' && optionValue != '') {
             $scope.arrRequestOptionsValues[$scope.arrOptionValues.indexOf(optionValue)] = $scope.arrOptionNames.indexOf(optionName);
         }
         var shareDetails = ''
-        if (tags.getTags().length) {
-            shareDetails = $scope.arrRequestOptionsValues.join('/') + '/' + $scope.arrRequestRadioValues.join('/') + '/' + tags.getTags().join(',');
+        if ($scope.tags.getTags().length) {
+            shareDetails = $scope.arrRequestOptionsValues.join('/') + '/' + $scope.arrRequestRadioValues.join('/') + '/' + $scope.tags.getTags().join(',');
         }
         $scope.url = $location.$$protocol + '://' + $location.$$host + '/share/' + $scope.typeOfGraph + '/' + shareDetails;
     }
@@ -96,11 +115,14 @@ pmpApp.controller('CampaignsController', function($http, $location, $scope, $tim
     $scope.$parent.allRequestData = [];
     $scope.$parent.piecharts.fullTerms = ["new", "validation", "defined", "approved", "submitted", "done"];
 
+
+
     $scope.load = function(campaign, add) {
         if (!campaign) {
+            $scope.$parent.allRequestData = [{"status": "new", "time_event": 15.0, "total_events": 15000, "process_string": "", "keep_output": [true], "size_event": -1, "mcdb_id": -1, "reqmgr_name": [], "priority": 0, "pwg": "BPH", "member_of_chain": [], "output_dataset": [], "memory": 2300, "prepid": "BPH-Summer12-00132", "name_of_fragment": "", "pileup_dataset_name": "", "member_of_campaign": "Summer12", "completed_events": -1}]
             $scope.showPopUp('warning', 'Your request parameters are empty');
         }
-        else if(add & tags.hasTag(campaign)) {
+        else if(add & $scope.tags.hasTag(campaign)) {
             $scope.showPopUp('warning', 'Your request is already loaded');
         }
         else {
@@ -113,11 +135,11 @@ pmpApp.controller('CampaignsController', function($http, $location, $scope, $tim
                     if (add) {
                         data.data.results.push.apply(data.data.results, $scope.allRequestData);
                     } else {
-                        for (var i = 0; i < tags.getTags().length; i++) {
-                            tags.removeTag(tags.getTags()[i]);
+                        for (var i = 0; i < $scope.tags.getTags().length; i++) {
+                            $scope.tags.removeTag($scope.tags.getTags()[i]);
                         }
                     }
-                    tags.addTag(campaign);
+                    $scope.tags.addTag(campaign);
                 }
                 $scope.loadingData = false;
                 $scope.$parent.allRequestData = data.data.results;
