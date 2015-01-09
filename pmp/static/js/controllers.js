@@ -74,7 +74,7 @@ pmpApp.controller('MainController', function($location, $scope, $timeout) {
 pmpApp.controller('CampaignsController', function($http, $location, $scope, $timeout) {
 
     $scope.tags = angular.element('#campaignList').tags({
-        tagClass: "btn btn-lg btn-primary",
+        tagClass: "btn btn-sm btn-primary",
         beforeDeletingTag: function(tag){
             $scope.tagsChanged(tag);
         }

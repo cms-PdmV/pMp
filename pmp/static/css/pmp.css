@@ -1,12 +1,40 @@
+.axis path, .axis line {
+    fill: none;
+    stroke: black;
+    stroke-width: 1;
+    shape-rendering: crispEdges;
+}
+
 body {
     background: #eee;
     font-family: 'Roboto', sans-serif;
+}
+
+body.dragging, body.dragging * {
+    cursor: move !important;
 }
 
 .brand-adjust {
     height: 30px;
     margin: 10px;
     float: left;
+}
+
+.grid .tick, .grid path {
+    fill: none;
+}
+.grid .tick {
+    stroke: grey;
+    opacity: 0.2;
+    stroke-width: 0.6;
+    stroke-dasharray: 2,2;
+}
+.grid path {
+    stroke-width: 0;
+}
+
+.line {
+    border-color: #888;
 }
 
 .nav-header {
@@ -26,8 +54,31 @@ body {
     display: block !important;
 }
 
-.line {
-    border-color: #888;
+.node {
+    cursor: pointer;
+}
+
+.node circle {
+    cursor: pointer;
+    stroke-width: 2px;
+}
+
+.node-text {
+    cursor: pointer;
+    fill: #000;
+    stroke: transparent;
+    font: bold 11px sans-serif;
+    text-shadow: 1px 1px #fff;
+    textLength: 20px;
+    display: none;
+}
+
+.node.expanded circle {
+    fill: #fff;
+}
+
+.node.expanded .node-text {
+    display: none;
 }
 
 .pointer {
@@ -48,9 +99,34 @@ body {
     margin-right: 10px;
 }
 
-.white {
-    color: white;
-}
 .tags.label{
     font-weight: normal;
+}
+
+ul.nav li {
+    position: static;
+}
+
+ul.nav li.dragged {
+    position: absolute;
+    opacity: 0.9;
+    z-index: 2000;
+}
+
+ul.nav li.placeholder {
+    position: relative;
+}
+
+ul.nav li.placeholder:before {
+    border: 5px solid transparent;
+    border-bottom: none;
+    border-top-color: black;
+    content: "";
+    margin-left: -6px;
+    position: absolute;
+    top: -3px;
+}
+
+.white {
+    color: white;
 }
