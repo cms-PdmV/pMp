@@ -13,8 +13,7 @@ def about():
 @app.route('/campaign')
 @app.route('/chain')
 def dashboard():
-    return make_response(open('pmp/templates/graph.html').read())
-
+    return render_template('graph.html')
 
 @app.route('/api/<member_of_campaign>/<typeof>')
 def api(member_of_campaign, typeof):
@@ -23,3 +22,7 @@ def api(member_of_campaign, typeof):
     elif typeof == 'chain':
         gc = models.GetChain()
     return make_response(gc.get(member_of_campaign))
+
+@app.route('/share/<typeof>/')
+def share(typeof):
+    return render_template('graph.html', foo=42)

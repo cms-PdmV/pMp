@@ -5,15 +5,19 @@ var pmpApp = angular.module('pmpApp', ['ngAnimate', 'ngRoute', 'mcm.charts'])
         function($routeProvider, $locationProvider) {
             $routeProvider
                 .when('/campaign', {
-                    templateUrl: 'partials/campaign.html',
+                    templateUrl: '/partials/campaign.html',
                     controller: 'CampaignsController'
                 })
                 .when('/chain', {
-                    templateUrl: 'partials/chain.html',
+                    templateUrl: '/partials/chain.html',
                     controller: 'ChainsController'
                 })
                 .when('/', {
-                    templateUrl: 'partials/index.html',
+                    templateUrl: '/partials/index.html',
+                    controller: 'IndexController'
+                })
+                .when('/share/:type/', {
+                    templateUrl: '/partials/index.html',
                     controller: 'IndexController'
                 });
             $locationProvider.html5Mode(true);

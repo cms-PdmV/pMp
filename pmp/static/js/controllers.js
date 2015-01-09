@@ -1,6 +1,11 @@
 'use strict';
 
 pmpApp.controller('MainController', function($location, $scope, $timeout) {
+    $scope.init = function(foo) {
+        $scope.dummy = foo;
+        console.log($scope.dummy);
+    }
+
     $scope.popUpMessage = '';
     $scope.showPopUp = function(type, text) {
         switch (type) {
