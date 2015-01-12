@@ -1,7 +1,8 @@
 'use strict';
 
 pmpApp.controller('MainController', function($location, $scope, $timeout) {
-    $scope.init = function(foo) {
+
+    $scope.ginit = function(foo) {
         $scope.dummy = foo;
         console.log($scope.dummy);
     }
