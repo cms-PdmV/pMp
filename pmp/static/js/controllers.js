@@ -2,11 +2,6 @@
 
 pmpApp.controller('MainController', function($location, $scope, $timeout) {
 
-    $scope.ginit = function(foo) {
-        $scope.dummy = foo;
-        console.log($scope.dummy);
-    }
-
     $scope.popUpMessage = '';
     $scope.showPopUp = function(type, text) {
         switch (type) {
@@ -40,23 +35,63 @@ pmpApp.controller('MainController', function($location, $scope, $timeout) {
         }
     }
 
-    $scope.arrRequestOptionsValues = [1,2,4,0,0,0];
-    $scope.arrRequestRadioValues = [0, 0];
+    $scope.requests = {};
     $scope.arrOptionNames = ['selections', 'grouping', 'value', 'stacking', 'coloring'];
     $scope.arrOptionValues = ['member_of_campaign', 'total_events', 'status', 'prepid', 'priority', 'pwg'];
 
-    $scope.requests = {};
-    $scope.requests.options = {
+    $scope.ginit = function(data) {
+        console.log(data);
+        $scope.arrRequestOptionsValues = [1,2,4,0,0,0];
+        $scope.arrRequestRadioValues = [0, 0];
+        if (data != undefined) {
+            if (data.length) {
+                $scope.arrRequestOptionsValues = data.slice(0,6);
+                $scope.arrRequestRadioValues = data.slice(6,2);
+            }
+        }
+        $scope.initiate_graph();
+        console.log($scope.arrRequestOptionsValues);
+    }
+
+    $scope.initiate_graph = function () {
+        $scope.requests.selections = [];
+        var init_grouping = [];
+        var init_stacking = [];
+        var init_coloring = ''; // 1 slot 
+        var init_value = ''; // 1 slot
+        for (var i = 0; i < $scope.arrRequestOptionsValues.length; i++) {
+            if ($scope.arrRequestOptionsValues[i] == 0) {
+                $scope.requests.selections.push($scope.arrOptionValues[i]);
+            } else if ($scope.arrRequestOptionsValues[i] == 1) {
+                init_grouping.push($scope.arrOptionValues[i]);
+            } else if ($scope.arrRequestOptionsValues[i] == 2) {
+                init_value = $scope.arrOptionValues[i];
+            } else if ($scope.arrRequestOptionsValues[i] == 3) {
+                init_stacking.push($scope.arrOptionValues[i]);
+            } else if ($scope.arrRequestOptionsValues[i] == 4) {
+                init_coloring = $scope.arrOptionValues[i];
+            } 
+        }
+        $scope.requests.options = {
+            grouping: init_grouping,
+            value: init_value,
+            stacking: init_stacking,
+            coloring: init_coloring
+        };
+    }
+    
+
+    /*$scope.requests.options = {
         grouping: ['member_of_campaign'],
         value: "total_events",
         stacking: [],
         coloring: "status"
-    };
+        };*/
     $scope.requests.radio = {
         'scale': ["linear", "log"],
         'mode': ["number of events", "number of requests"]
     };
-    $scope.requests.selections = ['prepid', 'priority', 'pwg'];
+    //$scope.requests.selections = ['prepid', 'priority', 'pwg'];
     $scope.requests.settings = {
         duration: 1000,
         legend: true,
