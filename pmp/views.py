@@ -52,5 +52,3 @@ def share(gtype, member_of_campaign, total_events, status, prepid, priority,
     if gtype == "cha":
         session['init_values'] = init_values
         return redirect('/chain', code=302)
-
-app.secret_key = 'A0Zr98j/3yX R~XHH!jmN]LWX/,?RT'

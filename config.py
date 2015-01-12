@@ -1,3 +1,4 @@
 
 DEBUG = True
-DATABASE_URL = 'http://localhost:9200/'
+DATABASE_URL = ''
+SECRET_KEY = ''
