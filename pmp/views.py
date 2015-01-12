@@ -18,7 +18,9 @@ def about():
 @app.route('/chain')
 def dashboard():
     if 'init_values' in session:
-        return render_template('graph.html', data=session['init_values'])
+        data = session['init_values']
+        session.clear()     
+        return render_template('graph.html', data=data)
     return render_template('graph.html')
 
 
@@ -46,9 +48,8 @@ def share(gtype, member_of_campaign, total_events, status, prepid, priority,
     if clist:
         init_values = [member_of_campaign, total_events, status, prepid,
                        priority, pwg, scale, mode, str(clist)]
-    if gtype == "cam":
         session['init_values'] = init_values
+    if gtype == "cam":
         return redirect('/campaign', code=302)
     if gtype == "cha":
-        session['init_values'] = init_values
         return redirect('/chain', code=302)
