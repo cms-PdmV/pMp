@@ -1,6 +1,6 @@
 'use strict';
 
-pmpApp.controller('MainController', function($location, $scope, $timeout) {
+pmpApp.controller('MainController', function($location, $rootScope, $scope, $timeout) {
 
     $scope.popUpMessage = '';
     $scope.showPopUp = function(type, text) {
@@ -40,52 +40,52 @@ pmpApp.controller('MainController', function($location, $scope, $timeout) {
     $scope.arrOptionValues = ['member_of_campaign', 'total_events', 'status', 'prepid', 'priority', 'pwg'];
 
     $scope.ginit = function(data) {
+        $scope.loadingData = true;
         $scope.arrRequestOptionsValues = [1,2,4,0,0,0];
         $scope.arrRequestRadioValues = [0, 0];
-        
-        console.log(data)
-
+        $scope.loadCampaigns = []
         if (data != undefined) {
             if (data.length) {
                 $scope.arrRequestOptionsValues = data.slice(0,6);
                 $scope.arrRequestRadioValues = data.slice(6,8);
-                console.log($scope.arrRequestOptionsValues);
-                console.log($scope.arrRequestRadioValues);
+
+            }
+            if (data.slice(8,9)) {
+                $scope.loadCampaigns = data.slice(8,9)[0].split(',');
             }
         }
-        $scope.initiate_graph();
+        $scope.initiateGraph();
+        $scope.loadingData = false;
     }
 
-    $scope.initiate_graph = function () {
-        $scope.loadingData = true;
+    $scope.initiateGraph = function () {
         $scope.requests.selections = [];
-        var init_grouping = [];
-        var init_stacking = [];
-        var init_coloring = ''; // 1 slot 
-        var init_value = ''; // 1 slot
+        var initGrouping = [];
+        var initStacking = [];
+        var initColoring = ''; // 1 slot 
+        var initValue = ''; // 1 slot
         for (var i = 0; i < $scope.arrRequestOptionsValues.length; i++) {
             if ($scope.arrRequestOptionsValues[i] == 0) {
                 $scope.requests.selections.push($scope.arrOptionValues[i]);
             } else if ($scope.arrRequestOptionsValues[i] == 1) {
-                init_grouping.push($scope.arrOptionValues[i]);
+                initGrouping.push($scope.arrOptionValues[i]);
             } else if ($scope.arrRequestOptionsValues[i] == 2) {
-                init_value = $scope.arrOptionValues[i];
+                initValue = $scope.arrOptionValues[i];
             } else if ($scope.arrRequestOptionsValues[i] == 3) {
-                init_stacking.push($scope.arrOptionValues[i]);
+                initStacking.push($scope.arrOptionValues[i]);
             } else if ($scope.arrRequestOptionsValues[i] == 4) {
-                init_coloring = $scope.arrOptionValues[i];
+                initColoring = $scope.arrOptionValues[i];
             } 
         }
         $scope.requests.options = {
-            grouping: init_grouping,
-            value: init_value,
-            stacking: init_stacking,
-            coloring: init_coloring
+            grouping: initGrouping,
+            value: initValue,
+            stacking: initStacking,
+            coloring: initColoring
         };
 
         $scope.requests.radio = {}
 
-        console.log($scope.arrRequestRadioValues);
 
         if ($scope.arrRequestRadioValues[1]) {
             $scope.requests.radio['scale'] = ["log", "linear"];    
@@ -98,23 +98,15 @@ pmpApp.controller('MainController', function($location, $scope, $timeout) {
         } else {
             $scope.requests.radio['mode'] = ["number of events", "number of requests"];
         }
-        $scope.loadingData = false;
     }
-    
 
-    /*$scope.requests.options = {
-        grouping: ['member_of_campaign'],
-        value: "total_events",
-        stacking: [],
-        coloring: "status"
-        };*/
-
-    //$scope.requests.selections = ['prepid', 'priority', 'pwg'];
     $scope.requests.settings = {
         duration: 1000,
         legend: true,
         sort: true
     };
+
+
     $scope.piecharts = {};
     $scope.piecharts.compactTerms = ["done", "to do"];
     $scope.piecharts.domain = ["new", "validation", "done", "approved", "submitted", "nothing", "defined", "to do"];
@@ -167,8 +159,7 @@ pmpApp.controller('CampaignsController', function($http, $location, $scope, $tim
     }
 
     $scope.setScaleAndOperation = function(i, value) {
-        console.log(i);
-        console.log(value);
+
         if ($scope.arrRequestRadioValues[i] != value) {
             $scope.arrRequestRadioValues[i] = value;
             $scope.setURL();
@@ -233,7 +224,11 @@ pmpApp.controller('CampaignsController', function($http, $location, $scope, $tim
     new ZeroClipboard(document.getElementById("copy"), {
         moviePath: '/lib/zeroclipboard/ZeroClipboard.swf'
     });
+
     $scope.setURL();
+    for (var i = 0; i < $scope.loadCampaigns.length; i++) {
+        $scope.load($scope.loadCampaigns[i], true);
+    }
 });
 
 pmpApp.controller('ChainsController', function($scope, $http, $timeout) {
