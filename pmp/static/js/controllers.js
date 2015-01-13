@@ -40,20 +40,24 @@ pmpApp.controller('MainController', function($location, $scope, $timeout) {
     $scope.arrOptionValues = ['member_of_campaign', 'total_events', 'status', 'prepid', 'priority', 'pwg'];
 
     $scope.ginit = function(data) {
-        console.log(data);
         $scope.arrRequestOptionsValues = [1,2,4,0,0,0];
         $scope.arrRequestRadioValues = [0, 0];
+        
+        console.log(data)
+
         if (data != undefined) {
             if (data.length) {
                 $scope.arrRequestOptionsValues = data.slice(0,6);
-                $scope.arrRequestRadioValues = data.slice(6,2);
+                $scope.arrRequestRadioValues = data.slice(6,8);
+                console.log($scope.arrRequestOptionsValues);
+                console.log($scope.arrRequestRadioValues);
             }
         }
         $scope.initiate_graph();
-        console.log($scope.arrRequestOptionsValues);
     }
 
     $scope.initiate_graph = function () {
+        $scope.loadingData = true;
         $scope.requests.selections = [];
         var init_grouping = [];
         var init_stacking = [];
@@ -78,6 +82,23 @@ pmpApp.controller('MainController', function($location, $scope, $timeout) {
             stacking: init_stacking,
             coloring: init_coloring
         };
+
+        $scope.requests.radio = {}
+
+        console.log($scope.arrRequestRadioValues);
+
+        if ($scope.arrRequestRadioValues[1]) {
+            $scope.requests.radio['scale'] = ["log", "linear"];    
+        } else {
+            $scope.requests.radio['scale'] = ["linear", "log"];    
+        }
+
+        if ($scope.arrRequestRadioValues[0]) {
+            $scope.requests.radio['mode'] = ["number of requests", "number of events"];
+        } else {
+            $scope.requests.radio['mode'] = ["number of events", "number of requests"];
+        }
+        $scope.loadingData = false;
     }
     
 
@@ -87,10 +108,7 @@ pmpApp.controller('MainController', function($location, $scope, $timeout) {
         stacking: [],
         coloring: "status"
         };*/
-    $scope.requests.radio = {
-        'scale': ["linear", "log"],
-        'mode': ["number of events", "number of requests"]
-    };
+
     //$scope.requests.selections = ['prepid', 'priority', 'pwg'];
     $scope.requests.settings = {
         duration: 1000,
@@ -149,6 +167,8 @@ pmpApp.controller('CampaignsController', function($http, $location, $scope, $tim
     }
 
     $scope.setScaleAndOperation = function(i, value) {
+        console.log(i);
+        console.log(value);
         if ($scope.arrRequestRadioValues[i] != value) {
             $scope.arrRequestRadioValues[i] = value;
             $scope.setURL();
