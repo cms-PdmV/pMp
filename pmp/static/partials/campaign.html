@@ -37,26 +37,52 @@
   </div>
 
   <div class="col-lg-3 col-md-3 col-sm-3">
-      <a class="btn btn-sm text-uppercase" data-toggle="collapse" data-target="#advanced">
-        <small><i class="fa fa-cog"></i> Advanced</small>
-      </a>
-      <a class="btn btn-sm text-uppercase" data-toggle="collapse" data-target="#share">
-        <small><i class="fa fa-share"></i> Share</small>
-      </a>
-      <div id="advanced" class="collapse col-xs-12 col-sm-12 col-md-12 col-lg-12 spacing">
-        Some advanced tricks<br>
-        More advanced tricks<br>
-        And some more advanced tricks
-      </div>
-      <div id="share" class="collapse col-xs-12 col-sm-12 col-md-12 col-lg-12">
-        <div class="input-group input-group-sm">
-          <span class="hidden-sm input-group-addon text-uppercase" ng-click="setURL()">Share</span>
-          <input id="url" type="text" class="form-control" ng-model="url"
-                 placeholder="Refresh to get URL">
-          <span id="copy" data-clipboard-text="{{url}}" class="input-group-addon pointer">
-            <i class="fa fa-copy"></i>
-          </span>
+    <a class="btn btn-sm text-uppercase" data-toggle="collapse" data-target="#advanced">
+      <small><i class="fa fa-cog"></i> Advanced</small>
+    </a>
+    <a class="btn btn-sm text-uppercase" data-toggle="collapse" data-target="#share">
+      <small><i class="fa fa-share"></i> Share</small>
+    </a>
+    <div id="advanced" class="collapse col-xs-12 col-sm-12 col-md-12 col-lg-12 spacing">
+
+      <hr class="line">
+      <form class="form-inline">
+        <h6 class="text-center text-uppercase">Filter by priority:</h6>
+        <div class="form-group form-group-sm">
+          <div class="input-group">
+            <input type="text" class="form-control" placeholder="min">
+            <div class="input-group-addon">
+              <strong> < x < </strong>
+            </div>
+            <input type="text" class="form-control" placeholder="max">
+          </div>
         </div>
+      </form>
+      
+      <hr class="line">
+      <h6 class="text-center text-uppercase">Filter by status:</h6>
+      <small>
+        <div class="col-lg-6" ng-repeat="term in piecharts.fullTerms">
+          <label class="checkbox-inline">
+            <input type="checkbox" value="true" checked="checked">
+            {{term}}
+          </label>
+        </div>
+      </small>
+      
+    </div>
+    
+    <div id="share" class="collapse col-xs-12 col-sm-12 col-md-12 col-lg-12">
+      
+      <hr class="line">
+      <div class="input-group input-group-sm">
+        <span class="hidden-sm input-group-addon text-uppercase" ng-click="setURL()">Share</span>
+        <input id="url" type="text" class="form-control" ng-model="url"
+               placeholder="Refresh to get URL">
+        <span id="copy" data-clipboard-text="{{url}}" class="input-group-addon pointer">
+          <i class="fa fa-copy"></i>
+        </span>
+      </div>
     </div>
   </div>
 </div>
