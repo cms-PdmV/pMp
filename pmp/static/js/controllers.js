@@ -21,37 +21,26 @@ pmpApp.controller('MainController', function($location, $route, $rootScope, $sco
         return original.apply($location, [path]);
     };
 
-    $scope.popUpMessage = '';
-
     $scope.showPopUp = function(type, text) {
         switch (type) {
-            case 'error':
-                $scope.popUpMessage = text;
-                $scope.showError = true;
-                $scope.showWarning = false;
-                $scope.showSuccess = false;
-                $timeout(function() {$scope.showPopUp('', '');}, 2000);
-                break;
-            case "warning":
-                $scope.popUpMessage = text;
-                $scope.showError = false;
-                $scope.showWarning = true;
-                $scope.showSuccess = false;
-                $timeout(function() {$scope.showPopUp('', '');}, 2000);
-                break;
-            case "success":
-                $scope.popUpMessage = text;
-                $scope.showError = false;
-                $scope.showWarning = false;
-                $scope.showSuccess = true;
-                $timeout(function() {$scope.showPopUp('', '');}, 2000);
-                break;
-            default:
-                $timeout(function() {$scope.popUpMessage = '';}, 1000);
-                $scope.showError = false;
-                $scope.showWarning = false;
-                $scope.showSuccess = false;
-                break;
+        case 'error':
+            $scope.popUp = {show: true, title: 'Error', message: text,
+                            style: 'panel-danger', icon: 'fa-frown-o'};
+            $timeout(function() {$scope.showPopUp('', '');}, 2000);
+        break;
+        case 'warning':
+            $scope.popUp = {show: true, title: 'Warning', message: text,
+                            style: 'panel-warning', icon: 'fa-exclamation-triangle'};
+            $timeout(function() {$scope.showPopUp('', '');}, 2000);
+        break;
+        case 'success':
+            $scope.popUp = {show: true, title: 'Success', message: text,
+                            style: 'panel-success', icon: 'fa-check'};
+            $timeout(function() {$scope.showPopUp('', '');}, 2000);
+        break;
+        default:
+            $scope.popUp.show = false;
+            break;
         }
     }
 });
@@ -61,9 +50,9 @@ pmpApp.controller('CampaignsController', function($http, $location, $rootScope, 
 
     $scope.allRequestData = [];
 
-    $scope.arrOptionNames = ['selections', 'grouping', 'value', 'stacking', 'coloring'];
+    $scope.graphParam = ['selections', 'grouping', 'value', 'stacking', 'coloring'];
 
-    $scope.arrOptionValues = ['member_of_campaign', 'total_events', 'status', 'prepid', 'priority', 'pwg'];
+    $scope.graphTabs = ['member_of_campaign', 'total_events', 'status', 'prepid', 'priority', 'pwg'];
 
     $scope.init = function(data) {
 
@@ -83,15 +72,15 @@ pmpApp.controller('CampaignsController', function($http, $location, $rootScope, 
         var initValue = '';
         for (var i = 0; i < $scope.arrRequestOptionsValues.length; i++) {
             if ($scope.arrRequestOptionsValues[i] == 0) {
-                $scope.requests.selections.push($scope.arrOptionValues[i]);
+                $scope.requests.selections.push($scope.graphTabs[i]);
             } else if ($scope.arrRequestOptionsValues[i] == 1) {
-                initGrouping.push($scope.arrOptionValues[i]);
+                initGrouping.push($scope.graphTabs[i]);
             } else if ($scope.arrRequestOptionsValues[i] == 2) {
-                initValue = $scope.arrOptionValues[i];
+                initValue = $scope.graphTabs[i];
             } else if ($scope.arrRequestOptionsValues[i] == 3) {
-                initStacking.push($scope.arrOptionValues[i]);
+                initStacking.push($scope.graphTabs[i]);
             } else if ($scope.arrRequestOptionsValues[i] == 4) {
-                initColoring = $scope.arrOptionValues[i];
+                initColoring = $scope.graphTabs[i];
             } 
         }
         $scope.requests.options = {
@@ -136,7 +125,7 @@ pmpApp.controller('CampaignsController', function($http, $location, $rootScope, 
             var promise = $http.get("api/" + campaign + "/simple");
             promise.then(function(data) {
                 if (!data.data.results.length) {
-                    $scope.showPopUp('warning', 'No results for this request parameters');   
+                    $scope.showPopUp('error', 'No results for this request parameters');   
                 } else {
 
                     if (add) {
@@ -160,11 +149,10 @@ pmpApp.controller('CampaignsController', function($http, $location, $rootScope, 
                     } else {
                         $scope.tags.addTag(campaign);
                     }
-
+                    $scope.allRequestData = data.data.results;
+                    $scope.setURL();
                 }
                 $scope.loadingData = false;
-                $scope.allRequestData = data.data.results;
-                $scope.setURL();
             }, function() {
                 $scope.showPopUp('error', 'Error getting requests');
                 $scope.loadingData = false;
@@ -189,7 +177,7 @@ pmpApp.controller('CampaignsController', function($http, $location, $rootScope, 
     $scope.setURL = function(optionName, optionValue){
         $location.path("campaign", false);
         if (typeof optionName != undefined && typeof optionValue != undefined) {
-            $scope.arrRequestOptionsValues[$scope.arrOptionValues.indexOf(optionValue)] = $scope.arrOptionNames.indexOf(optionName);
+            $scope.arrRequestOptionsValues[$scope.graphTabs.indexOf(optionValue)] = $scope.graphParam.indexOf(optionName);
         }
         var params = {}
         if ($scope.tags.getTags().length) {
