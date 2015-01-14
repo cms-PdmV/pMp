@@ -1,4 +1,4 @@
-from flask import make_response, redirect, render_template, session
+from flask import make_response, redirect, render_template
 from pmp import app, models
 
 
@@ -17,12 +17,7 @@ def about():
 @app.route('/campaign')
 @app.route('/chain')
 def dashboard():
-    if 'init_values' in session:
-        data = session['init_values']
-        session.clear()     
-        return render_template('graph.html', data=data)
-    return render_template('graph.html')
-
+    return make_response(open('pmp/templates/graph.html').read())
 
 @app.route('/api/<member_of_campaign>/<typeof>')
 def api(member_of_campaign, typeof):
@@ -31,25 +26,3 @@ def api(member_of_campaign, typeof):
     elif typeof == 'chain':
         gc = models.GetChain()
     return make_response(gc.get(member_of_campaign))
-
-
-@app.route('/share/<gtype>/')
-def share_type(gtype):
-    return share(gtype, False, False, False, False, False, False, False, False,
-                 False)
-
-
-@app.route('/share/<gtype>/<int:member_of_campaign>/<int:total_events>/' +
-           '<int:status>/<int:prepid>/<int:priority>/<int:pwg>/<int:scale>/' +
-           '<int:mode>/<clist>')
-def share(gtype, member_of_campaign, total_events, status, prepid, priority,
-          pwg, scale, mode, clist):
-    init_values = []
-    if clist:
-        init_values = [member_of_campaign, total_events, status, prepid,
-                       priority, pwg, scale, mode, str(clist)]
-        session['init_values'] = init_values
-    if gtype == "cam":
-        return redirect('/campaign', code=302)
-    if gtype == "cha":
-        return redirect('/chain', code=302)

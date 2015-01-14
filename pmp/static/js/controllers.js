@@ -1,8 +1,28 @@
 'use strict';
 
-pmpApp.controller('MainController', function($location, $rootScope, $scope, $timeout) {
+pmpApp.controller('MainController', function($location, $route, $rootScope, $scope, $timeout) {
+
+    $scope.nav = function(where) {
+        $scope.showview = !$scope.showview;
+        if (!$scope.showview) {
+            $timeout(function() {$location.path(where);}, 1100);
+        }
+    };
+
+    var original = $location.path;
+    $location.path = function (path, reload) {
+        if (reload === false) {
+            var lastRoute = $route.current;
+            var un = $rootScope.$on('$locationChangeSuccess', function () {
+                $route.current = lastRoute;
+                un();
+            });
+        }
+        return original.apply($location, [path]);
+    };
 
     $scope.popUpMessage = '';
+
     $scope.showPopUp = function(type, text) {
         switch (type) {
             case 'error':
@@ -34,36 +54,33 @@ pmpApp.controller('MainController', function($location, $rootScope, $scope, $tim
                 break;
         }
     }
+});
 
-    $scope.requests = {};
+
+pmpApp.controller('CampaignsController', function($http, $location, $rootScope, $scope, $timeout) {
+
+    $scope.allRequestData = [];
+
     $scope.arrOptionNames = ['selections', 'grouping', 'value', 'stacking', 'coloring'];
+
     $scope.arrOptionValues = ['member_of_campaign', 'total_events', 'status', 'prepid', 'priority', 'pwg'];
 
-    $scope.ginit = function(data) {
-        $scope.loadingData = true;
-        $scope.arrRequestOptionsValues = [1,2,4,0,0,0];
-        $scope.arrRequestRadioValues = [0, 0];
-        $scope.loadCampaigns = []
-        if (data != undefined) {
-            if (data.length) {
-                $scope.arrRequestOptionsValues = data.slice(0,6);
-                $scope.arrRequestRadioValues = data.slice(6,8);
+    $scope.init = function(data) {
 
-            }
-            if (data.slice(8,9)) {
-                $scope.loadCampaigns = data.slice(8,9)[0].split(',');
-            }
+        if($location.search()['p'] != undefined) {
+            var toLoad = $location.search()['p'].split(',');
+            $scope.arrRequestOptionsValues = toLoad.slice(0,6);
+            $scope.arrRequestRadioValues = toLoad.slice(6,8);
+        } else {
+            $scope.arrRequestOptionsValues = [1,2,4,0,0,0];
+            $scope.arrRequestRadioValues = [0, 0];
         }
-        $scope.initiateGraph();
-        $scope.loadingData = false;
-    }
 
-    $scope.initiateGraph = function () {
         $scope.requests.selections = [];
         var initGrouping = [];
         var initStacking = [];
-        var initColoring = ''; // 1 slot 
-        var initValue = ''; // 1 slot
+        var initColoring = '';
+        var initValue = '';
         for (var i = 0; i < $scope.arrRequestOptionsValues.length; i++) {
             if ($scope.arrRequestOptionsValues[i] == 0) {
                 $scope.requests.selections.push($scope.arrOptionValues[i]);
@@ -86,90 +103,26 @@ pmpApp.controller('MainController', function($location, $rootScope, $scope, $tim
 
         $scope.requests.radio = {}
 
-
-        if ($scope.arrRequestRadioValues[1]) {
+        if ($scope.arrRequestRadioValues[1] == 1) {
             $scope.requests.radio['scale'] = ["log", "linear"];    
         } else {
             $scope.requests.radio['scale'] = ["linear", "log"];    
         }
 
-        if ($scope.arrRequestRadioValues[0]) {
+        if ($scope.arrRequestRadioValues[0] == 1) {
             $scope.requests.radio['mode'] = ["number of requests", "number of events"];
         } else {
             $scope.requests.radio['mode'] = ["number of events", "number of requests"];
         }
-    }
 
-    $scope.requests.settings = {
-        duration: 1000,
-        legend: true,
-        sort: true
-    };
-
-
-    $scope.piecharts = {};
-    $scope.piecharts.compactTerms = ["done", "to do"];
-    $scope.piecharts.domain = ["new", "validation", "done", "approved", "submitted", "nothing", "defined", "to do"];
-    $scope.piecharts.nestBy = ["member_of_campaign", "status"];
-    $scope.piecharts.sum = "total_events";
-
-    $scope.nav = function(where) {
-        $scope.showview = !$scope.showview;
-        if (!$scope.showview) {
-            $timeout(function() {$location.path(where);}, 1100);
-        }
-    };
-});
-
-
-pmpApp.controller('CampaignsController', function($http, $location, $scope, $timeout) {
-
-    $scope.tags = angular.element('#campaignList').tags({
-        tagClass: "btn btn-sm btn-primary",
-        beforeDeletingTag: function(tag){
-            $scope.tagsChanged(tag);
-        }
-    });
-
-    $scope.tagsChanged = function(tag){
-        if (tag == 'NULL') {
-            tag = '';
-        }
-        $scope.loadingData = true;
-        var data = []
-        for (var i = 0; i < $scope.$parent.allRequestData.length; i++) {
-            if ($scope.$parent.allRequestData[i]['member_of_campaign'] !== tag) {
-                data.push($scope.$parent.allRequestData[i]);
+        //initiate allRequestData from URL
+        if($location.search()['r'] != undefined) {
+            var toLoad = $location.search()['r'].split(',');
+            for (var i = 0; i < toLoad.length; i++) {
+                $scope.load(toLoad[i], true, i == toLoad.length-1);
             }
         }
-        $scope.$parent.allRequestData = data;
-        $scope.loadingData = false;
-        $scope.setURL();
     }
-
-    $scope.setURL = function(optionName, optionValue){
-        if (typeof optionName != undefined && typeof optionValue != undefined) {
-            $scope.arrRequestOptionsValues[$scope.arrOptionValues.indexOf(optionValue)] = $scope.arrOptionNames.indexOf(optionName);
-        }
-        var shareDetails = ''
-        if ($scope.tags.getTags().length) {
-            shareDetails = $scope.arrRequestOptionsValues.join('/') + '/' + $scope.arrRequestRadioValues.join('/') + '/' + $scope.tags.getTags().join(',');
-        }
-        $scope.url = $location.$$protocol + '://' + $location.$$host + '/share/' + $scope.typeOfGraph + '/' + shareDetails;
-    }
-
-    $scope.setScaleAndOperation = function(i, value) {
-
-        if ($scope.arrRequestRadioValues[i] != value) {
-            $scope.arrRequestRadioValues[i] = value;
-            $scope.setURL();
-        }
-    }
-
-    $scope.typeOfGraph = "cam"
-    $scope.$parent.title = 'Statistics of Campaigns';
-    $scope.$parent.allRequestData = [];
-    $scope.$parent.piecharts.fullTerms = ["new", "validation", "defined", "approved", "submitted", "done"];
 
     $scope.load = function(campaign, add) {
         if (!campaign) {
@@ -210,7 +163,7 @@ pmpApp.controller('CampaignsController', function($http, $location, $scope, $tim
 
                 }
                 $scope.loadingData = false;
-                $scope.$parent.allRequestData = data.data.results;
+                $scope.allRequestData = data.data.results;
                 $scope.setURL();
             }, function() {
                 $scope.showPopUp('error', 'Error getting requests');
@@ -218,17 +171,74 @@ pmpApp.controller('CampaignsController', function($http, $location, $scope, $tim
             });
         }
     };
-    $scope.$parent.showview = false;
-    $timeout(function() {$scope.nav('');}, 100);
 
-    new ZeroClipboard(document.getElementById("copy"), {
-        moviePath: '/lib/zeroclipboard/ZeroClipboard.swf'
+    $scope.piecharts = {};
+    $scope.piecharts.compactTerms = ["done", "to do"];
+    $scope.piecharts.domain = ["new", "validation", "done", "approved", "submitted", "nothing", "defined", "to do"];
+    $scope.piecharts.fullTerms = ["new", "validation", "defined", "approved", "submitted", "done"];
+    $scope.piecharts.nestBy = ["member_of_campaign", "status"];
+    $scope.piecharts.sum = "total_events";
+
+    $scope.requests = {};
+    $scope.requests.settings = {
+        duration: 1000,
+        legend: true,
+        sort: true
+    };
+
+    $scope.setURL = function(optionName, optionValue){
+        $location.path("campaign", false);
+        if (typeof optionName != undefined && typeof optionValue != undefined) {
+            $scope.arrRequestOptionsValues[$scope.arrOptionValues.indexOf(optionValue)] = $scope.arrOptionNames.indexOf(optionName);
+        }
+        var params = {}
+        if ($scope.tags.getTags().length) {
+            params['r'] = $scope.tags.getTags().join(',')
+        }
+        params['p'] = $scope.arrRequestOptionsValues.join(',') + ',' + $scope.arrRequestRadioValues.join(',');        
+        $location.search(params);
+        $scope.url = $location.absUrl();
+    }
+
+    $scope.setScaleAndOperation = function(i, value) {
+        if ($scope.arrRequestRadioValues[i] != value) {
+            $scope.arrRequestRadioValues[i] = value;
+            $scope.setURL();
+        }
+    }
+
+    $scope.tags = angular.element('#campaignList').tags({
+        tagClass: "btn btn-sm btn-primary",
+        beforeDeletingTag: function(tag){
+            $scope.tagsChanged(tag);
+        }
     });
 
-    $scope.setURL();
-    for (var i = 0; i < $scope.loadCampaigns.length; i++) {
-        $scope.load($scope.loadCampaigns[i], true);
+    $scope.tagsChanged = function(tag){
+        if (tag == 'NULL') {
+            tag = '';
+        }
+        //$scope.loadingData = true;
+        var data = []
+        for (var i = 0; i < $scope.allRequestData.length; i++) {
+            if ($scope.allRequestData[i]['member_of_campaign'] !== tag) {
+                data.push($scope.allRequestData[i]);
+            }
+        }
+        $scope.allRequestData = data;
+        //$scope.loadingData = false;
+        $scope.setURL();
     }
+
+    $scope.title = 'Statistics of Campaigns';
+
+    $rootScope.showview = false;
+
+    $timeout(function() {$scope.nav('');}, 100);
+
+    new ZeroClipboard(document.getElementById('copy'), {
+        moviePath: '/lib/zeroclipboard/ZeroClipboard.swf'
+    });
 });
 
 pmpApp.controller('ChainsController', function($scope, $http, $timeout) {

@@ -6,16 +6,17 @@ var pmpApp = angular.module('pmpApp', ['ngAnimate', 'ngRoute', 'mcm.charts'])
             $routeProvider
                 .when('/campaign', {
                     templateUrl: '/partials/campaign.html',
-                    controller: 'CampaignsController',
+                    controller: 'CampaignsController'
                 })
                 .when('/chain', {
                     templateUrl: '/partials/chain.html',
-                    controller: 'ChainsController',
+                    controller: 'ChainsController'
                 })
                 .when('/', {
                     templateUrl: '/partials/index.html',
-                    controller: 'IndexController',
+                    controller: 'IndexController'
                 });
             $locationProvider.html5Mode(true);
+            $locationProvider.hashPrefix('!');
         }
     ]);
