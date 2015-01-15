@@ -172,6 +172,7 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval,
     };
 
     $scope.minPriority = "";
+    $scope.maxPriority = "";
     $scope.cachedRequestData = [];
 
     $scope.updateRequestData = function() {
@@ -184,7 +185,13 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval,
         var data = []
         for (var i = 0; i < $scope.allRequestData.length; i++) {
             if ($scope.allRequestData[i]['priority'] >= $scope.minPriority) {
-                data.push($scope.allRequestData[i]);
+                if ($scope.maxPriority != "") {
+                    if ($scope.allRequestData[i]['priority'] <= $scope.maxPriority) {
+                        data.push($scope.allRequestData[i]);
+                    } 
+                } else {
+                    data.push($scope.allRequestData[i]);
+                }
             }
         }
         $scope.allRequestData = data;

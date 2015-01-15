@@ -76,17 +76,16 @@
       </form>
 
       <form class="form-inline">
-        <h6 class="text-center text-uppercase">Filter by priority:</h6>
+        <small class="text-uppercase">Filter by priority:</small>
         <div class="form-group form-group-sm">
           <div class="input-group">
-
             <input type="text" class="form-control" placeholder="min"
                    ng-model="minPriority" ng-change="updateRequestData()">
-
             <div class="input-group-addon">
-              <strong> < x < </strong>
+              &le; x &le;
             </div>
-            <input type="text" class="form-control" placeholder="max">
+            <input type="text" class="form-control" placeholder="max"
+                   ng-model="maxPriority" ng-change="updateRequestData()">
           </div>
         </div>
       </form>
