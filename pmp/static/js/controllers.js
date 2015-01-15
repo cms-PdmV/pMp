@@ -43,6 +43,9 @@ pmpApp.controller('MainController', function($location, $route, $rootScope, $sco
             break;
         }
     }
+
+    $rootScope.showview = false;
+    $timeout(function() {$scope.nav('');}, 100);
 });
 
 
@@ -126,7 +129,11 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval,
         }
         else {
             $scope.loadingData = true;
-            var promise = $http.get("api/" + campaign + "/simple");
+            if ($scope.chainMode) {
+                var promise = $http.get("api/" + campaign + "/chain");
+            } else {
+                var promise = $http.get("api/" + campaign + "/simple");
+            }
             promise.then(function(data) {
                 if (!data.data.results.length) {
                     $scope.showPopUp('error', 'No results for this request parameters');   
@@ -161,6 +168,20 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval,
                 $scope.showPopUp('error', 'Error getting requests');
                 $scope.loadingData = false;
             });
+        }
+    };
+
+    $scope.chainMode = false;
+
+    $scope.modeUpdate = function() {
+        $scope.allRequestData = [];
+        if (!$scope.chainMode) {
+            $scope.title = 'Get_Stats';
+            $scope.piecharts.fullTerms.push('upcoming');
+        } else {
+            $scope.title = 'Dashboard';
+            var index = $scope.piecharts.fullTerms.indexOf('upcoming');
+            $scope.piecharts.fullTerms.splice(index, 1);
         }
     };
 
@@ -201,6 +222,8 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval,
         }
     }
 
+    $scope.showDate = false;
+
     $scope.tags = angular.element('#campaignList').tags({
         tagClass: "btn btn-sm btn-primary",
         beforeDeletingTag: function(tag){
@@ -222,46 +245,17 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval,
         $scope.setURL();
     }
 
-    $scope.title = 'Statistics of Campaigns';
-
-    $rootScope.showview = false;
-
     $scope.updateDate = function() {
         $scope.dt = new Date();
     }
 
-    $scope.showDate = false;
-
     $interval($scope.updateDate, 1000);
-
-    $timeout(function() {$scope.nav('');}, 100);
 
     new ZeroClipboard(document.getElementById('copy'), {
         moviePath: '/lib/zeroclipboard/ZeroClipboard.swf'
     });
 });
 
-pmpApp.controller('ChainsController', function($scope, $http, $timeout) {
-    $scope.$parent.title = 'Statistics Within Chains';
-    $scope.$parent.allRequestData = [];
-    $scope.$parent.piecharts.fullTerms = ["new", "validation", "defined", "approved", "submitted", "done", "upcoming"];
+pmpApp.controller('IndexController', function() {
 
-    $scope.load = function(campaign) {
-        $scope.loadingData = true;
-        var promise = $http.get("api/" + campaign + "/chain");
-        promise.then(function(data) {
-            $scope.loadingData = false;
-            $scope.$parent.allRequestData = data.data.results;
-        }, function() {
-            $scope.loadingData = false;
-            alert("Error getting requests");
-        });
-    };
-    $scope.$parent.showview = false;
-    $timeout(function() {$scope.nav('');}, 100);
-});
-
-pmpApp.controller('IndexController', function($scope, $timeout) {
-    $scope.$parent.showview = false;
-    $timeout(function() {$scope.nav('');}, 100);
 });

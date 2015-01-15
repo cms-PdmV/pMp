@@ -15,7 +15,6 @@ def about():
 
 @app.route('/')
 @app.route('/campaign')
-@app.route('/chain')
 def dashboard():
     return make_response(open('pmp/templates/graph.html').read())
 

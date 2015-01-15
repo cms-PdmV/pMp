@@ -8,10 +8,6 @@ var pmpApp = angular.module('pmpApp', ['ngAnimate', 'ngRoute', 'mcm.charts'])
                     templateUrl: '/partials/campaign.html',
                     controller: 'CampaignsController'
                 })
-                .when('/chain', {
-                    templateUrl: '/partials/chain.html',
-                    controller: 'ChainsController'
-                })
                 .when('/', {
                     templateUrl: '/partials/index.html',
                     controller: 'IndexController'
