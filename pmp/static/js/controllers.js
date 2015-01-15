@@ -227,11 +227,13 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval,
     $rootScope.showview = false;
 
     $scope.updateDate = function() {
-        $scope.showDate = true;
         $scope.dt = new Date();
     }
 
+    $scope.showDate = false;
+
     $interval($scope.updateDate, 1000);
+
     $timeout(function() {$scope.nav('');}, 100);
 
     new ZeroClipboard(document.getElementById('copy'), {
