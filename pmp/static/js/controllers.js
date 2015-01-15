@@ -171,11 +171,30 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval,
         }
     };
 
+    $scope.minPriority = "";
+    $scope.cachedRequestData = [];
+
+    $scope.updateRequestData = function() {
+        if (!$scope.cachedRequestData.length) {
+            $scope.cachedRequestData = $scope.allRequestData;
+        } else {
+            $scope.allRequestData = $scope.cachedRequestData;
+        }
+
+        var data = []
+        for (var i = 0; i < $scope.allRequestData.length; i++) {
+            if ($scope.allRequestData[i]['priority'] >= $scope.minPriority) {
+                data.push($scope.allRequestData[i]);
+            }
+        }
+        $scope.allRequestData = data;
+    }
+
     $scope.chainMode = false;
 
     $scope.modeUpdate = function() {
         $scope.allRequestData = [];
-        if (!$scope.chainMode) {
+        if ($scope.chainMode) {
             $scope.title = 'Get_Stats';
             $scope.piecharts.fullTerms.push('upcoming');
         } else {

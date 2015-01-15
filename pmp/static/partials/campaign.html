@@ -68,7 +68,7 @@
         </label>
         <br/>
         <label class="checkbox-inline col-lg-12 spacing">
-          <input type="checkbox" ng-model="chainMode" ng-click="modeUpdate()">
+          <input type="checkbox" ng-model="chainMode" ng-change="modeUpdate()">
           <small>
             New get_stats mode
           </small>
@@ -79,7 +79,10 @@
         <h6 class="text-center text-uppercase">Filter by priority:</h6>
         <div class="form-group form-group-sm">
           <div class="input-group">
-            <input type="text" class="form-control" placeholder="min">
+
+            <input type="text" class="form-control" placeholder="min"
+                   ng-model="minPriority" ng-change="updateRequestData()">
+
             <div class="input-group-addon">
               <strong> < x < </strong>
             </div>
