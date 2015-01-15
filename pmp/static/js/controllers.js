@@ -46,13 +46,15 @@ pmpApp.controller('MainController', function($location, $route, $rootScope, $sco
 });
 
 
-pmpApp.controller('CampaignsController', function($http, $location, $rootScope, $scope, $timeout) {
+pmpApp.controller('CampaignsController', function($http, $location, $interval,
+                                                  $rootScope, $scope, $timeout) {
 
     $scope.allRequestData = [];
 
     $scope.graphParam = ['selections', 'grouping', 'value', 'stacking', 'coloring'];
 
-    $scope.graphTabs = ['member_of_campaign', 'total_events', 'status', 'prepid', 'priority', 'pwg'];
+    $scope.graphTabs = ['member_of_campaign', 'total_events',
+                        'status', 'prepid', 'priority', 'pwg'];
 
     $scope.init = function(data) {
 
@@ -99,9 +101,11 @@ pmpApp.controller('CampaignsController', function($http, $location, $rootScope, 
         }
 
         if ($scope.arrRequestRadioValues[0] == 1) {
-            $scope.requests.radio['mode'] = ["number of requests", "number of events"];
+            $scope.requests.radio['mode'] = ["number of requests",
+                                             "number of events"];
         } else {
-            $scope.requests.radio['mode'] = ["number of events", "number of requests"];
+            $scope.requests.radio['mode'] = ["number of events",
+                                             "number of requests"];
         }
 
         //initiate allRequestData from URL
@@ -162,8 +166,10 @@ pmpApp.controller('CampaignsController', function($http, $location, $rootScope, 
 
     $scope.piecharts = {};
     $scope.piecharts.compactTerms = ["done", "to do"];
-    $scope.piecharts.domain = ["new", "validation", "done", "approved", "submitted", "nothing", "defined", "to do"];
-    $scope.piecharts.fullTerms = ["new", "validation", "defined", "approved", "submitted", "done"];
+    $scope.piecharts.domain = ["new", "validation", "done", "approved",
+                               "submitted", "nothing", "defined", "to do"];
+    $scope.piecharts.fullTerms = ["new", "validation", "defined",
+                                  "approved", "submitted", "done"];
     $scope.piecharts.nestBy = ["member_of_campaign", "status"];
     $scope.piecharts.sum = "total_events";
 
@@ -206,7 +212,6 @@ pmpApp.controller('CampaignsController', function($http, $location, $rootScope, 
         if (tag == 'NULL') {
             tag = '';
         }
-        //$scope.loadingData = true;
         var data = []
         for (var i = 0; i < $scope.allRequestData.length; i++) {
             if ($scope.allRequestData[i]['member_of_campaign'] !== tag) {
@@ -214,7 +219,6 @@ pmpApp.controller('CampaignsController', function($http, $location, $rootScope, 
             }
         }
         $scope.allRequestData = data;
-        //$scope.loadingData = false;
         $scope.setURL();
     }
 
@@ -222,6 +226,12 @@ pmpApp.controller('CampaignsController', function($http, $location, $rootScope, 
 
     $rootScope.showview = false;
 
+    $scope.updateDate = function() {
+        $scope.showDate = true;
+        $scope.dt = new Date();
+    }
+
+    $interval($scope.updateDate, 1000);
     $timeout(function() {$scope.nav('');}, 100);
 
     new ZeroClipboard(document.getElementById('copy'), {

@@ -1,39 +1,53 @@
 <div class="row spacing"  ng-init="init()">
   <div class="col-lg-9 col-md-9 col-sm-9">
-    <div class="row">
-      <h1 class="pull-right white">
-        <strong>{{title}}</strong>
-      </h1>
-    </div>
-    <div class="row">
-      <div class="well spacing">
-        <div class="row">
-          <div class="col-lg-11 col-md-11 col-sm-11 col-xs-11">
-            <div class="input-group spacing">
-              <input ng-model="campaign" class="form-control" type="text"
-                     placeholder="Campaign Name">
-              <span class="input-group-btn">
-                <button type="button" class="btn btn-danger"
-                    ng-click="load(campaign, false)" ng-disabled="loadingData">
-                  See
-                </button>
-                <button type="button" class="btn btn-danger"
-                        ng-click="load(campaign, true)" ng-disabled="loadingData">
-                  Append
-                </button>
-            <button type="button" class="btn btn-danger"
-                    ng-click="load('all')" ng-disabled="loadingData">
-              Load <strong>all</strong>
-            </button>
-              </span>
-            </div>
-          </div>
-          <div class="col-lg-1" ng-show="loadingData">
-            <i class="fa fa-spinner fa-spin fa-3x"></i>
-          </div>
-        </div>
-      </div>
-    </div>
+   <div class="row">
+     <div class="row">
+       <h1 class="pull-right white">
+         <strong>{{title}}</strong>
+       </h1>
+     </div>
+     <div class="row">
+       <div class="well spacing">
+         <div class="row">
+           <div class="col-lg-11 col-md-11 col-sm-11 col-xs-11">
+             <div class="input-group spacing">
+               <input ng-model="campaign" class="form-control" type="text"
+                      placeholder="Campaign Name">
+               <span class="input-group-btn">
+                 <button type="button" class="btn btn-danger"
+                         ng-click="load(campaign, false)" ng-disabled="loadingData">
+                   See
+                 </button>
+                 <button type="button" class="btn btn-danger"
+                         ng-click="load(campaign, true)" ng-disabled="loadingData">
+                   Append
+                 </button>
+                 <button type="button" class="btn btn-danger"
+                         ng-click="load('all')" ng-disabled="loadingData">
+                   Load <strong>all</strong>
+                 </button>
+               </span>
+             </div>
+           </div>
+           <div class="col-lg-1" ng-show="loadingData">
+             <i class="fa fa-spinner fa-spin fa-3x"></i>
+           </div>
+         </div>
+       </div>
+     </div>
+     <div class="row">
+       <div class="panel panel-default"
+            ng-init="updateDate()" ng-show="showDate">
+         <div class="panel-body">
+           Current time:
+           <strong>
+             {{dt | date:"d MMMM y H:mm"}}
+           </strong>
+           {{dt | date: "'GMT': Z"}}
+         </div>
+       </div>
+     </div>
+   </div>
   </div>
 
   <div class="col-lg-3 col-md-3 col-sm-3">
