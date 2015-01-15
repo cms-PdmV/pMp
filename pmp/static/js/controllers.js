@@ -60,7 +60,6 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval,
                         'status', 'prepid', 'priority', 'pwg'];
 
     $scope.init = function(data) {
-
         if($location.search()['p'] != undefined) {
             var toLoad = $location.search()['p'].split(',');
             $scope.arrRequestOptionsValues = toLoad.slice(0,6);
@@ -177,7 +176,6 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval,
     $scope.priorityPerBlock = {1: 110000, 2: 90000, 3: 85000, 4: 80000, 5: 70000, 6: 63000};
 
     $scope.updateRequestData = function() {
-        console.log('urd');
         if (!$scope.cachedRequestData.length) {
             $scope.cachedRequestData = $scope.allRequestData;
         } else {
@@ -200,16 +198,13 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval,
     }
 
     $scope.chainMode = false;
-
+    
     $scope.modeUpdate = function() {
         $scope.allRequestData = [];
         if ($scope.chainMode) {
             $scope.title = 'Get_Stats';
-            $scope.piecharts.fullTerms.push('upcoming');
         } else {
             $scope.title = 'Dashboard';
-            var index = $scope.piecharts.fullTerms.indexOf('upcoming');
-            $scope.piecharts.fullTerms.splice(index, 1);
         }
     };
 
@@ -218,7 +213,7 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval,
     $scope.piecharts.domain = ["new", "validation", "done", "approved",
                                "submitted", "nothing", "defined", "to do"];
     $scope.piecharts.fullTerms = ["new", "validation", "defined",
-                                  "approved", "submitted", "done"];
+                                  "approved", "submitted", "done", "upcoming"];
     $scope.piecharts.nestBy = ["member_of_campaign", "status"];
     $scope.piecharts.sum = "total_events";
 

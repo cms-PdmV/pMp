@@ -1252,14 +1252,12 @@ angular.module('mcm.charts', [])
 
                // domain for colors
                scope.domain = scope.colorDomain || _.union(fullTerms, compactTerms);
-
+               scope.chainMode = function() {
+                   return scope.$parent.chainMode;
+               }
                var innerHtml = '<mcm-donut-chart ng-repeat="(key, terms) in current_data" data="terms.data" outer-radius="100" inner-radius="40" inner-title="{{key}}" on-click-title="changeChart" domain="domain"></mcm-donut-chart>';
                if(showTable) {
-                   innerHtml += '<table class="table table-bordered table-striped table-condensed col-lg-12 col-md-12 col-sm-12"><thead><tr><th class="text-center">{{tableTitle}}</th>';
-                   for(i=0; i<fullTerms.length; i++) {
-                       innerHtml += '<th class="text-center">' + fullTerms[i] + '</th>'
-                   }
-                   innerHtml +=  '</tr></thead><tbody><tr ng-repeat="(key, terms) in piechart_data_full"><td class="text-left">{{key}}</td> <td class="text-right" ng-repeat="element in terms.terms">{{element.count}}</td></tr></tbody></table>';
+                   innerHtml += '<table class="table table-bordered table-striped table-condensed col-lg-12 col-md-12 col-sm-12"><thead><tr><th class="text-center">{{tableTitle}}</th><th class="text-center" ng-repeat="term in fullTerms">{{term}}</th></tr></thead><tbody><tr ng-repeat="(key, terms) in piechart_data_full"><td class="text-left">{{key}}</td> <td class="text-right" ng-show="element.term !== \'upcoming\' || chainMode()" ng-repeat="element in terms.terms">{{element.count}}</td></tr></tbody></table>';
                }
                element.append($compile(innerHtml)(scope));
            }
