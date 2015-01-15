@@ -174,8 +174,10 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval,
     $scope.minPriority = "";
     $scope.maxPriority = "";
     $scope.cachedRequestData = [];
+    $scope.priorityPerBlock = {1: 110000, 2: 90000, 3: 85000, 4: 80000, 5: 70000, 6: 63000};
 
     $scope.updateRequestData = function() {
+        console.log('urd');
         if (!$scope.cachedRequestData.length) {
             $scope.cachedRequestData = $scope.allRequestData;
         } else {
