@@ -62,11 +62,11 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval,
     $scope.init = function(data) {
         if($location.search()['p'] != undefined) {
             var toLoad = $location.search()['p'].split(',');
-            $scope.arrRequestOptionsValues = toLoad.slice(0,6);
-            $scope.arrRequestRadioValues = toLoad.slice(6,8);
+            $scope.aOptionsValues = toLoad.slice(0,6);
+            $scope.aRadioValues = toLoad.slice(6,8);
         } else {
-            $scope.arrRequestOptionsValues = [1,2,4,0,0,0];
-            $scope.arrRequestRadioValues = [0, 0];
+            $scope.aOptionsValues = [1,2,4,0,0,0];
+            $scope.aRadioValues = [0, 0];
         }
 
         $scope.requests.selections = [];
@@ -74,16 +74,16 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval,
         var initStacking = [];
         var initColoring = '';
         var initValue = '';
-        for (var i = 0; i < $scope.arrRequestOptionsValues.length; i++) {
-            if ($scope.arrRequestOptionsValues[i] == 0) {
+        for (var i = 0; i < $scope.aOptionsValues.length; i++) {
+            if ($scope.aOptionsValues[i] == 0) {
                 $scope.requests.selections.push($scope.graphTabs[i]);
-            } else if ($scope.arrRequestOptionsValues[i] == 1) {
+            } else if ($scope.aOptionsValues[i] == 1) {
                 initGrouping.push($scope.graphTabs[i]);
-            } else if ($scope.arrRequestOptionsValues[i] == 2) {
+            } else if ($scope.aOptionsValues[i] == 2) {
                 initValue = $scope.graphTabs[i];
-            } else if ($scope.arrRequestOptionsValues[i] == 3) {
+            } else if ($scope.aOptionsValues[i] == 3) {
                 initStacking.push($scope.graphTabs[i]);
-            } else if ($scope.arrRequestOptionsValues[i] == 4) {
+            } else if ($scope.aOptionsValues[i] == 4) {
                 initColoring = $scope.graphTabs[i];
             } 
         }
@@ -96,13 +96,13 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval,
 
         $scope.requests.radio = {}
 
-        if ($scope.arrRequestRadioValues[1] == 1) {
+        if ($scope.aRadioValues[1] == 1) {
             $scope.requests.radio['scale'] = ["log", "linear"];    
         } else {
             $scope.requests.radio['scale'] = ["linear", "log"];    
         }
 
-        if ($scope.arrRequestRadioValues[0] == 1) {
+        if ($scope.aRadioValues[0] == 1) {
             $scope.requests.radio['mode'] = ["number of requests",
                                              "number of events"];
         } else {
@@ -117,6 +117,8 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval,
                 $scope.load(toLoad[i], true, i == toLoad.length-1);
             }
         }
+
+        $scope.initStatus();
     }
 
     $scope.load = function(campaign, add) {
@@ -175,7 +177,16 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval,
     $scope.cachedRequestData = [];
     $scope.priorityPerBlock = {1: 110000, 2: 90000, 3: 85000, 4: 80000, 5: 70000, 6: 63000};
 
+    $scope.initStatus = function() {
+        $scope.todos = {}
+        for (var i = 0; i < $scope.piecharts.fullTerms.length; i++) {
+            $scope.todos[$scope.piecharts.fullTerms[i]] = {name:$scope.piecharts.fullTerms[i],
+                                                           selected: true};
+        }
+    }
+
     $scope.updateRequestData = function() {
+        console.log($scope.todos);
         if (!$scope.cachedRequestData.length) {
             $scope.cachedRequestData = $scope.allRequestData;
         } else {
@@ -192,6 +203,14 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval,
                 } else {
                     data.push($scope.allRequestData[i]);
                 }
+            }
+        }
+        $scope.allRequestData = data;
+
+        var data = []
+        for (var i = 0; i < $scope.allRequestData.length; i++) {
+            if ($scope.todos[$scope.allRequestData[i]['status']].selected) {
+                data.push($scope.allRequestData[i]);
             }
         }
         $scope.allRequestData = data;
@@ -227,20 +246,20 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval,
     $scope.setURL = function(optionName, optionValue){
         $location.path("campaign", false);
         if (typeof optionName != undefined && typeof optionValue != undefined) {
-            $scope.arrRequestOptionsValues[$scope.graphTabs.indexOf(optionValue)] = $scope.graphParam.indexOf(optionName);
+            $scope.aOptionsValues[$scope.graphTabs.indexOf(optionValue)] = $scope.graphParam.indexOf(optionName);
         }
         var params = {}
         if ($scope.tags.getTags().length) {
             params['r'] = $scope.tags.getTags().join(',')
         }
-        params['p'] = $scope.arrRequestOptionsValues.join(',') + ',' + $scope.arrRequestRadioValues.join(',');        
+        params['p'] = $scope.aOptionsValues.join(',') + ',' + $scope.aRadioValues.join(',');        
         $location.search(params);
         $scope.url = $location.absUrl();
     }
 
     $scope.setScaleAndOperation = function(i, value) {
-        if ($scope.arrRequestRadioValues[i] != value) {
-            $scope.arrRequestRadioValues[i] = value;
+        if ($scope.aRadioValues[i] != value) {
+            $scope.aRadioValues[i] = value;
             $scope.setURL();
         }
     }

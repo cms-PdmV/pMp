@@ -75,48 +75,44 @@
         </label>
       </form>
 
-      <form class="form-inline">
-        <small class="text-uppercase">Filter by priority:</small>
-        <div class="form-group form-group-sm">
-          <div class="input-group">
-            <select class="form-control text-center" ng-model="minPriority" ng-change="updateRequestData()">
-              <option ng-repeat="(key, value) in priorityPerBlock"
-                      value="{{value}}">
-                {{key}}
-              </option>
-            </select>
-            <input type="text" class="form-control" placeholder="min"
-                   ng-model="minPriority" ng-change="updateRequestData()">
-            <div class="input-group-addon">
-              &le; x &le;
-            </div>
-            <select class="form-control text-center" ng-model="maxPriority" ng-change="updateRequestData()">
-              <option ng-repeat="(key, value) in priorityPerBlock"
-                      value="{{value}}">
-                {{key}}
-              </option>
-            </select>
-            <input type="text" class="form-control" placeholder="max"
-                   ng-model="maxPriority" ng-change="updateRequestData()">
+      <form class="form-group form-inline form-group-sm">
+        <small class="text-uppercase col-lg-12">Filter by priority:</small>
+        <div class="input-group">
+          <select class="form-control text-center" ng-model="minPriority"
+                  ng-change="updateRequestData()">
+            <option ng-repeat="(key, value) in priorityPerBlock"
+                    value="{{value}}">
+              {{key}}
+            </option>
+          </select>
+          <input type="text" class="form-control" placeholder="min"
+                 ng-model="minPriority" ng-change="updateRequestData()">
+          <div class="input-group-addon">
+            &le; x &le;
           </div>
+          <select class="form-control text-center" ng-model="maxPriority"
+                  ng-change="updateRequestData()">
+            <option ng-repeat="(key, value) in priorityPerBlock"
+                    value="{{value}}">
+              {{key}}
+            </option>
+          </select>
+          <input type="text" class="form-control" placeholder="max"
+                 ng-model="maxPriority" ng-change="updateRequestData()">
         </div>
       </form>
       
-      <h6 class="text-center text-uppercase">Filter by status:</h6>
-      <small>
-        <div class="col-lg-6" ng-repeat="term in piecharts.fullTerms">
-          <label class="checkbox-inline">
-            <input type="checkbox" value="true" checked="checked">
-            {{term}}
-          </label>
-        </div>
-      </small>
+      <small class="text-uppercase col-lg-12">Filter by status:</small>
+      <div class="col-lg-6" ng-repeat="status in todos">
+        <label class="checkbox-inline">
+          <input type="checkbox" ng-model="status.selected" ng-change="updateRequestData()">
+          <small>{{status.name}}</small>
+        </label>
+      </div>
       
     </div>
     
     <div id="share" class="collapse col-xs-12 col-sm-12 col-md-12 col-lg-12">
-      
-      <hr class="line">
       <div class="input-group input-group-sm">
         <span class="hidden-sm input-group-addon text-uppercase" ng-click="setURL()">Share</span>
         <input id="url" type="text" class="form-control" ng-model="url"
