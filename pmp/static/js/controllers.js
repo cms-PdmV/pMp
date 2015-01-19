@@ -110,11 +110,9 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval,
                                              "number of requests"];
         }
 
-        if($location.search()['t']) {
-            $scope.showDate = $location.search()['t'];            
-        } else {
-            $scope.showDate = false;
-        }
+        $scope.showDate = $location.search()['t'] === 'true';
+        $scope.chainMode = $location.search()['m'] === 'true';
+        $scope.modeUpdate();
 
         //initiate allRequestData from URL
         if($location.search()['r'] != undefined) {
@@ -221,8 +219,6 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval,
         $scope.allRequestData = data;
     }
 
-    $scope.chainMode = false;
-    
     $scope.modeUpdate = function() {
         if ($scope.chainMode) {
             $scope.title = 'Get_Stats';
