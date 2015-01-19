@@ -253,7 +253,9 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval,
             params['r'] = $scope.tags.getTags().join(',')
         }
         params['p'] = $scope.aOptionsValues.join(',') + ',' + $scope.aRadioValues.join(',');        
+        params['t'] = $scope.showDate + "";        
         $location.search(params);
+
         $scope.url = $location.absUrl();
     }
 
