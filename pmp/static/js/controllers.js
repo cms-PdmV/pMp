@@ -110,6 +110,12 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval,
                                              "number of requests"];
         }
 
+        if($location.search()['t']) {
+            $scope.showDate = $location.search()['t'];            
+        } else {
+            $scope.showDate = false;
+        }
+
         //initiate allRequestData from URL
         if($location.search()['r'] != undefined) {
             var toLoad = $location.search()['r'].split(',');
@@ -117,7 +123,6 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval,
                 $scope.load(toLoad[i], true, i == toLoad.length-1);
             }
         }
-
         $scope.initStatus();
     }
 
@@ -265,8 +270,6 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval,
             $scope.setURL();
         }
     }
-
-    $scope.showDate = false;
 
     $scope.tags = angular.element('#campaignList').tags({
         tagClass: "btn btn-sm btn-primary",
