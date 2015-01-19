@@ -287,6 +287,10 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval,
         $scope.setURL();
     }
 
+    $scope.takeScreenshot = function() {
+        console.log("Not yet implemented");
+    }
+
     $scope.updateDate = function() {
         $scope.dt = new Date();
     }
