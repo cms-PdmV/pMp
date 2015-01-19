@@ -189,7 +189,6 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval,
     }
 
     $scope.updateRequestData = function() {
-        console.log($scope.todos);
         if (!$scope.cachedRequestData.length) {
             $scope.cachedRequestData = $scope.allRequestData;
         } else {
@@ -217,6 +216,7 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval,
             }
         }
         $scope.allRequestData = data;
+        $scope.setURL();
     }
 
     $scope.modeUpdate = function() {
@@ -257,6 +257,8 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval,
         params['p'] = $scope.aOptionsValues.join(',') + ',' + $scope.aRadioValues.join(',');        
         params['t'] = $scope.showDate + "";
         params['m'] = $scope.chainMode + "";
+        params['pn'] = $scope.minPriority + "";
+        params['px'] = $scope.maxPriority + "";
         $location.search(params);
 
         $scope.url = $location.absUrl();
