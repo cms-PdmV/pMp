@@ -224,12 +224,13 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval,
     $scope.chainMode = false;
     
     $scope.modeUpdate = function() {
-        $scope.allRequestData = [];
         if ($scope.chainMode) {
             $scope.title = 'Get_Stats';
         } else {
             $scope.title = 'Dashboard';
         }
+        $scope.allRequestData = [];
+        $scope.setURL();
     };
 
     $scope.piecharts = {};
@@ -258,7 +259,8 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval,
             params['r'] = $scope.tags.getTags().join(',')
         }
         params['p'] = $scope.aOptionsValues.join(',') + ',' + $scope.aRadioValues.join(',');        
-        params['t'] = $scope.showDate + "";        
+        params['t'] = $scope.showDate + "";
+        params['m'] = $scope.chainMode + "";
         $location.search(params);
 
         $scope.url = $location.absUrl();
