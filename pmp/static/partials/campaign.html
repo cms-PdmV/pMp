@@ -19,11 +19,11 @@
                    See
                  </button>
                  <button type="button" class="btn btn-danger"
-                         ng-click="load(campaign, true)" ng-disabled="loadingData">
+                         ng-click="load(campaign, true)" ng-disabled="loadingData || chainMode">
                    Append
                  </button>
                  <button type="button" class="btn btn-danger"
-                         ng-click="load('all')" ng-disabled="loadingData">
+                         ng-click="load('all')" ng-disabled="loadingData || chainMode">
                    Load <strong>all</strong>
                  </button>
                </span>
@@ -35,8 +35,17 @@
          </div>
        </div>
      </div>
+
+     <div class="row" ng-hide="chainMode">
+       <div class="panel-default">
+         <div class="panel-body">
+           <div id="campaignList" style="padding-bottom: 0px;"></div>
+         </div>
+       </div>
+     </div>
+
      <div class="row">
-       <div class="panel panel-default"
+       <div class="panel"
             ng-init="updateDate()" ng-show="showDate">
          <div class="panel-body">
            Current time:
@@ -47,6 +56,7 @@
          </div>
        </div>
      </div>
+
    </div>
   </div>
 
@@ -128,12 +138,6 @@
         </span>
       </div>
     </div>
-  </div>
-</div>
-
-<div class="row">
-  <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
-    <div id="campaignList"></div>
   </div>
 </div>
 

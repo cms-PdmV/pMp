@@ -3,11 +3,6 @@
   margin: 0 0 0 .3em; }
 .bootstrap-tags.bootstrap-3 .glyphicon-white {
   color: #fff; }
-.bootstrap-tags .tags {
-    width: inherit;
-    height: 0;
-    //position: absolute;
-    margin: 0; }
 .bootstrap-tags .tag-data {
     display: none; }
 .bootstrap-tags .tags-input {

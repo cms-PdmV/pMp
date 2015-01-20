@@ -49,7 +49,7 @@ pmpApp.controller('MainController', function($location, $route, $rootScope, $sco
 });
 
 
-pmpApp.controller('CampaignsController', function($http, $location, $interval,
+pmpApp.controller('CampaignsController', function($http, $location, $interval, $q,
                                                   $rootScope, $scope, $timeout) {
 
     // currently displayed data (after filtering)
@@ -171,11 +171,9 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval,
 
                     if (add) {
                         data.data.results.push.apply(data.data.results, $scope.cachedRequestData);
-                        //data.data.results.push.apply(data.data.results, $scope.allRequestData);
                     } else {
-                        for (var i = 0; i < $scope.tags.getTags().length; i++) {
-                            $scope.tags.removeTag($scope.tags.getTags()[i]);
-                        }
+                        $scope.cachedRequestData = [];
+                        $scope.tagsRemoveAll();
                     }
 
                     if (campaign == 'all') {
@@ -191,8 +189,6 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval,
                     } else {
                         $scope.tags.addTag(campaign);
                     }
-                    
-                    //$scope.allRequestData = data.data.results;
                     $scope.cachedRequestData = data.data.results;
                     $scope.updateRequestData();
                     $scope.setURL();
@@ -215,7 +211,10 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval,
         } else {
             $scope.title = 'Dashboard';
         }
-        $scope.allRequestData = [];
+
+        $scope.cachedRequestData = [];
+        $scope.updateRequestData();
+        $scope.tagsRemoveAll();
         $scope.setURL();
     };
 
@@ -265,26 +264,49 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval,
             $scope.setURL();
         }
     }
-
+    
     $scope.tags = angular.element('#campaignList').tags({
-        tagClass: "btn btn-sm btn-primary",
-        beforeDeletingTag: function(tag){
-            $scope.tagsChanged(tag);
-        }
-    });
+            tagClass: "btn btn-sm btn-primary",
+            beforeDeletingTag: function(tag) {
+                $scope.loadingData = true;
+                return true;
+            },
+            afterDeletingTag: function(tag) {
+                $scope.loadingData = true;
+                var promise = $scope.tagsChanged(tag);
+                promise.then(function() {
+                        $scope.loadingData = false;
+                    }, function(reason) {
+                        $scope.loadingData = false;
+                    });
+            }
+        });
 
     $scope.tagsChanged = function(tag){
+        var deferred = $q.defer();
         if (tag == 'NULL') {
             tag = '';
         }
-        var data = []
-        for (var i = 0; i < $scope.allRequestData.length; i++) {
-            if ($scope.allRequestData[i]['member_of_campaign'] !== tag) {
-                data.push($scope.allRequestData[i]);
+        var data = [];
+        for (var i = 0; i < $scope.cachedRequestData.length; i++) {
+            if ($scope.cachedRequestData[i]['member_of_campaign'] !== tag) {
+                data.push($scope.cachedRequestData[i]);
             }
         }
-        $scope.allRequestData = data;
-        $scope.setURL();
+        $scope.cachedRequestData = data;
+        if ($scope.updateRequestData()) {
+            deferred.resolve();
+        } else {
+            deferred.reject();
+        };
+        return deferred.promise;
+    }
+
+    $scope.tagsRemoveAll = function() {
+        var tmp = angular.copy($scope.tags.getTags());
+        for (var i = 0; i < tmp.length; i++) {
+            $scope.tags.removeTag(tmp[i]);
+        }
     }
 
     $scope.takeScreenshot = function() {
@@ -321,6 +343,7 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval,
         }
         $scope.allRequestData = data;
         $scope.setURL();
+        return true;
     }
 
     $interval($scope.updateDate, 1000);
