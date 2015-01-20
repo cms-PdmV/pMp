@@ -219,7 +219,8 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval, $
                 $scope.title = 'Campaign: Dashboard';
             }
             $scope.cachedRequestData = [];
-            $scope.updateRequestData();
+            $scope.allRequestData = [];
+            //$scope.updateRequestData();
             $scope.tagsRemoveAll();
         }
     };
@@ -325,30 +326,31 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval, $
     }
 
     $scope.updateRequestData = function() {
-        $scope.allRequestData = $scope.cachedRequestData;
-        var data = []
-        for (var i = 0; i < $scope.allRequestData.length; i++) {
-            if ($scope.allRequestData[i]['priority'] >= $scope.minPriority) {
-                if ($scope.maxPriority != "") {
-                    if ($scope.allRequestData[i]['priority'] <= $scope.maxPriority) {
-                        data.push($scope.allRequestData[i]);
-                    } 
-                } else {
-                    data.push($scope.allRequestData[i]);
+        console.log("uRD");
+        $scope.loadingData = true;
+        var mp = $scope.maxPriority;
+        if (mp == '') {
+            mp = 1000000000;
+        }
+
+        setTimeout(function () {
+            var tmp = $scope.cachedRequestData;
+            var data = [];
+            for (var i = 0; i < tmp.length; i++) {
+                if (tmp[i]['priority'] >= $scope.minPriority && tmp[i]['priority'] <= mp) {
+                    //some objects have status 'none'
+                    if ($scope.status[tmp[i].status] != undefined) {
+                        if ($scope.status[tmp[i]['status']].selected) {
+                            data.push(tmp[i]);
+                        }
+                    }
                 }
             }
-        }
-        $scope.allRequestData = data;
-        var data = []
-        for (var i = 0; i < $scope.allRequestData.length; i++) {
-            //some objects have status 'none'
-            if ($scope.status[$scope.allRequestData[i].status] != undefined) {
-                    if ($scope.status[$scope.allRequestData[i]['status']].selected) {
-                        data.push($scope.allRequestData[i]);
-                    }
-            }
-        }
-        $scope.allRequestData = data;
+            $scope.$apply(function () {
+                $scope.allRequestData = data;
+                $scope.loadingData = false;
+            });
+            }, 100);
         return true;
     }
 
