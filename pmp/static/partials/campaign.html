@@ -109,10 +109,10 @@
       </form>
       
       <small class="text-uppercase col-lg-12">Filter by status:</small>
-      <div class="col-lg-6" ng-repeat="status in todos">
+      <div class="col-lg-6" ng-repeat="(key, status) in status">
         <label class="checkbox-inline">
           <input type="checkbox" ng-model="status.selected" ng-change="updateRequestData()">
-          <small>{{status.name}}</small>
+          <small>{{key}}</small>
         </label>
       </div>
       

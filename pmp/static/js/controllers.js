@@ -54,6 +54,8 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval,
 
     $scope.allRequestData = [];
 
+    $scope.cachedRequestData = [];
+
     $scope.graphParam = ['selections', 'grouping', 'value', 'stacking', 'coloring'];
 
     $scope.graphTabs = ['member_of_campaign', 'total_events',
@@ -112,16 +114,32 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval,
 
         $scope.showDate = $location.search()['t'] === 'true';
         $scope.chainMode = $location.search()['m'] === 'true';
-        $scope.modeUpdate();
+        $scope.minPriority = $location.search()['pn'];
+        $scope.maxPriority = $location.search()['px'];
+        $scope.initStatus();
+        console.log($location.search['r']);
 
         //initiate allRequestData from URL
         if($location.search()['r'] != undefined) {
             var toLoad = $location.search()['r'].split(',');
+            console.log(toLoad);
+            $scope.modeUpdate();
             for (var i = 0; i < toLoad.length; i++) {
                 $scope.load(toLoad[i], true, i == toLoad.length-1);
             }
         }
-        $scope.initStatus();
+    }
+
+    $scope.initStatus = function() {
+        $scope.status = {}
+        for (var i = 0; i < $scope.piecharts.fullTerms.length; i++) {
+            var name = $scope.piecharts.fullTerms[i].slice(0,2),
+            tmp = true;
+            if($location.search()[name] != undefined) {
+                tmp = ($location.search()[name] === 'true');
+            }
+            $scope.status[$scope.piecharts.fullTerms[i]] = {name:name, selected: tmp};
+        }
     }
 
     $scope.load = function(campaign, add) {
@@ -175,50 +193,6 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval,
         }
     };
 
-    $scope.minPriority = "";
-    $scope.maxPriority = "";
-    $scope.cachedRequestData = [];
-    $scope.priorityPerBlock = {1: 110000, 2: 90000, 3: 85000, 4: 80000, 5: 70000, 6: 63000};
-
-    $scope.initStatus = function() {
-        $scope.todos = {}
-        for (var i = 0; i < $scope.piecharts.fullTerms.length; i++) {
-            $scope.todos[$scope.piecharts.fullTerms[i]] = {name:$scope.piecharts.fullTerms[i],
-                                                           selected: true};
-        }
-    }
-
-    $scope.updateRequestData = function() {
-        if (!$scope.cachedRequestData.length) {
-            $scope.cachedRequestData = $scope.allRequestData;
-        } else {
-            $scope.allRequestData = $scope.cachedRequestData;
-        }
-
-        var data = []
-        for (var i = 0; i < $scope.allRequestData.length; i++) {
-            if ($scope.allRequestData[i]['priority'] >= $scope.minPriority) {
-                if ($scope.maxPriority != "") {
-                    if ($scope.allRequestData[i]['priority'] <= $scope.maxPriority) {
-                        data.push($scope.allRequestData[i]);
-                    } 
-                } else {
-                    data.push($scope.allRequestData[i]);
-                }
-            }
-        }
-        $scope.allRequestData = data;
-
-        var data = []
-        for (var i = 0; i < $scope.allRequestData.length; i++) {
-            if ($scope.todos[$scope.allRequestData[i]['status']].selected) {
-                data.push($scope.allRequestData[i]);
-            }
-        }
-        $scope.allRequestData = data;
-        $scope.setURL();
-    }
-
     $scope.modeUpdate = function() {
         if ($scope.chainMode) {
             $scope.title = 'Get_Stats';
@@ -237,6 +211,8 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval,
                                   "approved", "submitted", "done", "upcoming"];
     $scope.piecharts.nestBy = ["member_of_campaign", "status"];
     $scope.piecharts.sum = "total_events";
+
+    $scope.priorityPerBlock = {1: 110000, 2: 90000, 3: 85000, 4: 80000, 5: 70000, 6: 63000};
 
     $scope.requests = {};
     $scope.requests.settings = {
@@ -259,8 +235,11 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval,
         params['m'] = $scope.chainMode + "";
         params['pn'] = $scope.minPriority + "";
         params['px'] = $scope.maxPriority + "";
-        $location.search(params);
+        for(var i in $scope.status) {
+            params[$scope.status[i]['name']] = ($scope.status[i]['selected'] === true) + "";
+        }
 
+        $location.search(params);
         $scope.url = $location.absUrl();
     }
 
@@ -298,6 +277,37 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval,
 
     $scope.updateDate = function() {
         $scope.dt = new Date();
+    }
+
+    $scope.updateRequestData = function() {
+        if (!$scope.cachedRequestData.length) {
+            $scope.cachedRequestData = $scope.allRequestData;
+        } else {
+            $scope.allRequestData = $scope.cachedRequestData;
+        }
+
+        var data = []
+        for (var i = 0; i < $scope.allRequestData.length; i++) {
+            if ($scope.allRequestData[i]['priority'] >= $scope.minPriority) {
+                if ($scope.maxPriority != "") {
+                    if ($scope.allRequestData[i]['priority'] <= $scope.maxPriority) {
+                        data.push($scope.allRequestData[i]);
+                    } 
+                } else {
+                    data.push($scope.allRequestData[i]);
+                }
+            }
+        }
+        $scope.allRequestData = data;
+
+        var data = []
+        for (var i = 0; i < $scope.allRequestData.length; i++) {
+            if ($scope.status[$scope.allRequestData[i]['status']].selected) {
+                data.push($scope.allRequestData[i]);
+            }
+        }
+        $scope.allRequestData = data;
+        $scope.setURL();
     }
 
     $interval($scope.updateDate, 1000);
