@@ -4,9 +4,10 @@ pmpApp.controller('MainController', function($location, $route, $rootScope, $sco
 
     $scope.nav = function(where) {
         $scope.showview = !$scope.showview;
-        if (!$scope.showview) {
-            $timeout(function() {$location.path(where);}, 1100);
-        }
+        if (!$scope.showview) { $location.search({}); $timeout(function() {
+                    $location.path(where);
+                    $timeout(function() {$scope.nav('');}, 100);
+                }, 1100);}
     };
 
     var original = $location.path;
@@ -64,6 +65,9 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval, $
                         'status', 'prepid', 'priority', 'pwg'];
 
     $scope.init = function(data) {
+
+        $scope.isChainUrl = ($location.path() === '/chain');
+
         if($location.search()['p'] != undefined) {
             var toLoad = $location.search()['p'].split(',');
             $scope.aOptionsValues = toLoad.slice(0,6);
@@ -115,7 +119,7 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval, $
         }
 
         $scope.showDate = $location.search()['t'] === 'true';
-        $scope.chainMode = $location.search()['m'] === 'true';
+        $scope.chainMode = ($location.search()['m'] === 'true') || $scope.isChainUrl;
         if($location.search()['pn'] != undefined) {
             $scope.minPriority = $location.search()['pn'] + "";
         } else {
@@ -127,11 +131,11 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval, $
             $scope.maxPriority = "";
         }
         $scope.initStatus();
+        $scope.modeUpdate();
 
         //initiate allRequestData from URL
         if($location.search()['r'] != undefined) {
             var toLoad = $location.search()['r'].split(',');
-            $scope.modeUpdate();
             for (var i = 0; i < toLoad.length; i++) {
                 $scope.load(toLoad[i], true, toLoad.length);
             }
@@ -206,16 +210,18 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval, $
     };
 
     $scope.modeUpdate = function() {
-        if ($scope.chainMode) {
-            $scope.title = 'Get_Stats';
+        if ($scope.isChainUrl) {
+            $scope.title = 'Chained campaign';
         } else {
-            $scope.title = 'Dashboard';
+            if ($scope.chainMode) {
+                $scope.title = 'Campaign: Get_Stats';
+            } else {
+                $scope.title = 'Campaign: Dashboard';
+            }
+            $scope.cachedRequestData = [];
+            $scope.updateRequestData();
+            $scope.tagsRemoveAll();
         }
-
-        $scope.cachedRequestData = [];
-        $scope.updateRequestData();
-        $scope.tagsRemoveAll();
-        $scope.setURL();
     };
 
     $scope.piecharts = {};
@@ -237,7 +243,7 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval, $
     };
 
     $scope.setURL = function(optionName, optionValue){
-        $location.path("campaign", false);
+        $location.path($location.path(), false);
         if (typeof optionName != undefined && typeof optionValue != undefined) {
             $scope.aOptionsValues[$scope.graphTabs.indexOf(optionValue)] = $scope.graphParam.indexOf(optionName);
         }
@@ -299,6 +305,7 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval, $
         } else {
             deferred.reject();
         };
+        $scope.setURL();
         return deferred.promise;
     }
 
@@ -342,7 +349,6 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval, $
             }
         }
         $scope.allRequestData = data;
-        $scope.setURL();
         return true;
     }
 
