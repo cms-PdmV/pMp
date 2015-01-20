@@ -116,8 +116,16 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval,
 
         $scope.showDate = $location.search()['t'] === 'true';
         $scope.chainMode = $location.search()['m'] === 'true';
-        $scope.minPriority = $location.search()['pn'];
-        $scope.maxPriority = $location.search()['px'];
+        if($location.search()['pn'] != undefined) {
+            $scope.minPriority = $location.search()['pn'] + "";
+        } else {
+            $scope.minPriority = "";
+        }
+        if($location.search()['px'] != undefined) {
+            $scope.maxPriority = $location.search()['px'] + "";
+        } else {
+            $scope.maxPriority = "";
+        }
         $scope.initStatus();
 
         //initiate allRequestData from URL
@@ -125,7 +133,7 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval,
             var toLoad = $location.search()['r'].split(',');
             $scope.modeUpdate();
             for (var i = 0; i < toLoad.length; i++) {
-                $scope.load(toLoad[i], true, i == toLoad.length-1);
+                $scope.load(toLoad[i], true, toLoad.length);
             }
         }
     }
@@ -142,7 +150,7 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval,
         }
     }
 
-    $scope.load = function(campaign, add) {
+    $scope.load = function(campaign, add, more) {
         if (!campaign) {
             $scope.showPopUp('warning', 'Your request parameters are empty');
         }
@@ -189,7 +197,11 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval,
                     $scope.updateRequestData();
                     $scope.setURL();
                 }
-                $scope.loadingData = false;
+                if (more) {
+                    $scope.loadingData = !(more === $scope.tags.getTags().length);
+                } else {
+                    $scope.loadingData = false;
+                }
             }, function() {
                 $scope.showPopUp('error', 'Error getting requests');
                 $scope.loadingData = false;
@@ -285,7 +297,6 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval,
 
     $scope.updateRequestData = function() {
         $scope.allRequestData = $scope.cachedRequestData;
-
         var data = []
         for (var i = 0; i < $scope.allRequestData.length; i++) {
             if ($scope.allRequestData[i]['priority'] >= $scope.minPriority) {
@@ -299,7 +310,6 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval,
             }
         }
         $scope.allRequestData = data;
-
         var data = []
         for (var i = 0; i < $scope.allRequestData.length; i++) {
             //some objects have status 'none'
