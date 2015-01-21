@@ -179,7 +179,8 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval, $
             }
             promise.then(function(data) {
                 if (!data.data.results.length) {
-                    $scope.showPopUp('error', 'No results for this request parameters');   
+                    $scope.showPopUp('error', 'No results for this request parameters');
+                    $scope.loadingData = false;
                 } else {
                     $scope.updatePwg(data.data.results, !more);
                     if (add) {
@@ -217,7 +218,7 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval, $
 
     $scope.modeUpdate = function() {
         if ($scope.isChainUrl) {
-            $scope.title = 'Chained campaign';
+            $scope.title = 'Chains and Flows';
         } else {
             if ($scope.chainMode) {
                 $scope.title = 'Campaign: Get_Stats';
