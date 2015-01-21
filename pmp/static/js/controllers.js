@@ -67,6 +67,7 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval, $
     $scope.init = function(data) {
 
         $scope.isChainUrl = ($location.path() === '/chain');
+        $scope.pwg = {};
 
         if($location.search()['p'] != undefined) {
             var toLoad = $location.search()['p'].split(',');
@@ -172,14 +173,13 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval, $
                 if (!data.data.results.length) {
                     $scope.showPopUp('error', 'No results for this request parameters');   
                 } else {
-
+                    $scope.updatePwg(data.data.results);
                     if (add) {
                         data.data.results.push.apply(data.data.results, $scope.cachedRequestData);
                     } else {
                         $scope.cachedRequestData = [];
                         $scope.tagsRemoveAll();
                     }
-
                     if (campaign == 'all') {
                         for (var i = 0; i < data.data.results.length; i++) {
                             if (! $scope.tags.hasTag(data.data.results[i]['member_of_campaign'])) {
@@ -271,7 +271,7 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval, $
             $scope.setURL();
         }
     }
-    
+
     $scope.tags = angular.element('#campaignList').tags({
             tagClass: "btn btn-sm btn-primary",
             beforeDeletingTag: function(tag) {
@@ -282,8 +282,10 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval, $
                 $scope.loadingData = true;
                 var promise = $scope.tagsChanged(tag);
                 promise.then(function() {
+                        $scope.resetPwg();
                         $scope.loadingData = false;
                     }, function(reason) {
+                        $scope.resetPwg();
                         $scope.loadingData = false;
                     });
             }
@@ -298,7 +300,7 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval, $
         for (var i = 0; i < $scope.cachedRequestData.length; i++) {
             if ($scope.cachedRequestData[i]['member_of_campaign'] !== tag) {
                 data.push($scope.cachedRequestData[i]);
-            }
+            }            
         }
         $scope.cachedRequestData = data;
         if ($scope.updateRequestData()) {
@@ -325,25 +327,39 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval, $
         $scope.dt = new Date();
     }
 
+    $scope.resetPwg = function() {
+        $scope.pwg = {};
+        $scope.updatePwg($scope.cachedRequestData);
+    }
+
+    $scope.updatePwg = function(x) {
+        var data = $scope.pwg;
+        for (var i = 0; i < x.length; i++) {
+            if (data[x[i].pwg] == undefined) {
+                data[x[i].pwg] = {name: x[i].pwg, selected: true};;
+            }
+        }
+        $scope.pwg = data;
+        $scope.showPwg = Object.keys($scope.pwg).length;
+    }
+
     $scope.updateRequestData = function() {
-        console.log("uRD");
         $scope.loadingData = true;
-        var mp = $scope.maxPriority;
-        if (mp == '') {
-            mp = 1000000000;
+
+        var max = $scope.maxPriority;
+        if (isNaN(max) || max == '') {
+            max = Number.MAX_VALUE;
         }
 
         setTimeout(function () {
             var tmp = $scope.cachedRequestData;
             var data = [];
             for (var i = 0; i < tmp.length; i++) {
-                if (tmp[i]['priority'] >= $scope.minPriority && tmp[i]['priority'] <= mp) {
-                    //some objects have status 'none'
-                    if ($scope.status[tmp[i].status] != undefined) {
-                        if ($scope.status[tmp[i]['status']].selected) {
-                            data.push(tmp[i]);
-                        }
-                    }
+                if (tmp[i].priority >= $scope.minPriority &&
+                    tmp[i].priority <= max &&
+                    $scope.status[tmp[i].status].selected &&
+                    $scope.pwg[ tmp[i].pwg ].selected) {
+                    data.push(tmp[i]);
                 }
             }
             $scope.$apply(function () {

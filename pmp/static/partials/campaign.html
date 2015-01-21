@@ -93,6 +93,7 @@
 
       <form class="form-group form-inline form-group-sm">
         <small class="text-uppercase col-lg-12">Filter by priority:</small>
+
         <div class="input-group">
           <select class="form-control text-center" ng-model="minPriority"
                   ng-change="updateRequestData();setURL()">
@@ -117,17 +118,31 @@
                  ng-model="maxPriority" ng-change="updateRequestData();setURL()">
         </div>
       </form>
-      
-      <small class="text-uppercase col-lg-12">Filter by status:</small>
-      <div class="col-lg-6" ng-repeat="(key, status) in status">
-        <label class="checkbox-inline">
-          <input type="checkbox" ng-model="status.selected" ng-change="updateRequestData();setURL()">
-          <small>{{key}}</small>
-        </label>
-      </div>
-      
+
+      <form class="form-group form-inline form-group-sm spacing">
+        <small class="text-uppercase col-lg-12">Filter by status:</small>
+        <div class="input-group">
+          <div class="col-lg-6" ng-repeat="(key, status) in status">
+            <label class="checkbox-inline">
+              <input type="checkbox" ng-model="status.selected" 
+                     ng-change="updateRequestData();setURL()">
+              <small>{{key}}</small>
+            </label>
+          </div>
+        </div>
+      </form>
+
+      <form class="form-group form-inline form-group-sm" ng-show="showPwg">
+        <small class="text-uppercase col-lg-12">Filter by PWG:</small>
+        <div class="col-lg-4" ng-repeat="(key, status) in pwg">
+          <label class="checkbox-inline">
+            <input type="checkbox" ng-model="status.selected" ng-change="updateRequestData();setURL()">
+            <small>{{key}}</small>
+          </label>
+        </div>
+      </form>
     </div>
-    
+
     <div id="share" class="collapse col-xs-12 col-sm-12 col-md-12 col-lg-12">
       <div class="input-group input-group-sm">
         <span class="hidden-sm input-group-addon text-uppercase" ng-click="setURL()">Share</span>
