@@ -60,40 +60,22 @@
   </div>
 
   <div class="col-lg-3 col-md-3 col-sm-3">
-    <a class="btn btn-sm text-uppercase spacing" data-toggle="collapse" data-target="#advanced">
-      <small><i class="fa fa-cog"></i> Advanced</small>
+    <a class="btn btn-sm text-uppercase padding-r" data-toggle="collapse" data-target="#filter">
+      <i class="fa fa-eyedropper"></i>
+      <small> Filter</small>
     </a>
-    <a class="btn btn-sm text-uppercase spacing" data-toggle="collapse" data-target="#share">
-      <small><i class="fa fa-share"></i> Share</small>
+    <a class="btn btn-sm text-uppercase padding-r" data-toggle="collapse" data-target="#advanced">
+      <i class="fa fa-cog"></i>
+      <small> Advanced</small>
     </a>
-    <div id="advanced" class="collapse col-xs-12 col-sm-12 col-md-12 col-lg-12 spacing">
-      
-      <form class="form-group text-uppercase">
-        <label class="checkbox-inline col-lg-12">
-          <input type="checkbox" ng-model="showDate" ng-change="setURL()">
-          <small>
-            Show current time
-          </small>
-        </label>
-        <br/>
-        <label class="checkbox-inline col-lg-12 spacing">
-          <input type="checkbox" ng-model="chainMode"
-                 ng-change="modeUpdate();setURL()" ng-disabled="isChainUrl">
-          <small>
-            New get_stats mode
-          </small>
-        </label>
-      </form>
-      
-      <button type="button" class="btn btn-sm btn-default text-center col-lg-12 spacing"
-              ng-click="takeScreenshot()" ng-disabled="false">
-        <i class="fa fa-camera"></i>
-        Take screenshot
-      </button>
-
+    <a class="btn btn-sm text-uppercase" data-toggle="collapse" data-target="#share">
+      <i class="fa fa-share"></i>
+      <small> Share</small>
+    </a>
+    
+    <div id="filter" class="collapse col-xs-12 col-sm-12 col-md-12 col-lg-12 spacing">
       <form class="form-group form-inline form-group-sm">
         <small class="text-uppercase col-lg-12">Filter by priority:</small>
-
         <div class="input-group">
           <select class="form-control text-center" ng-model="minPriority"
                   ng-change="updateRequestData();setURL()">
@@ -118,7 +100,7 @@
                  ng-model="maxPriority" ng-change="updateRequestData();setURL()">
         </div>
       </form>
-
+      
       <form class="form-group form-inline form-group-sm spacing">
         <small class="text-uppercase col-lg-12">Filter by status:</small>
         <div class="input-group">
@@ -131,7 +113,7 @@
           </div>
         </div>
       </form>
-
+      
       <form class="form-group form-inline form-group-sm" ng-show="showPwg">
         <small class="text-uppercase col-lg-12">Filter by PWG:</small>
         <div class="col-lg-4" ng-repeat="(key, status) in pwg">
@@ -143,6 +125,31 @@
       </form>
     </div>
 
+    <div id="advanced" class="collapse col-xs-12 col-sm-12 col-md-12 col-lg-12 spacing">
+      <form class="form-group text-uppercase">
+        <label class="checkbox-inline col-lg-12">
+          <input type="checkbox" ng-model="showDate" ng-change="setURL()">
+          <small>
+            Show current time
+          </small>
+        </label>
+        <br/>
+        <label class="checkbox-inline col-lg-12 spacing">
+          <input type="checkbox" ng-model="chainMode"
+                 ng-change="modeUpdate();setURL()" ng-disabled="isChainUrl">
+          <small>
+            New get_stats mode
+          </small>
+        </label>
+      </form>
+      
+      <button type="button" class="btn btn-sm btn-default text-center col-lg-12 spacing"
+              ng-click="takeScreenshot()" ng-disabled="false">
+        <i class="fa fa-camera"></i>
+        Take screenshot
+      </button>
+    </div>
+    
     <div id="share" class="collapse col-xs-12 col-sm-12 col-md-12 col-lg-12">
       <div class="input-group input-group-sm">
         <span class="hidden-sm input-group-addon text-uppercase" ng-click="setURL()">Share</span>
