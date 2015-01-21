@@ -6,8 +6,8 @@ import time
 import utils
 import sys
 
-# logging.basicConfig(filename='info.log', level=logging.INFO)
-logging.basicConfig(level=logging.INFO)
+#logging.basicConfig(filename='info.log', level=logging.INFO)
+logging.basicConfig(level=logging.WARNING)
 
 
 def parse(data, rlist):
@@ -52,7 +52,7 @@ def get_changes(utl, cfg):
             for r in res['results']:
                 if r['seq'] == res['last_seq']:
                     _, s = utl.curl('PUT', cfg.last_seq,
-                                    json.loads({"val": res['last_seq']}))
+                                    json.loads('{"val": %s}' % res['last_seq']))
                     if s not in [200, 201]:
                         logging.error('%s Cannot update last_seq' %
                                       utl.get_time())
