@@ -134,6 +134,14 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval, $
         $scope.initStatus();
         $scope.modeUpdate();
 
+        $scope.pwg = {};
+        if($location.search()['w'] != undefined) {
+            var toLoad = $location.search()['w'].split(',');
+            for (var i = 0; i < toLoad.length; i++) {            
+                $scope.pwg[toLoad[i]] = {name: toLoad[i], selected: true};
+            }
+        } 
+
         //initiate allRequestData from URL
         if($location.search()['r'] != undefined) {
             var toLoad = $location.search()['r'].split(',');
@@ -173,7 +181,7 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval, $
                 if (!data.data.results.length) {
                     $scope.showPopUp('error', 'No results for this request parameters');   
                 } else {
-                    $scope.updatePwg(data.data.results);
+                    $scope.updatePwg(data.data.results, !more);
                     if (add) {
                         data.data.results.push.apply(data.data.results, $scope.cachedRequestData);
                     } else {
@@ -199,8 +207,6 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval, $
                 }
                 if (more) {
                     $scope.loadingData = !(more === $scope.tags.getTags().length);
-                } else {
-                    $scope.loadingData = false;
                 }
             }, function() {
                 $scope.showPopUp('error', 'Error getting requests');
@@ -257,6 +263,16 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval, $
         params['m'] = $scope.chainMode + "";
         params['pn'] = $scope.minPriority + "";
         params['px'] = $scope.maxPriority + "";
+
+        var tmp = $scope.pwg;
+        var w = [];
+        for (var i = 0; i < Object.keys(tmp).length; i++) {
+            if (tmp[Object.keys(tmp)[i]].selected) {
+                w.push(tmp[Object.keys(tmp)[i]].name);
+            }            
+        }
+        params['w'] = w.join(',');
+
         for(var i in $scope.status) {
             params[$scope.status[i]['name']] = ($scope.status[i]['selected'] === true) + "";
         }
@@ -283,6 +299,7 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval, $
                 var promise = $scope.tagsChanged(tag);
                 promise.then(function() {
                         $scope.resetPwg();
+                        $scope.setURL();
                         $scope.loadingData = false;
                     }, function(reason) {
                         $scope.resetPwg();
@@ -308,7 +325,6 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval, $
         } else {
             deferred.reject();
         };
-        $scope.setURL();
         return deferred.promise;
     }
 
@@ -328,15 +344,22 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval, $
     }
 
     $scope.resetPwg = function() {
-        $scope.pwg = {};
-        $scope.updatePwg($scope.cachedRequestData);
+        var tmp = $scope.cachedRequestData;
+        var data = {};
+        for (var i = 0; i < tmp.length; i++) {
+            if (data[tmp[i].pwg] == undefined) {
+                data[tmp[i].pwg] = {name: tmp[i].pwg, selected: $scope.pwg[tmp[i].pwg].selected};;
+            }
+        }
+        $scope.pwg = data;
+        $scope.showPwg = Object.keys($scope.pwg).length;
     }
 
-    $scope.updatePwg = function(x) {
+    $scope.updatePwg = function(x, vDefault) {
         var data = $scope.pwg;
         for (var i = 0; i < x.length; i++) {
             if (data[x[i].pwg] == undefined) {
-                data[x[i].pwg] = {name: x[i].pwg, selected: true};;
+                data[x[i].pwg] = {name: x[i].pwg, selected: vDefault};;
             }
         }
         $scope.pwg = data;
