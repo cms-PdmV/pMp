@@ -3,18 +3,23 @@
 pmpApp.controller('MainController', function($location, $route, $rootScope, $scope, $timeout) {
 
     $scope.nav = function(where) {
-        $scope.showview = !$scope.showview;
-        if (!$scope.showview) { $location.search({}); $timeout(function() {
-                    $location.path(where);
-                    $timeout(function() {$scope.nav('');}, 100);
-                }, 1100);}
+        $scope.showView = !$scope.showView;
+        if (!$scope.showView) {
+            $location.search({});
+            $timeout(function() {
+                $location.path(where);
+                $timeout(function() {
+                    $scope.nav('');
+                }, 100);
+            }, 1100);
+        }
     };
 
     var original = $location.path;
-    $location.path = function (path, reload) {
+    $location.path = function(path, reload) {
         if (reload === false) {
             var lastRoute = $route.current;
-            var un = $rootScope.$on('$locationChangeSuccess', function () {
+            var un = $rootScope.$on('$locationChangeSuccess', function() {
                 $route.current = lastRoute;
                 un();
             });
@@ -24,34 +29,55 @@ pmpApp.controller('MainController', function($location, $route, $rootScope, $sco
 
     $scope.showPopUp = function(type, text) {
         switch (type) {
-        case 'error':
-            $scope.popUp = {show: true, title: 'Error', message: text,
-                            style: 'panel-danger', icon: 'fa-frown-o'};
-            $timeout(function() {$scope.showPopUp('', '');}, 2000);
-        break;
-        case 'warning':
-            $scope.popUp = {show: true, title: 'Warning', message: text,
-                            style: 'panel-warning', icon: 'fa-exclamation-triangle'};
-            $timeout(function() {$scope.showPopUp('', '');}, 2000);
-        break;
-        case 'success':
-            $scope.popUp = {show: true, title: 'Success', message: text,
-                            style: 'panel-success', icon: 'fa-check'};
-            $timeout(function() {$scope.showPopUp('', '');}, 2000);
-        break;
-        default:
-            $scope.popUp.show = false;
-            break;
+            case 'error':
+                $scope.popUp = {
+                    show: true,
+                    title: 'Error',
+                    message: text,
+                    style: 'panel-danger',
+                    icon: 'fa-frown-o'
+                };
+                $timeout(function() {
+                    $scope.showPopUp('', '');
+                }, 2000);
+                break;
+            case 'warning':
+                $scope.popUp = {
+                    show: true,
+                    title: 'Warning',
+                    message: text,
+                    style: 'panel-warning',
+                    icon: 'fa-exclamation-triangle'
+                };
+                $timeout(function() {
+                    $scope.showPopUp('', '');
+                }, 2000);
+                break;
+            case 'success':
+                $scope.popUp = {
+                    show: true,
+                    title: 'Success',
+                    message: text,
+                    style: 'panel-success',
+                    icon: 'fa-check'
+                };
+                $timeout(function() {
+                    $scope.showPopUp('', '');
+                }, 2000);
+                break;
+            default:
+                $scope.popUp.show = false;
+                break;
         }
     }
-
-    $rootScope.showview = false;
-    $timeout(function() {$scope.nav('');}, 100);
+    $rootScope.showView = false;
+    $timeout(function() {
+        $scope.nav('');
+    }, 100);
 });
 
-
 pmpApp.controller('CampaignsController', function($http, $location, $interval, $q,
-                                                  $rootScope, $scope, $timeout) {
+    $rootScope, $scope, $timeout) {
 
     // currently displayed data (after filtering)
     $scope.allRequestData = [];
@@ -62,22 +88,19 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval, $
     $scope.graphParam = ['selections', 'grouping', 'value', 'stacking', 'coloring'];
 
     $scope.graphTabs = ['member_of_campaign', 'total_events',
-                        'status', 'prepid', 'priority', 'pwg'];
+        'status', 'prepid', 'priority', 'pwg'
+    ];
 
-    $scope.init = function(data) {
-
+    $scope.init = function() {
         $scope.isChainUrl = ($location.path() === '/chain');
-        $scope.pwg = {};
+        $scope.aOptionsValues = [1, 2, 4, 0, 0, 0];
+        $scope.aRadioValues = [0, 0];
 
-        if($location.search()['p'] != undefined) {
-            var toLoad = $location.search()['p'].split(',');
-            $scope.aOptionsValues = toLoad.slice(0,6);
-            $scope.aRadioValues = toLoad.slice(6,8);
-        } else {
-            $scope.aOptionsValues = [1,2,4,0,0,0];
-            $scope.aRadioValues = [0, 0];
+        if ($location.search().p != undefined) {
+            var toLoad = $location.search().p.split(',');
+            $scope.aOptionsValues = toLoad.slice(0, 6);
+            $scope.aRadioValues = toLoad.slice(6, 8);
         }
-
         $scope.requests.selections = [];
         var initGrouping = [];
         var initStacking = [];
@@ -94,7 +117,7 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval, $
                 initStacking.push($scope.graphTabs[i]);
             } else if ($scope.aOptionsValues[i] == 4) {
                 initColoring = $scope.graphTabs[i];
-            } 
+            }
         }
         $scope.requests.options = {
             grouping: initGrouping,
@@ -102,51 +125,40 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval, $
             stacking: initStacking,
             coloring: initColoring
         };
-
         $scope.requests.radio = {}
-
+        $scope.requests.radio.scale = ["linear", "log"];
+        $scope.requests.radio.mode = ["number of events", "number of requests"];
         if ($scope.aRadioValues[1] == 1) {
-            $scope.requests.radio['scale'] = ["log", "linear"];    
-        } else {
-            $scope.requests.radio['scale'] = ["linear", "log"];    
+            $scope.requests.radio.scale = ["log", "linear"];
         }
-
         if ($scope.aRadioValues[0] == 1) {
-            $scope.requests.radio['mode'] = ["number of requests",
-                                             "number of events"];
-        } else {
-            $scope.requests.radio['mode'] = ["number of events",
-                                             "number of requests"];
+            $scope.requests.radio.mode = ["number of requests", "number of events"];
         }
-
         $scope.showDate = $location.search()['t'] === 'true';
         $scope.chainMode = ($location.search()['m'] === 'true') || $scope.isChainUrl;
-        if($location.search()['pn'] != undefined) {
-            $scope.minPriority = $location.search()['pn'] + "";
-        } else {
-            $scope.minPriority = "";
-        }
-        if($location.search()['px'] != undefined) {
-            $scope.maxPriority = $location.search()['px'] + "";
-        } else {
-            $scope.maxPriority = "";
+        $scope.filterPriority = ['', ''];
+        if ($location.search()['x'] != undefined) {
+            var tmp = $location.search()['x'].split(',');
+            $scope.filterPriority = tmp;
         }
         $scope.initStatus();
         $scope.modeUpdate();
-
         $scope.pwg = {};
-        if($location.search()['w'] != undefined) {
-            var toLoad = $location.search()['w'].split(',');
-            for (var i = 0; i < toLoad.length; i++) {            
-                $scope.pwg[toLoad[i]] = {name: toLoad[i], selected: true};
+        if ($location.search()['w'] != undefined) {
+            var tmp = $location.search()['w'].split(',');
+            for (var i = 0; i < tmp.length; i++) {
+                $scope.pwg[tmp[i]] = {
+                    name: tmp[i],
+                    selected: true
+                };
             }
-        } 
-
+        }
         //initiate allRequestData from URL
-        if($location.search()['r'] != undefined) {
-            var toLoad = $location.search()['r'].split(',');
-            for (var i = 0; i < toLoad.length; i++) {
-                $scope.load(toLoad[i], true, toLoad.length);
+        if ($location.search()['r'] != undefined) {
+            $scope.loadingData = true;
+            var tmp = $location.search()['r'].split(',');
+            for (var i = 0; i < tmp.length; i++) {
+                $scope.load(tmp[i], true, tmp.length);
             }
         }
     }
@@ -154,23 +166,24 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval, $
     $scope.initStatus = function() {
         $scope.status = {}
         for (var i = 0; i < $scope.piecharts.fullTerms.length; i++) {
-            var name = $scope.piecharts.fullTerms[i].slice(0,2),
-            tmp = true;
-            if($location.search()[name] != undefined) {
+            var name = $scope.piecharts.fullTerms[i].slice(0, 2),
+                tmp = true;
+            if ($location.search()[name] != undefined) {
                 tmp = ($location.search()[name] === 'true');
             }
-            $scope.status[$scope.piecharts.fullTerms[i]] = {name:name, selected: tmp};
+            $scope.status[$scope.piecharts.fullTerms[i]] = {
+                name: name,
+                selected: tmp
+            };
         }
     }
 
     $scope.load = function(campaign, add, more) {
         if (!campaign) {
             $scope.showPopUp('warning', 'Your request parameters are empty');
-        }
-        else if(add & $scope.tags.hasTag(campaign)) {
+        } else if (add & $scope.tags.hasTag(campaign)) {
             $scope.showPopUp('warning', 'Your request is already loaded');
-        }
-        else {
+        } else {
             $scope.loadingData = true;
             if ($scope.chainMode) {
                 var promise = $http.get("api/" + campaign + "/chain");
@@ -191,23 +204,19 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval, $
                     }
                     if (campaign == 'all') {
                         for (var i = 0; i < data.data.results.length; i++) {
-                            if (! $scope.tags.hasTag(data.data.results[i]['member_of_campaign'])) {
-                                if (data.data.results[i]['member_of_campaign'] == ''){
-                                    $scope.tags.addTag('NULL');
-                                } else {
-                                    $scope.tags.addTag(data.data.results[i]['member_of_campaign']);
-                                }
+                            if (!$scope.tags.hasTag(data.data.results[i]['member_of_campaign'])) {
+                                $scope.tags.addTag(data.data.results[i]['member_of_campaign']);
                             }
                         }
                     } else {
                         $scope.tags.addTag(campaign);
                     }
                     $scope.cachedRequestData = data.data.results;
-                    $scope.updateRequestData();
                     $scope.setURL();
                 }
-                if (more) {
-                    $scope.loadingData = !(more === $scope.tags.getTags().length);
+                if (!more || more == $scope.tags.getTags().length) {
+                    $scope.updateRequestData();
+                    $scope.loadingData == false;
                 }
             }, function() {
                 $scope.showPopUp('error', 'Error getting requests');
@@ -217,31 +226,37 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval, $
     };
 
     $scope.modeUpdate = function() {
-        if ($scope.isChainUrl) {
-            $scope.title = 'Chains and Flows';
-        } else {
+        $scope.title = 'Chains and Flows';
+        if (!$scope.isChainUrl) {
+            $scope.title = 'Campaign: Dashboard';
             if ($scope.chainMode) {
                 $scope.title = 'Campaign: Get_Stats';
-            } else {
-                $scope.title = 'Campaign: Dashboard';
             }
-            $scope.cachedRequestData = [];
-            $scope.allRequestData = [];
-            //$scope.updateRequestData();
-            $scope.tagsRemoveAll();
         }
+        $scope.cachedRequestData = [];
+        $scope.allRequestData = [];
+        $scope.tagsRemoveAll();
     };
 
     $scope.piecharts = {};
     $scope.piecharts.compactTerms = ["done", "to do"];
     $scope.piecharts.domain = ["new", "validation", "done", "approved",
-                               "submitted", "nothing", "defined", "to do"];
+        "submitted", "nothing", "defined", "to do"
+    ];
     $scope.piecharts.fullTerms = ["new", "validation", "defined",
-                                  "approved", "submitted", "done", "upcoming"];
+        "approved", "submitted", "done", "upcoming"
+    ];
     $scope.piecharts.nestBy = ["member_of_campaign", "status"];
     $scope.piecharts.sum = "total_events";
 
-    $scope.priorityPerBlock = {1: 110000, 2: 90000, 3: 85000, 4: 80000, 5: 70000, 6: 63000};
+    $scope.priorityPerBlock = {
+        1: 110000,
+        2: 90000,
+        3: 85000,
+        4: 80000,
+        5: 70000,
+        6: 63000
+    };
 
     $scope.requests = {};
     $scope.requests.settings = {
@@ -250,31 +265,30 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval, $
         sort: true
     };
 
-    $scope.setURL = function(optionName, optionValue){
+    $scope.setURL = function(name, value) {
         $location.path($location.path(), false);
-        if (typeof optionName != undefined && typeof optionValue != undefined) {
-            $scope.aOptionsValues[$scope.graphTabs.indexOf(optionValue)] = $scope.graphParam.indexOf(optionName);
+        if (typeof name != undefined && typeof value != undefined) {
+            $scope.aOptionsValues[$scope.graphTabs.indexOf(value)] = $scope.graphParam.indexOf(name);
         }
         var params = {}
         if ($scope.tags.getTags().length) {
             params['r'] = $scope.tags.getTags().join(',')
         }
-        params['p'] = $scope.aOptionsValues.join(',') + ',' + $scope.aRadioValues.join(',');        
+        params['p'] = $scope.aOptionsValues.join(',') + ',' + $scope.aRadioValues.join(',');
         params['t'] = $scope.showDate + "";
         params['m'] = $scope.chainMode + "";
-        params['pn'] = $scope.minPriority + "";
-        params['px'] = $scope.maxPriority + "";
+        params['x'] = $scope.filterPriority.join(',');
 
         var tmp = $scope.pwg;
         var w = [];
         for (var i = 0; i < Object.keys(tmp).length; i++) {
             if (tmp[Object.keys(tmp)[i]].selected) {
                 w.push(tmp[Object.keys(tmp)[i]].name);
-            }            
+            }
         }
         params['w'] = w.join(',');
 
-        for(var i in $scope.status) {
+        for (var i in $scope.status) {
             params[$scope.status[i]['name']] = ($scope.status[i]['selected'] === true) + "";
         }
 
@@ -290,44 +304,31 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval, $
     }
 
     $scope.tags = angular.element('#campaignList').tags({
-            tagClass: "btn btn-sm btn-primary",
-            beforeDeletingTag: function(tag) {
-                $scope.loadingData = true;
-                return true;
-            },
-            afterDeletingTag: function(tag) {
-                $scope.loadingData = true;
-                var promise = $scope.tagsChanged(tag);
-                promise.then(function() {
-                        $scope.resetPwg();
-                        $scope.setURL();
-                        $scope.loadingData = false;
-                    }, function(reason) {
-                        $scope.resetPwg();
-                        $scope.loadingData = false;
-                    });
-            }
-        });
-
-    $scope.tagsChanged = function(tag){
-        var deferred = $q.defer();
-        if (tag == 'NULL') {
-            tag = '';
+        tagClass: 'btn btn-sm btn-primary',
+        afterDeletingTag: function(tag) {
+            $scope.loadingData = true;
+            setTimeout(function() {
+                var tmp = $scope.cachedRequestData;
+                var data1 = [];
+                var data2 = {};
+                for (var i = 0; i < tmp.length; i++) {
+                    if (tmp[i].member_of_campaign !== tag) {
+                        data1.push(tmp[i]);
+                    }
+                    if (data2[tmp[i].pwg] == undefined) {
+                        data2[tmp[i].pwg] = {
+                            name: tmp[i].pwg,
+                            selected: $scope.pwg[tmp[i].pwg].selected
+                        };
+                    }
+                }
+                $scope.cachedRequestData = data1;
+                $scope.pwg = data2;
+                $scope.setURL();
+                $scope.updateRequestData();
+            }, 500);
         }
-        var data = [];
-        for (var i = 0; i < $scope.cachedRequestData.length; i++) {
-            if ($scope.cachedRequestData[i]['member_of_campaign'] !== tag) {
-                data.push($scope.cachedRequestData[i]);
-            }            
-        }
-        $scope.cachedRequestData = data;
-        if ($scope.updateRequestData()) {
-            deferred.resolve();
-        } else {
-            deferred.reject();
-        };
-        return deferred.promise;
-    }
+    });
 
     $scope.tagsRemoveAll = function() {
         var tmp = angular.copy($scope.tags.getTags());
@@ -337,61 +338,51 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval, $
     }
 
     $scope.takeScreenshot = function() {
-        console.log("Not yet implemented");
+        console.log('Not yet implemented');
     }
 
     $scope.updateDate = function() {
         $scope.dt = new Date();
     }
 
-    $scope.resetPwg = function() {
-        var tmp = $scope.cachedRequestData;
-        var data = {};
-        for (var i = 0; i < tmp.length; i++) {
-            if (data[tmp[i].pwg] == undefined) {
-                data[tmp[i].pwg] = {name: tmp[i].pwg, selected: $scope.pwg[tmp[i].pwg].selected};;
-            }
-        }
-        $scope.pwg = data;
-        $scope.showPwg = Object.keys($scope.pwg).length;
-    }
-
     $scope.updatePwg = function(x, vDefault) {
         var data = $scope.pwg;
         for (var i = 0; i < x.length; i++) {
             if (data[x[i].pwg] == undefined) {
-                data[x[i].pwg] = {name: x[i].pwg, selected: vDefault};;
+                data[x[i].pwg] = {
+                    name: x[i].pwg,
+                    selected: vDefault
+                };
             }
         }
         $scope.pwg = data;
-        $scope.showPwg = Object.keys($scope.pwg).length;
     }
 
     $scope.updateRequestData = function() {
         $scope.loadingData = true;
 
-        var max = $scope.maxPriority;
+        var max = $scope.filterPriority[1];
+        var min = $scope.filterPriority[0];
         if (isNaN(max) || max == '') {
             max = Number.MAX_VALUE;
         }
 
-        setTimeout(function () {
+        setTimeout(function() {
             var tmp = $scope.cachedRequestData;
             var data = [];
             for (var i = 0; i < tmp.length; i++) {
-                if (tmp[i].priority >= $scope.minPriority &&
+                if (tmp[i].priority >= min &&
                     tmp[i].priority <= max &&
                     $scope.status[tmp[i].status].selected &&
-                    $scope.pwg[ tmp[i].pwg ].selected) {
+                    $scope.pwg[tmp[i].pwg].selected) {
                     data.push(tmp[i]);
                 }
             }
-            $scope.$apply(function () {
-                $scope.allRequestData = data;
+            $scope.allRequestData = data;
+            $scope.$apply(function() {
                 $scope.loadingData = false;
             });
-            }, 100);
-        return true;
+        }, 500);
     }
 
     $interval($scope.updateDate, 1000);
@@ -401,6 +392,6 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval, $
     });
 });
 
-pmpApp.controller('IndexController', function() {
-
+pmpApp.controller('IndexController', function($location) {
+    $location.search({});
 });

@@ -1,4 +1,4 @@
-<div class="row spacing"  ng-init="init()">
+<div class="row spacing" ng-init="init()">
   <div class="col-lg-9 col-md-9 col-sm-9">
    <div class="row">
      <div class="row">
@@ -34,7 +34,6 @@
          </div>
        </div>
      </div>
-
      <div class="row" ng-hide="chainMode">
        <div class="panel-default">
          <div class="panel-body">
@@ -74,55 +73,63 @@
     </a>
     
     <div id="filter" class="collapse col-xs-12 col-sm-12 col-md-12 col-lg-12 spacing">
-      <form class="form-group form-inline form-group-sm">
-        <small class="text-uppercase col-lg-12">Filter by priority:</small>
-        <div class="input-group">
-          <select class="form-control text-center" ng-model="minPriority"
-                  ng-change="updateRequestData();setURL()">
-            <option ng-repeat="(key, value) in priorityPerBlock"
-                    value="{{value}}">
-              {{key}}
-            </option>
-          </select>
-          <input type="text" class="form-control" placeholder="min"
-                 ng-model="minPriority" ng-change="updateRequestData();setURL()">
-          <div class="input-group-addon">
-            &le; x &le;
+      <div ng-show="!cachedRequestData.length">
+        <small>No data to filter</small>
+      </div>
+      <div ng-show="cachedRequestData.length">
+        <form class="form-group form-inline form-group-sm">
+          <small class="text-uppercase col-lg-12">Filter by priority:</small>
+          <div class="input-group">
+            <select class="form-control text-center" ng-model="filterPriority[0]"
+                    ng-change="updateRequestData();setURL()">
+              <option ng-repeat="(key, value) in priorityPerBlock"
+                      value="{{value}}">
+                {{key}}
+              </option>
+            </select>
+            <input type="text" class="form-control" placeholder="min"
+                   ng-model="filterPriority[0]" ng-change="updateRequestData();setURL()">
+            <div class="input-group-addon">
+              &le; x &le;
+            </div>
+            <select class="form-control text-center" ng-model="filterPriority[1]"
+                    ng-change="updateRequestData();setURL()">
+              <option ng-repeat="(key, value) in priorityPerBlock"
+                      value="{{value}}">
+                {{key}}
+              </option>
+            </select>
+            <input type="text" class="form-control" placeholder="max"
+                   ng-model="filterPriority[1]" ng-change="updateRequestData();setURL()">
           </div>
-          <select class="form-control text-center" ng-model="maxPriority"
-                  ng-change="updateRequestData();setURL()">
-            <option ng-repeat="(key, value) in priorityPerBlock"
-                    value="{{value}}">
-              {{key}}
-            </option>
-          </select>
-          <input type="text" class="form-control" placeholder="max"
-                 ng-model="maxPriority" ng-change="updateRequestData();setURL()">
-        </div>
-      </form>
-      
-      <form class="form-group form-inline form-group-sm spacing">
-        <small class="text-uppercase col-lg-12">Filter by status:</small>
-        <div class="input-group">
-          <div class="col-lg-6" ng-repeat="(key, status) in status">
+        </form>
+        
+        <form class="form-group form-inline form-group-sm spacing">
+          <small class="text-uppercase col-lg-12">Filter by status:</small>
+          <div class="input-group">
+            <div class="col-lg-6" ng-repeat="(key, status) in status">
+              <label class="checkbox-inline">
+                <input type="checkbox" ng-model="status.selected" 
+                       ng-change="updateRequestData();setURL()">
+                <small>{{key}}</small>
+              </label>
+            </div>
+          </div>
+        </form>
+        
+        <form class="form-group form-inline form-group-sm">
+          <small class="text-uppercase col-lg-12">Filter by PWG:</small>
+          <div class="col-lg-4" ng-repeat="(key, status) in pwg">
             <label class="checkbox-inline">
-              <input type="checkbox" ng-model="status.selected" 
+              <input type="checkbox" ng-model="status.selected"
                      ng-change="updateRequestData();setURL()">
-              <small>{{key}}</small>
+              <small>
+                {{key}}
+              </small>
             </label>
           </div>
-        </div>
-      </form>
-      
-      <form class="form-group form-inline form-group-sm" ng-show="showPwg">
-        <small class="text-uppercase col-lg-12">Filter by PWG:</small>
-        <div class="col-lg-4" ng-repeat="(key, status) in pwg">
-          <label class="checkbox-inline">
-            <input type="checkbox" ng-model="status.selected" ng-change="updateRequestData();setURL()">
-            <small>{{key}}</small>
-          </label>
-        </div>
-      </form>
+        </form>
+      </div>
     </div>
 
     <div id="advanced" class="collapse col-xs-12 col-sm-12 col-md-12 col-lg-12 spacing">
@@ -152,7 +159,9 @@
     
     <div id="share" class="collapse col-xs-12 col-sm-12 col-md-12 col-lg-12">
       <div class="input-group input-group-sm">
-        <span class="hidden-sm input-group-addon text-uppercase" ng-click="setURL()">Share</span>
+        <span class="hidden-sm input-group-addon text-uppercase" ng-click="setURL()">
+          Share
+        </span>
         <input id="url" type="text" class="form-control" ng-model="url"
                placeholder="Refresh to get URL">
         <span id="copy" data-clipboard-text="{{url}}" class="input-group-addon pointer">
@@ -165,13 +174,13 @@
 
 <div class="row" ng-show="allRequestData.length">
   <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 text-center">
-
+    
     <mcm-customizable-chart chart-type="'mcm-column-chart'" chart-title="Requests chart"
                             radio="requests.radio" settings="requests.settings"
                             selections="requests.selections" options="requests.options"
                             chart-data="allRequestData">
     </mcm-customizable-chart>
-
+    
     <multiple-pie-charts color-domain="piecharts.domain" table-title="Campaigns"
                          data="allRequestData" full-terms="piecharts.fullTerms"
                          compact-terms="piecharts.compactTerms" sum-by="piecharts.sum"
