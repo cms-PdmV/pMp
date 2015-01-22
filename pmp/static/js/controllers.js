@@ -160,6 +160,8 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval, $
             for (var i = 0; i < tmp.length; i++) {
                 $scope.load(tmp[i], true, tmp.length);
             }
+        } else {
+            $scope.setURL();
         }
     }
 
@@ -195,7 +197,6 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval, $
                     $scope.showPopUp('error', 'No results for this request parameters');
                     $scope.loadingData = false;
                 } else {
-                    $scope.updatePwg(data.data.results, !more);
                     if (add) {
                         data.data.results.push.apply(data.data.results, $scope.cachedRequestData);
                     } else {
@@ -211,6 +212,7 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval, $
                     } else {
                         $scope.tags.addTag(campaign);
                     }
+                    $scope.updatePwg(data.data.results, !more);
                     $scope.cachedRequestData = data.data.results;
                     $scope.setURL();
                 }

@@ -99,6 +99,10 @@ body.dragging, body.dragging * {
     margin-bottom: 10px;
 }
 
+.spacing-sm {
+    margin-bottom: 4px;
+}
+
 .spacing-r {
     margin-right: 10px;
 }

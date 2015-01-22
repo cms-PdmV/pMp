@@ -1076,10 +1076,10 @@ angular.module('mcm.charts', [])
                 scope.radiovalue = {};
                 for(key in scope.radio) {
 
-                    innerHtml += "<div class='col-lg-6 col-md-6 col-sm-6'>";
-                    innerHtml += "<span class='col-lg-3 col-md-4 col-sm-4 nav-header'>" + key + "</span>";
+                    innerHtml += "<div class='col-lg-6 col-md-6 col-sm-12 spacing-sm'>";
+                    innerHtml += "<span class='col-lg-3 col-md-4 col-sm-2 nav-header'>" + key + "</span>";
 
-                    innerHtml += "<ul class='nav nav-pills inline col-lg-9 col-md-8 col-sm-8'>";
+                    innerHtml += "<ul class='nav nav-pills inline col-lg-9 col-md-8 col-sm-10'>";
                     scope.radiovalue[key] = scope.radio[key][0];
                     innerHtml += "<li>";
 
