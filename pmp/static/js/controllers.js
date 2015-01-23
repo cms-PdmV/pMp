@@ -408,13 +408,13 @@ pmpApp.controller('IndexController', function($location) {
 });
 
 pmpApp.controller('TypeaheadCtrl', function($scope, $http) {
-        $scope.suggestions = [];
-        $scope.getSuggestions = function() {
-            if ($scope.campaign) {
-                $http.get('http://cms-pdmv-pmpdev.cern.ch/api/suggest/' + $scope.campaign).then(function(response){
-                        console.log(response.data.result);
-                        $scope.suggestions = response.data.result;
-                    });
-            }
-        };
-    });
+    $scope.suggestions = [];
+    $scope.getSuggestions = function() {
+        if ($scope.campaign) {
+            $http.get('http://cms-pdmv-pmpdev.cern.ch/api/suggest/'
+                      + $scope.campaign).then(function(response) {
+                $scope.suggestions = response.data.results;
+            });
+        }
+    };
+});

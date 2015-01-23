@@ -160,3 +160,18 @@ class GetCampaign():
                          self.es.search(('member_of_campaign:%s' % campaign),
                                         index='requests',
                                         size=self.overflow)['hits']['hits']]})
+
+
+class GetSuggestions():
+
+    def __init__(self):
+        self.es = ElasticSearch(config.DATABASE_URL)
+        self.overflow = 8
+
+    def get(self, campaign):
+        print "Suggestions"
+        return json.dumps(
+            {"results": [s['_id'] for s in
+                         self.es.search(('prepid:*%s*' % campaign),
+                                        index="campaigns",
+                                        size=self.overflow)['hits']['hits']]})

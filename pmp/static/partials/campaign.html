@@ -13,7 +13,7 @@
              <div class="input-group spacing">
 
                <input type="text" ng-model="campaign" ng-change="getSuggestions()"
-                      typeahead="s for s in suggestions | filter:$viewValue | limitTo:8"
+                      typeahead="s for s in suggestions"
                       class="form-control" autocomplete="off"
                       placeholder="Start typing something to search...">
                <span class="input-group-btn">
