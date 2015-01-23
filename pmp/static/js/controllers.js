@@ -79,11 +79,19 @@ pmpApp.controller('MainController', function($location, $route, $rootScope, $sco
 pmpApp.controller('CampaignsController', function($http, $location, $interval, $q,
     $rootScope, $scope, $timeout) {
 
+                      /*$('#query').typeahead({        
+        local: ['alpha', 'bravo','charlie','delta','epsilon','gamma','zulu']
+        });*/
+
     // currently displayed data (after filtering)
     $scope.allRequestData = [];
 
     // all gathered data (before filtering)
     $scope.cachedRequestData = [];
+
+    $scope.getSuggestions = function(x) {
+        console.log(x);
+    }
 
     $scope.graphParam = ['selections', 'grouping', 'value', 'stacking', 'coloring'];
 
@@ -398,3 +406,15 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval, $
 pmpApp.controller('IndexController', function($location) {
     $location.search({});
 });
+
+pmpApp.controller('TypeaheadCtrl', function($scope, $http) {
+        $scope.suggestions = [];
+        $scope.getSuggestions = function() {
+            if ($scope.campaign) {
+                $http.get('http://cms-pdmv-pmpdev.cern.ch/api/suggest/' + $scope.campaign).then(function(response){
+                        console.log(response.data.result);
+                        $scope.suggestions = response.data.result;
+                    });
+            }
+        };
+    });

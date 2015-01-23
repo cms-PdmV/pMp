@@ -1,6 +1,6 @@
 'use strict';
 
-var pmpApp = angular.module('pmpApp', ['ngAnimate', 'ngRoute', 'mcm.charts'])
+var pmpApp = angular.module('pmpApp', ['ngAnimate', 'ngRoute', 'ui.bootstrap', 'mcm.charts'])
     .config(['$routeProvider', '$locationProvider',
         function($routeProvider, $locationProvider) {
             $routeProvider
