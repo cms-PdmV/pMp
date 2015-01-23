@@ -164,14 +164,29 @@ class GetCampaign():
 
 class GetSuggestions():
 
-    def __init__(self):
+    def __init__(self, typeof):
         self.es = ElasticSearch(config.DATABASE_URL)
         self.overflow = 8
+        self.on = (typeof == 'true')
 
     def get(self, campaign):
-        print "Suggestions"
-        return json.dumps(
-            {"results": [s['_id'] for s in
-                         self.es.search(('prepid:*%s*' % campaign),
-                                        index="campaigns",
-                                        size=self.overflow)['hits']['hits']]})
+        if '-' in campaign:
+            self.search_string = ('prepid:%s' % campaign.replace('-', '\-'))
+        else:
+            self.search_string = ('prepid:*%s*' % campaign.replace('-', '\-'))
+
+        if self.on:
+            return json.dumps(
+                {"results": [s['_id'] for s in self.es.search(
+                            self.search_string, index="chained_campaigns",
+                            size=self.overflow)['hits']['hits']]
+                 + [s['_id'] for s in self.es.search(self.search_string,
+                                                     index="chained_requests",
+                                                     size=self.overflow)
+                    ['hits']['hits']]
+                 })
+        else:
+            return json.dumps(
+                {"results": [s['_id'] for s in self.es.search(
+                            self.search_string, index="campaigns",
+                            size=self.overflow)['hits']['hits']]})

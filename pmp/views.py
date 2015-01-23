@@ -31,7 +31,7 @@ def api(member_of_campaign, typeof):
     return make_response(gc.get(member_of_campaign))
 
 
-@app.route('/api/suggest/<input>')
-def suggest(input):
-    gc = models.GetSuggestions()
+@app.route('/api/suggest/<input>/<typeof>')
+def suggest(input, typeof):
+    gc = models.GetSuggestions(typeof)
     return make_response(gc.get(input))
