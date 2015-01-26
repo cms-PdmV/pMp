@@ -1,8 +1,14 @@
-AngularJS v1.2.27
+AngularJS v1.2.27 # https://github.com/angular/angular.js
+Animate.css  v3.2.0 # https://github.com/daneden/animate.css
 Bootstrap v3.3.1
+Bootstrap-tags v1.1.6 # https://github.com/maxwells/bootstrap-tags/releases
 D3.js v3.4.13
-Font Awesome v 4.2.0
+Elasticsearch v1.4.0 # https://github.com/elasticsearch/elasticsearch
+FileSaver.min.js # https://github.com/eligrey/FileSaver.js
 Flask v0.10.1
+Font Awesome v 4.2.0 # https://github.com/FortAwesome/Font-Awesome
 jQuery v2.1.1
 jQuerySortable v0.9.12
-Underscore.js v1.7.0
+pyelasticsearch v0.6.1 # https://github.com/pyelasticsearch/pyelasticsearch/releases
+ui.bootstrap v0.12.0
+ZeroClipboard v2.1.6 # https://github.com/zeroclipboard/zeroclipboard
