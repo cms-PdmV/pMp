@@ -23,6 +23,7 @@ body.dragging, body.dragging * {
 .grid .tick, .grid path {
     fill: none;
 }
+
 .grid .tick {
     stroke: grey;
     opacity: 0.2;
@@ -38,6 +39,7 @@ body.dragging, body.dragging * {
 }
 
 .nav-header {
+    font-size: 16px;
     font-weight: bold;
     text-align: right;
     text-transform: uppercase;

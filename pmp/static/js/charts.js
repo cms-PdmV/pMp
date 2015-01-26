@@ -1,5 +1,6 @@
 // for multi-transitions
 function endall(transition, callback) {
+    console.log('is that?');
                         var n = 0;
                         transition
                             .each(function() { ++n; })
@@ -1047,24 +1048,24 @@ angular.module('mcm.charts', [])
 
                 var innerHtml = "<style>.nav.dnd {margin-bottom: 0;}</style>";
                 //innerHtml += "<div class='row' align='middle'><h4>{{title}}</h4></div>";
-                innerHtml += "<div class='row'><div class='col-lg-6 col-md-12 col-sm-12'><span class='col-lg-3 col-md-2 col-sm-2 nav-header'>selections</span>";
+                innerHtml += "<div class='row'><div class='col-lg-9 col-md-12 col-sm-12'><span class='col-lg-2 col-md-2 col-sm-2 nav-header text-muted'>selections</span>";
 
-                innerHtml += "<ul id='possible-selections' class='nav nav-pills dnd col-lg-6 col-md-10 col-sm-10 inline' style='min-height:27px'>";
+                innerHtml += "<ul id='possible-selections' class='nav nav-pills dnd col-lg-10 col-md-10 col-sm-10 inline' style='min-height:27px'>";
                 innerHtml += "<li class='btn btn-default btn-xs text-uppercase' ng-repeat='value in selections'>{{value}}</li>";
                 innerHtml += "</ul></div>";
                 // options for drag and drop
                 for(var key in scope.options) {
                     var value = scope.options[key];
                     if(value instanceof Array) {
-                        innerHtml += "<div class='col-lg-6 col-md-12 col-sm-12'>";
-                        innerHtml+="<ul id='"+key+"' class='nav nav-pills dnd col-lg-12 col-md-12 col-sm-12 inline' style='min-height:27px'><li class='col-lg-3 col-md-2 col-sm-2 nav-header'>"+key+"</li>";
+                        innerHtml += "<div class='col-lg-6 col-md-12 col-sm-12'><span class='col-lg-3 col-md-2 col-sm-2 nav-header'>"+key+"</span>";
+                        innerHtml += "<ul id='"+key+"' class='nav nav-pills dnd col-lg-9 col-md-10 col-sm-10 inline' style='min-height:27px'>";
                         for(var i=0;i<value.length;i++) {
                             innerHtml+="<li class='btn btn-default btn-xs text-uppercase'>"+value[i]+"</li>";
                         }
                         innerHtml+="</ul></div>";
                     } else {
-                        innerHtml += "<div class='col-lg-6 col-md-12 col-sm-12'>";
-                        innerHtml+="<ul id='"+key+"' class='nav nav-pills dnd single col-lg-12 col-md-12 col-sm-12 inline' style='min-height:27px'><li class='col-lg-3 col-md-2 col-sm-2 nav-header'>"+key+"</li>";
+                        innerHtml += "<div class='col-lg-6 col-md-12 col-sm-12'><span class='col-lg-3 col-md-2 col-sm-2 nav-header'>"+key+"</span>";
+                        innerHtml+="<ul id='"+key+"' class='nav nav-pills dnd single col-lg-9 col-md-10 col-sm-10 inline' style='min-height:27px'>";
                         if(value!="") {
                             innerHtml+="<li class='btn btn-default btn-xs text-uppercase'>" + value + "</li>";
                         }
@@ -1121,16 +1122,25 @@ angular.module('mcm.charts', [])
                     title: 'nav-header',
                     pullPlaceholder:false,
                     isValidTarget: function($item, container) {
-                        return !($(container.el[0]).hasClass("single") && container.items.length > 1);
+                            console.log("A:");
+                            console.log($item);
+                            console.log(container);
+                            console.log(!($(container.el[0]).hasClass("single") && container.items.length > 1));
+                        return !($(container.el[0]).hasClass("single") && container.items.length > 0);
                     },
                     onDrop: function($item, container, _super) {
+                            console.log("B:" + $item);
+
                         if(container.el[0].id!='possible-selections') {
                             scope.addOption(container.el[0].id, $item[0].textContent, $(container.el[0].children).index($item[0]));
+                            console.log("Y");
                         }
                         _super($item, container);
                         },
                             onDragStart: function($item, container, _super) {
+                            console.log("C");
                         if(container.el[0].id!='possible-selections') {
+                            console.log("D");
                             scope.removeOption(container.el[0].id, $item[0].textContent);
                         }
                         _super($item, container);
