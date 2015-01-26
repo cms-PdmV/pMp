@@ -1,6 +1,5 @@
 // for multi-transitions
 function endall(transition, callback) {
-    console.log('is that?');
                         var n = 0;
                         transition
                             .each(function() { ++n; })
@@ -633,9 +632,22 @@ angular.module('mcm.charts', [])
                             .tickValues(yAxis.tickValues())
                     );
 
+                    // HERE Y axes
+                    if (valueOperation == 'number of events') {
+                        axesYTitle = 'events';
+                    } else if (valueOperation == 'number of requests') {
+                        axesYTitle = 'requests';
+                    } else if (valueOperation == "seconds") {
+                        axesYTitle = 's';
+                    }
+
+                    if (yScaleType == 'log') {
+                        axesYTitle = 'log(' + axesYTitle + ')';
+                    }
+
                     svg.select(".y.axis")
                         .select("#ytitle")
-                        .text(yScaleType);
+                        .text(axesYTitle);
 
                     svg.select(".y.axis")
                         .transition()
@@ -1058,14 +1070,14 @@ angular.module('mcm.charts', [])
                     var value = scope.options[key];
                     if(value instanceof Array) {
                         innerHtml += "<div class='col-lg-6 col-md-12 col-sm-12'><span class='col-lg-3 col-md-2 col-sm-2 nav-header'>"+key+"</span>";
-                        innerHtml += "<ul id='"+key+"' class='nav nav-pills dnd col-lg-9 col-md-10 col-sm-10 inline' style='min-height:27px'>";
+                        innerHtml += "<ul id='"+key+"' class='nav nav-pills dnd col-lg-9 col-md-10 col-sm-10 inline alert-info' style='min-height:20px; margin:3px 0;'>";
                         for(var i=0;i<value.length;i++) {
                             innerHtml+="<li class='btn btn-default btn-xs text-uppercase'>"+value[i]+"</li>";
                         }
                         innerHtml+="</ul></div>";
                     } else {
                         innerHtml += "<div class='col-lg-6 col-md-12 col-sm-12'><span class='col-lg-3 col-md-2 col-sm-2 nav-header'>"+key+"</span>";
-                        innerHtml+="<ul id='"+key+"' class='nav nav-pills dnd single col-lg-9 col-md-10 col-sm-10 inline' style='min-height:27px'>";
+                        innerHtml+="<ul id='"+key+"' class='nav nav-pills dnd single col-lg-9 col-md-10 col-sm-10 inline alert-info' style='min-height:20px; margin:3px 0;'>";
                         if(value!="") {
                             innerHtml+="<li class='btn btn-default btn-xs text-uppercase'>" + value + "</li>";
                         }

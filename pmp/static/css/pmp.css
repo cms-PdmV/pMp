@@ -30,6 +30,7 @@ body.dragging, body.dragging * {
     stroke-width: 0.6;
     stroke-dasharray: 2,2;
 }
+
 .grid path {
     stroke-width: 0;
 }
