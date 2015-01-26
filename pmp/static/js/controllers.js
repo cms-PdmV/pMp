@@ -345,7 +345,14 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval, $
     }
 
     $scope.takeScreenshot = function() {
-        console.log('Not yet implemented');
+        var tmp = document.getElementById("ctn");
+        var svg = tmp.getElementsByTagName("svg")[0];
+        var svg_xml = (new XMLSerializer).serializeToString(svg);
+        svg_xml = svg_xml.split('<path class="domain"').join('<path style="fill: none;shape-rendering: crispedges;stroke: black;stroke-width: 1;"');
+        svg_xml = svg_xml.split('<g class="tick" style="opacity: 1;"').join('<g style="opacity: 1;stroke: grey;stroke-dasharray: 2, 2;stroke-width: 0.6;"');
+        svg_xml = svg_xml.split('<svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMin meet" viewBox="0 0 1500 500" width="100%" style="height: 100%;">').join('<svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMin meet" viewBox="0 0 1500 500" width="100%" style="font-size:12px;">');
+        var blob = new Blob([svg_xml], {type: "text/plain;charset=utf-8"});
+        saveAs(blob, "screenshot.xml");
     }
 
     $scope.updateDate = function() {
