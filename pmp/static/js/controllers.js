@@ -128,12 +128,12 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval, $
         };
         $scope.requests.radio = {}
         $scope.requests.radio.scale = ["linear", "log"];
-        $scope.requests.radio.mode = ["number of events", "number of requests"];
+        $scope.requests.radio.mode = ['events', 'requests', 'seconds'];
         if ($scope.aRadioValues[1] == 1) {
             $scope.requests.radio.scale = ["log", "linear"];
         }
         if ($scope.aRadioValues[0] == 1) {
-            $scope.requests.radio.mode = ["number of requests", "number of events"];
+            $scope.requests.radio.mode = ['requests', 'events', 'seconds'];
         }
         $scope.showDate = $location.search().t === 'true';
         $scope.chainMode = ($location.search().m === 'true') || $scope.isChainUrl;

@@ -306,7 +306,7 @@ angular.module('mcm.charts', [])
                 columns: '=?coloring', // how to do and color last horizontal split
                 stacking: '=?', // how to vertically divide each column
                 yScaleType: '=?scale', // "linear" or "log"
-                valueOperation: '=?mode', // "number of events" or "number of requests"
+                valueOperation: '=?mode', // events, requests or seconds
                 responsive: '=?', // should the chart be responsive to the webpage size
                 duration: '=?', // duration of animations
                 legend: '=?', // should the color legend be shown
@@ -358,17 +358,13 @@ angular.module('mcm.charts', [])
                     columns = scope.columns || "";
                     stacking = scope.stacking ? scope.stacking.slice(0) : [];
                     yScaleType = scope.yScaleType || "linear";
-                    valueOperation = scope.valueOperation || "number of events";
+                    valueOperation = scope.valueOperation || 'events';
                     duration = isNaN(scope.duration) ? 1000 : scope.duration;
                     if(scope.legend){
                         margin.right=100;
                     } else {
                         margin.right=50;
                     }
-
-//                    if(valueOperation=="count" && stacking.indexOf(scope.value)<0 && value.length) {
-//                        stacking.push(scope.value);
-//                    }
                 }
 
                 function changeWidthHeight() {
@@ -432,10 +428,8 @@ angular.module('mcm.charts', [])
                         svg.select(".no-data-info").remove();
                     }
 
-
                     scales['undefined']={};
                     scales['undefined'].rangeBand = function(){return width};
-
                 }
 
 
@@ -449,14 +443,14 @@ angular.module('mcm.charts', [])
                             for(; i<rows_domains[stacking_level].length; i++) {
                                 var t = {};
                                 t["tooltipInfoAttribute"] = "";
-                                if(valueOperation=="number of events") {
-                                    t[value] = d3.sum(input_list, function(d){
+                                if(valueOperation == 'events') {
+                                    t[value] = d3.sum(input_list, function(d) {
                                         if(d[stacking[stacking_level]]==rows_domains[stacking_level][i])
                                             return d[value];
                                         return 0;
                                     });
-                                } else if(valueOperation == "number of requests")  {
-                                    var v = "";
+                                } else if(valueOperation == 'requests') {
+                                    var v = '';
                                     t[value] = input_list.filter(function(d){
                                         if(d[stacking[stacking_level]]==rows_domains[stacking_level][i]) {
                                             v = d[value];
@@ -464,6 +458,20 @@ angular.module('mcm.charts', [])
                                         }
                                         return false;
                                     }).length;
+                                } else if(valueOperation == 'seconds') {
+                                    var v = '';
+                                    var tmp = input_list.filter(function(d){
+                                        if(d[stacking[stacking_level]]==rows_domains[stacking_level][i]) {
+                                            v = d[value];
+                                            return true;
+                                        }
+                                        return false;
+                                    });
+                                    var sum = 0;
+                                    for (var x=0; x<tmp.length; x++) {
+                                        sum += tmp[x].total_events*tmp[x].time_event;
+                                    }
+                                    t[value] = sum;
                                 }
                                 var final_y_attr = y_attr + rows_domains[stacking_level][i];
                                 if(rows_color_domain.indexOf(final_y_attr)<0)
@@ -562,16 +570,21 @@ angular.module('mcm.charts', [])
                                 var t = {};
                                 t.columnsXDomainAttribute = filtered_leaves[i].column;
                                 t.tooltipInfoAttribute = filtered_leaves[i].info_attribute;
-                                //made it
-                                if(valueOperation == "number of events") {
+                                if (valueOperation == 'events') {
                                     scope.$parent.$parent.setScaleAndOperation(0, 0);
-                                    t[value] = d3.sum(filtered_leaves[i].values, function(d) {return d[value]});
-                                } else if(valueOperation == "number of requests") {
+                                    t[value] = d3.sum(filtered_leaves[i].values,
+                                                      function(d) {return d[value]});
+                                } else if (valueOperation == 'requests') {
                                     scope.$parent.$parent.setScaleAndOperation(0, 1);
                                     t[value] = filtered_leaves[i].values.length;
-                                    if(value.length && valueOperation!="number of requests") {
-                                        t.tooltipInfoAttribute += "\n" + value + ": " + filtered_leaves[i].values[0][value];
+                                } else if (valueOperation == 'seconds') {
+                                    // sum over product of time_event and total_events
+                                    var tmp = filtered_leaves[i].values;
+                                    var sum = 0;
+                                    for (var x=0; x<tmp.length; x++) {
+                                        sum += tmp[x].time_event*tmp[x].total_events;
                                     }
+                                    t[value] = sum;
                                 }
                                 t.rowsYEndingAttribute = t[value];
                                 if(main_group=="") {
@@ -599,13 +612,6 @@ angular.module('mcm.charts', [])
                             xAxis.scale(x_scale);
                         }
                     }
-
-                    // reprint axes
-                    /*if(valueOperation=="number of requests") {
-                        yAxis.tickFormat(d3.format(",d")).tickSubdivide(0);
-                    } else {
-                        yAxis.tickFormat(d3.format(",f"));
-                        }*/
                     yAxis.tickFormat(d3.format(""));
                     if(yScaleType == "log" && ( columns || grouping.length ) && data.length) {
                         function prepareTicks(minimalValue, maximalTick, minimalTick) {
@@ -632,19 +638,17 @@ angular.module('mcm.charts', [])
                             .tickValues(yAxis.tickValues())
                     );
 
-                    // HERE Y axes
-                    if (valueOperation == 'number of events') {
+                    // y axis title
+                    if (valueOperation == 'events') {
                         axesYTitle = 'events';
-                    } else if (valueOperation == 'number of requests') {
+                    } else if (valueOperation == 'requests') {
                         axesYTitle = 'requests';
                     } else if (valueOperation == "seconds") {
                         axesYTitle = 's';
                     }
-
                     if (yScaleType == 'log') {
                         axesYTitle = 'log(' + axesYTitle + ')';
                     }
-
                     svg.select(".y.axis")
                         .select("#ytitle")
                         .text(axesYTitle);
@@ -667,17 +671,19 @@ angular.module('mcm.charts', [])
                                 .append("title");
 
                             svg.selectAll(".x.axis .tick title").text(function(d){
-                                    var string_to_show = "";
-                                    if(valueOperation == "number of events") {
-                                        string_to_show = value;
-                                    } else if(valueOperation == "number of requests") {
-                                        string_to_show = "#(items)";
+                                    var string_to_show = '';
+                                    if(valueOperation == 'events') {
+                                        string_to_show = 'Number of events';
+                                    } else if(valueOperation == 'requests') {
+                                        string_to_show = 'Number of requests';
+                                    } else if(valueOperation == 'seconds') {
+                                        string_to_show = 'Seconds per event';
                                     }
                                     var sum_value = d3.sum(svg.selectAll("rect.grouping" + d).data(),
                                         function(d){
                                             return d[value];
                                         });
-                                    string_to_show += ": " + sum_value;//.toLocaleString();
+                                    string_to_show += ": " + sum_value;
                                     return d+"\n"+string_to_show;
                                 });
                         })
@@ -852,13 +858,15 @@ angular.module('mcm.charts', [])
                     }
 
                     function setTitle(d) {
-                        var string_to_show;
-                        if(valueOperation == "number of events") {
+                        var string_to_show = '';
+                        if (valueOperation == 'events') {
                             string_to_show = 'Number of events';
-                        } else if(valueOperation == "number of requests") {
-                            string_to_show = "Number of requests";
+                        } else if (valueOperation == 'requests') {
+                            string_to_show = 'Number of requests';
+                        } else if (valueOperation == 'seconds') {
+                            string_to_show = 'Seconds per event';
                         }
-                        string_to_show += ": " + d[value];//.toLocaleString();
+                        string_to_show += ": " + d[value];
                         if(d.tooltipInfoAttribute){
                             string_to_show += d.tooltipInfoAttribute;
                         }
@@ -960,17 +968,19 @@ angular.module('mcm.charts', [])
 
                         legend.select("title")
                             .text(function(d){
-                                    var string_to_show = "";
-                                    if(valueOperation == "number of events") {
-                                        string_to_show = "Number of events";
-                                    } else if(valueOperation == "number of requests") {
-                                        string_to_show = "Number of requests";
+                                    var string_to_show = '';
+                                    if (valueOperation == 'events') {
+                                        string_to_show = 'Number of events';
+                                    } else if (valueOperation == 'requests') {
+                                        string_to_show = 'Number of requests';
+                                    } else if (valueOperation == 'seconds') {
+                                        string_to_show = 'Seconds per event';
                                     }
                                     var sum_value = d3.sum(svg.selectAll("rect.columning" + d).data(),
                                         function(d){
                                             return d[value];
                                         });
-                                    string_to_show += ": " + sum_value;//.toLocaleString();
+                                    string_to_show += ": " + sum_value;
                                     return d+"\n"+string_to_show;
                                 });
 
@@ -1004,7 +1014,6 @@ angular.module('mcm.charts', [])
                     redraw();
                 });
 
-
                 scope.optionsChange = function() {
                     return 'value + stacking + columns + grouping + yScaleType + valueOperation';
                 };
@@ -1012,7 +1021,6 @@ angular.module('mcm.charts', [])
                 scope.$watch(scope.optionsChange(), function(dat) {
                     redraw();
                 });
-
             }
         }
 
@@ -1062,7 +1070,7 @@ angular.module('mcm.charts', [])
                 //innerHtml += "<div class='row' align='middle'><h4>{{title}}</h4></div>";
                 innerHtml += "<div class='row'><div class='col-lg-9 col-md-12 col-sm-12'><span class='col-lg-2 col-md-2 col-sm-2 nav-header text-muted'>selections</span>";
 
-                innerHtml += "<ul id='possible-selections' class='nav nav-pills dnd col-lg-10 col-md-10 col-sm-10 inline' style='min-height:27px'>";
+                innerHtml += "<ul id='possible-selections' class='nav nav-pills dnd col-lg-10 col-md-10 col-sm-10 inline' style='min-height:22px'>";
                 innerHtml += "<li class='btn btn-default btn-xs text-uppercase' ng-repeat='value in selections'>{{value}}</li>";
                 innerHtml += "</ul></div>";
                 // options for drag and drop
@@ -1070,14 +1078,14 @@ angular.module('mcm.charts', [])
                     var value = scope.options[key];
                     if(value instanceof Array) {
                         innerHtml += "<div class='col-lg-6 col-md-12 col-sm-12'><span class='col-lg-3 col-md-2 col-sm-2 nav-header'>"+key+"</span>";
-                        innerHtml += "<ul id='"+key+"' class='nav nav-pills dnd col-lg-9 col-md-10 col-sm-10 inline alert-info' style='min-height:20px; margin:3px 0;'>";
+                        innerHtml += "<ul id='"+key+"' class='nav nav-pills dnd col-lg-9 col-md-10 col-sm-10 inline alert-info' style='min-height:22px; margin:3px 0;'>";
                         for(var i=0;i<value.length;i++) {
                             innerHtml+="<li class='btn btn-default btn-xs text-uppercase'>"+value[i]+"</li>";
                         }
                         innerHtml+="</ul></div>";
                     } else {
                         innerHtml += "<div class='col-lg-6 col-md-12 col-sm-12'><span class='col-lg-3 col-md-2 col-sm-2 nav-header'>"+key+"</span>";
-                        innerHtml+="<ul id='"+key+"' class='nav nav-pills dnd single col-lg-9 col-md-10 col-sm-10 inline alert-info' style='min-height:20px; margin:3px 0;'>";
+                        innerHtml+="<ul id='"+key+"' class='nav nav-pills dnd single col-lg-9 col-md-10 col-sm-10 inline alert-info' style='min-height:22px; margin:3px 0;'>";
                         if(value!="") {
                             innerHtml+="<li class='btn btn-default btn-xs text-uppercase'>" + value + "</li>";
                         }
@@ -1134,25 +1142,16 @@ angular.module('mcm.charts', [])
                     title: 'nav-header',
                     pullPlaceholder:false,
                     isValidTarget: function($item, container) {
-                            console.log("A:");
-                            console.log($item);
-                            console.log(container);
-                            console.log(!($(container.el[0]).hasClass("single") && container.items.length > 1));
                         return !($(container.el[0]).hasClass("single") && container.items.length > 0);
                     },
                     onDrop: function($item, container, _super) {
-                            console.log("B:" + $item);
-
                         if(container.el[0].id!='possible-selections') {
                             scope.addOption(container.el[0].id, $item[0].textContent, $(container.el[0].children).index($item[0]));
-                            console.log("Y");
                         }
                         _super($item, container);
                         },
                             onDragStart: function($item, container, _super) {
-                            console.log("C");
                         if(container.el[0].id!='possible-selections') {
-                            console.log("D");
                             scope.removeOption(container.el[0].id, $item[0].textContent);
                         }
                         _super($item, container);
