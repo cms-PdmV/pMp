@@ -578,6 +578,7 @@ angular.module('mcm.charts', [])
                                     scope.$parent.$parent.setScaleAndOperation(0, 1);
                                     t[value] = filtered_leaves[i].values.length;
                                 } else if (valueOperation == 'seconds') {
+                                    scope.$parent.$parent.setScaleAndOperation(0, 2);
                                     // sum over product of time_event and total_events
                                     var tmp = filtered_leaves[i].values;
                                     var sum = 0;

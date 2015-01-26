@@ -135,6 +135,9 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval, $
         if ($scope.aRadioValues[0] == 1) {
             $scope.requests.radio.mode = ['requests', 'events', 'seconds'];
         }
+        if ($scope.aRadioValues[0] == 2) {
+            $scope.requests.radio.mode = ['seconds', 'events', 'requests'];
+        }
         $scope.showDate = $location.search().t === 'true';
         $scope.chainMode = ($location.search().m === 'true') || $scope.isChainUrl;
         $scope.filterPriority = ['', ''];
