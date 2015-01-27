@@ -1069,7 +1069,7 @@ angular.module('mcm.charts', [])
 
                 var innerHtml = "<style>.nav.dnd {margin-bottom: 0;}</style>";
                 //innerHtml += "<div class='row' align='middle'><h4>{{title}}</h4></div>";
-                innerHtml += "<div class='row'><div class='col-lg-9 col-md-12 col-sm-12'><span class='col-lg-2 col-md-2 col-sm-2 nav-header text-muted'>selections</span>";
+                innerHtml += "<div class='row'><div class='col-lg-9 col-md-12 col-sm-12' style='margin-bottom: 3px'><span class='col-lg-2 col-md-2 col-sm-2 nav-header text-muted'>selections</span>";
 
                 innerHtml += "<ul id='possible-selections' class='nav nav-pills dnd col-lg-10 col-md-10 col-sm-10 inline' style='min-height:22px'>";
                 innerHtml += "<li class='btn btn-default btn-xs text-uppercase' ng-repeat='value in selections'>{{value}}</li>";
@@ -1099,7 +1099,7 @@ angular.module('mcm.charts', [])
                 scope.radiovalue = {};
                 for(key in scope.radio) {
 
-                    innerHtml += "<div class='col-lg-6 col-md-6 col-sm-12 spacing-sm'>";
+                    innerHtml += "<div class='col-lg-6 col-md-6 col-sm-12 spacing-sm' style='margin-top:3px;'>";
                     innerHtml += "<span class='col-lg-3 col-md-4 col-sm-2 nav-header'>" + key + "</span>";
 
                     innerHtml += "<ul class='nav nav-pills inline col-lg-9 col-md-8 col-sm-10'>";

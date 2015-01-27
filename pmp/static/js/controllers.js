@@ -206,7 +206,8 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval, $
                         data.data.results.push.apply(data.data.results, $scope.cachedRequestData);
                     } else {
                         $scope.cachedRequestData = [];
-                        $scope.tagsRemoveAll();
+                        //$scope.allRequestData = [];
+                        $scope.tagsRemoveAll([campaign]);
                     }
                     if (campaign == 'all') {
                         for (var i = 0; i < data.data.results.length; i++) {
@@ -337,10 +338,12 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval, $
         }
     });
 
-    $scope.tagsRemoveAll = function() {
+    $scope.tagsRemoveAll = function(arr) {
         var tmp = angular.copy($scope.tags.getTags());
         for (var i = 0; i < tmp.length; i++) {
-            $scope.tags.removeTag(tmp[i]);
+            if (arr.indexOf(tmp[i]) == -1) {
+                $scope.tags.removeTag(tmp[i]);
+            }
         }
     }
 
@@ -352,7 +355,7 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval, $
         svg_xml = svg_xml.split('<g class="tick" style="opacity: 1;"').join('<g style="opacity: 1;stroke: grey;stroke-dasharray: 2, 2;stroke-width: 0.6;"');
         svg_xml = svg_xml.split('<svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMin meet" viewBox="0 0 1500 500" width="100%" style="height: 100%;">').join('<svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMin meet" viewBox="0 0 1500 500" width="100%" style="font-size:12px;">');
         var blob = new Blob([svg_xml], {type: "text/plain;charset=utf-8"});
-        saveAs(blob, "screenshot.xml");
+        saveAs(blob, "screenshot.html");
     }
 
     $scope.updateDate = function() {
@@ -392,8 +395,8 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval, $
                     data.push(tmp[i]);
                 }
             }
-            $scope.allRequestData = data;
             $scope.$apply(function() {
+                $scope.allRequestData = data;
                 $scope.loadingData = false;
             });
         }, 500);

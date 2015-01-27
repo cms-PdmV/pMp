@@ -84,7 +84,7 @@
         <form class="form-group form-inline form-group-sm">
           <small class="text-uppercase col-sm-12 col-md-12 col-lg-12">Priority filter</small>
           <div class="input-group col-sm-12">
-            <select class="form-control text-center col-sm-5" ng-model="filterPriority[0]"
+            <select class="form-control text-center" ng-model="filterPriority[0]"
                     ng-change="updateRequestData();setURL()">
               <option ng-repeat="(key, value) in priorityPerBlock"
                       value="{{value}}">
