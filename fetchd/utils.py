@@ -20,7 +20,7 @@ class Config():
         self.exclude_list = re.split(", ", parser.get('exclude', 'list'))
         self.remove_list = re.split(", ", parser.get('remove_params', 'list'))
 
-        self.url_mcm = parser.get('general', 'mcm')
+        self.url_mcm = parser.get(typeof, 'db_source')
         self.db = parser.get(typeof, 'db')
         self.url_db = self.url_mcm + self.db
         self.url_db_changes = (self.url_db +
