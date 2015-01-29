@@ -206,7 +206,6 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval, $
                         data.data.results.push.apply(data.data.results, $scope.cachedRequestData);
                     } else {
                         $scope.cachedRequestData = [];
-                        //$scope.allRequestData = [];
                         $scope.tagsRemoveAll([campaign]);
                     }
                     if (campaign == 'all') {
@@ -243,7 +242,7 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval, $
         }
         $scope.cachedRequestData = [];
         $scope.allRequestData = [];
-        $scope.tagsRemoveAll();
+        $scope.tagsRemoveAll([]);
     };
 
     $scope.piecharts = {};

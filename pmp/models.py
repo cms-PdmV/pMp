@@ -166,7 +166,7 @@ class GetSuggestions():
 
     def __init__(self, typeof):
         self.es = ElasticSearch(config.DATABASE_URL)
-        self.overflow = 8
+        self.overflow = 20
         self.on = (typeof == 'true')
 
     def get(self, campaign):
