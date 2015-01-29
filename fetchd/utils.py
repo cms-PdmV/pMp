@@ -25,12 +25,16 @@ class Config():
         self.url_db = self.url_mcm + self.db
         self.url_db_changes = (self.url_db +
                                parser.get('general', 'db_query_changes'))
-
+        self.url_db_first = (self.url_db +
+                               parser.get('general', 'db_query_first'))
+        self.url_db_all = (self.url_db +
+                               parser.get('general', 'db_query_all_doc'))
         self.url_pmp = parser.get('general', 'pmp')
         self.pmp_db_index = self.url_pmp + parser.get(typeof, 'pmp_db_index')
         self.pmp_db = self.pmp_db_index + parser.get(typeof, 'pmp_db')
         self.last_seq = self.pmp_db_index + parser.get(typeof, 'last_seq')
         self.mapping = parser.get(typeof, 'mapping')
+
 
 
 class Utils():
