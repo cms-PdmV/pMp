@@ -4,19 +4,22 @@ var pmpApp = angular.module('pmpApp', ['ngAnimate', 'ngRoute', 'ui.bootstrap', '
     .config(['$routeProvider', '$locationProvider',
         function($routeProvider, $locationProvider) {
             $routeProvider
-                .when('/campaign', {
-                    templateUrl: '/partials/campaign.html',
-                    controller: 'CampaignsController'
-                })
                 .when('/', {
                     templateUrl: '/partials/index.html',
                     controller: 'IndexController'
                 })
+                .when('/campaign', {
+                    templateUrl: '/partials/campaign.html',
+                    controller: 'CampaignsController'
+                })
                 .when('/chain', {
                     templateUrl: '/partials/campaign.html',
                     controller: 'CampaignsController'
+                })
+                .when('/lifetime', {
+                    templateUrl: '/partials/lifetime.html',
+                    controller: 'LifetimeController'
                 });
             $locationProvider.html5Mode(true);
-            $locationProvider.hashPrefix('!');
         }
     ]);

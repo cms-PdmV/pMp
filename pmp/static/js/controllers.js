@@ -423,3 +423,7 @@ pmpApp.controller('TypeaheadCtrl', function($scope, $http) {
         }
     };
 });
+
+pmpApp.controller('LifetimeController', function() {
+        console.log('Hello Lifetime!');
+    });
