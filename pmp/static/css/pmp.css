@@ -141,3 +141,40 @@ ul.nav li.placeholder:before {
 .white {
     color: white;
 }
+
+/*in dev*/
+path {
+    stroke-width: 1;
+    fill: none;
+}
+
+.data1 {
+    stroke-width: 2;
+    stroke: #FF7373;
+}
+      
+.data2 {
+    stroke-width: 2;
+    stroke: #AAFD8E;
+}
+
+.axis {
+    shape-rendering: crispEdges;
+}
+      
+.x.axis line {
+    stroke: #AAAAAA;
+}
+
+.x.axis .minor {
+    stroke-opacity: .5;
+}
+
+.x.axis path {
+    display: none;
+}
+
+.y.axis line, .y.axis path {
+    fill: none;
+    stroke: #AAAAAA;
+}
