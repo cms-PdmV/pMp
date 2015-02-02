@@ -425,7 +425,6 @@ pmpApp.controller('TypeaheadCtrl', function($scope, $http) {
 });
 
 pmpApp.controller('LifetimeController', function($scope) {
-    console.log('Hello Lifetime!');
-
+    $scope.allRequestData = [[1335035400000, 100, 90],[1335135400000, 0, 0],[1335294600000, 100, 10]];
     $scope.title = 'Life-Time Representation of Requests';
 });
