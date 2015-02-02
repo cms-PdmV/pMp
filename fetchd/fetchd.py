@@ -60,7 +60,8 @@ def get_changes(utl, cfg):
                         if s not in [200, 201]:
                             logging.error('%s Cannot update last_seq' %
                                           utl.get_time())
-                    yield r['id'], ('deleted' in r)
+                    if r['id'].startswith('pdmvserv'):
+                        yield r['id'], ('deleted' in r)
             else:
                 logging.info('%s Nothing to do. No changes since last update' %
                              utl.get_time())
