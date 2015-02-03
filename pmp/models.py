@@ -161,6 +161,20 @@ class GetCampaign():
                                         index='requests',
                                         size=self.overflow)['hits']['hits']]})
 
+class GetLifetime():
+
+    def __init__(self):
+        self.es = ElasticSearch(config.DATABASE_URL)
+        self.overflow = 1000000
+
+    def get(self, request):
+        return '{"results": [[1335035400000, 100, 90],[1335135400000, 0, 0],[1335294600000, 50, 0]]}'
+        #return json.dumps(
+        #    {"results": [s['_source'] for s in
+        #                 self.es.search(('member_of_campaign:%s' % campaign),
+        #                                index='requests',
+        #                                size=self.overflow)['hits']['hits']]})
+
 
 class GetSuggestions():
 

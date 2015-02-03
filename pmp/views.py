@@ -23,13 +23,15 @@ def dashboard():
     return make_response(open('pmp/templates/graph.html').read())
 
 
-@app.route('/api/<member_of_campaign>/<typeof>')
-def api(member_of_campaign, typeof):
+@app.route('/api/<field>/<typeof>')
+def api(field, typeof):
     if typeof == 'simple':
         gc = models.GetCampaign()
     elif typeof == 'chain':
         gc = models.GetChain()
-    return make_response(gc.get(member_of_campaign))
+    elif typeof == 'lifetime':
+        gc = models.GetLifetime()
+    return make_response(gc.get(field))
 
 
 @app.route('/api/suggest/<input>/<typeof>')

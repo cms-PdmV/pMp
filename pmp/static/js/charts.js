@@ -9,7 +9,7 @@ function endall(transition, callback) {
 angular.module('mcm.charts', [])
     .directive('linearLifetime', function() {
         return {
-            restrict: 'E',
+            restrict: 'AE',
             scope: {
                 chartData: '=', // data to transfer to chart (as data='chartData')
             },
@@ -19,6 +19,17 @@ angular.module('mcm.charts', [])
                 var m = [20, 40, 20, 40]; // margins
                 var w = 1000 - m[1] - m[3]; // width
                 var h = 400 - m[0] - m[2]; // height
+
+
+
+                var svg = d3.select(element[0])
+                    .append('svg:svg')
+                    .attr("width", w + m[1] + m[3])
+                    .attr("height", h + m[0] + m[2])
+                    .append("svg:g")
+                    .attr("transform", "translate(" + m[3] + "," + m[0] + ")");
+
+                var t = svg.transition().duration(1000);
 		
                 var startTime = new Date(d3.min(scope.chartData, function(d) {return d[0];}));
                 var endTime = new Date(d3.max(scope.chartData, function(d) {return d[0];}));
@@ -27,14 +38,15 @@ angular.module('mcm.charts', [])
                 x.tickFormat(d3.time.format("%Y-%m-%d"));
                 
                 var y = d3.scale.linear().domain([0, d3.max(scope.chartData, function(d) { return d[1]; })]).range([h, 0]);
-                
+
+
                 var line1 = d3.svg.line()
                     .x(function(d,i) { 
                             return x(d[0]);
                         })
                     .y(function(d) { 
                             return y(d[1]);
-                        });
+                        }).interpolate("linear");;
                     
                 var line2 = d3.svg.line()
                     .x(function(d,i) { 
@@ -42,37 +54,34 @@ angular.module('mcm.charts', [])
                         })
                     .y(function(d) { 
                             return y(d[2]);
-                        });
-
-                var graph = d3.select(element[0])
-                    .append('svg:svg')
-                    .attr("width", w + m[1] + m[3])
-                    .attr("height", h + m[0] + m[2])
-                    .append("svg:g")
-                    .attr("transform", "translate(" + m[3] + "," + m[0] + ")");
+                        }).interpolate("linear");;
 
 
-                /*var graph = d3.select("#graph").append("svg:svg")
-                    .attr("width", w + m[1] + m[3])
-                    .attr("height", h + m[0] + m[2])
-                    .append("svg:g")
-                    .attr("transform", "translate(" + m[3] + "," + m[0] + ")");
-                */
+
                 var xAxis = d3.svg.axis().scale(x).tickSize(-h).tickSubdivide(1);
                 
-                graph.append("svg:g")
+                svg.append("svg:g")
                     .attr("class", "x axis")
                     .attr("transform", "translate(0," + h + ")")
                     .call(xAxis);
                 
                 var yAxisLeft = d3.svg.axis().scale(y).ticks(6).orient("left");
-                graph.append("svg:g")
+                svg.append("svg:g")
                     .attr("class", "y axis")
                     .attr("transform", "translate(-10,0)")
                     .call(yAxisLeft);
                 
-                graph.append("svg:path").attr("d", line1(scope.chartData)).attr("class", "data1");
-                graph.append("svg:path").attr("d", line2(scope.chartData)).attr("class", "data2");
+
+                var redraw = function() {
+                    svg.append("svg:path").attr("d", line1(scope.chartData)).attr("class", "data1");
+                    svg.append("svg:path").attr("d", line2(scope.chartData)).attr("class", "data2");
+                }
+
+                scope.$watch('chartData', function(dat) {
+                    redraw();
+                });
+
+                redraw();
             }
         } 
     })    
