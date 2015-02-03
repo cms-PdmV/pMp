@@ -70,11 +70,22 @@ angular.module('mcm.charts', [])
                     .attr("class", "y axis")
                     .attr("transform", "translate(-10,0)")
                     .call(yAxisLeft);
-                
+
+                var l1 = svg.append("svg:path")
+                    .attr("d", line1(scope.chartData))
+                    .attr("class", "data1");
+
+                var l2 = svg.append("svg:path")
+                    .attr("d", line2(scope.chartData))
+                    .attr("class", "data2");
 
                 var redraw = function() {
-                    svg.append("svg:path").attr("d", line1(scope.chartData)).attr("class", "data1");
-                    svg.append("svg:path").attr("d", line2(scope.chartData)).attr("class", "data2");
+                    l1.transition()
+                    .duration(2000).ease("elastic")
+                    .attr("d", line1(scope.chartData));
+                    l2.transition()
+                    .duration(2000).ease("elastic")
+                    .attr("d", line2(scope.chartData));
                 }
 
                 scope.$watch('chartData', function(dat) {

@@ -427,7 +427,6 @@ pmpApp.controller('TypeaheadCtrl', function($scope, $http) {
 pmpApp.controller('LifetimeController', function($http, $scope) {
 
     $scope.allRequestData = [[1335035400000, 100, 90],[1335135400000, 0, 0],[1335294600000, 100, 10]];
-    $scope.cachedRequestData = [[1335035400000, 100, 90],[1335135400000, 0, 0],[1335294600000, 100, 10]];
 
     $scope.load = function(request) {
         if (!request) {

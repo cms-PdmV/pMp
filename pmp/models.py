@@ -168,7 +168,7 @@ class GetLifetime():
         self.overflow = 1000000
 
     def get(self, request):
-        return '{"results": [[1335035400000, 100, 90],[1335135400000, 0, 0],[1335294600000, 50, 0]]}'
+        return '{"results": [[1335035400000, 10, 50],[1335135400000, 33, 66],[1335294600000, 50, 0]]}'
         #return json.dumps(
         #    {"results": [s['_source'] for s in
         #                 self.es.search(('member_of_campaign:%s' % campaign),
