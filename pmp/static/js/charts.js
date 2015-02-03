@@ -17,7 +17,7 @@ angular.module('mcm.charts', [])
                 console.log(scope.chartData);
 
                 var m = [20, 40, 20, 40]; // margins
-                var w = 1000 - m[1] - m[3]; // width
+                var w = 2000 - m[1] - m[3]; // width
                 var h = 400 - m[0] - m[2]; // height
 
 
@@ -29,14 +29,18 @@ angular.module('mcm.charts', [])
                     .append("svg:g")
                     .attr("transform", "translate(" + m[3] + "," + m[0] + ")");
 
-                var t = svg.transition().duration(1000);
-		
-                var startTime = new Date(d3.min(scope.chartData, function(d) {return d[0];}));
-                var endTime = new Date(d3.max(scope.chartData, function(d) {return d[0];}));
-                
-                var x = d3.time.scale().domain([startTime, endTime]).range([0, w]);
-                x.tickFormat(d3.time.format("%Y-%m-%d"));
-                
+                var startTime = d3.min(scope.chartData, function(d) {return d[0];});
+                var endTime = d3.max(scope.chartData, function(d) {return d[0];});
+
+
+                console.log(startTime, endTime);
+
+                //var x = d3.time.scale().domain([startTime, endTime]).range([0, w]);
+                var x = d3.scale.linear().domain([startTime, endTime]).range([0, w]);
+
+
+                //x.tickFormat(d3.time.format("%Y-%m-%d"));
+                x.tickFormat(d3.format(".0f"));
                 var y = d3.scale.linear().domain([0, d3.max(scope.chartData, function(d) { return d[1]; })]).range([h, 0]);
 
 

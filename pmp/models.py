@@ -2,7 +2,8 @@ from pyelasticsearch import ElasticSearch
 import config
 import copy
 import json
-
+import math
+import time
 
 class GetChain():
 
@@ -167,13 +168,39 @@ class GetLifetime():
         self.es = ElasticSearch(config.DATABASE_URL)
         self.overflow = 1000000
 
+    def db_query(self, request):
+        try:
+            return self.es.get('stats', 'stats', request)['_source']
+        except:
+            return []
+
+    def prepare_response(self, thisDoc):
+        response = {}
+        response['title'] = thisDoc['pdmv_prep_id']+' '+ thisDoc['pdmv_dataset_name']
+        response['y_max'] = thisDoc['pdmv_expected_events']
+        response['y_label'] = thisDoc['pdmv_expected_events']
+        response['data'] = []
+
+        if 'pdmv_monitor_history' in thisDoc:
+            #data = [int(round(time.time() * 1000)), thisDoc['pdmv_monitor_history'][0]['pdmv_evts_in_DAS'], thisDoc['pdmv_monitor_history'][0]['pdmv_evts_in_DAS'] + thisDoc['pdmv_monitor_history'][0]['pdmv_open_evts_in_DAS'] ]
+            #response['data'].append(data)
+
+            for nextOne in thisDoc['pdmv_monitor_history']:
+                today=time.mktime(time.strptime(time.asctime()))
+                T = time.mktime(time.strptime(nextOne['pdmv_monitor_time']))-today
+                T/= 60.*60.*24.*7.
+                
+                #T = math.log(T)
+                N = nextOne['pdmv_evts_in_DAS'] + nextOne['pdmv_open_evts_in_DAS']
+                M = nextOne['pdmv_evts_in_DAS']
+
+                data = [-T, N, M]
+                response['data'].append(data)
+        return response
+
     def get(self, request):
-        return '{"results": [[1335035400000, 10, 50],[1335135400000, 33, 66],[1335294600000, 50, 0]]}'
-        #return json.dumps(
-        #    {"results": [s['_source'] for s in
-        #                 self.es.search(('member_of_campaign:%s' % campaign),
-        #                                index='requests',
-        #                                size=self.overflow)['hits']['hits']]})
+        return json.dumps({"results": [self.prepare_response(self.db_query(request))]})
+
 
 
 class GetSuggestions():

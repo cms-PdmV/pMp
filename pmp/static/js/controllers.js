@@ -426,7 +426,7 @@ pmpApp.controller('TypeaheadCtrl', function($scope, $http) {
 
 pmpApp.controller('LifetimeController', function($http, $scope) {
 
-    $scope.allRequestData = [[1335035400000, 100, 90],[1335135400000, 0, 0],[1335294600000, 100, 10]];
+    $scope.allRequestData = [[-4.228993409929275, 100000, 0],[-2.9010480469402964, 100000, 0]];
 
     $scope.load = function(request) {
         if (!request) {
@@ -435,11 +435,12 @@ pmpApp.controller('LifetimeController', function($http, $scope) {
             $scope.loadingData = true;
             var promise = $http.get("api/" + request + "/lifetime");
             promise.then(function(data) {
+                console.log(data.data.results[0].data);
                 if (!data.data.results.length) {
                     $scope.showPopUp('error', 'No results for this request parameters');
                     $scope.loadingData = false;
                 } else {
-                    $scope.allRequestData = data.data.results;
+                    $scope.allRequestData = data.data.results[0].data;
                     $scope.loadingData = false;
                 }
             }, function() {
