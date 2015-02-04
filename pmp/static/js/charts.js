@@ -14,28 +14,34 @@ angular.module('mcm.charts', [])
                 chartData: '=', // data to transfer to chart (as data='chartData')
             },
             link: function(scope, element) {
-                var m = [40, 40, 40, 40]; // margins
-                var w = 1000 - m[1] - m[3]; // width
-                var h = 400 - m[0] - m[2]; // height
-
+                var margin = {top: 10, right: 0, bottom: 20, left: 80},
+                    width = 1200  - margin.left - margin.right,
+                    height = 400 - margin.top - margin.bottom;
+                    
+                var formatNumber = d3.format(".1f");
+                    
                 var svg = d3.select(element[0])
                     .append('svg:svg')
-                    .attr("width", w + m[1] + m[3])
-                    .attr("height", h + m[0] + m[2])
+                    .attr("preserveAspectRatio", "xMidYMin meet")
+                    .attr("viewBox", "0 0 " + (width + margin.left + margin.right) + " " + (height + margin.top + margin.bottom))
+                    .attr("width", "100%")
+                    .style("height", "100%")
                     .append("svg:g")
-                    .attr("transform", "translate(" + m[3] + "," + m[0] + ")");
+                    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+
 
                 var x = d3.time.scale()
                     .domain([
                              d3.min(scope.chartData, function(d) {return d[0];}),
                              d3.max(scope.chartData, function(d) {return d[0];})
                              ])
-                    .range([0, w]);
+                    .range([0, width]);
                     x.tickFormat(d3.time.format("%Y-%m-%d"));
+
                 var y = d3.scale.linear()
                     .domain([0, d3.max(scope.chartData, function(d) { return d[1]; })])
-                    .range([h, 0]);
-
+                    .range([height, 0]);
 
                 var line1 = d3.svg.line()
                     .x(function(d,i) { 
@@ -54,38 +60,33 @@ angular.module('mcm.charts', [])
                             return y(d[2]);
                         }).interpolate("linear");;
 
-                var line3 = d3.svg.line()
-                    .x(function(d,i) { 
-                            return x(d[0]);
-                        })
-                    .y(function(d) { 
-                            return y(100000*0.95);
-                        }).interpolate("linear");;
-
-
-
-                var xAxis = d3.svg.axis().scale(x).tickSize(-h).tickSubdivide(1);
+                var xAxis = d3.svg.axis().scale(x).tickSize(-height).tickSubdivide(1);
                 
                 svg.append("svg:g")
                     .attr("class", "x axis")
-                    .attr("transform", "translate(0," + h + ")")
+                    .attr("transform", "translate(0," + height + ")")
                     .call(xAxis);
+
+
+
                 
                 var yAxisLeft = d3.svg.axis().scale(y).ticks(6).orient("left");
-                svg.append("svg:g")
+                var gy = svg.append("svg:g")
                     .attr("class", "y axis")
-                    .attr("transform", "translate(-10,0)")
+                    //.attr("transform", "translate(-10,0)")
                     .call(yAxisLeft);
+
+                gy.selectAll("g").filter(function(d) { return d; })
+                    .classed("minor", true);
+
+                gy.selectAll(".y line")
+                    .attr("x2", width);
 
                 var l1 = svg.append("svg:path")
                     .attr("d", line1(scope.chartData))
                     .attr("class", "data1");
 
                 var l2 = svg.append("svg:path")
-                    .attr("d", line2(scope.chartData))
-                    .attr("class", "data2");
-
-                var l3 = svg.append("svg:path")
                     .attr("d", line2(scope.chartData))
                     .attr("class", "data2");
 
@@ -101,13 +102,6 @@ angular.module('mcm.charts', [])
                     .duration(1000)
                     .call(xAxis)
 
-                    console.log(d3.min(scope.chartData, function(d) {return d[0];}));
-
-
-                    l1.transition()
-                    .duration(2000).ease("elastic")
-                    .attr("d", "");
-
                     l1.transition()
                     .duration(2000).ease("elastic")
                     .attr("d", line1(scope.chartData));
@@ -115,12 +109,6 @@ angular.module('mcm.charts', [])
                     l2.transition()
                     .duration(2000).ease("elastic")
                     .attr("d", line2(scope.chartData));
-                    l3.transition()
-                    .duration(2000).ease("elastic")
-                    .attr("d", line3(scope.chartData));
-
-                    
-
                 }
 
                 scope.$watch('chartData', function(dat) {

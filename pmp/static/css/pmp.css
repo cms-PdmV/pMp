@@ -143,19 +143,24 @@ ul.nav li.placeholder:before {
 }
 
 /*in dev*/
+
+.axis .minor line {
+  stroke-dasharray: 1px, 4px;
+}
+
 path {
     stroke-width: 1;
     fill: none;
 }
 
 .data1 {
-    stroke-width: 2;
-    stroke: #FF7373;
+    stroke-width: 8;
+    stroke: #333333;
 }
       
 .data2 {
     stroke-width: 2;
-    stroke: #AAFD8E;
+    stroke: #15317E;
 }
 
 .axis {
@@ -176,5 +181,5 @@ path {
 
 .y.axis line, .y.axis path {
     fill: none;
-    stroke: #AAAAAA;
+    stroke: #777777;
 }
