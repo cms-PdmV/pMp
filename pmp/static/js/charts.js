@@ -14,13 +14,9 @@ angular.module('mcm.charts', [])
                 chartData: '=', // data to transfer to chart (as data='chartData')
             },
             link: function(scope, element) {
-                console.log(scope.chartData);
-
-                var m = [20, 40, 20, 40]; // margins
-                var w = 2000 - m[1] - m[3]; // width
+                var m = [40, 40, 40, 40]; // margins
+                var w = 1000 - m[1] - m[3]; // width
                 var h = 400 - m[0] - m[2]; // height
-
-
 
                 var svg = d3.select(element[0])
                     .append('svg:svg')
@@ -29,23 +25,21 @@ angular.module('mcm.charts', [])
                     .append("svg:g")
                     .attr("transform", "translate(" + m[3] + "," + m[0] + ")");
 
-                var startTime = d3.min(scope.chartData, function(d) {return d[0];});
-                var endTime = d3.max(scope.chartData, function(d) {return d[0];});
-
-
-                console.log(startTime, endTime);
-
-                //var x = d3.time.scale().domain([startTime, endTime]).range([0, w]);
-                var x = d3.scale.linear().domain([startTime, endTime]).range([0, w]);
-
-
-                //x.tickFormat(d3.time.format("%Y-%m-%d"));
-                x.tickFormat(d3.format(".0f"));
-                var y = d3.scale.linear().domain([0, d3.max(scope.chartData, function(d) { return d[1]; })]).range([h, 0]);
+                var x = d3.time.scale()
+                    .domain([
+                             d3.min(scope.chartData, function(d) {return d[0];}),
+                             d3.max(scope.chartData, function(d) {return d[0];})
+                             ])
+                    .range([0, w]);
+                    x.tickFormat(d3.time.format("%Y-%m-%d"));
+                var y = d3.scale.linear()
+                    .domain([0, d3.max(scope.chartData, function(d) { return d[1]; })])
+                    .range([h, 0]);
 
 
                 var line1 = d3.svg.line()
                     .x(function(d,i) { 
+                            console.log("x" + d[0]);
                             return x(d[0]);
                         })
                     .y(function(d) { 
@@ -58,6 +52,14 @@ angular.module('mcm.charts', [])
                         })
                     .y(function(d) { 
                             return y(d[2]);
+                        }).interpolate("linear");;
+
+                var line3 = d3.svg.line()
+                    .x(function(d,i) { 
+                            return x(d[0]);
+                        })
+                    .y(function(d) { 
+                            return y(100000*0.95);
                         }).interpolate("linear");;
 
 
@@ -83,13 +85,42 @@ angular.module('mcm.charts', [])
                     .attr("d", line2(scope.chartData))
                     .attr("class", "data2");
 
+                var l3 = svg.append("svg:path")
+                    .attr("d", line2(scope.chartData))
+                    .attr("class", "data2");
+
                 var redraw = function() {
+                    x.domain([
+                             d3.min(scope.chartData, function(d) {return d[0];}),
+                             d3.max(scope.chartData, function(d) {return d[0];})
+                              ]);
+                    xAxis.scale(x);
+                    
+                    svg.selectAll("g .x.axis")
+                    .transition().ease("linear")
+                    .duration(1000)
+                    .call(xAxis)
+
+                    console.log(d3.min(scope.chartData, function(d) {return d[0];}));
+
+
+                    l1.transition()
+                    .duration(2000).ease("elastic")
+                    .attr("d", "");
+
                     l1.transition()
                     .duration(2000).ease("elastic")
                     .attr("d", line1(scope.chartData));
+
                     l2.transition()
                     .duration(2000).ease("elastic")
                     .attr("d", line2(scope.chartData));
+                    l3.transition()
+                    .duration(2000).ease("elastic")
+                    .attr("d", line3(scope.chartData));
+
+                    
+
                 }
 
                 scope.$watch('chartData', function(dat) {
