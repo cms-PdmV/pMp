@@ -182,20 +182,14 @@ class GetLifetime():
         response['data'] = []
 
         if 'pdmv_monitor_history' in thisDoc:
-            #data = [int(round(time.time() * 1000)), thisDoc['pdmv_monitor_history'][0]['pdmv_evts_in_DAS'], thisDoc['pdmv_monitor_history'][0]['pdmv_evts_in_DAS'] + thisDoc['pdmv_monitor_history'][0]['pdmv_open_evts_in_DAS'] ]
-            #response['data'].append(data)
 
             for nextOne in thisDoc['pdmv_monitor_history']:
-                today=time.mktime(time.strptime(time.asctime()))
-                T = time.mktime(time.strptime(nextOne['pdmv_monitor_time']))-today
-                T/= 60.*60.*24.*7.
-                
-                #T = math.log(T)
                 N = nextOne['pdmv_evts_in_DAS'] + nextOne['pdmv_open_evts_in_DAS']
                 M = nextOne['pdmv_evts_in_DAS']
-
-                data = [-T, N, M]
+                T = time.mktime(time.strptime(nextOne['pdmv_monitor_time']))*1000
+                data = [T, N, M]
                 response['data'].append(data)
+
         return response
 
     def get(self, request):
