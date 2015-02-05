@@ -174,20 +174,20 @@ class GetLifetime():
         except:
             return []
 
-    def prepare_response(self, thisDoc):
+    def prepare_response(self, details):
         response = {}
-        response['title'] = thisDoc['pdmv_prep_id']+' '+ thisDoc['pdmv_dataset_name']
-        response['y_max'] = thisDoc['pdmv_expected_events']
-        response['y_label'] = thisDoc['pdmv_expected_events']
+        response['title'] = details['pdmv_prep_id'] + details['pdmv_dataset_name']
+        response['expected'] = details['pdmv_expected_events']
+        response['y_label'] = details['pdmv_expected_events']
         response['data'] = []
 
-        if 'pdmv_monitor_history' in thisDoc:
-
-            for nextOne in thisDoc['pdmv_monitor_history']:
-                N = nextOne['pdmv_evts_in_DAS'] + nextOne['pdmv_open_evts_in_DAS']
-                M = nextOne['pdmv_evts_in_DAS']
-                T = time.mktime(time.strptime(nextOne['pdmv_monitor_time']))*1000
-                data = [T, N, M]
+        if 'pdmv_monitor_history' in details:
+            
+            for record in details['pdmv_monitor_history']:
+                data = {}
+                data['allEiD'] = record['pdmv_evts_in_DAS'] + record['pdmv_open_evts_in_DAS']
+                data['EiD'] = record['pdmv_evts_in_DAS']
+                data['time'] = time.mktime(time.strptime(record['pdmv_monitor_time']))*1000
                 response['data'].append(data)
 
         return response

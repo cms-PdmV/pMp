@@ -159,8 +159,13 @@ path {
 }
       
 .data2 {
+    stroke-width: 4;
+    stroke: green;
+}
+
+.data3 {
     stroke-width: 2;
-    stroke: #15317E;
+    stroke: #A80000;
 }
 
 .axis {

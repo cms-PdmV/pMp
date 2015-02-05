@@ -7,58 +7,48 @@ function endall(transition, callback) {
       }
 
 angular.module('mcm.charts', [])
+/*** 
+Life-Time Representation of Requests directive:
+***/
     .directive('linearLifetime', function() {
+
         return {
+
             restrict: 'AE',
+
             scope: {
-                chartData: '=', // data to transfer to chart (as data='chartData')
+                chartData: '=' 
             },
+
             link: function(scope, element) {
+                console.log(scope.chartData);
+                // General attributes
                 var margin = {top: 10, right: 0, bottom: 20, left: 80},
                     width = 1200  - margin.left - margin.right,
                     height = 400 - margin.top - margin.bottom;
                     
-                var formatNumber = d3.format(".1f");
-                    
                 var svg = d3.select(element[0])
                     .append('svg:svg')
-                    .attr("preserveAspectRatio", "xMidYMin meet")
-                    .attr("viewBox", "0 0 " + (width + margin.left + margin.right) + " " + (height + margin.top + margin.bottom))
+                    .attr("viewBox", "0 0 " 
+                          + (width + margin.left + margin.right) 
+                          + " " + (height + margin.top + margin.bottom))
                     .attr("width", "100%")
                     .style("height", "100%")
                     .append("svg:g")
                     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-
-
+                // Predefine axes
                 var x = d3.time.scale()
                     .domain([
-                             d3.min(scope.chartData, function(d) {return d[0];}),
-                             d3.max(scope.chartData, function(d) {return d[0];})
+                             d3.min(scope.chartData[0].data, function(d) {return d.time;}),
+                             d3.max(scope.chartData[0].data, function(d) {return d.time;})
                              ])
                     .range([0, width]);
-                    x.tickFormat(d3.time.format("%Y-%m-%d"));
-
+                x.tickFormat(d3.time.format("%Y-%m-%d"));
+                
                 var y = d3.scale.linear()
-                    .domain([0, d3.max(scope.chartData, function(d) { return d[1]; })])
+                    .domain([0, d3.max(scope.chartData[0].data, function(d) { return d.allEiD*1.1; })])
                     .range([height, 0]);
-
-                var line1 = d3.svg.line()
-                    .x(function(d,i) { 
-                            console.log("x" + d[0]);
-                            return x(d[0]);
-                        })
-                    .y(function(d) { 
-                            return y(d[1]);
-                        }).interpolate("linear");;
-                    
-                var line2 = d3.svg.line()
-                    .x(function(d,i) { 
-                            return x(d[0]);
-                        })
-                    .y(function(d) { 
-                            return y(d[2]);
-                        }).interpolate("linear");;
 
                 var xAxis = d3.svg.axis().scale(x).tickSize(-height).tickSubdivide(1);
                 
@@ -66,9 +56,6 @@ angular.module('mcm.charts', [])
                     .attr("class", "x axis")
                     .attr("transform", "translate(0," + height + ")")
                     .call(xAxis);
-
-
-
                 
                 var yAxisLeft = d3.svg.axis().scale(y).ticks(6).orient("left");
                 var gy = svg.append("svg:g")
@@ -82,18 +69,40 @@ angular.module('mcm.charts', [])
                 gy.selectAll(".y line")
                     .attr("x2", width);
 
+                // Draw lines
+                var lAllEvents = d3.svg.line()
+                    .x(function(d) { return x(d.time);})
+                    .y(function(d) { return y(d.allEiD);})
+                    .interpolate("linear");;
+                    
+                var lNotOpenEvents = d3.svg.line()
+                    .x(function(d) { return x(d.time);})
+                    .y(function(d) { return y(d.EiD);})
+                    .interpolate("linear");;
+
+                var lTargetEvents = d3.svg.line()
+                    .x(function(d,i) { return x(d.time);})
+                    .y(function(d) { return y(scope.chartData[0].expected);})
+                    .interpolate("linear");;
+
                 var l1 = svg.append("svg:path")
-                    .attr("d", line1(scope.chartData))
+                    .attr("d", lAllEvents(scope.chartData[0].data))
                     .attr("class", "data1");
 
                 var l2 = svg.append("svg:path")
-                    .attr("d", line2(scope.chartData))
+                    .attr("d", lNotOpenEvents(scope.chartData[0].data))
                     .attr("class", "data2");
 
-                var redraw = function() {
+                var l3 = svg.append("svg:path")
+                    .attr("d", lTargetEvents(scope.chartData[0].data))
+                    .attr("class", "data3");
+
+                // On new data load
+                var onLoad = function(a) {
+                    // axes
                     x.domain([
-                             d3.min(scope.chartData, function(d) {return d[0];}),
-                             d3.max(scope.chartData, function(d) {return d[0];})
+                             d3.min(a[0].data, function(d) {return d.time;}),
+                             d3.max(a[0].data, function(d) {return d.time;})
                               ]);
                     xAxis.scale(x);
                     
@@ -102,20 +111,21 @@ angular.module('mcm.charts', [])
                     .duration(1000)
                     .call(xAxis)
 
+                    // lines
                     l1.transition()
-                    .duration(2000).ease("elastic")
-                    .attr("d", line1(scope.chartData));
+                    .duration(2000)
+                    .ease("elastic")
+                    .attr("d", lAllEvents(a[0].data));
 
                     l2.transition()
-                    .duration(2000).ease("elastic")
-                    .attr("d", line2(scope.chartData));
+                    .duration(2000)
+                    .ease("elastic")
+                    .attr("d", lNotOpenEvents(a[0].data));
                 }
 
-                scope.$watch('chartData', function(dat) {
-                    redraw();
+                scope.$watch('chartData', function(d) {
+                    onLoad(d);
                 });
-
-                redraw();
             }
         } 
     })    
