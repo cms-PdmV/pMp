@@ -188,3 +188,8 @@ path {
     fill: none;
     stroke: #777777;
 }
+
+.hover-line line {
+    stroke-width: 1;
+    stroke: #6E7B8B;
+}

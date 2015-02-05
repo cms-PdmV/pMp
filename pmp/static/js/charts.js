@@ -25,10 +25,12 @@ Life-Time Representation of Requests directive:
                 // General attributes
                 var margin = {top: 10, right: 0, bottom: 30, left: 80},
                     width = 1200  - margin.left - margin.right,
-                    height = 400 - margin.top - margin.bottom;
+                    height = 400 - margin.top - margin.bottom,
+                    aLegendRatio = 0;
                     
                 var svg = d3.select(element[0])
                     .append('svg:svg')
+                    .attr('id', 'lifetime')
                     .attr("viewBox", "0 0 " 
                           + (width + margin.left + margin.right) 
                           + " " + (height + margin.top + margin.bottom))
@@ -90,9 +92,12 @@ Life-Time Representation of Requests directive:
 
                 // On new data load
                 var onLoad = function(a) {
+                    currentMin = d3.min(a[0].data, function(d) {return d.time;});
+                    currentMax = d3.max(a[0].data, function(d) {return d.time;});
+                    aLegendRatio = (currentMax - currentMin)/width;
+
                     // axes
-                    x.domain([d3.min(a[0].data, function(d) {return d.time;}),
-                              d3.max(a[0].data, function(d) {return d.time;})]);
+                    x.domain([currentMin, currentMax]);
                     xAxis.scale(x);
                     svg.selectAll("g .x.axis").transition().ease("linear").duration(1000).call(xAxis);
 
@@ -125,6 +130,68 @@ Life-Time Representation of Requests directive:
                 scope.$watch('chartData', function(d) {
                     onLoad(d);
                 });
+
+                /**
+                 * Create a data label
+                 */
+                svg.append("svg:g")
+                    .attr("class", "date-label-group")
+                    .append("svg:text")
+                    .attr("class", "date-label")
+                    .attr("text-anchor", "end")
+                    .attr("font-size", "12") 
+                    .attr("y", 0)
+                    .attr("x", width);
+                
+                var hoverLineGroup = svg.append("svg:g")
+                    .attr("class", "hover-line");
+
+                var hoverLine = hoverLineGroup
+                    .append("svg:line")
+                    .attr("y1", 0).attr("y2", height+10);
+
+                var handleMouseOutGraph = function(event) {
+                    svg.select('text.date-label').text(" ")
+                    hoverLine.attr("x1", 1).attr("x2", 1);
+                }
+
+                var handleMouseOverGraph = function(event) {
+                    var mouseX = event.pageX-hoverLineXOffset;
+                    var mouseY = event.pageY-hoverLineYOffset;
+                    if(mouseX >= 0 && mouseX <= width && mouseY >= 0 && mouseY <= height) {
+                        displayValueLabelsForPositionX(mouseX)
+                    } else {
+			handleMouseOutGraph(event)
+                    }
+                }
+
+                container = document.querySelector('#lifetime');
+                var hoverLineXOffset = margin.left+$(container).offset().left;
+		var hoverLineYOffset = margin.top+$(container).offset().top;
+                
+                $(container).mouseleave(function(event) {
+			handleMouseOutGraph(event);
+                    });
+		
+                $(container).mousemove(function(event) {
+			handleMouseOverGraph(event);
+                    });
+
+                var displayValueLabelsForPositionX = function(xPosition) {
+                    var dateToShow, tmp;
+                    
+                    tmp = xPosition * aLegendRatio + currentMin;
+                    for (var i = 0; i < scope.chartData[0].data.length; i++) {
+                        if (tmp < scope.chartData[0].data[i].time) {
+                            dateToShow = scope.chartData[0].data[i].time;
+                        }
+                    }
+
+                    tmp = (dateToShow - currentMin) / aLegendRatio;;
+                    hoverLine.attr("x1", tmp).attr("x2", tmp);
+                    var date = new Date(dateToShow);
+                    svg.select('text.date-label').text(date.toDateString() + " " + date.toLocaleTimeString() );
+                }
             }
         } 
     })    
