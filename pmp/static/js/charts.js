@@ -23,7 +23,7 @@ Life-Time Representation of Requests directive:
             link: function(scope, element) {
                 console.log(scope.chartData);
                 // General attributes
-                var margin = {top: 10, right: 0, bottom: 20, left: 80},
+                var margin = {top: 10, right: 0, bottom: 30, left: 80},
                     width = 1200  - margin.left - margin.right,
                     height = 400 - margin.top - margin.bottom;
                     
@@ -44,7 +44,7 @@ Life-Time Representation of Requests directive:
                              d3.max(scope.chartData[0].data, function(d) {return d.time;})
                              ])
                     .range([0, width]);
-                x.tickFormat(d3.time.format("%Y-%m-%d"));
+                //x.tickFormat(d3.time.format("%Y-%m-%d"));
                 
                 var y = d3.scale.linear()
                     .domain([0, d3.max(scope.chartData[0].data, function(d) { return d.allEiD*1.1; })])
@@ -52,22 +52,13 @@ Life-Time Representation of Requests directive:
 
                 var xAxis = d3.svg.axis().scale(x).tickSize(-height).tickSubdivide(1);
                 
-                svg.append("svg:g")
+                var xy = svg.append("svg:g")
                     .attr("class", "x axis")
-                    .attr("transform", "translate(0," + height + ")")
+                    .attr("transform", "translate(0," + (height+10) + ")")
                     .call(xAxis);
                 
-                var yAxisLeft = d3.svg.axis().scale(y).ticks(6).orient("left");
-                var gy = svg.append("svg:g")
-                    .attr("class", "y axis")
-                    //.attr("transform", "translate(-10,0)")
-                    .call(yAxisLeft);
-
-                gy.selectAll("g").filter(function(d) { return d; })
-                    .classed("minor", true);
-
-                gy.selectAll(".y line")
-                    .attr("x2", width);
+                var yAxis = d3.svg.axis().scale(y).ticks(6).orient("left");
+                var gy = svg.append("svg:g").attr("class", "y axis").call(yAxis);
 
                 // Draw lines
                 var lAllEvents = d3.svg.line()
@@ -100,20 +91,23 @@ Life-Time Representation of Requests directive:
                 // On new data load
                 var onLoad = function(a) {
                     // axes
-                    x.domain([
-                             d3.min(a[0].data, function(d) {return d.time;}),
-                             d3.max(a[0].data, function(d) {return d.time;})
-                              ]);
+                    x.domain([d3.min(a[0].data, function(d) {return d.time;}),
+                              d3.max(a[0].data, function(d) {return d.time;})]);
                     xAxis.scale(x);
-                    
-                    svg.selectAll("g .x.axis")
-                    .transition().ease("linear")
-                    .duration(1000)
-                    .call(xAxis)
+                    svg.selectAll("g .x.axis").transition().ease("linear").duration(1000).call(xAxis);
+
+                    y.domain([0, d3.max(a[0].data, function(d) { return d.allEiD*1.1;})]);
+                    yAxis.scale(y);
+                    svg.selectAll("g .y.axis").transition().ease("linear").call(yAxis);
+
+                    gy.selectAll('g').filter(function(d) { return d; })
+                    .classed('minor', true);
+                    gy.selectAll('.minor line').filter(function(d) { return d; })
+                    .transition().attr("x2", width);
 
                     // lines
                     l1.transition()
-                    .duration(2000)
+                    .duration(1500)
                     .ease("elastic")
                     .attr("d", lAllEvents(a[0].data));
 
@@ -121,6 +115,11 @@ Life-Time Representation of Requests directive:
                     .duration(2000)
                     .ease("elastic")
                     .attr("d", lNotOpenEvents(a[0].data));
+
+                    l3.transition()
+                    .duration(2500)
+                    .ease("elastic")
+                    .attr("d", lTargetEvents(a[0].data));
                 }
 
                 scope.$watch('chartData', function(d) {
