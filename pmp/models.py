@@ -202,26 +202,37 @@ class GetSuggestions():
     def __init__(self, typeof):
         self.es = ElasticSearch(config.DATABASE_URL)
         self.overflow = 20
+        self.lifetime = (typeof == 'lifetime')
         self.on = (typeof == 'true')
 
     def get(self, campaign):
-        if '-' in campaign:
-            self.search_string = ('prepid:%s' % campaign.replace('-', '\-'))
-        else:
-            self.search_string = ('prepid:*%s*' % campaign.replace('-', '\-'))
-
-        if self.on:
+        if self.lifetime:
+            if '-' in campaign:
+                self.search_string = ('pdmv_request_name:%s' % campaign.replace('-', '\-'))
+            else:
+                self.search_string = ('pdmv_request_name:*%s*' % campaign.replace('-', '\-'))
             return json.dumps(
                 {"results": [s['_id'] for s in self.es.search(
-                            self.search_string, index="chained_campaigns",
-                            size=self.overflow)['hits']['hits']]
-                 + [s['_id'] for s in self.es.search(self.search_string,
-                                                     index="chained_requests",
-                                                     size=self.overflow)
-                    ['hits']['hits']]
-                 })
-        else:
-            return json.dumps(
-                {"results": [s['_id'] for s in self.es.search(
-                            self.search_string, index="campaigns",
+                            self.search_string, index="stats",
                             size=self.overflow)['hits']['hits']]})
+        else:
+            if '-' in campaign:
+                self.search_string = ('prepid:%s' % campaign.replace('-', '\-'))
+            else:
+                self.search_string = ('prepid:*%s*' % campaign.replace('-', '\-'))
+
+            if self.on:
+                return json.dumps(
+                    {"results": [s['_id'] for s in self.es.search(
+                                self.search_string, index="chained_campaigns",
+                                size=self.overflow)['hits']['hits']]
+                     + [s['_id'] for s in self.es.search(self.search_string,
+                                                         index="chained_requests",
+                                                         size=self.overflow)
+                        ['hits']['hits']]
+                     })
+            else:
+                return json.dumps(
+                    {"results": [s['_id'] for s in self.es.search(
+                                self.search_string, index="campaigns",
+                                size=self.overflow)['hits']['hits']]})

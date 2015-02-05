@@ -421,6 +421,12 @@ pmpApp.controller('TypeaheadCtrl', function($scope, $http) {
                 $scope.suggestions = response.data.results;
             });
         }
+        if ($scope.lifetime) {
+            $http.get('http://cms-pdmv-pmpdev.cern.ch/api/suggest/'
+                      + $scope.lifetime + '/lifetime').then(function(response) {
+                $scope.suggestions = response.data.results;
+            });
+        }
     };
 });
 
@@ -435,7 +441,6 @@ pmpApp.controller('LifetimeController', function($http, $scope) {
             $scope.loadingData = true;
             var promise = $http.get("api/" + request + "/lifetime");
             promise.then(function(data) {
-                console.log(data.data.results);
                 if (!data.data.results.length) {
                     $scope.showPopUp('error', 'No results for this request parameters');
                     $scope.loadingData = false;
