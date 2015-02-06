@@ -121,7 +121,6 @@ Life-Time Representation of Requests directive:
                     .attr("d", lTargetEvents(a[0].data));
 
                     if (container == undefined) {
-                        console.log('do');
                         constructDataLabel();
                     }
                 }
@@ -142,14 +141,38 @@ Life-Time Representation of Requests directive:
                     var hoverLineXOffset = margin.left+$(container).offset().left;
                     var hoverLineYOffset = margin.top+$(container).offset().top;
 
-                    svg.append("svg:g")
+                    var dateLabelGroup = svg.append("svg:g")
                     .attr("class", "date-label-group")
-                    .append("svg:text")
+                    .attr("font-size", "12");
+
+                    dateLabelGroup.append("svg:text")
                     .attr("class", "date-label")
-                    .attr("text-anchor", "end")
-                    .attr("font-size", "12") 
+                    .attr("text-anchor", "end")                  
                     .attr("y", 0)
                     .attr("x", width);
+
+                    dateLabelGroup.append("svg:text")
+                    .attr("class", "expected-label")
+                    .attr("text-anchor", "end")
+                    .attr("style", "fill: #a94442;")                 
+                    .attr("y", 0)
+                    .attr("x", width-200);
+
+                    dateLabelGroup.append("svg:text")
+                    .attr("class", "indas-label")
+                    .attr("text-anchor", "end")
+                    .attr("style", "fill: #3c763d;")                
+                    .attr("y", 0)
+                    .attr("x", width-300);
+
+                    dateLabelGroup.append("svg:text")
+                    .attr("class", "openindas-label")
+                    .attr("text-anchor", "end")                  
+                    .attr("style", "fill: #8a6d3b;")
+                    .attr("y", 0)
+                    .attr("x", width-430);
+
+
                 
                     var hoverLineGroup = svg.append("svg:g")
                     .attr("class", "hover-line");
@@ -159,7 +182,10 @@ Life-Time Representation of Requests directive:
                     .attr("y1", 0).attr("y2", height+10);
                     
                     var handleMouseOutGraph = function(event) {
-                        svg.select('text.date-label').text(" ")
+                        svg.select('text.date-label').text('')
+                        svg.select('text.expected-label').text('')
+                        svg.select('text.indas-label').text('')
+                        svg.select('text.openindas-label').text('')
                         hoverLine.attr("x1", 1).attr("x2", 1);
                     }
 
@@ -178,20 +204,31 @@ Life-Time Representation of Requests directive:
                     $(container).mousemove(function(event) { handleMouseOverGraph(event);});
 
                     var displayValueLabelsForPositionX = function(xPosition) {
-                        var dateToShow, tmp;
+                        var dateToShow, exp, das, odas, tmp;
                         
                         tmp = xPosition * aLegendRatio + currentMin;
                         for (var i = 0; i < scope.chartData[0].data.length; i++) {
                             if (tmp < scope.chartData[0].data[i].time) {
                                 dateToShow = scope.chartData[0].data[i].time;
+                                exp = scope.chartData[0].expected;
+                                das = scope.chartData[0].data[i].EiD;
+                                adas = scope.chartData[0].data[i].allEiD;
                             }
                         }
+
                         
                         tmp = (dateToShow - currentMin) / aLegendRatio;;
                         hoverLine.attr("x1", tmp).attr("x2", tmp);
                         var date = new Date(dateToShow);
+
                         svg.select('text.date-label')
-                        .text(date.toDateString() + " " + date.toLocaleTimeString());
+                        .text('Time: ' + date.toDateString() + ' ' + date.toLocaleTimeString());
+                        svg.select('text.expected-label')
+                        .text('Expected: ' + exp);
+                        svg.select('text.indas-label')
+                        .text('Events in DAS: ' + das);
+                        svg.select('text.openindas-label')
+                        .text('All events in DAS: ' + adas);
                     }
                 }
             }
