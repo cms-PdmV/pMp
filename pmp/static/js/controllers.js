@@ -432,7 +432,7 @@ pmpApp.controller('TypeaheadCtrl', function($scope, $http) {
 
 pmpApp.controller('LifetimeController', function($http, $scope) {
 
-    $scope.allRequestData = [{"expected": 49800, "data": [{"allEiD": 100800, "EiD": 800, "time": 1315659308000}, {"allEiD": 0, "EiD":10000, "time":1315400319000}]}];
+    $scope.allRequestData = [];
 
     $scope.load = function(request) {
         if (!request) {

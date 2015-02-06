@@ -21,12 +21,13 @@ Life-Time Representation of Requests directive:
             },
 
             link: function(scope, element) {
-                console.log(scope.chartData);
+
                 // General attributes
                 var margin = {top: 10, right: 0, bottom: 30, left: 80},
                     width = 1200  - margin.left - margin.right,
                     height = 400 - margin.top - margin.bottom,
                     aLegendRatio = 0;
+                var l1, l2, l3, container;
                     
                 var svg = d3.select(element[0])
                     .append('svg:svg')
@@ -40,21 +41,12 @@ Life-Time Representation of Requests directive:
                     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
                 // Predefine axes
-                var x = d3.time.scale()
-                    .domain([
-                             d3.min(scope.chartData[0].data, function(d) {return d.time;}),
-                             d3.max(scope.chartData[0].data, function(d) {return d.time;})
-                             ])
-                    .range([0, width]);
-                //x.tickFormat(d3.time.format("%Y-%m-%d"));
-                
-                var y = d3.scale.linear()
-                    .domain([0, d3.max(scope.chartData[0].data, function(d) { return d.allEiD*1.1; })])
-                    .range([height, 0]);
+                var x = d3.time.scale();
+                var y = d3.scale.linear();
 
                 var xAxis = d3.svg.axis().scale(x).tickSize(-height).tickSubdivide(1);
                 
-                var xy = svg.append("svg:g")
+                var gx = svg.append("svg:g")
                     .attr("class", "x axis")
                     .attr("transform", "translate(0," + (height+10) + ")")
                     .call(xAxis);
@@ -78,63 +70,79 @@ Life-Time Representation of Requests directive:
                     .y(function(d) { return y(scope.chartData[0].expected);})
                     .interpolate("linear");;
 
-                var l1 = svg.append("svg:path")
-                    .attr("d", lAllEvents(scope.chartData[0].data))
-                    .attr("class", "data1");
-
-                var l2 = svg.append("svg:path")
-                    .attr("d", lNotOpenEvents(scope.chartData[0].data))
-                    .attr("class", "data2");
-
-                var l3 = svg.append("svg:path")
-                    .attr("d", lTargetEvents(scope.chartData[0].data))
-                    .attr("class", "data3");
-
                 // On new data load
                 var onLoad = function(a) {
+                    console.log(a);
                     currentMin = d3.min(a[0].data, function(d) {return d.time;});
                     currentMax = d3.max(a[0].data, function(d) {return d.time;});
                     aLegendRatio = (currentMax - currentMin)/width;
 
                     // axes
-                    x.domain([currentMin, currentMax]);
+                    x.domain([currentMin, currentMax]).range([0, width]);
                     xAxis.scale(x);
-                    svg.selectAll("g .x.axis").transition().ease("linear").duration(1000).call(xAxis);
+                    svg.selectAll("g .x.axis").transition().duration(200).ease("linear").call(xAxis);
 
-                    y.domain([0, d3.max(a[0].data, function(d) { return d.allEiD*1.1;})]);
+                    y.domain([0, d3.max(a[0].data, function(d) { return d.allEiD*1.1;})])
+                    .range([height, 0]);
                     yAxis.scale(y);
                     svg.selectAll("g .y.axis").transition().ease("linear").call(yAxis);
-
                     gy.selectAll('g').filter(function(d) { return d; })
                     .classed('minor', true);
                     gy.selectAll('.minor line').filter(function(d) { return d; })
                     .transition().attr("x2", width);
 
+                    if (l1 == undefined || l2 == undefined || l3 == undefined) {
+                        l1 = svg.append("svg:path")
+                            .attr("d", lAllEvents(scope.chartData[0].data))
+                            .attr("class", "data1");
+                        
+                        l2 = svg.append("svg:path")
+                            .attr("d", lNotOpenEvents(scope.chartData[0].data))
+                            .attr("class", "data2");
+                        
+                        l3 = svg.append("svg:path")
+                            .attr("d", lTargetEvents(scope.chartData[0].data))
+                            .attr("class", "data3");
+                    }
+
                     // lines
                     l1.transition()
-                    .duration(1500)
-                    .ease("elastic")
+                    .duration(200)
+                    .ease('linear')
                     .attr("d", lAllEvents(a[0].data));
 
                     l2.transition()
-                    .duration(2000)
-                    .ease("elastic")
+                    .duration(400)
+                    .ease('linear')
                     .attr("d", lNotOpenEvents(a[0].data));
 
                     l3.transition()
-                    .duration(2500)
-                    .ease("elastic")
+                    .duration(600)
                     .attr("d", lTargetEvents(a[0].data));
+
+                    if (container == undefined) {
+                        console.log('do');
+                        constructDataLabel();
+                    }
                 }
 
                 scope.$watch('chartData', function(d) {
-                    onLoad(d);
+                    if (d.length) {
+                        onLoad(d);
+                    }
                 });
 
                 /**
                  * Create a data label
                  */
-                svg.append("svg:g")
+                var constructDataLabel = function() {
+                    //There is a bug here as legend on the left side cause offset
+
+                    container = document.querySelector('#lifetime');
+                    var hoverLineXOffset = margin.left+$(container).offset().left;
+                    var hoverLineYOffset = margin.top+$(container).offset().top;
+
+                    svg.append("svg:g")
                     .attr("class", "date-label-group")
                     .append("svg:text")
                     .attr("class", "date-label")
@@ -143,54 +151,48 @@ Life-Time Representation of Requests directive:
                     .attr("y", 0)
                     .attr("x", width);
                 
-                var hoverLineGroup = svg.append("svg:g")
+                    var hoverLineGroup = svg.append("svg:g")
                     .attr("class", "hover-line");
 
-                var hoverLine = hoverLineGroup
+                    var hoverLine = hoverLineGroup
                     .append("svg:line")
                     .attr("y1", 0).attr("y2", height+10);
-
-                var handleMouseOutGraph = function(event) {
-                    svg.select('text.date-label').text(" ")
-                    hoverLine.attr("x1", 1).attr("x2", 1);
-                }
-
-                var handleMouseOverGraph = function(event) {
-                    var mouseX = event.pageX-hoverLineXOffset;
-                    var mouseY = event.pageY-hoverLineYOffset;
-                    if(mouseX >= 0 && mouseX <= width && mouseY >= 0 && mouseY <= height) {
-                        displayValueLabelsForPositionX(mouseX)
-                    } else {
-			handleMouseOutGraph(event)
-                    }
-                }
-
-                container = document.querySelector('#lifetime');
-                var hoverLineXOffset = margin.left+$(container).offset().left;
-		var hoverLineYOffset = margin.top+$(container).offset().top;
-                
-                $(container).mouseleave(function(event) {
-			handleMouseOutGraph(event);
-                    });
-		
-                $(container).mousemove(function(event) {
-			handleMouseOverGraph(event);
-                    });
-
-                var displayValueLabelsForPositionX = function(xPosition) {
-                    var dateToShow, tmp;
                     
-                    tmp = xPosition * aLegendRatio + currentMin;
-                    for (var i = 0; i < scope.chartData[0].data.length; i++) {
-                        if (tmp < scope.chartData[0].data[i].time) {
-                            dateToShow = scope.chartData[0].data[i].time;
+                    var handleMouseOutGraph = function(event) {
+                        svg.select('text.date-label').text(" ")
+                        hoverLine.attr("x1", 1).attr("x2", 1);
+                    }
+
+                    var handleMouseOverGraph = function(event) {
+                        var mouseX = event.pageX-hoverLineXOffset;
+                        var mouseY = event.pageY-hoverLineYOffset;
+                        
+                        if(mouseX >= 0 && mouseX <= width && mouseY >= 0 && mouseY <= height) {
+                            displayValueLabelsForPositionX(mouseX);
+                        } else {
+                            handleMouseOutGraph(event);
                         }
                     }
+                    
+                    $(container).mouseleave(function(event) { handleMouseOutGraph(event);});
+                    $(container).mousemove(function(event) { handleMouseOverGraph(event);});
 
-                    tmp = (dateToShow - currentMin) / aLegendRatio;;
-                    hoverLine.attr("x1", tmp).attr("x2", tmp);
-                    var date = new Date(dateToShow);
-                    svg.select('text.date-label').text(date.toDateString() + " " + date.toLocaleTimeString() );
+                    var displayValueLabelsForPositionX = function(xPosition) {
+                        var dateToShow, tmp;
+                        
+                        tmp = xPosition * aLegendRatio + currentMin;
+                        for (var i = 0; i < scope.chartData[0].data.length; i++) {
+                            if (tmp < scope.chartData[0].data[i].time) {
+                                dateToShow = scope.chartData[0].data[i].time;
+                            }
+                        }
+                        
+                        tmp = (dateToShow - currentMin) / aLegendRatio;;
+                        hoverLine.attr("x1", tmp).attr("x2", tmp);
+                        var date = new Date(dateToShow);
+                        svg.select('text.date-label')
+                        .text(date.toDateString() + " " + date.toLocaleTimeString());
+                    }
                 }
             }
         } 
