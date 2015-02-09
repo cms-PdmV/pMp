@@ -30,7 +30,6 @@ Life-Time Representation of Requests directive:
                     
                 var svg = d3.select(element[0])
                     .append('svg:svg')
-                    .attr('id', 'lifetime')
                     .attr("viewBox", "0 0 " 
                           + (width + margin.left + margin.right) 
                           + " " + (height + margin.top + margin.bottom))
@@ -43,6 +42,7 @@ Life-Time Representation of Requests directive:
                     .on("zoom", draw);
 
                 svg.append("rect")
+                    .attr('id', 'lifetime')
                     .attr("class", "pane")
                     .attr("fill", "#eeeeee")
                     .attr("width", width)
@@ -86,32 +86,8 @@ Life-Time Representation of Requests directive:
                     svg.select("path.data1").attr("d", lAllEvents(scope.chartData[0].data));
                     svg.select("path.data2").attr("d", lNotOpenEvents(scope.chartData[0].data));
                     svg.select("path.data3").attr("d", lTargetEvents(scope.chartData[0].data));
-
-                    /*
-                    console.log(d3.event);
-
-                    var enlarge = d3.event.scale / prevZoom;
-                    console.log(enlarge);
-                    var scale = lastScale * enlarge;
-                    console.log(scale);
-                    if (scale < 1) {
-                        scale = 1;
-                    }
-
-                    prevZoom = d3.event.scale;
-                    lastScale = scale;
-
-                    var scalediff = (diff / scale) / 2;
-                    var middle = currentMin + diff / 2;
-                    theMin = middle - scalediff;
-                    theMax = middle + scalediff;
-
-                    x.domain([theMin, theMax]).range([0, width]);
-                    svg.selectAll("g .x.axis").transition().duration(200).ease("linear").call(xAxis);
-                    x.attr("transform", "translate(" + d3.event.translate + ")");
-                    svg.select("path.data1").attr("d", lAllEvents(scope.chartData[0].data));
-                    */
-                    //svg.select("path.data2").attr("d", lNotOpenEvents(scope.chartData[0].data));
+                    aLegendRatio = (xAxis.scale().domain()[1].getTime() -
+                                    xAxis.scale().domain()[0].getTime()) / width;
                 }
                 
                 // On new data load
@@ -180,9 +156,7 @@ Life-Time Representation of Requests directive:
                     .duration(600)
                     .attr("d", lTargetEvents(a[0].data));
 
-                    if (container == undefined) {
-                        constructDataLabel();
-                    }
+                    constructDataLabel();
 
                     draw()
                 }
@@ -198,57 +172,58 @@ Life-Time Representation of Requests directive:
                  */
                 var constructDataLabel = function() {
                     //There is a bug here as legend on the left side cause offset
+                    if (container == undefined) {
+                        container = document.querySelector('#lifetime');
+                        var hoverLineXOffset = $(container).offset().left;
+                        var hoverLineYOffset = margin.top+$(container).offset().top;
 
-                    container = document.querySelector('#lifetime');
-                    var hoverLineXOffset = margin.left+$(container).offset().left;
-                    var hoverLineYOffset = margin.top+$(container).offset().top;
+                        var dateLabelGroup = svg.append("svg:g")
+                        .attr("class", "date-label-group")
+                        .attr("font-size", "12");
+                        
+                        dateLabelGroup.append("svg:text")
+                        .attr("class", "date-label")
+                        .attr("text-anchor", "end")                  
+                        .attr("y", 0)
+                        .attr("x", width);
 
-                    var dateLabelGroup = svg.append("svg:g")
-                    .attr("class", "date-label-group")
-                    .attr("font-size", "12");
-
-                    dateLabelGroup.append("svg:text")
-                    .attr("class", "date-label")
-                    .attr("text-anchor", "end")                  
-                    .attr("y", 0)
-                    .attr("x", width);
-
-                    dateLabelGroup.append("svg:text")
-                    .attr("class", "expected-label")
-                    .attr("text-anchor", "end")
-                    .attr("style", "fill: #a94442;")                 
-                    .attr("y", 0)
-                    .attr("x", width-200);
-
-                    dateLabelGroup.append("svg:text")
-                    .attr("class", "indas-label")
-                    .attr("text-anchor", "end")
-                    .attr("style", "fill: #3c763d;")                
-                    .attr("y", 0)
-                    .attr("x", width-300);
-
-                    dateLabelGroup.append("svg:text")
-                    .attr("class", "openindas-label")
-                    .attr("text-anchor", "end")                  
-                    .attr("style", "fill: #8a6d3b;")
-                    .attr("y", 0)
-                    .attr("x", width-430);
-
-
+                        dateLabelGroup.append("svg:text")
+                        .attr("class", "expected-label")
+                        .attr("text-anchor", "end")
+                        .attr("style", "fill: #a94442;")                 
+                        .attr("y", 0)
+                        .attr("x", width-200);
+                        
+                        dateLabelGroup.append("svg:text")
+                        .attr("class", "indas-label")
+                        .attr("text-anchor", "end")
+                        .attr("style", "fill: #3c763d;")                
+                        .attr("y", 0)
+                        .attr("x", width-300);
+                        
+                        dateLabelGroup.append("svg:text")
+                        .attr("class", "openindas-label")
+                        .attr("text-anchor", "end")                  
+                        .attr("style", "fill: #8a6d3b;")
+                        .attr("y", 0)
+                        .attr("x", width-430);
                 
-                    var hoverLineGroup = svg.append("svg:g")
-                    .attr("class", "hover-line");
+                        var hoverLineGroup = svg.append("svg:g")
+                        .attr("class", "hover-line");
 
-                    var hoverLine = hoverLineGroup
-                    .append("svg:line")
-                    .attr("y1", 0).attr("y2", height+10);
+                        var hoverLine = hoverLineGroup
+                        .append("svg:line")
+                        .attr("y1", 0).attr("y2", height+10);
+                    }
                     
                     var handleMouseOutGraph = function(event) {
                         svg.select('text.date-label').text('')
                         svg.select('text.expected-label').text('')
                         svg.select('text.indas-label').text('')
                         svg.select('text.openindas-label').text('')
-                        hoverLine.attr("x1", 1).attr("x2", 1);
+                        if (hoverLine != undefined) {
+                            hoverLine.attr("x1", width).attr("x2", width);
+                        }
                     }
 
                     var handleMouseOverGraph = function(event) {
@@ -266,9 +241,10 @@ Life-Time Representation of Requests directive:
                     $(container).mousemove(function(event) { handleMouseOverGraph(event);});
 
                     var displayValueLabelsForPositionX = function(xPosition) {
-                        var dateToShow, exp, das, odas, tmp;
+                        var dateToShow, exp = '', das = '', odas = '', tmp;
+                        var scale = xAxis.scale().domain();
                         
-                        tmp = xPosition * aLegendRatio + currentMin;
+                        tmp = scale[0].getTime() + xPosition * (scale[1].getTime() - scale[0].getTime()) / width;
                         for (var i = 0; i < scope.chartData[0].data.length; i++) {
                             if (tmp < scope.chartData[0].data[i].time) {
                                 dateToShow = scope.chartData[0].data[i].time;
@@ -278,8 +254,12 @@ Life-Time Representation of Requests directive:
                             }
                         }
 
-                        
-                        tmp = (dateToShow - currentMin) / aLegendRatio;;
+                        console.log("A " + dateToShow);
+                        console.log(dateToShow - scale[0].getTime());
+
+                        tmp = (dateToShow - scale[0].getTime()) / ((scale[1].getTime() - scale[0].getTime()) / width);
+
+                        console.log(tmp);
                         hoverLine.attr("x1", tmp).attr("x2", tmp);
                         var date = new Date(dateToShow);
 
