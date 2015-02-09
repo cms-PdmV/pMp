@@ -26,8 +26,7 @@ Life-Time Representation of Requests directive:
                 var margin = {top: 10, right: 0, bottom: 30, left: 80},
                     width = 1200  - margin.left - margin.right,
                     height = 400 - margin.top - margin.bottom,
-                    aLegendRatio = 0;
-                var l1, l2, l3, container;
+                    l1, l2, l3, diff, container, aLegendRatio = 0, prevZoom = 1, lastScale = 1;
                     
                 var svg = d3.select(element[0])
                     .append('svg:svg')
@@ -40,12 +39,21 @@ Life-Time Representation of Requests directive:
                     .append("svg:g")
                     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
+                var zoom = d3.behavior.zoom()
+                    .on("zoom", draw);
+
+                svg.append("rect")
+                    .attr("class", "pane")
+                    .attr("fill", "#eeeeee")
+                    .attr("width", width)
+                    .attr("height", height)
+                    .call(zoom);
+
                 // Predefine axes
                 var x = d3.time.scale();
                 var y = d3.scale.linear();
 
                 var xAxis = d3.svg.axis().scale(x).tickSize(-height).tickSubdivide(1);
-                
                 var gx = svg.append("svg:g")
                     .attr("class", "x axis")
                     .attr("transform", "translate(0," + (height+10) + ")")
@@ -58,29 +66,71 @@ Life-Time Representation of Requests directive:
                 var lAllEvents = d3.svg.line()
                     .x(function(d) { return x(d.time);})
                     .y(function(d) { return y(d.allEiD);})
-                    .interpolate("linear");;
+                    .interpolate("linear");
                     
                 var lNotOpenEvents = d3.svg.line()
                     .x(function(d) { return x(d.time);})
                     .y(function(d) { return y(d.EiD);})
-                    .interpolate("linear");;
+                    .interpolate("linear");
 
                 var lTargetEvents = d3.svg.line()
                     .x(function(d,i) { return x(d.time);})
                     .y(function(d) { return y(scope.chartData[0].expected);})
-                    .interpolate("linear");;
+                    .interpolate("linear");
 
+            
+                // Zoom
+                function draw() {
+                    svg.select("g.x.axis").call(xAxis);
+                    svg.select("g.y.axis").call(yAxis);
+                    svg.select("path.data1").attr("d", lAllEvents(scope.chartData[0].data));
+                    svg.select("path.data2").attr("d", lNotOpenEvents(scope.chartData[0].data));
+                    svg.select("path.data3").attr("d", lTargetEvents(scope.chartData[0].data));
+
+                    /*
+                    console.log(d3.event);
+
+                    var enlarge = d3.event.scale / prevZoom;
+                    console.log(enlarge);
+                    var scale = lastScale * enlarge;
+                    console.log(scale);
+                    if (scale < 1) {
+                        scale = 1;
+                    }
+
+                    prevZoom = d3.event.scale;
+                    lastScale = scale;
+
+                    var scalediff = (diff / scale) / 2;
+                    var middle = currentMin + diff / 2;
+                    theMin = middle - scalediff;
+                    theMax = middle + scalediff;
+
+                    x.domain([theMin, theMax]).range([0, width]);
+                    svg.selectAll("g .x.axis").transition().duration(200).ease("linear").call(xAxis);
+                    x.attr("transform", "translate(" + d3.event.translate + ")");
+                    svg.select("path.data1").attr("d", lAllEvents(scope.chartData[0].data));
+                    */
+                    //svg.select("path.data2").attr("d", lNotOpenEvents(scope.chartData[0].data));
+                }
+                
                 // On new data load
                 var onLoad = function(a) {
+                    prevZoom = 1;
+                    lastScale = 1;
+
                     console.log(a);
+
                     currentMin = d3.min(a[0].data, function(d) {return d.time;});
                     currentMax = d3.max(a[0].data, function(d) {return d.time;});
                     aLegendRatio = (currentMax - currentMin)/width;
+                    diff = currentMax - currentMin;
 
                     // axes
                     x.domain([currentMin, currentMax]).range([0, width]);
                     xAxis.scale(x);
                     svg.selectAll("g .x.axis").transition().duration(200).ease("linear").call(xAxis);
+
 
                     y.domain([0, d3.max(a[0].data, function(d) { return d.allEiD*1.1;})])
                     .range([height, 0]);
@@ -91,18 +141,28 @@ Life-Time Representation of Requests directive:
                     gy.selectAll('.minor line').filter(function(d) { return d; })
                     .transition().attr("x2", width);
 
+                    zoom.x(x);
+
+                    svg.append("clipPath")
+                    .attr("id", "clip")
+                    .append("rect")
+                    .attr("x", 0)
+                    .attr("y", 0)
+                    .attr("width", width)
+                    .attr("height", height);
+
                     if (l1 == undefined || l2 == undefined || l3 == undefined) {
                         l1 = svg.append("svg:path")
                             .attr("d", lAllEvents(scope.chartData[0].data))
-                            .attr("class", "data1");
+                            .attr("class", "data1").attr("clip-path", "url(#clip)");
                         
                         l2 = svg.append("svg:path")
                             .attr("d", lNotOpenEvents(scope.chartData[0].data))
-                            .attr("class", "data2");
+                            .attr("class", "data2").attr("clip-path", "url(#clip)");
                         
                         l3 = svg.append("svg:path")
                             .attr("d", lTargetEvents(scope.chartData[0].data))
-                            .attr("class", "data3");
+                            .attr("class", "data3").attr("clip-path", "url(#clip)");
                     }
 
                     // lines
@@ -123,6 +183,8 @@ Life-Time Representation of Requests directive:
                     if (container == undefined) {
                         constructDataLabel();
                     }
+
+                    draw()
                 }
 
                 scope.$watch('chartData', function(d) {
