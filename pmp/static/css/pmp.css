@@ -154,18 +154,18 @@ path {
 }
 
 .data1 {
-    stroke-width: 8;
-    stroke: #333333;
+    stroke-width: 1;
+    stroke: #666666;
 }
       
 .data2 {
-    stroke-width: 4;
-    stroke: green;
+    stroke-width: 2;
+    stroke: rgb(106, 168, 79);;
 }
 
 .data3 {
     stroke-width: 2;
-    stroke: #A80000;
+    stroke: rgb(166, 28, 0);
 }
 
 .axis {
@@ -192,4 +192,10 @@ path {
 .hover-line line {
     stroke-width: 1;
     stroke: #6E7B8B;
+}
+
+rect.pane {
+  cursor: move;
+  fill: none;
+  pointer-events: all;
 }

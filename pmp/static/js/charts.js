@@ -41,14 +41,6 @@ Life-Time Representation of Requests directive:
                 var zoom = d3.behavior.zoom()
                     .on("zoom", draw);
 
-                svg.append("rect")
-                    .attr('id', 'lifetime')
-                    .attr("class", "pane")
-                    .attr("fill", "#eeeeee")
-                    .attr("width", width)
-                    .attr("height", height)
-                    .call(zoom);
-
                 // Predefine axes
                 var x = d3.time.scale();
                 var y = d3.scale.linear();
@@ -56,30 +48,58 @@ Life-Time Representation of Requests directive:
                 var xAxis = d3.svg.axis().scale(x).tickSize(-height).tickSubdivide(1);
                 var gx = svg.append("svg:g")
                     .attr("class", "x axis")
+                    .attr('fill', '#666')
                     .attr("transform", "translate(0," + (height+10) + ")")
                     .call(xAxis);
                 
                 var yAxis = d3.svg.axis().scale(y).ticks(6).orient("left");
-                var gy = svg.append("svg:g").attr("class", "y axis").call(yAxis);
+                var gy = svg.append("svg:g")
+                    .attr("class", "y axis")
+                    .attr('fill', '#666')
+                    .call(yAxis);
 
+                gy.append("text")
+                    .attr("id", "ytitle")
+                    .attr("dy", "-3px")
+                    .attr("dx", '-33px')
+                    .attr("font-size", "10")
+                    .text('events');
+                
                 // Draw lines
-                var lAllEvents = d3.svg.line()
+                var lAllEvents = d3.svg.area()
                     .x(function(d) { return x(d.time);})
-                    .y(function(d) { return y(d.allEiD);})
-                    .interpolate("linear");
+                    .y0(y(height))
+                    .y1(function(d) { return y(d.allEiD);})
+                    .interpolate("step-before");
                     
                 var lNotOpenEvents = d3.svg.line()
                     .x(function(d) { return x(d.time);})
                     .y(function(d) { return y(d.EiD);})
-                    .interpolate("linear");
+                    .interpolate("step-before");
 
                 var lTargetEvents = d3.svg.line()
                     .x(function(d,i) { return x(d.time);})
                     .y(function(d) { return y(scope.chartData[0].expected);})
-                    .interpolate("linear");
+                    .interpolate("step-before");
 
-            
+                var gradient = svg.append("defs").append("linearGradient")
+                    .attr("id", "gradient")
+                    .attr("x2", "0%")
+                    .attr("y2", "100%");
+
+                gradient.append("stop")
+                    .attr("offset", "0%")
+                    .attr("stop-color", "#888")
+                    .attr("stop-opacity", 0.4);
+                
+                gradient.append("stop")
+                    .attr("offset", "100%")
+                    .attr("stop-color", "#fff")
+                    .attr("stop-opacity", 0.8);            
+                
+
                 // Zoom
+
                 function draw() {
                     svg.select("g.x.axis").call(xAxis);
                     svg.select("g.y.axis").call(yAxis);
@@ -94,8 +114,6 @@ Life-Time Representation of Requests directive:
                 var onLoad = function(a) {
                     prevZoom = 1;
                     lastScale = 1;
-
-                    console.log(a);
 
                     currentMin = d3.min(a[0].data, function(d) {return d.time;});
                     currentMax = d3.max(a[0].data, function(d) {return d.time;});
@@ -122,7 +140,7 @@ Life-Time Representation of Requests directive:
                     svg.append("clipPath")
                     .attr("id", "clip")
                     .append("rect")
-                    .attr("x", 0)
+                    .attr("x", 1)
                     .attr("y", 0)
                     .attr("width", width)
                     .attr("height", height);
@@ -130,7 +148,8 @@ Life-Time Representation of Requests directive:
                     if (l1 == undefined || l2 == undefined || l3 == undefined) {
                         l1 = svg.append("svg:path")
                             .attr("d", lAllEvents(scope.chartData[0].data))
-                            .attr("class", "data1").attr("clip-path", "url(#clip)");
+                            .attr("class", "data1").attr("clip-path", "url(#clip)")
+                            .style("fill", "url(#gradient)");
                         
                         l2 = svg.append("svg:path")
                             .attr("d", lNotOpenEvents(scope.chartData[0].data))
@@ -139,6 +158,15 @@ Life-Time Representation of Requests directive:
                         l3 = svg.append("svg:path")
                             .attr("d", lTargetEvents(scope.chartData[0].data))
                             .attr("class", "data3").attr("clip-path", "url(#clip)");
+
+                        svg.append("rect")
+                            .attr('id', 'lifetime')
+                            .attr("class", "pane")
+                            .attr("x", 1)
+                            .attr("width", width)
+                            .attr("height", height)
+                            .call(zoom);
+
                     }
 
                     // lines
@@ -183,30 +211,26 @@ Life-Time Representation of Requests directive:
                         
                         dateLabelGroup.append("svg:text")
                         .attr("class", "date-label")
-                        .attr("text-anchor", "end")                  
                         .attr("y", 0)
-                        .attr("x", width);
+                        .attr("x", 10);
 
                         dateLabelGroup.append("svg:text")
                         .attr("class", "expected-label")
-                        .attr("text-anchor", "end")
-                        .attr("style", "fill: #a94442;")                 
+                        .attr("style", "fill: rgb(106, 28, 0);")                 
                         .attr("y", 0)
-                        .attr("x", width-200);
+                        .attr("x", 225);
                         
                         dateLabelGroup.append("svg:text")
                         .attr("class", "indas-label")
-                        .attr("text-anchor", "end")
-                        .attr("style", "fill: #3c763d;")                
+                        .attr("style", "fill: rgb(106, 168, 79);")
                         .attr("y", 0)
-                        .attr("x", width-300);
+                        .attr("x", 350);
                         
                         dateLabelGroup.append("svg:text")
                         .attr("class", "openindas-label")
-                        .attr("text-anchor", "end")                  
-                        .attr("style", "fill: #8a6d3b;")
+                        .attr("style", "fill: #666666;")
                         .attr("y", 0)
-                        .attr("x", width-430);
+                        .attr("x", 500);
                 
                         var hoverLineGroup = svg.append("svg:g")
                         .attr("class", "hover-line");
@@ -217,10 +241,10 @@ Life-Time Representation of Requests directive:
                     }
                     
                     var handleMouseOutGraph = function(event) {
-                        svg.select('text.date-label').text('')
-                        svg.select('text.expected-label').text('')
-                        svg.select('text.indas-label').text('')
-                        svg.select('text.openindas-label').text('')
+                        svg.select('text.date-label').text('Time: ')
+                        svg.select('text.expected-label').text('Expected: ')
+                        svg.select('text.indas-label').text('Events in DAS: ')
+                        svg.select('text.openindas-label').text('All events in DAS:')
                         if (hoverLine != undefined) {
                             hoverLine.attr("x1", width).attr("x2", width);
                         }
@@ -254,12 +278,7 @@ Life-Time Representation of Requests directive:
                             }
                         }
 
-                        console.log("A " + dateToShow);
-                        console.log(dateToShow - scale[0].getTime());
-
                         tmp = (dateToShow - scale[0].getTime()) / ((scale[1].getTime() - scale[0].getTime()) / width);
-
-                        console.log(tmp);
                         hoverLine.attr("x1", tmp).attr("x2", tmp);
                         var date = new Date(dateToShow);
 
