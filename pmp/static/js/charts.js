@@ -7,33 +7,36 @@ function endall(transition, callback) {
       }
 
 angular.module('mcm.charts', [])
-/*** 
-Life-Time Representation of Requests directive:
+    /*** 
+    Life-Time Representation of Requests directive:
 
-#notesforfutureme:
-bug: grid disappears when zooming or moving graph
-bug: data-label not updated onSee()
-bug: data-label shown only after onHover()
+    #notesforfutureme:
+    bug: grid disappears when zooming or moving graph
+    bug: data-label not updated onSee()
+    bug: data-label shown only after onHover()
 
-***/
+    ***/
     .directive('linearLifetime', function() {
         return {
             restrict: 'AE',
             scope: {
-                chartData: '=' 
+                chartData: '='
             },
             link: function(scope, element) {
                 // General attributes
-                var margin = {top: 10, right: 0, bottom: 30, left: 80},
-                    width = 1200  - margin.left - margin.right,
+                var margin = {
+                        top: 10,
+                        right: 0,
+                        bottom: 30,
+                        left: 80
+                    },
+                    width = 1200 - margin.left - margin.right,
                     height = 400 - margin.top - margin.bottom,
-                        l1, l2, l3, containerBox;
-                    
+                    l1, l2, l3, containerBox;
+
                 var svg = d3.select(element[0])
                     .append('svg:svg')
-                    .attr("viewBox", "0 0 " 
-                          + (width + margin.left + margin.right) 
-                          + " " + (height + margin.top + margin.bottom))
+                    .attr("viewBox", "0 0 " + (width + margin.left + margin.right) + " " + (height + margin.top + margin.bottom))
                     .attr("width", "100%")
                     .attr("height", "100%")
                     .append("svg:g")
@@ -50,9 +53,9 @@ bug: data-label shown only after onHover()
                 var gx = svg.append("svg:g")
                     .attr("class", "x axis")
                     .attr('fill', '#666')
-                    .attr("transform", "translate(0," + (height+10) + ")")
+                    .attr("transform", "translate(0," + (height + 10) + ")")
                     .call(xAxis);
-                
+
                 var yAxis = d3.svg.axis().scale(y).ticks(6).orient("left");
                 var gy = svg.append("svg:g")
                     .attr("class", "y axis")
@@ -64,22 +67,34 @@ bug: data-label shown only after onHover()
                     .attr("dx", '-33px')
                     .attr("font-size", "10")
                     .text('events');
-                
+
                 // Draw lines
                 var areaAllEvents = d3.svg.area()
-                    .x(function(d) { return x(d.time);})
+                    .x(function(d) {
+                        return x(d.time);
+                    })
                     .y0(y(height))
-                    .y1(function(d) { return y(d.allEiD);})
+                    .y1(function(d) {
+                        return y(d.allEiD);
+                    })
                     .interpolate("step-before");
-                    
+
                 var pathNotOpenEvents = d3.svg.line()
-                    .x(function(d) { return x(d.time);})
-                    .y(function(d) { return y(d.EiD);})
+                    .x(function(d) {
+                        return x(d.time);
+                    })
+                    .y(function(d) {
+                        return y(d.EiD);
+                    })
                     .interpolate("step-before");
 
                 var pathTargetEvents = d3.svg.line()
-                    .x(function(d,i) { return x(d.time);})
-                    .y(function(d) { return y(scope.chartData[0].expected);})
+                    .x(function(d, i) {
+                        return x(d.time);
+                    })
+                    .y(function(d) {
+                        return y(scope.chartData[0].expected);
+                    })
                     .interpolate("step-before");
 
                 // Area gradient
@@ -105,32 +120,42 @@ bug: data-label shown only after onHover()
                     svg.select("path.data2").attr("d", pathNotOpenEvents(scope.chartData[0].data));
                     svg.select("path.data3").attr("d", pathTargetEvents(scope.chartData[0].data));
                 }
-                
+
                 // When new data to load
                 var onLoad = function(a) {
-                    currentMin = d3.min(a[0].data, function(d) {return d.time;});
-                    currentMax = d3.max(a[0].data, function(d) {return d.time;});
+                    currentMin = d3.min(a[0].data, function(d) {
+                        return d.time;
+                    });
+                    currentMax = d3.max(a[0].data, function(d) {
+                        return d.time;
+                    });
 
                     // Axes
                     x.domain([currentMin, currentMax]).range([0, width]);
                     xAxis.scale(x);
                     svg.selectAll("g .x.axis").transition().duration(200).ease("linear").call(xAxis);
 
-                    y.domain([0, d3.max(a[0].data, function(d) { return d.allEiD*1.1;})]).range([height, 0]);
+                    y.domain([0, d3.max(a[0].data, function(d) {
+                        return d.allEiD * 1.1;
+                    })]).range([height, 0]);
                     yAxis.scale(y);
                     svg.selectAll("g .y.axis").transition().ease("linear").call(yAxis);
-                    gy.selectAll('g').filter(function(d) { return d; }).classed('minor', true);
-                    gy.selectAll('.minor line').filter(function(d) { return d; }).transition().attr("x2", width);
+                    gy.selectAll('g').filter(function(d) {
+                        return d;
+                    }).classed('minor', true);
+                    gy.selectAll('.minor line').filter(function(d) {
+                        return d;
+                    }).transition().attr("x2", width);
                     zoom.x(x);
-                    
+
                     // Prevent hover over axis while moving
                     svg.append("clipPath")
-                    .attr("id", "clip")
-                    .append("rect")
-                    .attr("x", 1)
-                    .attr("y", 0)
-                    .attr("width", width)
-                    .attr("height", height);
+                        .attr("id", "clip")
+                        .append("rect")
+                        .attr("x", 1)
+                        .attr("y", 0)
+                        .attr("width", width)
+                        .attr("height", height);
 
                     // Draw lifetime
                     if (l1 == undefined || l2 == undefined || l3 == undefined) {
@@ -155,7 +180,7 @@ bug: data-label shown only after onHover()
                     l1.transition().duration(200).ease('linear').attr("d", areaAllEvents(a[0].data));
                     l2.transition().duration(400).ease('linear').attr("d", pathNotOpenEvents(a[0].data));
                     l3.transition().duration(600).ease('linear').attr("d", pathTargetEvents(a[0].data));
-                    
+
                     constructDataLabel();
                     onZoom();
                 }
@@ -165,50 +190,50 @@ bug: data-label shown only after onHover()
                     if (containerBox == undefined) {
                         containerBox = document.querySelector('#lifetime');
                         var hoverLineXOffset = $(containerBox).offset().left;
-                        var hoverLineYOffset = margin.top+$(containerBox).offset().top;
+                        var hoverLineYOffset = margin.top + $(containerBox).offset().top;
 
                         var dateLabelGroup = svg.append("svg:g")
-                        .attr("class", "date-label-group")
-                        .attr("font-size", "12");
-                        
+                            .attr("class", "date-label-group")
+                            .attr("font-size", "12");
+
                         dateLabelGroup.append("svg:text")
-                        .attr("class", "date-label")
-                        .attr("y", 0)
-                        .attr("x", 10);
+                            .attr("class", "date-label")
+                            .attr("y", 0)
+                            .attr("x", 10);
                         dateLabelGroup.append("svg:text")
-                        .attr("class", "expected-label")
-                        .attr("style", "fill: rgb(106, 28, 0);")                 
-                        .attr("y", 0)
-                        .attr("x", 225);
+                            .attr("class", "expected-label")
+                            .attr("style", "fill: rgb(106, 28, 0);")
+                            .attr("y", 0)
+                            .attr("x", 225);
                         dateLabelGroup.append("svg:text")
-                        .attr("class", "indas-label")
-                        .attr("style", "fill: rgb(106, 168, 79);")
-                        .attr("y", 0)
-                        .attr("x", 350);
+                            .attr("class", "indas-label")
+                            .attr("style", "fill: rgb(106, 168, 79);")
+                            .attr("y", 0)
+                            .attr("x", 350);
                         dateLabelGroup.append("svg:text")
-                        .attr("class", "openindas-label")
-                        .attr("style", "fill: #666666;")
-                        .attr("y", 0)
-                        .attr("x", 500);
-                
+                            .attr("class", "openindas-label")
+                            .attr("style", "fill: #666666;")
+                            .attr("y", 0)
+                            .attr("x", 500);
+
                         var hoverLineGroup = svg.append("svg:g")
-                        .attr("class", "hover-line");
+                            .attr("class", "hover-line");
 
                         var hoverLine = hoverLineGroup
-                        .append("svg:line")
-                        .attr("y1", 0).attr("y2", height+10);
+                            .append("svg:line")
+                            .attr("y1", 0).attr("y2", height + 10);
                     }
-                    
+
                     var handleMouseOutGraph = function(event) {
-                        updateDataLabel([false,'','','']);
+                        updateDataLabel([false, '', '', '']);
                         updateIndicatorPosition(width);
                     }
 
                     var handleMouseOverGraph = function(event) {
-                        var mouseX = event.pageX-hoverLineXOffset;
-                        var mouseY = event.pageY-hoverLineYOffset;
-                        
-                        if(mouseX >= 0 && mouseX <= width && mouseY >= 0 && mouseY <= height) {
+                        var mouseX = event.pageX - hoverLineXOffset;
+                        var mouseY = event.pageY - hoverLineYOffset;
+
+                        if (mouseX >= 0 && mouseX <= width && mouseY >= 0 && mouseY <= height) {
                             displayValueLabelsForPositionX(mouseX);
                         } else {
                             handleMouseOutGraph(event);
@@ -231,7 +256,7 @@ bug: data-label shown only after onHover()
                         svg.select('text.indas-label').text('Events in DAS: ' + data[2]);
                         svg.select('text.openindas-label').text('All events in DAS: ' + data[3]);
                     }
-                    
+
                     var displayValueLabelsForPositionX = function(xPosition) {
                         var tmp, data = [];
                         var s = xAxis.scale().domain();
@@ -256,8 +281,12 @@ bug: data-label shown only after onHover()
                     }
 
                     // Watch for mouse events
-                    $(containerBox).mouseleave(function(event) { handleMouseOutGraph(event);});
-                    $(containerBox).mousemove(function(event) { handleMouseOverGraph(event);});
+                    $(containerBox).mouseleave(function(event) {
+                        handleMouseOutGraph(event);
+                    });
+                    $(containerBox).mousemove(function(event) {
+                        handleMouseOverGraph(event);
+                    });
                 }
 
                 // Watch for data change
@@ -267,7 +296,7 @@ bug: data-label shown only after onHover()
                     }
                 });
             }
-        } 
+        }
     })
 
     .directive('mcmDonutChart', function() {
