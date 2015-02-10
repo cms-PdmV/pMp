@@ -1,3 +1,7 @@
+.axis .minor line {
+    stroke-dasharray: 1px, 4px;
+}
+
 .axis path, .axis line {
     fill: none;
     stroke: black;
@@ -20,6 +24,21 @@ body.dragging, body.dragging * {
     float: left;
 }
 
+.data1 {
+    stroke-width: 1;
+    stroke: #666666;
+}
+      
+.data2 {
+    stroke-width: 2;
+    stroke: rgb(106, 168, 79);;
+}
+
+.data3 {
+    stroke-width: 2;
+    stroke: rgb(166, 28, 0);
+}
+
 .grid .tick, .grid path {
     fill: none;
 }
@@ -33,6 +52,11 @@ body.dragging, body.dragging * {
 
 .grid path {
     stroke-width: 0;
+}
+
+.hover-line line {
+    stroke-width: 0.5;
+    stroke: #6E7B8B;
 }
 
 .line {
@@ -88,6 +112,17 @@ body.dragging, body.dragging * {
     padding-right: 0px;
 }
 
+path {
+    stroke-width: 1;
+    fill: none;
+}
+
+rect.pane {
+    cursor: move;
+    fill: none;
+    pointer-events: all;
+}
+
 .pointer {
     cursor: pointer;
 }
@@ -132,52 +167,18 @@ ul.nav li.placeholder:before {
     border: 5px solid transparent;
     border-bottom: none;
     border-top-color: black;
-    content: "";
+    content: '';
     margin-left: -6px;
     position: absolute;
     top: -3px;
 }
 
-.white {
-    color: white;
-}
-
-/*in dev*/
-
-.axis .minor line {
-  stroke-dasharray: 1px, 4px;
-}
-
-path {
-    stroke-width: 1;
-    fill: none;
-}
-
-.data1 {
-    stroke-width: 1;
-    stroke: #666666;
-}
-      
-.data2 {
-    stroke-width: 2;
-    stroke: rgb(106, 168, 79);;
-}
-
-.data3 {
-    stroke-width: 2;
-    stroke: rgb(166, 28, 0);
-}
-
-.axis {
-    shape-rendering: crispEdges;
-}
-      
 .x.axis line {
     stroke: #AAAAAA;
 }
 
 .x.axis .minor {
-    stroke-opacity: .5;
+    stroke-opacity: 0.5;
 }
 
 .x.axis path {
@@ -189,13 +190,6 @@ path {
     stroke: #777777;
 }
 
-.hover-line line {
-    stroke-width: 1;
-    stroke: #6E7B8B;
-}
-
-rect.pane {
-  cursor: move;
-  fill: none;
-  pointer-events: all;
+.white {
+    color: white;
 }
