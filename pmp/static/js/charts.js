@@ -20,9 +20,11 @@ angular.module('mcm.charts', [])
         return {
             restrict: 'AE',
             scope: {
-                chartData: '='
+                chartData: '=',
             },
             link: function(scope, element) {
+                scope.dataCopy = [];
+
                 // General attributes
                 var margin = {
                         top: 10,
@@ -116,17 +118,17 @@ angular.module('mcm.charts', [])
                 function onZoom() {
                     svg.select("g.x.axis").call(xAxis);
                     svg.select("g.y.axis").call(yAxis);
-                    svg.select("path.data1").attr("d", areaAllEvents(scope.chartData[0].data));
-                    svg.select("path.data2").attr("d", pathNotOpenEvents(scope.chartData[0].data));
-                    svg.select("path.data3").attr("d", pathTargetEvents(scope.chartData[0].data));
+                    svg.select("path.data1").attr("d", areaAllEvents(scope.dataCopy));
+                    svg.select("path.data2").attr("d", pathNotOpenEvents(scope.dataCopy));
+                    svg.select("path.data3").attr("d", pathTargetEvents(scope.dataCopy));
                 }
 
                 // When new data to load
                 var onLoad = function(a) {
-                    currentMin = d3.min(a[0].data, function(d) {
+                    currentMin = d3.min(a, function(d) {
                         return d.t;
                     });
-                    currentMax = d3.max(a[0].data, function(d) {
+                    currentMax = d3.max(a, function(d) {
                         return d.t;
                     });
 
@@ -135,7 +137,7 @@ angular.module('mcm.charts', [])
                     xAxis.scale(x);
                     svg.selectAll("g .x.axis").transition().duration(200).ease("linear").call(xAxis);
 
-                    y.domain([0, d3.max(a[0].data, function(d) {
+                    y.domain([0, d3.max(a, function(d) {
                         return d.a * 1.1;
                     })]).range([height, 0]);
                     yAxis.scale(y);
@@ -160,14 +162,14 @@ angular.module('mcm.charts', [])
                     // Draw lifetime
                     if (l1 == undefined || l2 == undefined || l3 == undefined) {
                         l1 = svg.append("svg:path")
-                            .attr("d", areaAllEvents(scope.chartData[0].data))
+                            .attr("d", areaAllEvents(a))
                             .attr("class", "data1").attr("clip-path", "url(#clip)")
                             .style("fill", "url(#gradient)");
                         l2 = svg.append("svg:path")
-                            .attr("d", pathNotOpenEvents(scope.chartData[0].data))
+                            .attr("d", pathNotOpenEvents(a))
                             .attr("class", "data2").attr("clip-path", "url(#clip)");
                         l3 = svg.append("svg:path")
-                            .attr("d", pathTargetEvents(scope.chartData[0].data))
+                            .attr("d", pathTargetEvents(a))
                             .attr("class", "data3").attr("clip-path", "url(#clip)");
                         svg.append("rect")
                             .attr('id', 'lifetime')
@@ -177,9 +179,9 @@ angular.module('mcm.charts', [])
                             .attr("height", height)
                             .call(zoom);
                     }
-                    l1.transition().duration(200).ease('linear').attr("d", areaAllEvents(a[0].data));
-                    l2.transition().duration(400).ease('linear').attr("d", pathNotOpenEvents(a[0].data));
-                    l3.transition().duration(600).ease('linear').attr("d", pathTargetEvents(a[0].data));
+                    l1.transition().duration(200).ease('linear').attr("d", areaAllEvents(a));
+                    l2.transition().duration(400).ease('linear').attr("d", pathNotOpenEvents(a));
+                    l3.transition().duration(600).ease('linear').attr("d", pathTargetEvents(a));
 
                     constructDataLabel();
                     onZoom();
@@ -262,12 +264,12 @@ angular.module('mcm.charts', [])
                         var s = xAxis.scale().domain();
                         var min = s[0].getTime();
                         var max = s[1].getTime();
-                        var local = scope.chartData[0].data;
+                        var local = scope.dataCopy;
 
                         tmp = min + xPosition * (max - min) / width;
 
                         for (var i = 0; i < local.length; i++) {
-                            if (tmp < local[i].t) {
+                            if (tmp > local[i].t) {
                                 data[0] = local[i].t;
                                 data[1] = local[i].x;
                                 data[2] = local[i].e;
@@ -289,13 +291,30 @@ angular.module('mcm.charts', [])
                     });
                 }
 
+                var prepareData = function(d) {
+                    var tmp = {}
+
+                    for (var i=0; i < d.length; i++) {
+                        var r = d[i].request;
+                        var x = angular.copy(d[i].data);
+                        x.pop();
+                        if (tmp[r] != undefined) {
+                            Array.prototype.push.apply(tmp[r], x);
+                        } else {
+                            tmp[r] = x;
+                        }
+                    }
+
+                    tmp[r] = tmp[r].sort(function(a,b) {
+                            return parseFloat(a['t']) - parseFloat(b['t']) } );
+                    scope.dataCopy = angular.copy(tmp[r]);
+                    onLoad(scope.dataCopy);
+                }
+
                 // Watch for data change
                 scope.$watch('chartData', function(d) {
                     if (d.length) {
-
-                        // Prepare DATA
-
-                        onLoad(d);
+                      prepareData(d);
                     }
                 });
             }

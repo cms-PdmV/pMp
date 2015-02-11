@@ -174,10 +174,13 @@ class GetLifetime():
         except:
             return []
 
-    def prepare_response(self, details):
+    def prepare_response(self, details, name):
         response = {}
+        if not len(details):
+            return response
         response['campaign'] = details['pdmv_campaign']
         response['data'] = []
+        response['input'] = name
         response['priority'] = details['pdmv_priority']
         response['pwg'] = '#HaveToQueryRequest'
         response['request'] = details['pdmv_prep_id']
@@ -197,7 +200,7 @@ class GetLifetime():
         return response
 
     def get(self, request):
-        return json.dumps({"results": [self.prepare_response(self.db_query(request))]})
+        return json.dumps({"results": [self.prepare_response(self.db_query(request), request)]})
 
 
 
