@@ -71,29 +71,29 @@ angular.module('mcm.charts', [])
                 // Draw lines
                 var areaAllEvents = d3.svg.area()
                     .x(function(d) {
-                        return x(d.time);
+                        return x(d.t);
                     })
                     .y0(y(height))
                     .y1(function(d) {
-                        return y(d.allEiD);
+                        return y(d.a);
                     })
                     .interpolate("step-before");
 
                 var pathNotOpenEvents = d3.svg.line()
                     .x(function(d) {
-                        return x(d.time);
+                        return x(d.t);
                     })
                     .y(function(d) {
-                        return y(d.EiD);
+                        return y(d.e);
                     })
                     .interpolate("step-before");
 
                 var pathTargetEvents = d3.svg.line()
                     .x(function(d, i) {
-                        return x(d.time);
+                        return x(d.t);
                     })
                     .y(function(d) {
-                        return y(scope.chartData[0].expected);
+                        return y(d.x);
                     })
                     .interpolate("step-before");
 
@@ -124,10 +124,10 @@ angular.module('mcm.charts', [])
                 // When new data to load
                 var onLoad = function(a) {
                     currentMin = d3.min(a[0].data, function(d) {
-                        return d.time;
+                        return d.t;
                     });
                     currentMax = d3.max(a[0].data, function(d) {
-                        return d.time;
+                        return d.t;
                     });
 
                     // Axes
@@ -136,7 +136,7 @@ angular.module('mcm.charts', [])
                     svg.selectAll("g .x.axis").transition().duration(200).ease("linear").call(xAxis);
 
                     y.domain([0, d3.max(a[0].data, function(d) {
-                        return d.allEiD * 1.1;
+                        return d.a * 1.1;
                     })]).range([height, 0]);
                     yAxis.scale(y);
                     svg.selectAll("g .y.axis").transition().ease("linear").call(yAxis);
@@ -262,16 +262,16 @@ angular.module('mcm.charts', [])
                         var s = xAxis.scale().domain();
                         var min = s[0].getTime();
                         var max = s[1].getTime();
-                        var local = scope.chartData[0];
+                        var local = scope.chartData[0].data;
 
                         tmp = min + xPosition * (max - min) / width;
 
-                        for (var i = 0; i < local.data.length; i++) {
-                            if (tmp < local.data[i].time) {
-                                data[0] = local.data[i].time;
-                                data[1] = local.expected;
-                                data[2] = local.data[i].EiD;
-                                data[3] = local.data[i].allEiD;
+                        for (var i = 0; i < local.length; i++) {
+                            if (tmp < local[i].t) {
+                                data[0] = local[i].t;
+                                data[1] = local[i].x;
+                                data[2] = local[i].e;
+                                data[3] = local[i].a;
                             }
                         }
                         data[0] = new Date(data[0]);
@@ -292,6 +292,9 @@ angular.module('mcm.charts', [])
                 // Watch for data change
                 scope.$watch('chartData', function(d) {
                     if (d.length) {
+
+                        // Prepare DATA
+
                         onLoad(d);
                     }
                 });

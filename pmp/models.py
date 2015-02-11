@@ -176,18 +176,22 @@ class GetLifetime():
 
     def prepare_response(self, details):
         response = {}
-        response['title'] = details['pdmv_prep_id'] + details['pdmv_dataset_name']
-        response['expected'] = details['pdmv_expected_events']
-        response['y_label'] = details['pdmv_expected_events']
+        response['campaign'] = details['pdmv_campaign']
         response['data'] = []
+        response['priority'] = details['pdmv_priority']
+        response['pwg'] = '#HaveToQueryRequest'
+        response['request'] = details['pdmv_prep_id']
+        response['status'] = '#HaveToQueryRequest'
+        response['title'] = details['pdmv_prep_id'] + details['pdmv_dataset_name']
 
         if 'pdmv_monitor_history' in details:
             
             for record in details['pdmv_monitor_history']:
                 data = {}
-                data['allEiD'] = record['pdmv_evts_in_DAS'] + record['pdmv_open_evts_in_DAS']
-                data['EiD'] = record['pdmv_evts_in_DAS']
-                data['time'] = time.mktime(time.strptime(record['pdmv_monitor_time']))*1000
+                data['a'] = record['pdmv_evts_in_DAS'] + record['pdmv_open_evts_in_DAS']
+                data['e'] = record['pdmv_evts_in_DAS']
+                data['t'] = time.mktime(time.strptime(record['pdmv_monitor_time']))*1000
+                data['x'] = details['pdmv_expected_events']
                 response['data'].append(data)
 
         return response
