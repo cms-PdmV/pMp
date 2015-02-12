@@ -86,7 +86,7 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval, $
     $scope.cachedRequestData = [];
 
 
-    $scope.graphParam = ['selections', 'grouping', 'value', 'stacking', 'coloring'];
+    $scope.graphParam = ['selections', 'grouping', 'stacking', 'coloring'];
 
     $scope.graphTabs = ['member_of_campaign', 'total_events',
         'status', 'prepid', 'priority', 'pwg'
@@ -94,7 +94,7 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval, $
 
     $scope.init = function() {
         $scope.isChainUrl = ($location.path() === '/chain');
-        $scope.aOptionsValues = [1, 2, 4, 0, 0, 0];
+        $scope.aOptionsValues = [1, 0, 3, 0, 0, 0];
         $scope.aRadioValues = [0, 0];
 
         if ($location.search().p != undefined) {
@@ -113,16 +113,13 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval, $
             } else if ($scope.aOptionsValues[i] == 1) {
                 initGrouping.push($scope.graphTabs[i]);
             } else if ($scope.aOptionsValues[i] == 2) {
-                initValue = $scope.graphTabs[i];
-            } else if ($scope.aOptionsValues[i] == 3) {
                 initStacking.push($scope.graphTabs[i]);
-            } else if ($scope.aOptionsValues[i] == 4) {
+            } else if ($scope.aOptionsValues[i] == 3) {
                 initColoring = $scope.graphTabs[i];
             }
         }
         $scope.requests.options = {
             grouping: initGrouping,
-            value: initValue,
             stacking: initStacking,
             coloring: initColoring
         };

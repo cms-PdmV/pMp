@@ -759,10 +759,10 @@ angular.module('mcm.charts', [])
                                 t["tooltipInfoAttribute"] = "";
                                 if(valueOperation == 'events') {
                                     t[value] = d3.sum(input_list, function(d) {
-                                        if(d[stacking[stacking_level]]==rows_domains[stacking_level][i])
-                                            return d[value];
-                                        return 0;
-                                    });
+                                            if(d[stacking[stacking_level]]==rows_domains[stacking_level][i])
+                                                return d['total_events'];
+                                            return 0;
+                                        });
                                 } else if(valueOperation == 'requests') {
                                     var v = '';
                                     t[value] = input_list.filter(function(d){
@@ -773,19 +773,11 @@ angular.module('mcm.charts', [])
                                         return false;
                                     }).length;
                                 } else if(valueOperation == 'seconds') {
-                                    var v = '';
-                                    var tmp = input_list.filter(function(d){
-                                        if(d[stacking[stacking_level]]==rows_domains[stacking_level][i]) {
-                                            v = d[value];
-                                            return true;
-                                        }
-                                        return false;
-                                    });
-                                    var sum = 0;
-                                    for (var x=0; x<tmp.length; x++) {
-                                        sum += tmp[x].total_events*tmp[x].time_event;
-                                    }
-                                    t[value] = sum;
+                                    t[value] = d3.sum(input_list, function(d) {
+                                            if(d[stacking[stacking_level]]==rows_domains[stacking_level][i])
+                                                return d['total_events']*d['time_event'];
+                                            return 0;
+                                        });
                                 }
                                 var final_y_attr = y_attr + rows_domains[stacking_level][i];
                                 if(rows_color_domain.indexOf(final_y_attr)<0)
@@ -887,19 +879,19 @@ angular.module('mcm.charts', [])
                                 if (valueOperation == 'events') {
                                     scope.$parent.$parent.setScaleAndOperation(0, 0);
                                     t[value] = d3.sum(filtered_leaves[i].values,
-                                                      function(d) {return d[value]});
+                                                      function(d) {
+                                                          return d['total_events']
+                                                      });
                                 } else if (valueOperation == 'requests') {
                                     scope.$parent.$parent.setScaleAndOperation(0, 1);
                                     t[value] = filtered_leaves[i].values.length;
                                 } else if (valueOperation == 'seconds') {
                                     scope.$parent.$parent.setScaleAndOperation(0, 2);
                                     // sum over product of time_event and total_events
-                                    var tmp = filtered_leaves[i].values;
-                                    var sum = 0;
-                                    for (var x=0; x<tmp.length; x++) {
-                                        sum += tmp[x].time_event*tmp[x].total_events;
-                                    }
-                                    t[value] = sum;
+                                    t[value] = d3.sum(filtered_leaves[i].values,
+                                                      function(d) {
+                                                          return d['total_events']*d['time_event']
+                                                      });
                                 }
                                 t.rowsYEndingAttribute = t[value];
                                 if(main_group=="") {
@@ -1330,7 +1322,7 @@ angular.module('mcm.charts', [])
                 });
 
                 scope.optionsChange = function() {
-                    return 'value + stacking + columns + grouping + yScaleType + valueOperation';
+                    return 'stacking + columns + grouping + yScaleType + valueOperation';
                 };
 
                 scope.$watch(scope.optionsChange(), function(dat) {
