@@ -5,6 +5,7 @@ import json
 import math
 import time
 
+
 class GetChain():
 
     def __init__(self):
@@ -21,7 +22,7 @@ class GetChain():
         fake_r = {}
         fake_r['status'] = status
         fake_r['member_of_campaign'] = memberOfCampaign
-        for member in ['pwg', 'priority', 'total_events']:
+        for member in ['pwg', 'priority', 'total_events', 'time_event']:
             fake_r[member] = req[member]
         if total is not None:
             fake_r['total_events'] = total
@@ -122,7 +123,7 @@ class GetChain():
                     for member in mcm_r.keys():
                         if member not in ['prepid', 'pwg', 'priority',
                                           'total_events', 'status',
-                                          'member_of_campaign']:
+                                          'member_of_campaign', 'time_event']:
                             mcm_r.pop(member)
                     return mcm_r
 
@@ -162,6 +163,7 @@ class GetCampaign():
                                         index='requests',
                                         size=self.overflow)['hits']['hits']]})
 
+
 class GetLifetime():
 
     def __init__(self):
@@ -169,6 +171,12 @@ class GetLifetime():
         self.overflow = 1000000
 
     def db_query(self, request):
+        '''
+        print [s['_source'] for s in
+               self.es.search('pdmv_prep_id:B2G-Fall13-00039',
+                              index='stats',
+                              size=self.overflow)['hits']['hits']]
+                              '''
         try:
             return self.es.get('stats', 'stats', request)['_source']
         except:
