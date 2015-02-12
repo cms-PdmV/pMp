@@ -183,9 +183,9 @@ class GetLifetime():
             return []
 
     def prepare_response(self, details, name):
-        response = {}
         if not len(details):
-            return response
+            return []
+        response = {}
         response['campaign'] = details['pdmv_campaign']
         response['data'] = []
         response['input'] = name
@@ -205,10 +205,10 @@ class GetLifetime():
                 data['x'] = details['pdmv_expected_events']
                 response['data'].append(data)
 
-        return response
+        return [response]
 
     def get(self, request):
-        return json.dumps({"results": [self.prepare_response(self.db_query(request), request)]})
+        return json.dumps({"results": self.prepare_response(self.db_query(request), request)})
 
 
 
@@ -221,14 +221,18 @@ class GetSuggestions():
         self.on = (typeof == 'true')
 
     def get(self, campaign):
+
         if self.lifetime:
             if '-' in campaign:
-                self.search_string = ('pdmv_request_name:%s' % campaign.replace('-', '\-'))
+                self.search_string = ('prepid:%s' % campaign.replace('-', '\-'))
             else:
-                self.search_string = ('pdmv_request_name:*%s*' % campaign.replace('-', '\-'))
+                self.search_string = ('prepid:*%s*' % campaign.replace('-', '\-'))
             return json.dumps(
                 {"results": [s['_id'] for s in self.es.search(
                             self.search_string, index="stats",
+                            size=self.overflow)['hits']['hits']]
+                 + [s['_id'] for s in self.es.search(
+                            self.search_string, index="requests",
                             size=self.overflow)['hits']['hits']]})
         else:
             if '-' in campaign:
