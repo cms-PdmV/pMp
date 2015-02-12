@@ -171,44 +171,53 @@ class GetLifetime():
         self.overflow = 1000000
 
     def db_query(self, request):
-        '''
-        print [s['_source'] for s in
-               self.es.search('pdmv_prep_id:B2G-Fall13-00039',
-                              index='stats',
-                              size=self.overflow)['hits']['hits']]
-                              '''
         try:
-            return self.es.get('stats', 'stats', request)['_source']
+            r = [s['_source'] for s in self.es.search('pdmv_prep_id:' + request,
+                                                      index='stats',
+                                                      size=self.overflow)['hits']['hits']]
+            if len(r):
+                return r
+            else:
+                return [self.es.get('stats', 'stats', request)['_source']]
         except:
             return []
 
     def prepare_response(self, details, name):
-        if not len(details):
-            return []
-        response = {}
-        response['campaign'] = details['pdmv_campaign']
-        response['data'] = []
-        response['input'] = name
-        response['priority'] = details['pdmv_priority']
-        response['pwg'] = '#HaveToQueryRequest'
-        response['request'] = details['pdmv_prep_id']
-        response['status'] = '#HaveToQueryRequest'
-        response['title'] = details['pdmv_prep_id'] + details['pdmv_dataset_name']
+        r = []
 
-        if 'pdmv_monitor_history' in details:
-            
-            for record in details['pdmv_monitor_history']:
-                data = {}
-                data['a'] = record['pdmv_evts_in_DAS'] + record['pdmv_open_evts_in_DAS']
-                data['e'] = record['pdmv_evts_in_DAS']
-                data['t'] = time.mktime(time.strptime(record['pdmv_monitor_time']))*1000
-                data['x'] = details['pdmv_expected_events']
-                response['data'].append(data)
+        for d in details:
+            response = {}
+            response['campaign'] = d['pdmv_campaign']
+            response['data'] = []
+            response['input'] = name
+            response['priority'] = d['pdmv_priority']
+            response['pwg'] = '#HaveToQueryRequest'
+            response['request'] = d['pdmv_prep_id']
+            response['status'] = '#HaveToQueryRequest'
+            response['title'] = d['pdmv_prep_id'] + d['pdmv_dataset_name']
 
-        return [response]
+            if 'pdmv_monitor_history' in d:
+                for record in d['pdmv_monitor_history']:
+                    data = {}
+                    data['a'] = record['pdmv_evts_in_DAS'] + record['pdmv_open_evts_in_DAS']
+                    data['e'] = record['pdmv_evts_in_DAS']
+                    data['t'] = time.mktime(time.strptime(record['pdmv_monitor_time']))*1000
+                    data['x'] = d['pdmv_expected_events']
+                    response['data'].append(data)
+
+            r.append(response)
+
+        return r
 
     def get(self, request):
-        return json.dumps({"results": self.prepare_response(self.db_query(request), request)})
+
+
+        returning = self.prepare_response(self.db_query(request), request)
+
+
+        return json.dumps({"results":
+                               returning
+                           })
 
 
 

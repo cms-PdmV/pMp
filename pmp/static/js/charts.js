@@ -79,7 +79,7 @@ angular.module('mcm.charts', [])
                     .y1(function(d) {
                         return y(d.a);
                     })
-                    .interpolate("step-before");
+                    .interpolate("step-after");
 
                 var pathNotOpenEvents = d3.svg.line()
                     .x(function(d) {
@@ -88,7 +88,7 @@ angular.module('mcm.charts', [])
                     .y(function(d) {
                         return y(d.e);
                     })
-                    .interpolate("step-before");
+                    .interpolate("step-after");
 
                 var pathTargetEvents = d3.svg.line()
                     .x(function(d, i) {
@@ -138,7 +138,7 @@ angular.module('mcm.charts', [])
                     svg.selectAll("g .x.axis").transition().duration(200).ease("linear").call(xAxis);
 
                     y.domain([0, d3.max(a, function(d) {
-                        return d.a * 1.1;
+                        return d.x * 1.1;
                     })]).range([height, 0]);
                     yAxis.scale(y);
                     svg.selectAll("g .y.axis").transition().ease("linear").call(yAxis);
