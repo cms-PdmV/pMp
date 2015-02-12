@@ -662,6 +662,7 @@ angular.module('mcm.charts', [])
                         return "rotate(-90)"
                         });
 
+
                 svg.append("g")
                     .attr("class", "grid horizontal");
 
@@ -682,8 +683,8 @@ angular.module('mcm.charts', [])
                 }
 
                 function changeWidthHeight() {
-                    width = scope.userWidth || 1500;
-                    height = scope.userHeight || 500;
+                    width = scope.userWidth || 1125;
+                    height = scope.userHeight || 375;
                     width = width  - margin.left - margin.right;
                     height = height - margin.top - margin.bottom;
                     max_column_width = width/4;
@@ -708,7 +709,7 @@ angular.module('mcm.charts', [])
 
 
                     yAxis = d3.svg.axis()
-                        .scale(y_scale)
+                        .scale(y_scale).ticks(5)
                         .orient("left");
 
                     // create base SVG (and translate it to the start of plot)
