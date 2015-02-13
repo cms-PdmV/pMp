@@ -236,13 +236,19 @@ class GetSuggestions():
                 self.search_string = ('prepid:%s' % campaign.replace('-', '\-'))
             else:
                 self.search_string = ('prepid:*%s*' % campaign.replace('-', '\-'))
+            req = [s['_id'] for s in self.es.search(self.search_string, index="requests",
+                                                    size=self.overflow)['hits']['hits']]
+                
+            if '-' in campaign:
+                self.search_string = ('pdmv_request_name:%s' % campaign.replace('-', '\-'))
+            else:
+                self.search_string = ('pdmv_request_name:*%s*' % campaign.replace('-', '\-'))
+
             return json.dumps(
                 {"results": [s['_id'] for s in self.es.search(
                             self.search_string, index="stats",
                             size=self.overflow)['hits']['hits']]
-                 + [s['_id'] for s in self.es.search(
-                            self.search_string, index="requests",
-                            size=self.overflow)['hits']['hits']]})
+                 + req})
         else:
             if '-' in campaign:
                 self.search_string = ('prepid:%s' % campaign.replace('-', '\-'))
