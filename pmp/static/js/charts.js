@@ -138,7 +138,7 @@ angular.module('mcm.charts', [])
                     svg.selectAll("g .x.axis").transition().duration(200).ease("linear").call(xAxis);
 
                     y.domain([0, d3.max(a, function(d) {
-                        return d.x * 1.1;
+                        return d.x * 2;
                     })]).range([height, 0]);
                     yAxis.scale(y);
                     svg.selectAll("g .y.axis").transition().ease("linear").call(yAxis);
@@ -292,11 +292,16 @@ angular.module('mcm.charts', [])
                 }
 
                 var prepareData = function(d) {
-                    var tmp = {}
+
+                    
+                    // #notesforfutureme:
+                    // works, but to rewrite!!!
+
+                    var x, tmp = {}
 
                     for (var i=0; i < d.length; i++) {
                         var r = d[i].request;
-                        var x = angular.copy(d[i].data);
+                        x = angular.copy(d[i].data);
                         x.pop();
                         if (tmp[r] != undefined) {
                             Array.prototype.push.apply(tmp[r], x);
@@ -304,11 +309,76 @@ angular.module('mcm.charts', [])
                             tmp[r] = x;
                         }
                     }
-
-                    tmp[r] = tmp[r].sort(function(a,b) {
+                    
+                    //console.log("Filtering requests:");
+                    //console.log(tmp);
+                    
+                    var y = []
+                    for (var k in tmp){
+                        tmp[k] = tmp[k].sort(function(a,b) {
                             return parseFloat(a['t']) - parseFloat(b['t']) } );
-                    scope.dataCopy = angular.copy(tmp[r]);
+
+                        tmp[k].forEach(function(d) {
+                                return y.push(d.t);
+                            });
+                    } 
+                    y.sort().filter(function(item, pos) {
+                            return !pos || item != y[pos - 1];
+                        });
+
+                    console.log("Getting x points:");
+                    console.log(y);
+                    
+                    var tmp2 = [], arr_input, cur_index, nxw;
+
+                    for (var k in tmp) {
+                        nxw = [];
+                        cur_index = 0;
+                        dummy = {a:0,e:0,x:0};
+                        
+                        for(var a = 0; a < y.length; a++) {
+                            if (tmp[k][cur_index] != undefined && y[a] === tmp[k][cur_index].t) {
+                                dummy = angular.copy(tmp[k][cur_index]);
+                                delete dummy.t;
+
+                                //console.log("D");
+                                //console.log(y[a]);
+                                //console.log(tmp[k][cur_index].t);
+                                //console.log(dummy);
+                                cur_index += 1;
+                            } else {
+                                dummy = angular.copy(dummy);
+                            }
+                            //console.log(y[a]);
+                            dummy.t = y[a]
+                                //console.log(dummy);
+                            nxw.push(dummy);
+                        }
+                        tmp2[k] = nxw;
+                    }
+
+
+                    console.log("Adding dummy points:");
+                    console.log(tmp2);
+                    
+                    finallmente = []
+                    for (var o = 0; o < y.length; o++) {
+                        v = {a:0,e:0,x:0,t:0}
+                        finallmente[o] = v
+                        for (var k in tmp2) {
+                            finallmente[o].a += tmp2[k][o].a;
+                            finallmente[o].e += tmp2[k][o].e;
+                            finallmente[o].x += tmp2[k][o].x;
+                            finallmente[o].t = tmp2[k][o].t;
+                        }
+                    }
+
+                    //console.log("Final plot:")
+                    //console.log(finallmente);
+                    
+                    scope.dataCopy = angular.copy(finallmente);
                     onLoad(scope.dataCopy);
+                    
                 }
 
                 // Watch for data change
