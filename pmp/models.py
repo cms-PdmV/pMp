@@ -168,28 +168,40 @@ class GetLifetime():
 
     def __init__(self):
         self.es = ElasticSearch(config.DATABASE_URL)
+        # normally es will crop results
+        # and a million rows is more than we have in db
         self.overflow = 1000000
 
-    def db_query(self, request):
+    def db_query(self, input):
+        """
+        Query DB and return array of raw documents
+        """
         try:
-            r = [s['_source'] for s in self.es.search('pdmv_prep_id:' + request,
-                                                      index='stats',
-                                                      size=self.overflow)['hits']['hits']]
-            if len(r):
-                return r
-            else:
-                return [self.es.get('stats', 'stats', request)['_source']]
+            # check the input is a request
+            iterable = [s['name'] for s in self.es.get(
+                    'requests', 'request', input)['_source']['reqmgr_name']]
         except:
-            return []
+            # input can be a reqmgr_name
+            iterable = [input]
 
-    def prepare_response(self, details, name):
+        for i in iterable:
+            try:
+                yield self.es.get('stats', 'stats', i)['_source']
+            except:
+                yield None
+
+    def prepare_response(self, query):
         r = []
 
-        for d in details:
+        for d in self.db_query(query):
+
+            if d is None:
+                continue
+
             response = {}
             response['campaign'] = d['pdmv_campaign']
             response['data'] = []
-            response['input'] = name
+            response['input'] = query
             response['priority'] = d['pdmv_priority']
             response['pwg'] = '#HaveToQueryRequest'
             response['request'] = d['pdmv_prep_id']
@@ -209,15 +221,8 @@ class GetLifetime():
 
         return r
 
-    def get(self, request):
-
-
-        returning = self.prepare_response(self.db_query(request), request)
-
-
-        return json.dumps({"results":
-                               returning
-                           })
+    def get(self, query):
+        return json.dumps({"results": self.prepare_response(query)})
 
 
 
