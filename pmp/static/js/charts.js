@@ -13,7 +13,6 @@ angular.module('mcm.charts', [])
     #notesforfutureme:
     bug: data-label not updated onSee()
     bug: data-label shown only after onHover()
-    bug: maximum of y axis
     ***/
     .directive('linearLifetime', function() {
         return {
@@ -137,7 +136,7 @@ angular.module('mcm.charts', [])
                     svg.selectAll("g .x.axis").transition().duration(200).ease("linear").call(xAxis);
 
                     y.domain([0, d3.max(a, function(d) {
-                        return d.x * 2;
+                        return Math.max(d.x, d.a) * 1.1;
                     })]).range([height, 0]);
 
                     yAxis.scale(y);
