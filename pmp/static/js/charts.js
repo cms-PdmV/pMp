@@ -11,10 +11,9 @@ angular.module('mcm.charts', [])
     Life-Time Representation of Requests directive:
 
     #notesforfutureme:
-    bug: grid disappears when zooming or moving graph
     bug: data-label not updated onSee()
     bug: data-label shown only after onHover()
-
+    bug: maximum of y axis
     ***/
     .directive('linearLifetime', function() {
         return {
@@ -53,14 +52,14 @@ angular.module('mcm.charts', [])
 
                 var xAxis = d3.svg.axis().scale(x).tickSize(-height).tickSubdivide(1);
                 var gx = svg.append("svg:g")
-                    .attr("class", "x axis")
+                    .attr("class", "x axis minorx")
                     .attr('fill', '#666')
                     .attr("transform", "translate(0," + (height + 10) + ")")
                     .call(xAxis);
 
-                var yAxis = d3.svg.axis().scale(y).ticks(6).orient("left");
+                var yAxis = d3.svg.axis().scale(y).ticks(4).orient("left");
                 var gy = svg.append("svg:g")
-                    .attr("class", "y axis")
+                    .attr("class", "y axis minory")
                     .attr('fill', '#666')
                     .call(yAxis)
                     .append("text")
@@ -117,7 +116,7 @@ angular.module('mcm.charts', [])
                 // Zoom
                 function onZoom() {
                     svg.select("g.x.axis").call(xAxis);
-                    svg.select("g.y.axis").call(yAxis);
+                    //svg.select("g.y.axis").call(yAxis);
                     svg.select("path.data1").attr("d", areaAllEvents(scope.dataCopy));
                     svg.select("path.data2").attr("d", pathNotOpenEvents(scope.dataCopy));
                     svg.select("path.data3").attr("d", pathTargetEvents(scope.dataCopy));
@@ -140,14 +139,14 @@ angular.module('mcm.charts', [])
                     y.domain([0, d3.max(a, function(d) {
                         return d.x * 2;
                     })]).range([height, 0]);
+
                     yAxis.scale(y);
-                    svg.selectAll("g .y.axis").transition().ease("linear").call(yAxis);
-                    gy.selectAll('g').filter(function(d) {
-                        return d;
-                    }).classed('minor', true);
-                    gy.selectAll('.minor line').filter(function(d) {
+                    svg.selectAll("g .y.axis").transition().duration(200).ease("linear").call(yAxis);
+                    d3.selectAll('.minory line').filter(function(d) {
                         return d;
                     }).transition().attr("x2", width);
+
+
                     zoom.x(x);
 
                     // Prevent hover over axis while moving

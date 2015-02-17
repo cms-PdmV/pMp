@@ -50,6 +50,13 @@ body.dragging, body.dragging * {
     stroke-dasharray: 2,2;
 }
 
+.minorx .tick, .minory .tick {
+    stroke: grey;
+    opacity: 0.2;
+    stroke-width: 0.6;
+    stroke-dasharray: 2,2;
+}
+
 .grid path {
     stroke-width: 0;
 }
