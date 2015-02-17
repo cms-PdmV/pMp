@@ -28,16 +28,16 @@ angular.module('mcm.charts', [])
                 var margin = {
                         top: 10,
                         right: 0,
-                        bottom: 30,
+                        bottom: 50,
                         left: 80
                     },
-                    width = 1200 - margin.left - margin.right,
-                    height = 400 - margin.top - margin.bottom,
+                    width = 1050 - margin.left - margin.right,
+                    height = 350 - margin.top - margin.bottom,
                     l1, l2, l3, containerBox;
 
                 var svg = d3.select(element[0])
                     .append('svg:svg')
-                    .attr("viewBox", "0 0 " + (width + margin.left + margin.right) + " " + (height + margin.top + margin.bottom))
+                    .attr("viewBox", "0 -20 " + (width + margin.left + margin.right) + " " + (height + margin.top + margin.bottom))
                     .attr("width", "100%")
                     .attr("height", "100%")
                     .append("svg:g")
@@ -50,7 +50,7 @@ angular.module('mcm.charts', [])
                 var x = d3.time.scale();
                 var y = d3.scale.linear();
 
-                var xAxis = d3.svg.axis().scale(x).tickSize(-height).tickSubdivide(1);
+                var xAxis = d3.svg.axis().scale(x).tickSize(-height).ticks(4).tickSubdivide(1);
                 var gx = svg.append("svg:g")
                     .attr("class", "x axis minorx")
                     .attr('fill', '#666')
@@ -64,8 +64,8 @@ angular.module('mcm.charts', [])
                     .call(yAxis)
                     .append("text")
                     .attr("id", "ytitle")
-                    .attr("dy", "-3px")
-                    .attr("dx", '-33px')
+                    .attr("dy", "-20px")
+                    .attr("dx", '-30px')
                     .attr("font-size", "10")
                     .text('events');
 
@@ -199,22 +199,22 @@ angular.module('mcm.charts', [])
 
                         dateLabelGroup.append("svg:text")
                             .attr("class", "date-label")
-                            .attr("y", 0)
+                            .attr("y", -20)
                             .attr("x", 10);
                         dateLabelGroup.append("svg:text")
                             .attr("class", "expected-label")
                             .attr("style", "fill: rgb(106, 28, 0);")
-                            .attr("y", 0)
+                            .attr("y", -20)
                             .attr("x", 225);
                         dateLabelGroup.append("svg:text")
                             .attr("class", "indas-label")
                             .attr("style", "fill: rgb(106, 168, 79);")
-                            .attr("y", 0)
+                            .attr("y", -20)
                             .attr("x", 350);
                         dateLabelGroup.append("svg:text")
                             .attr("class", "openindas-label")
                             .attr("style", "fill: #666666;")
-                            .attr("y", 0)
+                            .attr("y", -20)
                             .attr("x", 500);
 
                         var hoverLineGroup = svg.append("svg:g")
