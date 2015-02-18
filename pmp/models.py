@@ -178,8 +178,9 @@ class GetLifetime():
         """
         try:
             # check the input is a request
-            iterable = [s['name'] for s in self.es.get(
-                    'requests', 'request', input)['_source']['reqmgr_name']]
+            iterable = [s['name'] for s in
+                        self.es.get('requests', 'request',
+                                    input)['_source']['reqmgr_name']]
         except:
             # input can be a reqmgr_name
             iterable = [input]
@@ -225,7 +226,6 @@ class GetLifetime():
         return json.dumps({"results": self.prepare_response(query)})
 
 
-
 class GetSuggestions():
 
     def __init__(self, typeof):
@@ -234,44 +234,53 @@ class GetSuggestions():
         self.lifetime = (typeof == 'lifetime')
         self.on = (typeof == 'true')
 
-    def get(self, campaign):
+    def get(self, query):
+
+        searchable = query.replace('-', '\-')
 
         if self.lifetime:
-            if '-' in campaign:
-                self.search_string = ('prepid:%s' % campaign.replace('-', '\-'))
-            else:
-                self.search_string = ('prepid:*%s*' % campaign.replace('-', '\-'))
-            req = [s['_id'] for s in self.es.search(self.search_string, index="requests",
-                                                    size=self.overflow)['hits']['hits']]
-                
-            if '-' in campaign:
-                self.search_string = ('pdmv_request_name:%s' % campaign.replace('-', '\-'))
-            else:
-                self.search_string = ('pdmv_request_name:*%s*' % campaign.replace('-', '\-'))
 
-            return json.dumps(
-                {"results": [s['_id'] for s in self.es.search(
-                            self.search_string, index="stats",
-                            size=self.overflow)['hits']['hits']]
-                 + req})
-        else:
-            if '-' in campaign:
-                self.search_string = ('prepid:%s' % campaign.replace('-', '\-'))
+            if '-' in query:
+                search_string = ('prepid:%s' % searchable)
+                search_stats = ('pdmv_request_name:%s' % searchable)
             else:
-                self.search_string = ('prepid:*%s*' % campaign.replace('-', '\-'))
+                search_string = ('prepid:*%s*' % searchable)
+                search_stats = ('pdmv_request_name:*%s*' % searchable)
+
+            campa = [s['_id'] for s in
+                     self.es.search(search_string, index='campaigns',
+                                    size=self.overflow)['hits']['hits']]
+
+            reque = [s['_id'] for s in
+                     self.es.search(search_string, index='requests',
+                                    size=self.overflow)['hits']['hits']]
+
+            stats = [s['_id'] for s in
+                     self.es.search(search_stats, index='stats',
+                                    size=self.overflow)['hits']['hits']]
+
+            return json.dumps({'results': campa + reque + stats})
+
+        else:
+            if '-' in query:
+                search_string = ('prepid:%s' % searchable)
+            else:
+                search_string = ('prepid:*%s*' % searchable)
 
             if self.on:
                 return json.dumps(
-                    {"results": [s['_id'] for s in self.es.search(
-                                self.search_string, index="chained_campaigns",
-                                size=self.overflow)['hits']['hits']]
-                     + [s['_id'] for s in self.es.search(self.search_string,
-                                                         index="chained_requests",
-                                                         size=self.overflow)
-                        ['hits']['hits']]
-                     })
+                    {"results": [s['_id'] for s in
+                                 self.es.search(search_string,
+                                                index="chained_campaigns",
+                                                size=self.overflow)
+                                 ['hits']['hits']]
+                     + [s['_id'] for s in
+                        self.es.search(search_string, index="chained_requests",
+                                       size=self.overflow)['hits']['hits']]})
             else:
                 return json.dumps(
-                    {"results": [s['_id'] for s in self.es.search(
-                                self.search_string, index="campaigns",
-                                size=self.overflow)['hits']['hits']]})
+                    {"results": [s['_id'] for s in
+                                 self.es.search(self.search_string,
+                                                index="campaigns",
+                                                size=self.overflow)
+                                 ['hits']['hits']]})
