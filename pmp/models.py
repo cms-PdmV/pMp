@@ -176,14 +176,33 @@ class GetLifetime():
         """
         Query DB and return array of raw documents
         """
+        iterable = []
         try:
-            # check the input is a request
-            iterable = [s['name'] for s in
+            # check if the input is a campaign
+            req_arr = [s['_source'] for s in
+                       self.es.search(('member_of_campaign:%s' % input),
+                                      index='requests',
+                                      size=self.overflow)['hits']['hits']]
+            print req_arr
+
+            for r in req_arr:
+                res = ([s['name'] for s in
                         self.es.get('requests', 'request',
-                                    input)['_source']['reqmgr_name']]
+                                    r['prepid'])['_source']['reqmgr_name']])
+                for e in res:
+                    iterable.append(e)
         except:
-            # input can be a reqmgr_name
-            iterable = [input]
+            pass
+
+        if not len(iterable):
+            try:
+                # check if the input is a request
+                iterable = [s['name'] for s in
+                            self.es.get('requests', 'request',
+                                        input)['_source']['reqmgr_name']]
+            except:
+                # input can be a reqmgr_name
+                iterable = [input]
 
         for i in iterable:
             try:
