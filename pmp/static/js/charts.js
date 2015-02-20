@@ -30,8 +30,8 @@ angular.module('mcm.charts', [])
                         bottom: 50,
                         left: 80
                     },
-                    width = 1050 - margin.left - margin.right,
-                    height = 350 - margin.top - margin.bottom,
+                    width = 1500 - margin.left - margin.right,
+                    height = 400 - margin.top - margin.bottom,
                     l1, l2, l3, containerBox;
 
                 var svg = d3.select(element[0])
@@ -288,12 +288,15 @@ angular.module('mcm.charts', [])
                         handleMouseOverGraph(event);
                     });
                 }
-
+                /*
                 var prepareData = function(d) {
 
                     
                     // #notesforfutureme:
                     // works, but to rewrite!!!
+
+                    console.log("Start:");
+                    console.log(Math.floor(Date.now() / 1000))
 
                     var x, tmp = {}
 
@@ -308,7 +311,8 @@ angular.module('mcm.charts', [])
                         }
                     }
                     
-                    //console.log("Filtering requests:");
+                    console.log("Filtering requests:");
+                    console.log(Math.floor(Date.now() / 1000))
                     //console.log(tmp);
                     
                     var y = []
@@ -324,8 +328,9 @@ angular.module('mcm.charts', [])
                             return !pos || item != y[pos - 1];
                         });
 
-                    console.log("Getting x points:");
-                    console.log(y);
+                    console.log("Getting x points:");    
+                    console.log(Math.floor(Date.now() / 1000))
+                    //console.log(y);
                     
                     var tmp2 = [], arr_input, cur_index, nxw;
 
@@ -338,18 +343,11 @@ angular.module('mcm.charts', [])
                             if (tmp[k][cur_index] != undefined && y[a] === tmp[k][cur_index].t) {
                                 dummy = angular.copy(tmp[k][cur_index]);
                                 delete dummy.t;
-
-                                //console.log("D");
-                                //console.log(y[a]);
-                                //console.log(tmp[k][cur_index].t);
-                                //console.log(dummy);
                                 cur_index += 1;
                             } else {
                                 dummy = angular.copy(dummy);
                             }
-                            //console.log(y[a]);
                             dummy.t = y[a]
-                                //console.log(dummy);
                             nxw.push(dummy);
                         }
                         tmp2[k] = nxw;
@@ -357,7 +355,8 @@ angular.module('mcm.charts', [])
 
 
                     console.log("Adding dummy points:");
-                    console.log(tmp2);
+                    console.log(Math.floor(Date.now() / 1000))
+                    //console.log(tmp2);
                     
                     finallmente = []
                     for (var o = 0; o < y.length; o++) {
@@ -371,19 +370,22 @@ angular.module('mcm.charts', [])
                         }
                     }
 
-                    //console.log("Final plot:")
+                    console.log("Final plot:")
+                    console.log(Math.floor(Date.now() / 1000))
                     //console.log(finallmente);
                     
                     scope.dataCopy = angular.copy(finallmente);
                     onLoad(scope.dataCopy);
                     
                 }
-
+                */
                 // Watch for data change
                 scope.$watch('chartData', function(d) {
-                    if (d.length) {
+                    scope.dataCopy = angular.copy(d);
+                    onLoad(scope.dataCopy);
+                    /*if (d.length) {
                       prepareData(d);
-                    }
+                      }*/
                 });
             }
         }

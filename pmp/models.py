@@ -183,7 +183,6 @@ class GetLifetime():
                        self.es.search(('member_of_campaign:%s' % input),
                                       index='requests',
                                       size=self.overflow)['hits']['hits']]
-            print req_arr
 
             for r in req_arr:
                 res = ([s['name'] for s in
@@ -211,8 +210,12 @@ class GetLifetime():
                 yield None
 
     def prepare_response(self, query):
+        print "Start"
+        prev = int(round(time.time() * 1000))
+        print prev
         r = []
 
+        # Process the db documents
         for d in self.db_query(query):
 
             if d is None:
@@ -238,8 +241,75 @@ class GetLifetime():
                     response['data'].append(data)
 
             r.append(response)
+        
+        print "Data prepared"
+        print int(round(time.time() * 1000)) - prev
+        prev = int(round(time.time() * 1000))
 
-        return r
+        # Step 1: Get accumulated requests
+        tmp = {}
+        for x in r:
+            s = x['request']
+            try:
+                tmp[s] += x['data']
+            except KeyError:
+                tmp[s] = x['data']
+
+        print "Accum request"
+        print int(round(time.time() * 1000)) - prev
+        prev = int(round(time.time() * 1000))
+
+
+        # Step 2: Get and sort timestamps
+        times = []
+        for t in tmp:
+            times += (x['t'] for x in tmp[t])
+        times = sorted(set(times))
+
+
+        print "Sorted times"
+        print int(round(time.time() * 1000)) - prev
+        prev = int(round(time.time() * 1000))
+
+
+        # Step 3: Create dummy points for each request
+        tmp2 = {}
+        for t in tmp:
+            nxw = []
+            cur_index = 0
+            dummy = {'a':0, 'e':0, 'x':0}
+
+            listed = sorted(tmp[t], key=lambda e: e['t'])
+            for a in times:
+                if cur_index < len(listed) and a == listed[cur_index]['t']:
+                    dummy = listed[cur_index]
+                    cur_index += 1
+                dummy['t'] = a
+                nxw.append(dummy)
+
+            tmp2[t] = nxw
+
+        print "dummy points"
+        print int(round(time.time() * 1000)) - prev
+        prev = int(round(time.time() * 1000))
+
+
+        # Step 4: Generating data points
+        data = []
+
+        for (x, t) in enumerate(times):
+            d = {'a': 0, 'e':0, 't': t, 'x': 0}
+            for m in tmp2:
+                d['a'] += tmp2[m][x]['a']
+                d['e'] += tmp2[m][x]['e']
+                d['x'] += tmp2[m][x]['x']
+            data.append(d)
+
+        print "Data points"
+        print int(round(time.time() * 1000)) - prev
+        prev = int(round(time.time() * 1000))
+
+        return data
 
     def get(self, query):
         return json.dumps({"results": self.prepare_response(query)})
