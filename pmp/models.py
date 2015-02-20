@@ -242,13 +242,13 @@ class GetLifetime():
 
             if 'pdmv_monitor_history' in d:
                 for record in d['pdmv_monitor_history']:
-                    data = {}
-                    data['a'] = record['pdmv_evts_in_DAS'] + record['pdmv_open_evts_in_DAS']
-                    data['e'] = record['pdmv_evts_in_DAS']
-                    data['t'] = time.mktime(time.strptime(record['pdmv_monitor_time']))*1000
-                    data['x'] = d['pdmv_expected_events']
-                    response['data'].append(data)
-
+                    if len(record['pdmv_monitor_time']):
+                        data = {}
+                        data['a'] = record['pdmv_evts_in_DAS'] + record['pdmv_open_evts_in_DAS']
+                        data['e'] = record['pdmv_evts_in_DAS']
+                        data['t'] = time.mktime(time.strptime(record['pdmv_monitor_time']))*1000
+                        data['x'] = d['pdmv_expected_events']
+                        response['data'].append(data)
             r.append(response)
         
         #print "Data prepared"
@@ -323,20 +323,29 @@ class GetLifetime():
         #print int(round(time.time() * 1000)) - prev
         #prev = int(round(time.time() * 1000))
 
+        # get only 1000 points
+        skiper = len(times) / 20
 
         # Step 4: Generating data points
         data = []
+        i = 0
+
         for (x, t) in enumerate(times):
-            d = {'a': 0, 'e':0, 't': t, 'x': 0}
-            for m in tmp2:
-                d['a'] += tmp2[m][x]['a']
-                d['e'] += tmp2[m][x]['e']
-                d['x'] += tmp2[m][x]['x']
-            data.append(d)
+            if i < skiper and x < len(times) - 1 and x != 0:
+                i += 1
+            else:
+                i = 0
+                d = {'a': 0, 'e':0, 't': t, 'x': 0}
+                for m in tmp2:
+                    d['a'] += tmp2[m][x]['a']
+                    d['e'] += tmp2[m][x]['e']
+                    d['x'] += tmp2[m][x]['x']
+                data.append(d)
+            
         #print "Data points"
         #print int(round(time.time() * 1000)) - prev
-
-        return self.rm_useless(data)
+        print len(data)
+        return data
 
     def get(self, query):
         return json.dumps({"results": self.prepare_response(query)})
