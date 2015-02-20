@@ -209,10 +209,19 @@ class GetLifetime():
             except:
                 yield None
 
+    def rm_useless(self, arr):
+        r = []
+        prev = {'a': -1, 'e': -1, 'x': -1}
+        for a in arr:
+            if a['a'] != prev['a'] or a['e'] != prev['e'] or a['x'] != prev['x']:
+                r.append(a)
+                prev = a
+        return r
+
     def prepare_response(self, query):
-        print "Start"
-        prev = int(round(time.time() * 1000))
-        print prev
+        #print "Start"
+        #prev = int(round(time.time() * 1000))
+        #print prev
         r = []
 
         # Process the db documents
@@ -242,9 +251,9 @@ class GetLifetime():
 
             r.append(response)
         
-        print "Data prepared"
-        print int(round(time.time() * 1000)) - prev
-        prev = int(round(time.time() * 1000))
+        #print "Data prepared"
+        #print int(round(time.time() * 1000)) - prev
+        #prev = int(round(time.time() * 1000))
 
         # Step 1: Get accumulated requests
         tmp = {}
@@ -254,10 +263,14 @@ class GetLifetime():
                 tmp[s] += x['data']
             except KeyError:
                 tmp[s] = x['data']
+            tmp[s] = self.rm_useless(tmp[s])
 
-        print "Accum request"
-        print int(round(time.time() * 1000)) - prev
-        prev = int(round(time.time() * 1000))
+        #for name in tmp:
+        #    tmp[name] = sorted(tmp[name], key=lambda e: e['t'])
+
+        #print "Accum request"
+        #print int(round(time.time() * 1000)) - prev
+        #prev = int(round(time.time() * 1000))
 
 
         # Step 2: Get and sort timestamps
@@ -265,12 +278,32 @@ class GetLifetime():
         for t in tmp:
             times += (x['t'] for x in tmp[t])
         times = sorted(set(times))
+        #print "Sorted times"
+        #print int(round(time.time() * 1000)) - prev
+        #prev = int(round(time.time() * 1000))
 
-
-        print "Sorted times"
-        print int(round(time.time() * 1000)) - prev
-        prev = int(round(time.time() * 1000))
-
+        '''
+        Step 3 & Step 4
+        data = []
+        for t in times:
+            dummy = {'a':0, 'e':0, 'x':0, 't': t}
+            for name in tmp:
+                pre = {'a':0, 'e':0, 'x':0}
+                for i in xrange(len(tmp[name])):
+                    if tmp[name][i]['t'] == t:
+                        dummy['a'] += tmp[name][i]['a']
+                        dummy['e'] += tmp[name][i]['e']
+                        dummy['x'] += tmp[name][i]['x']
+                        break
+                    elif tmp[name][i]['t'] > t:
+                        dummy['a'] += pre['a']
+                        dummy['e'] += pre['e']
+                        dummy['x'] += pre['x']
+                        break
+                    elif tmp[name][i]['t'] < t:
+                        pre = tmp[name][i]
+            data.append(dummy)
+        '''
 
         # Step 3: Create dummy points for each request
         tmp2 = {}
@@ -278,7 +311,6 @@ class GetLifetime():
             nxw = []
             cur_index = 0
             dummy = {'a':0, 'e':0, 'x':0}
-
             listed = sorted(tmp[t], key=lambda e: e['t'])
             for a in times:
                 if cur_index < len(listed) and a == listed[cur_index]['t']:
@@ -286,17 +318,14 @@ class GetLifetime():
                     cur_index += 1
                 dummy['t'] = a
                 nxw.append(dummy)
-
             tmp2[t] = nxw
-
-        print "dummy points"
-        print int(round(time.time() * 1000)) - prev
-        prev = int(round(time.time() * 1000))
+        #print "Dummy points"
+        #print int(round(time.time() * 1000)) - prev
+        #prev = int(round(time.time() * 1000))
 
 
         # Step 4: Generating data points
         data = []
-
         for (x, t) in enumerate(times):
             d = {'a': 0, 'e':0, 't': t, 'x': 0}
             for m in tmp2:
@@ -304,12 +333,10 @@ class GetLifetime():
                 d['e'] += tmp2[m][x]['e']
                 d['x'] += tmp2[m][x]['x']
             data.append(d)
+        #print "Data points"
+        #print int(round(time.time() * 1000)) - prev
 
-        print "Data points"
-        print int(round(time.time() * 1000)) - prev
-        prev = int(round(time.time() * 1000))
-
-        return data
+        return self.rm_useless(data)
 
     def get(self, query):
         return json.dumps({"results": self.prepare_response(query)})

@@ -30,7 +30,7 @@ angular.module('mcm.charts', [])
                         bottom: 50,
                         left: 80
                     },
-                    width = 1500 - margin.left - margin.right,
+                    width = 1200 - margin.left - margin.right,
                     height = 400 - margin.top - margin.bottom,
                     l1, l2, l3, containerBox;
 
