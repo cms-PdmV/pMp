@@ -178,11 +178,20 @@ class GetLifetime():
         """
         iterable = []
         try:
+            ### Performance
+            prev = int(round(time.time() * 1000))
+            ###
+
             # check if the input is a campaign
             req_arr = [s['_source'] for s in
                        self.es.search(('member_of_campaign:%s' % input),
                                       index='requests',
                                       size=self.overflow)['hits']['hits']]
+            
+            ### Performance
+            print "MoC in ", (int(round(time.time() * 1000)) - prev)
+            prev = int(round(time.time() * 1000))
+            ###
 
             for r in req_arr:
                 res = ([s['name'] for s in
@@ -190,6 +199,12 @@ class GetLifetime():
                                     r['prepid'])['_source']['reqmgr_name']])
                 for e in res:
                     iterable.append(e)
+
+            ### Performance
+            print "ReqMgr in ", (int(round(time.time() * 1000)) - prev)
+            prev = int(round(time.time() * 1000))
+            ###
+
         except:
             pass
 
@@ -202,6 +217,8 @@ class GetLifetime():
             except:
                 # input can be a reqmgr_name
                 iterable = [input]
+
+        print len(iterable)
 
         for i in iterable:
             try:
@@ -219,7 +236,7 @@ class GetLifetime():
         return r
 
     def prepare_response(self, query):
-        nop = 100
+        nop = 50
         r = []
 
         ### Performance
@@ -233,14 +250,14 @@ class GetLifetime():
                 continue
 
             response = {}
-            response['campaign'] = d['pdmv_campaign']
+            #response['campaign'] = d['pdmv_campaign']
             response['data'] = []
-            response['input'] = query
-            response['priority'] = d['pdmv_priority']
-            response['pwg'] = '#HaveToQueryRequest'
+            #response['input'] = query
+            #response['priority'] = d['pdmv_priority']
+            #response['pwg'] = '#HaveToQueryRequest'
             response['request'] = d['pdmv_prep_id']
-            response['status'] = '#HaveToQueryRequest'
-            response['title'] = d['pdmv_prep_id'] + d['pdmv_dataset_name']
+            #response['status'] = '#HaveToQueryRequest'
+            #response['title'] = d['pdmv_prep_id'] + d['pdmv_dataset_name']
 
             if 'pdmv_monitor_history' in d:
                 for record in d['pdmv_monitor_history']:
@@ -254,7 +271,7 @@ class GetLifetime():
             r.append(response)
         
         ### Performance
-        print "Data prepared in ", int(round(time.time() * 1000)) - prev
+        print "Data prepared in ", (int(round(time.time() * 1000)) - prev)
         prev = int(round(time.time() * 1000))
         ###
 
@@ -266,13 +283,10 @@ class GetLifetime():
                 tmp[s] += x['data']
             except KeyError:
                 tmp[s] = x['data']
-            tmp[s] = self.rm_useless(tmp[s])
-
-        for name in tmp:
-            tmp[name] = sorted(tmp[name], key=lambda e: e['t'])
+            #tmp[s] = self.rm_useless(tmp[s])
 
         ### Performance
-        print "Accum request in ", int(round(time.time() * 1000)) - prev
+        print "Accum request in ", (int(round(time.time() * 1000)) - prev)
         prev = int(round(time.time() * 1000))
         ###
 
@@ -280,24 +294,25 @@ class GetLifetime():
         times = []
         for t in tmp:
             times += (x['t'] for x in tmp[t])
+            tmp[t] = sorted(tmp[t], key=lambda e: e['t'])
         times = sorted(set(times))
 
-        skiper = len(times) / (nop-1)
+        if len(times) > (nop-1):
+            skiper = len(times) / (nop-1)
+        else:
+            skiper = -1
 
         filter_times  = []
-
         i = 0
-
         for (x, t) in enumerate(times):
             if i < skiper and x < len(times) - 1 and x != 0:
                 i += 1
             else:
                 filter_times.append(t)
                 i = 0
-        print len(filter_times)
         
         ### Performance
-        print "Sorted times in ", int(round(time.time() * 1000)) - prev
+        print "Sorted times in ", (int(round(time.time() * 1000)) - prev)
         prev = int(round(time.time() * 1000))
         ###
 
@@ -322,59 +337,9 @@ class GetLifetime():
                         prevx = x
             data.append(d)
         
-        print len(data)
-
         ### Performance
-        print "Testing in ", int(round(time.time() * 1000)) - prev
-        prev = int(round(time.time() * 1000))
+        print "Dataset in ", (int(round(time.time() * 1000)) - prev)
         ###
-
-        return data
-
-        # Step 3: Create dummy points for each request
-        tmp2 = {}
-        for t in tmp:
-            nxw = []
-            cur_index = 0
-            dummy = {'a':0, 'e':0, 'x':0}
-            listed = sorted(tmp[t], key=lambda e: e['t'])
-            for a in times:
-                if cur_index < len(listed) and a == listed[cur_index]['t']:
-                    dummy = listed[cur_index]
-                    cur_index += 1
-                dummy['t'] = a
-                nxw.append(dummy)
-            tmp2[t] = nxw
-
-        ### Performance
-        print "Dummy points"
-        print int(round(time.time() * 1000)) - prev
-        prev = int(round(time.time() * 1000))
-        ###
-
-        # get only 1000 points
-        skiper = len(times) / 100
-
-        # Step 4: Generating data points
-        data = []
-        i = 0
-
-        for (x, t) in enumerate(times):
-            if i < skiper and x < len(times) - 1 and x != 0:
-                i += 1
-            else:
-                i = 0
-                d = {'a': 0, 'e':0, 't': t, 'x': 0}
-                for m in tmp2:
-                    d['a'] += tmp2[m][x]['a']
-                    d['e'] += tmp2[m][x]['e']
-                    d['x'] += tmp2[m][x]['x']
-                data.append(d)
-        ### Performance
-        print "Data points"
-        print int(round(time.time() * 1000)) - prev
-        print len(data)
-        ### Performance
         return data
 
     def get(self, query):
