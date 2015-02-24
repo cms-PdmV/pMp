@@ -405,7 +405,7 @@ class GetSuggestions():
             else:
                 return json.dumps(
                     {"results": [s['_id'] for s in
-                                 self.es.search(self.search_string,
+                                 self.es.search(search_string,
                                                 index="campaigns",
                                                 size=self.overflow)
                                  ['hits']['hits']]})
