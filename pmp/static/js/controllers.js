@@ -26,7 +26,7 @@ pmpApp.controller('MainController', function($location, $route, $rootScope, $sco
         }
         return original.apply($location, [path]);
     };
-
+3
     $scope.showPopUp = function(type, text) {
         switch (type) {
             case 'error':
@@ -442,7 +442,7 @@ pmpApp.controller('LifetimeController', function($http, $scope) {
                     $scope.showPopUp('error', 'No results for this request parameters');
                 } else {
                     if (add) {
-                        data.data.results.push.apply(data.data.results, $scope.allRequestData);
+                        data.data.results.push.apply(data.data.results.data, $scope.allRequestData);
                     } else {
                         $scope.allRequestData = [];
                     }

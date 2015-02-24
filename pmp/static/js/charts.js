@@ -121,6 +121,18 @@ angular.module('mcm.charts', [])
                     svg.select("path.data3").attr("d", pathTargetEvents(scope.dataCopy));
                 }
 
+                function formatY(d) {
+                    var l = ['G', 'M', 'k', ''];
+                    var s, j = 0
+                    for (var i = 1e9; i > 0; i = i / 1e3) {
+                        s = d / i;
+                        if (s >= 1) {
+                            return s + l[j]
+                        }
+                        j++;
+                    }
+                }
+
                 // When new data to load
                 var onLoad = function(a) {
                     currentMin = d3.min(a, function(d) {
@@ -139,7 +151,7 @@ angular.module('mcm.charts', [])
                         return Math.max(d.x, d.a) * 1.1;
                     })]).range([height, 0]);
 
-                    yAxis.scale(y);
+                    yAxis.scale(y).tickFormat(formatY);
                     svg.selectAll("g .y.axis").transition().duration(200).ease("linear").call(yAxis);
                     d3.selectAll('.minory line').filter(function(d) {
                         return d;
@@ -288,104 +300,17 @@ angular.module('mcm.charts', [])
                         handleMouseOverGraph(event);
                     });
                 }
-                /*
+
                 var prepareData = function(d) {
-
-                    
-                    // #notesforfutureme:
-                    // works, but to rewrite!!!
-
-                    console.log("Start:");
-                    console.log(Math.floor(Date.now() / 1000))
-
-                    var x, tmp = {}
-
-                    for (var i=0; i < d.length; i++) {
-                        var r = d[i].request;
-                        x = angular.copy(d[i].data);
-                        x.pop();
-                        if (tmp[r] != undefined) {
-                            Array.prototype.push.apply(tmp[r], x);
-                        } else {
-                            tmp[r] = x;
-                        }
-                    }
-                    
-                    console.log("Filtering requests:");
-                    console.log(Math.floor(Date.now() / 1000))
-                    //console.log(tmp);
-                    
-                    var y = []
-                    for (var k in tmp){
-                        tmp[k] = tmp[k].sort(function(a,b) {
-                            return parseFloat(a['t']) - parseFloat(b['t']) } );
-
-                        tmp[k].forEach(function(d) {
-                                return y.push(d.t);
-                            });
-                    } 
-                    y.sort().filter(function(item, pos) {
-                            return !pos || item != y[pos - 1];
-                        });
-
-                    console.log("Getting x points:");    
-                    console.log(Math.floor(Date.now() / 1000))
-                    //console.log(y);
-                    
-                    var tmp2 = [], arr_input, cur_index, nxw;
-
-                    for (var k in tmp) {
-                        nxw = [];
-                        cur_index = 0;
-                        dummy = {a:0,e:0,x:0};
-                        
-                        for(var a = 0; a < y.length; a++) {
-                            if (tmp[k][cur_index] != undefined && y[a] === tmp[k][cur_index].t) {
-                                dummy = angular.copy(tmp[k][cur_index]);
-                                delete dummy.t;
-                                cur_index += 1;
-                            } else {
-                                dummy = angular.copy(dummy);
-                            }
-                            dummy.t = y[a]
-                            nxw.push(dummy);
-                        }
-                        tmp2[k] = nxw;
-                    }
-
-
-                    console.log("Adding dummy points:");
-                    console.log(Math.floor(Date.now() / 1000))
-                    //console.log(tmp2);
-                    
-                    finallmente = []
-                    for (var o = 0; o < y.length; o++) {
-                        v = {a:0,e:0,x:0,t:0}
-                        finallmente[o] = v
-                        for (var k in tmp2) {
-                            finallmente[o].a += tmp2[k][o].a;
-                            finallmente[o].e += tmp2[k][o].e;
-                            finallmente[o].x += tmp2[k][o].x;
-                            finallmente[o].t = tmp2[k][o].t;
-                        }
-                    }
-
-                    console.log("Final plot:")
-                    console.log(Math.floor(Date.now() / 1000))
-                    //console.log(finallmente);
-                    
-                    scope.dataCopy = angular.copy(finallmente);
-                    onLoad(scope.dataCopy);
-                    
-                }
-                */
-                // Watch for data change
-                scope.$watch('chartData', function(d) {
                     scope.dataCopy = angular.copy(d);
                     onLoad(scope.dataCopy);
-                    /*if (d.length) {
-                      prepareData(d);
-                      }*/
+                }
+
+                // Watch for data change
+                scope.$watch('chartData', function(d) {
+                    if (d.length) {
+                        prepareData(d);
+                    }
                 });
             }
         }
