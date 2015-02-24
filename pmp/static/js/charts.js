@@ -700,7 +700,7 @@ angular.module('mcm.charts', [])
             },
             link: function(scope, element, attrs) {
                 var highlight_color = "#93cdff";
-                var margin = {top: 20, right: 50, bottom: 150, left: 150};
+                var margin = {top: 30, right: 50, bottom: 150, left: 50};
                 //input data
                 var data, value, grouping, columns, stacking, yScaleType, valueOperation,
                     duration;
@@ -752,6 +752,18 @@ angular.module('mcm.charts', [])
                     }
                 }
 
+                function formatY(d) {
+                    var l = ['G', 'M', 'k', ''];
+                    var s, j = 0
+                    for (var i = 1e9; i > 0; i = i / 1e3) {
+                        s = d / i;
+                        if (s >= 1) {
+                            return s + l[j]
+                        }
+                        j++;
+                    }
+                }
+
                 function changeWidthHeight() {
                     width = scope.userWidth || 1125;
                     height = scope.userHeight || 375;
@@ -777,9 +789,9 @@ angular.module('mcm.charts', [])
                     xAxis = d3.svg.axis()
                         .orient("bottom");
 
-
                     yAxis = d3.svg.axis()
                         .scale(y_scale).ticks(5)
+                        .tickFormat(formatY)
                         .orient("left");
 
                     // create base SVG (and translate it to the start of plot)
@@ -990,7 +1002,8 @@ angular.module('mcm.charts', [])
                             xAxis.scale(x_scale);
                         }
                     }
-                    yAxis.tickFormat(d3.format(""));
+                    //yAxis.tickFormat(d3.format(""));
+                    yAxis.tickFormat(formatY);
                     if(yScaleType == "log" && ( columns || grouping.length ) && data.length) {
                         function prepareTicks(minimalValue, maximalTick, minimalTick) {
                             var retList = [];
