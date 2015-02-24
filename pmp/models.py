@@ -219,10 +219,12 @@ class GetLifetime():
         return r
 
     def prepare_response(self, query):
-        #print "Start"
-        #prev = int(round(time.time() * 1000))
-        #print prev
+        nop = 100
         r = []
+
+        ### Performance
+        prev = int(round(time.time() * 1000))
+        ###
 
         # Process the db documents
         for d in self.db_query(query):
@@ -251,9 +253,10 @@ class GetLifetime():
                         response['data'].append(data)
             r.append(response)
         
-        #print "Data prepared"
-        #print int(round(time.time() * 1000)) - prev
-        #prev = int(round(time.time() * 1000))
+        ### Performance
+        print "Data prepared in ", int(round(time.time() * 1000)) - prev
+        prev = int(round(time.time() * 1000))
+        ###
 
         # Step 1: Get accumulated requests
         tmp = {}
@@ -265,45 +268,68 @@ class GetLifetime():
                 tmp[s] = x['data']
             tmp[s] = self.rm_useless(tmp[s])
 
-        #for name in tmp:
-        #    tmp[name] = sorted(tmp[name], key=lambda e: e['t'])
+        for name in tmp:
+            tmp[name] = sorted(tmp[name], key=lambda e: e['t'])
 
-        #print "Accum request"
-        #print int(round(time.time() * 1000)) - prev
-        #prev = int(round(time.time() * 1000))
-
+        ### Performance
+        print "Accum request in ", int(round(time.time() * 1000)) - prev
+        prev = int(round(time.time() * 1000))
+        ###
 
         # Step 2: Get and sort timestamps
         times = []
         for t in tmp:
             times += (x['t'] for x in tmp[t])
         times = sorted(set(times))
-        #print "Sorted times"
-        #print int(round(time.time() * 1000)) - prev
-        #prev = int(round(time.time() * 1000))
 
-        '''
-        Step 3 & Step 4
+        skiper = len(times) / (nop-1)
+
+        filter_times  = []
+
+        i = 0
+
+        for (x, t) in enumerate(times):
+            if i < skiper and x < len(times) - 1 and x != 0:
+                i += 1
+            else:
+                filter_times.append(t)
+                i = 0
+        print len(filter_times)
+        
+        ### Performance
+        print "Sorted times in ", int(round(time.time() * 1000)) - prev
+        prev = int(round(time.time() * 1000))
+        ###
+
+        # Step 3 & 4: Cycle through requests and add data points
         data = []
-        for t in times:
-            dummy = {'a':0, 'e':0, 'x':0, 't': t}
-            for name in tmp:
-                pre = {'a':0, 'e':0, 'x':0}
-                for i in xrange(len(tmp[name])):
-                    if tmp[name][i]['t'] == t:
-                        dummy['a'] += tmp[name][i]['a']
-                        dummy['e'] += tmp[name][i]['e']
-                        dummy['x'] += tmp[name][i]['x']
+        for ft in filter_times:
+            d = {'a': 0, 'e':0, 't': ft, 'x': 0}
+            for t in tmp:
+                prevx = {'a': 0, 'e':0, 'x': 0}
+                for (i, x) in enumerate(tmp[t]):
+                    if x['t'] > ft:
+                        d['a'] += prevx['a']
+                        d['e'] += prevx['e']
+                        d['x'] += prevx['x']
                         break
-                    elif tmp[name][i]['t'] > t:
-                        dummy['a'] += pre['a']
-                        dummy['e'] += pre['e']
-                        dummy['x'] += pre['x']
+                    elif x['t'] == ft or i == len(tmp[t])-1:
+                        d['a'] += x['a']
+                        d['e'] += x['e']
+                        d['x'] += x['x']
                         break
-                    elif tmp[name][i]['t'] < t:
-                        pre = tmp[name][i]
-            data.append(dummy)
-        '''
+                    else:
+                        prevx = x
+            data.append(d)
+        
+        print len(data)
+
+        ### Performance
+        print "Testing in ", int(round(time.time() * 1000)) - prev
+        prev = int(round(time.time() * 1000))
+        ###
+
+        return data
 
         # Step 3: Create dummy points for each request
         tmp2 = {}
@@ -319,12 +345,15 @@ class GetLifetime():
                 dummy['t'] = a
                 nxw.append(dummy)
             tmp2[t] = nxw
-        #print "Dummy points"
-        #print int(round(time.time() * 1000)) - prev
-        #prev = int(round(time.time() * 1000))
+
+        ### Performance
+        print "Dummy points"
+        print int(round(time.time() * 1000)) - prev
+        prev = int(round(time.time() * 1000))
+        ###
 
         # get only 1000 points
-        skiper = len(times) / 20
+        skiper = len(times) / 100
 
         # Step 4: Generating data points
         data = []
@@ -341,10 +370,11 @@ class GetLifetime():
                     d['e'] += tmp2[m][x]['e']
                     d['x'] += tmp2[m][x]['x']
                 data.append(d)
-            
-        #print "Data points"
-        #print int(round(time.time() * 1000)) - prev
+        ### Performance
+        print "Data points"
+        print int(round(time.time() * 1000)) - prev
         print len(data)
+        ### Performance
         return data
 
     def get(self, query):
