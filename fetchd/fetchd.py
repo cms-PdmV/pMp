@@ -60,8 +60,8 @@ def get_changes(utl, cfg):
                         if s not in [200, 201]:
                             logging.error('%s Cannot update last_seq' %
                                           utl.get_time())
-                    if r['id'].startswith('pdmvserv'):
-                        yield r['id'], ('deleted' in r)
+                    #!!! if r['id'].startswith('jbadillo_ACDC_B2G-Fall13'):
+                    yield r['id'], ('deleted' in r)
             else:
                 logging.info('%s Nothing to do. No changes since last update' %
                              utl.get_time())
@@ -73,8 +73,8 @@ def get_changes(utl, cfg):
         if status == 200:
             if len(res['rows']):
                 for r in res['rows']:
-                    if r['id'].startswith('pdmvserv'):
-                        yield r['id'], ('deleted' in r)
+                    yield r['id'], ('deleted' in r)
+
                 r, status = utl.curl('GET', cfg.url_db_first,
                                      cookie=cfg.cookie)
                 _, s = utl.curl('PUT', cfg.last_seq, json.loads('{"val": %s}' %
@@ -113,6 +113,23 @@ if __name__ == "__main__":
                 url = str(cfg.url_db + r)
                 data, status = utl.curl('GET', url, cookie=cfg.cookie)
                 data = parse(data, cfg.remove_list)
+                try:
+                    i = 0
+                    for _ in data['pdmv_monitor_history']:
+                        data['pdmv_monitor_history'][i] = parse(
+                            data['pdmv_monitor_history'][i], cfg.remove_list)
+                        i += 1
+                except KeyError:
+                    pass
+                try:
+                    i = 0
+                    for _ in data['reqmgr_name']:
+                        data['reqmgr_name'][i] = parse(
+                            data['reqmgr_name'][i], cfg.remove_list)
+                        i += 1
+                except KeyError:
+                    pass
+
                 if status == 200:
                     reason, s = utl.curl('PUT', '%s%s' % (cfg.pmp_db, r), data)
                     if s in [200, 201]:
