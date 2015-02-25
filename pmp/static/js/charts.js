@@ -17,19 +17,19 @@ angular.module('mcm.charts', [])
         return {
             restrict: 'AE',
             scope: {
-                chartData: '=',
+                chartData: '='
             },
             link: function(scope, element) {
                 scope.dataCopy = [];
-
+                var customWidth = 1200;
                 // General attributes
                 var margin = {
                         top: 10,
                         right: 0,
                         bottom: 50,
-                        left: 80
+                        left: 40
                     },
-                    width = 1200 - margin.left - margin.right,
+                    width = customWidth - margin.left - margin.right,
                     height = 400 - margin.top - margin.bottom,
                     l1, l2, l3, containerBox;
 
@@ -234,19 +234,12 @@ angular.module('mcm.charts', [])
                             .attr("y1", 0).attr("y2", height + 10);
                     }
 
-                    var handleMouseOutGraph = function(event) {
-                        updateDataLabel([false, '', '', '']);
-                        updateIndicatorPosition(width);
-                    }
-
                     var handleMouseOverGraph = function(event) {
                         var mouseX = event.pageX - hoverLineXOffset;
                         var mouseY = event.pageY - hoverLineYOffset;
 
                         if (mouseX >= 0 && mouseX <= width && mouseY >= 0 && mouseY <= height) {
                             displayValueLabelsForPositionX(mouseX);
-                        } else {
-                            handleMouseOutGraph(event);
                         }
                     }
 
@@ -257,7 +250,6 @@ angular.module('mcm.charts', [])
                     }
 
                     var updateDataLabel = function(data) {
-                        console.log('update');
                         if (data[0]) {
                             svg.select('text.date-label').text('Time: ' + data[0].toDateString() + ' ' + data[0].toLocaleTimeString());
                         } else {
@@ -274,9 +266,10 @@ angular.module('mcm.charts', [])
                         var min = s[0].getTime();
                         var max = s[1].getTime();
                         var local = scope.dataCopy;
+                        var w = $('#measure').width() * width / customWidth;
 
-                        tmp = min + xPosition * (max - min) / width;
-                        
+                        tmp = min + (xPosition/ w * (max - min));
+
                         for (var i = 0; i < local.length; i++) {
                             if (tmp > local[i].t || i == 0) {
                                 data[0] = local[i].t;
@@ -292,9 +285,6 @@ angular.module('mcm.charts', [])
                     }
 
                     // Watch for mouse events
-                    $(containerBox).mouseleave(function(event) {
-                        handleMouseOutGraph(event);
-                    });
                     $(containerBox).mousemove(function(event) {
                         handleMouseOverGraph(event);
                     });
