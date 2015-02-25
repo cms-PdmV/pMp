@@ -66,10 +66,10 @@
     </a>
     
     <div id="filter" class="collapse col-xs-12 col-sm-12 col-md-12 col-lg-12 spacing">
-      <div ng-show="!cachedRequestData.length">
+      <div ng-show="!allRequestData.length">
         <small>No data to filter</small>
       </div>
-      <div ng-show="cachedRequestData.length">
+      <div ng-show="allRequestData.length">
         <form class="form-group form-inline form-group-sm">
           <small class="text-uppercase col-sm-12 col-md-12 col-lg-12">Priority filter</small>
           <div class="input-group col-sm-12">
@@ -100,11 +100,11 @@
         <form class="form-group form-inline form-group-sm spacing">
           <small class="text-uppercase col-sm-12 col-md-12 col-lg-12">Status filter</small>
           <div class="input-group">
-            <div class="col-lg-6 col-md-6 col-sm-12" ng-repeat="(key, status) in status">
+            <div class="col-lg-6 col-md-6 col-sm-12" ng-repeat="(key, status) in allStatus">
               <label class="checkbox-inline">
                 <input type="checkbox" ng-model="status.selected" 
                        ng-change="updateRequestData();setURL()">
-                <small>{{key}}</small>
+                <small>{{status}}</small>
               </label>
             </div>
           </div>

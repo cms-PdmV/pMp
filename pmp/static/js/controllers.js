@@ -438,7 +438,7 @@ pmpApp.controller('LifetimeController', function($http, $scope) {
             $scope.loadingData = true;
             var promise = $http.get("api/" + request + '/lifetime/' + $scope.probing);
             promise.then(function(data) {
-                if (!data.data.results.length) {
+                if (!data.data.results.data.length) {
                     $scope.showPopUp('error', 'No results for this request parameters');
                 } else {
                     if (add) {
@@ -447,7 +447,8 @@ pmpApp.controller('LifetimeController', function($http, $scope) {
                         $scope.allRequestData = [];
                     }
                 }
-                $scope.allRequestData = data.data.results;
+                $scope.allRequestData = data.data.results.data;
+                $scope.allStatus = data.data.results.status;
                 $scope.loadingData = false;
             }, function() {
                 $scope.showPopUp('error', 'Error getting requests');
@@ -457,6 +458,8 @@ pmpApp.controller('LifetimeController', function($http, $scope) {
     };
 
     $scope.probing = 40;
+
+    $scope.allStatus = [];
 
     $scope.title = 'Life-Time Representation of Requests';
 });

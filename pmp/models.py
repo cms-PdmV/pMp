@@ -194,11 +194,14 @@ class GetLifetime():
             ###
 
             for r in req_arr:
+                i = {}
+                i['status'] = r['status']
                 res = ([s['name'] for s in
                         self.es.get('requests', 'request',
                                     r['prepid'])['_source']['reqmgr_name']])
                 for e in res:
-                    iterable.append(e)
+                    i['name'] = e
+                    iterable.append(i)
 
             ### Performance
             print "ReqMgr in ", (int(round(time.time() * 1000)) - prev)
@@ -220,9 +223,9 @@ class GetLifetime():
 
         for i in iterable:
             try:
-                yield self.es.get('stats', 'stats', i)['_source']
+                yield [self.es.get('stats', 'stats', i['name'])['_source'], i['status']]
             except:
-                yield None
+                yield [None, None]
         ### Performance
         print "End yielding in ", (int(round(time.time() * 1000)) - prev)
         ###
@@ -239,16 +242,20 @@ class GetLifetime():
 
     def prepare_response(self, query, probe):
         r = []
+        status = []
 
         ### Performance
         prev = int(round(time.time() * 1000))
         ###
 
         # Process the db documents
-        for d in self.db_query(query):
+        for (d, s) in self.db_query(query):
 
             if d is None:
                 continue
+
+            if not s in status:
+                status.append(s)
 
             response = {}
             #response['campaign'] = d['pdmv_campaign']
@@ -342,7 +349,10 @@ class GetLifetime():
         ### Performance
         print "Dataset in ", (int(round(time.time() * 1000)) - prev)
         ###
-        return data
+        re = {}
+        re['data'] = data
+        re['status'] = status
+        return re
 
     def get(self, query, probe=100):
         return json.dumps({"results": self.prepare_response(query, probe)})
