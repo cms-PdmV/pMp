@@ -27,7 +27,7 @@ angular.module('mcm.charts', [])
                         top: 10,
                         right: 0,
                         bottom: 50,
-                        left: 40
+                        left: 50
                     },
                     width = customWidth - margin.left - margin.right,
                     height = 400 - margin.top - margin.bottom,

@@ -33,6 +33,11 @@ def api(field, typeof):
         gc = models.GetLifetime()
     return make_response(gc.get(field))
 
+@app.route('/api/<f>/lifetime/<p>')
+def api_extended(f, p):
+    gc = models.GetLifetime()
+    return make_response(gc.get(f, int(p)))
+
 
 @app.route('/api/suggest/<input>/<typeof>')
 def suggest(input, typeof):

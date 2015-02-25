@@ -126,15 +126,24 @@
     </div>
 
     <div id="advanced" class="collapse col-xs-12 col-sm-12 col-md-12 col-lg-12 spacing">
+
       <form class="form-group text-uppercase">
-        <label class="checkbox-inline col-lg-12 col-md-12 col-sm-12">
+        <label class="checkbox-inline col-lg-12 col-md-12 col-sm-12 spacing">
           <input type="checkbox" ng-model="showDate" ng-change="setURL()">
           <small>
             Show time
           </small>
         </label>
       </form>
-      
+
+      <div class="input-group input-group-sm spacing">
+        <span class="hidden-sm input-group-addon text-uppercase" ng-click="setURL()">
+          Probing
+        </span>
+        <input type="text" class="form-control" ng-model="probing"
+               placeholder="Default: 100">
+      </div>
+
       <button type="button" ng-show="allRequestData.length"
               class="btn btn-sm btn-default text-center col-lg-12 col-md-12 col-sm-12 spacing"
               ng-click="takeScreenshot()" ng-disabled="false">

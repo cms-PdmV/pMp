@@ -436,7 +436,7 @@ pmpApp.controller('LifetimeController', function($http, $scope) {
             $scope.showPopUp('warning', 'Your request parameters are empty');
         } else {
             $scope.loadingData = true;
-            var promise = $http.get("api/" + request + "/lifetime");
+            var promise = $http.get("api/" + request + '/lifetime/' + $scope.probing);
             promise.then(function(data) {
                 if (!data.data.results.length) {
                     $scope.showPopUp('error', 'No results for this request parameters');
@@ -455,6 +455,8 @@ pmpApp.controller('LifetimeController', function($http, $scope) {
             });
         }
     };
+
+    $scope.probing = 40;
 
     $scope.title = 'Life-Time Representation of Requests';
 });

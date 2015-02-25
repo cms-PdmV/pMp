@@ -218,13 +218,14 @@ class GetLifetime():
                 # input can be a reqmgr_name
                 iterable = [input]
 
-        print len(iterable)
-
         for i in iterable:
             try:
                 yield self.es.get('stats', 'stats', i)['_source']
             except:
                 yield None
+        ### Performance
+        print "End yielding in ", (int(round(time.time() * 1000)) - prev)
+        ###
 
     def rm_useless(self, arr):
         r = []
@@ -236,8 +237,7 @@ class GetLifetime():
                 prev = a
         return r
 
-    def prepare_response(self, query):
-        nop = 50
+    def prepare_response(self, query, probe):
         r = []
 
         ### Performance
@@ -299,8 +299,8 @@ class GetLifetime():
 
         times = sorted(set(times))
 
-        if len(times) > (nop-1):
-            skiper = len(times) / (nop-1)
+        if len(times) > (probe-1):
+            skiper = len(times) / (probe-1)
         else:
             skiper = -1
 
@@ -344,8 +344,8 @@ class GetLifetime():
         ###
         return data
 
-    def get(self, query):
-        return json.dumps({"results": self.prepare_response(query)})
+    def get(self, query, probe=100):
+        return json.dumps({"results": self.prepare_response(query, probe)})
 
 
 class GetSuggestions():
