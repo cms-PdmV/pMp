@@ -229,8 +229,9 @@ class GetLifetime():
     def rm_useless(self, arr):
         r = []
         prev = {'a': -1, 'e': -1, 'x': -1}
-        for a in arr:
-            if a['a'] != prev['a'] or a['e'] != prev['e'] or a['x'] != prev['x']:
+        for (x, a) in enumerate(arr):
+            if (a['a'] != 0 or x == 0) and (
+                a['a'] != prev['a'] or a['e'] != prev['e'] or a['x'] != prev['x']):
                 r.append(a)
                 prev = a
         return r
@@ -283,7 +284,8 @@ class GetLifetime():
                 tmp[s] += x['data']
             except KeyError:
                 tmp[s] = x['data']
-            #tmp[s] = self.rm_useless(tmp[s])
+            tmp[s] = sorted(tmp[s], key=lambda e: e['t'])
+            tmp[s] = self.rm_useless(tmp[s])
 
         ### Performance
         print "Accum request in ", (int(round(time.time() * 1000)) - prev)
@@ -294,7 +296,7 @@ class GetLifetime():
         times = []
         for t in tmp:
             times += (x['t'] for x in tmp[t])
-            tmp[t] = sorted(tmp[t], key=lambda e: e['t'])
+
         times = sorted(set(times))
 
         if len(times) > (nop-1):
