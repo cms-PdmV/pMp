@@ -427,9 +427,11 @@ pmpApp.controller('TypeaheadCtrl', function($scope, $http) {
     };
 });
 
-pmpApp.controller('LifetimeController', function($http, $scope) {
+pmpApp.controller('LifetimeController', function($http, $scope, $interval) {
 
     $scope.allRequestData = [];
+
+    $scope.allStatus = [];
 
     $scope.load = function(request, add) {
         if (!request) {
@@ -459,7 +461,11 @@ pmpApp.controller('LifetimeController', function($http, $scope) {
 
     $scope.probing = 40;
 
-    $scope.allStatus = [];
+    $scope.updateDate = function() {
+        $scope.dt = new Date();
+    }
 
     $scope.title = 'Life-Time Representation of Requests';
+
+    $interval($scope.updateDate, 1000);
 });
