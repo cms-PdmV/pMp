@@ -12,7 +12,6 @@ angular.module('mcm.charts', [])
 
     #notesforfutureme:
     bug: data-label not updated onSee()
-    bug: data-label shown only after onHover()
     ***/
     .directive('linearLifetime', function() {
         return {
@@ -68,6 +67,30 @@ angular.module('mcm.charts', [])
                     .attr("font-size", "10")
                     .text('events');
 
+                // Data-label
+                var dateLabelGroup = svg.append("svg:g")
+                    .attr("class", "date-label-group")
+                    .attr("font-size", "12");
+                dateLabelGroup.append("svg:text")
+                    .attr("class", "date-label")
+                    .attr("y", -20)
+                    .attr("x", 10);
+                dateLabelGroup.append("svg:text")
+                    .attr("class", "expected-label")
+                    .attr("style", "fill: rgb(106, 28, 0);")
+                    .attr("y", -20)
+                    .attr("x", 225);
+                dateLabelGroup.append("svg:text")
+                    .attr("class", "indas-label")
+                    .attr("style", "fill: rgb(106, 168, 79);")
+                    .attr("y", -20)
+                    .attr("x", 350);
+                dateLabelGroup.append("svg:text")
+                    .attr("class", "openindas-label")
+                    .attr("style", "fill: #666666;")
+                    .attr("y", -20)
+                    .attr("x", 500);
+                
                 // Draw lines
                 var areaAllEvents = d3.svg.area()
                     .x(function(d) {
@@ -157,7 +180,6 @@ angular.module('mcm.charts', [])
                         return d;
                     }).transition().attr("x2", width);
 
-
                     zoom.x(x);
 
                     // Prevent hover over axis while moving
@@ -204,30 +226,6 @@ angular.module('mcm.charts', [])
                         var hoverLineXOffset = $(containerBox).offset().left;
                         var hoverLineYOffset = margin.top + $(containerBox).offset().top;
 
-                        var dateLabelGroup = svg.append("svg:g")
-                            .attr("class", "date-label-group")
-                            .attr("font-size", "12");
-
-                        dateLabelGroup.append("svg:text")
-                            .attr("class", "date-label")
-                            .attr("y", -20)
-                            .attr("x", 10);
-                        dateLabelGroup.append("svg:text")
-                            .attr("class", "expected-label")
-                            .attr("style", "fill: rgb(106, 28, 0);")
-                            .attr("y", -20)
-                            .attr("x", 225);
-                        dateLabelGroup.append("svg:text")
-                            .attr("class", "indas-label")
-                            .attr("style", "fill: rgb(106, 168, 79);")
-                            .attr("y", -20)
-                            .attr("x", 350);
-                        dateLabelGroup.append("svg:text")
-                            .attr("class", "openindas-label")
-                            .attr("style", "fill: #666666;")
-                            .attr("y", -20)
-                            .attr("x", 500);
-
                         var hoverLineGroup = svg.append("svg:g")
                             .attr("class", "hover-line");
 
@@ -259,6 +257,7 @@ angular.module('mcm.charts', [])
                     }
 
                     var updateDataLabel = function(data) {
+                        console.log('update');
                         if (data[0]) {
                             svg.select('text.date-label').text('Time: ' + data[0].toDateString() + ' ' + data[0].toLocaleTimeString());
                         } else {
@@ -277,9 +276,9 @@ angular.module('mcm.charts', [])
                         var local = scope.dataCopy;
 
                         tmp = min + xPosition * (max - min) / width;
-
+                        
                         for (var i = 0; i < local.length; i++) {
-                            if (tmp > local[i].t) {
+                            if (tmp > local[i].t || i == 0) {
                                 data[0] = local[i].t;
                                 data[1] = local[i].x;
                                 data[2] = local[i].e;
@@ -299,6 +298,7 @@ angular.module('mcm.charts', [])
                     $(containerBox).mousemove(function(event) {
                         handleMouseOverGraph(event);
                     });
+                    updateDataLabel([false, '', '', '']);
                 }
 
                 var prepareData = function(d) {
