@@ -431,6 +431,8 @@ pmpApp.controller('LifetimeController', function($http, $scope, $interval) {
 
     $scope.allRequestData = [];
 
+    $scope.allRequests = [];
+
     $scope.allStatus = [];
 
     $scope.load = function(request, add) {
@@ -438,19 +440,19 @@ pmpApp.controller('LifetimeController', function($http, $scope, $interval) {
             $scope.showPopUp('warning', 'Your request parameters are empty');
         } else {
             $scope.loadingData = true;
-            var promise = $http.get("api/" + request + '/lifetime/' + $scope.probing);
+            if (!add) {
+                $scope.allRequests = [];
+            }
+            $scope.allRequests.push(request);
+            var promise = $http.get("api/" + $scope.allRequests.join(',')
+                                    + '/lifetime/' + $scope.probing);
             promise.then(function(data) {
                 if (!data.data.results.data.length) {
                     $scope.showPopUp('error', 'No results for this request parameters');
                 } else {
-                    if (add) {
-                        data.data.results.push.apply(data.data.results.data, $scope.allRequestData);
-                    } else {
-                        $scope.allRequestData = [];
-                    }
+                    $scope.allRequestData = data.data.results.data;
+                    $scope.allStatus = data.data.results.status;
                 }
-                $scope.allRequestData = data.data.results.data;
-                $scope.allStatus = data.data.results.status;
                 $scope.loadingData = false;
             }, function() {
                 $scope.showPopUp('error', 'Error getting requests');

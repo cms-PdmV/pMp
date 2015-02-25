@@ -248,35 +248,39 @@ class GetLifetime():
         prev = int(round(time.time() * 1000))
         ###
 
+        print query
         # Process the db documents
-        for (d, s) in self.db_query(query):
 
-            if d is None:
-                continue
+        for q in query:
+            print q
+            for (d, s) in self.db_query(q):
 
-            if not s in status:
-                status.append(s)
+                if d is None:
+                    continue
 
-            response = {}
+                if not s in status:
+                    status.append(s)
+
+                response = {}
             #response['campaign'] = d['pdmv_campaign']
-            response['data'] = []
+                response['data'] = []
             #response['input'] = query
             #response['priority'] = d['pdmv_priority']
             #response['pwg'] = '#HaveToQueryRequest'
-            response['request'] = d['pdmv_prep_id']
+                response['request'] = d['pdmv_prep_id']
             #response['status'] = '#HaveToQueryRequest'
             #response['title'] = d['pdmv_prep_id'] + d['pdmv_dataset_name']
 
-            if 'pdmv_monitor_history' in d:
-                for record in d['pdmv_monitor_history']:
-                    if len(record['pdmv_monitor_time']):
-                        data = {}
-                        data['a'] = record['pdmv_evts_in_DAS'] + record['pdmv_open_evts_in_DAS']
-                        data['e'] = record['pdmv_evts_in_DAS']
-                        data['t'] = time.mktime(time.strptime(record['pdmv_monitor_time']))*1000
-                        data['x'] = d['pdmv_expected_events']
-                        response['data'].append(data)
-            r.append(response)
+                if 'pdmv_monitor_history' in d:
+                    for record in d['pdmv_monitor_history']:
+                        if len(record['pdmv_monitor_time']):
+                            data = {}
+                            data['a'] = record['pdmv_evts_in_DAS'] + record['pdmv_open_evts_in_DAS']
+                            data['e'] = record['pdmv_evts_in_DAS']
+                            data['t'] = time.mktime(time.strptime(record['pdmv_monitor_time']))*1000
+                            data['x'] = d['pdmv_expected_events']
+                            response['data'].append(data)
+                r.append(response)
         
         ### Performance
         print "Data prepared in ", (int(round(time.time() * 1000)) - prev)
@@ -355,7 +359,7 @@ class GetLifetime():
         return re
 
     def get(self, query, probe=100):
-        return json.dumps({"results": self.prepare_response(query, probe)})
+        return json.dumps({"results": self.prepare_response(query.split(','), probe)})
 
 
 class GetSuggestions():
