@@ -438,6 +438,7 @@ pmpApp.controller('LifetimeController', function($http, $scope, $interval) {
     $scope.allStatus = [];
 
     $scope.load = function(request, add) {
+        console.log($scope.filterPriority);
         if (!request) {
             $scope.showPopUp('warning', 'Your request parameters are empty');
         } else {
@@ -445,9 +446,22 @@ pmpApp.controller('LifetimeController', function($http, $scope, $interval) {
             if (!add) {
                 $scope.allRequests = [];
             }
+            var p = '';
+            if($scope.filterPriority != undefined) {
+                if($scope.filterPriority[0] != undefined) {
+                    p += $scope.filterPriority[0];
+                }
+                p += ',';
+                if($scope.filterPriority[1] != undefined) {
+                    p += $scope.filterPriority[1];
+                }
+            } else {
+                p = ','
+            }
+
             $scope.allRequests.push(request);
             var promise = $http.get("api/" + $scope.allRequests.join(',')
-                                    + '/lifetime/' + $scope.probing);
+                                    + '/lifetime/' + $scope.probing + '/' + p);
             promise.then(function(data) {
                 if (!data.data.results.data.length) {
                     $scope.showPopUp('error', 'No results for this request parameters');
@@ -463,6 +477,15 @@ pmpApp.controller('LifetimeController', function($http, $scope, $interval) {
                 $scope.loadingData = false;
             });
         }
+    };
+
+    $scope.priorityPerBlock = {
+        1: 110000,
+        2: 90000,
+        3: 85000,
+        4: 80000,
+        5: 70000,
+        6: 63000
     };
 
     $scope.probing = 40;

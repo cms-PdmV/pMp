@@ -197,6 +197,7 @@ class GetLifetime():
                 i = {}
                 i['status'] = r['status']
                 i['pwg'] = r['pwg']
+                i['priority'] = r['priority']
                 res = ([s['name'] for s in
                         self.es.get('requests', 'request',
                                     r['prepid'])['_source']['reqmgr_name']])
@@ -224,9 +225,10 @@ class GetLifetime():
 
         for i in iterable:
             try:
-                yield [self.es.get('stats', 'stats', i['name'])['_source'], i['status'], i['pwg']]
+                yield [self.es.get('stats', 'stats', i['name'])['_source'],
+                       i['status'], i['pwg'], i['priority']]
             except:
-                yield [None, None, None]
+                yield [None, None, None, None]
         ### Performance
         print "End yielding in ", (int(round(time.time() * 1000)) - prev)
         ###
@@ -241,7 +243,7 @@ class GetLifetime():
                 prev = a
         return r
 
-    def prepare_response(self, query, probe):
+    def prepare_response(self, query, probe, p_min, p_max):
         r = []
         status = []
         pwg = []
@@ -250,12 +252,9 @@ class GetLifetime():
         prev = int(round(time.time() * 1000))
         ###
 
-        print query
-        # Process the db documents
-
         for q in query:
-            print q
-            for (d, s, p) in self.db_query(q):
+            # Process the db documents
+            for (d, s, p, pr) in self.db_query(q):
 
                 if d is None:
                     continue
@@ -265,6 +264,10 @@ class GetLifetime():
 
                 if not p in pwg:
                     pwg.append(p)
+
+                # priority filtering
+                if (pr < p_min or (pr > p_max and p_max != -1)):
+                    continue
 
                 response = {}
                 response['data'] = []
@@ -358,8 +361,9 @@ class GetLifetime():
         re['pwg'] = pwg
         return re
 
-    def get(self, query, probe=100):
-        return json.dumps({"results": self.prepare_response(query.split(','), probe)})
+    def get(self, query, probe=100, priority_min=0, priority_max=-1):
+        return json.dumps(
+            {"results": self.prepare_response(query.split(','), probe, priority_min, priority_max)})
 
 
 class GetSuggestions():

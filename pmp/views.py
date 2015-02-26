@@ -33,10 +33,15 @@ def api(field, typeof):
         gc = models.GetLifetime()
     return make_response(gc.get(field))
 
-@app.route('/api/<f>/lifetime/<p>')
-def api_extended(f, p):
+@app.route('/api/<f>/lifetime/<p>/<r>')
+def api_extended(f, p, r):
     gc = models.GetLifetime()
-    return make_response(gc.get(f, int(p)))
+    priority = r.split(',')
+    if priority[0] == '':
+        priority[0] = 0
+    if priority[1] == '':
+        priority[1] = -1
+    return make_response(gc.get(f, int(p), int(priority[0]), int(priority[1])))
 
 
 @app.route('/api/suggest/<input>/<typeof>')
