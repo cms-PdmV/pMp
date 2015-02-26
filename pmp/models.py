@@ -196,6 +196,7 @@ class GetLifetime():
             for r in req_arr:
                 i = {}
                 i['status'] = r['status']
+                i['pwg'] = r['pwg']
                 res = ([s['name'] for s in
                         self.es.get('requests', 'request',
                                     r['prepid'])['_source']['reqmgr_name']])
@@ -223,9 +224,9 @@ class GetLifetime():
 
         for i in iterable:
             try:
-                yield [self.es.get('stats', 'stats', i['name'])['_source'], i['status']]
+                yield [self.es.get('stats', 'stats', i['name'])['_source'], i['status'], i['pwg']]
             except:
-                yield [None, None]
+                yield [None, None, None]
         ### Performance
         print "End yielding in ", (int(round(time.time() * 1000)) - prev)
         ###
@@ -243,6 +244,7 @@ class GetLifetime():
     def prepare_response(self, query, probe):
         r = []
         status = []
+        pwg = []
 
         ### Performance
         prev = int(round(time.time() * 1000))
@@ -253,7 +255,7 @@ class GetLifetime():
 
         for q in query:
             print q
-            for (d, s) in self.db_query(q):
+            for (d, s, p) in self.db_query(q):
 
                 if d is None:
                     continue
@@ -261,15 +263,12 @@ class GetLifetime():
                 if not s in status:
                     status.append(s)
 
+                if not p in pwg:
+                    pwg.append(p)
+
                 response = {}
-            #response['campaign'] = d['pdmv_campaign']
                 response['data'] = []
-            #response['input'] = query
-            #response['priority'] = d['pdmv_priority']
-            #response['pwg'] = '#HaveToQueryRequest'
                 response['request'] = d['pdmv_prep_id']
-            #response['status'] = '#HaveToQueryRequest'
-            #response['title'] = d['pdmv_prep_id'] + d['pdmv_dataset_name']
 
                 if 'pdmv_monitor_history' in d:
                     for record in d['pdmv_monitor_history']:
@@ -356,6 +355,7 @@ class GetLifetime():
         re = {}
         re['data'] = data
         re['status'] = status
+        re['pwg'] = pwg
         return re
 
     def get(self, query, probe=100):

@@ -118,7 +118,7 @@ angular.module('mcm.charts', [])
                     .y(function(d) {
                         return y(d.x);
                     })
-                    .interpolate("step-before");
+                    .interpolate("step-after");
 
                 // Area gradient
                 var gradient = svg.append("defs")

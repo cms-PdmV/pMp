@@ -429,6 +429,8 @@ pmpApp.controller('TypeaheadCtrl', function($scope, $http) {
 
 pmpApp.controller('LifetimeController', function($http, $scope, $interval) {
 
+    $scope.allPWG = [];
+
     $scope.allRequestData = [];
 
     $scope.allRequests = [];
@@ -452,6 +454,8 @@ pmpApp.controller('LifetimeController', function($http, $scope, $interval) {
                 } else {
                     $scope.allRequestData = data.data.results.data;
                     $scope.allStatus = data.data.results.status;
+                    $scope.allPWG = data.data.results.pwg;
+                    console.log($scope.allPWG)
                 }
                 $scope.loadingData = false;
             }, function() {

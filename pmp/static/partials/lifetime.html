@@ -111,12 +111,12 @@
         
         <form class="form-group form-inline form-group-sm">
           <small class="text-uppercase col-sm-12 col-md-12 col-lg-12">PWG filter</small>
-          <div class="col-sm-6 col-md-4 col-lg-4" ng-repeat="(key, status) in pwg">
+          <div class="col-sm-6 col-md-4 col-lg-4" ng-repeat="(key, status) in allPWG">
             <label class="checkbox-inline">
               <input type="checkbox" ng-model="status.selected"
                      ng-change="updateRequestData();setURL()">
               <small>
-                {{key}}
+                {{status}}
               </small>
             </label>
           </div>
