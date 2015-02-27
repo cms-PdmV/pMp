@@ -101,9 +101,9 @@
           <div class="input-group">
             <div class="col-lg-6 col-md-6 col-sm-12" ng-repeat="(key, status) in allStatus">
               <label class="checkbox-inline">
-                <input type="checkbox" ng-model="status.selected" 
+                <input type="checkbox" ng-model="allStatus[key]" 
                        ng-change="updateRequestData();setURL()">
-                <small>{{status}}</small>
+                <small>{{key}}</small>
               </label>
             </div>
           </div>

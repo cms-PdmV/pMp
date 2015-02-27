@@ -201,6 +201,7 @@ class GetLifetime():
                 res = ([s['name'] for s in
                         self.es.get('requests', 'request',
                                     r['prepid'])['_source']['reqmgr_name']])
+
                 for e in res:
                     i['name'] = e
                     iterable.append(i)
@@ -243,11 +244,10 @@ class GetLifetime():
                 prev = a
         return r
 
-    def prepare_response(self, query, probe, p_min, p_max):
+    def prepare_response(self, query, probe, p_min, p_max, status_i):
         r = []
-        status = []
+        status = {}
         pwg = []
-
         ### Performance
         prev = int(round(time.time() * 1000))
         ###
@@ -255,15 +255,25 @@ class GetLifetime():
         for q in query:
             # Process the db documents
             for (d, s, p, pr) in self.db_query(q):
-
+                
                 if d is None:
                     continue
 
                 if not s in status:
-                    status.append(s)
+                    status[s] = False
+                    if status_i is None:
+                        status[s] = True
+                    else:
+                        for i in status_i:
+                            if i == s:
+                                status[s] = True
+                                break
 
                 if not p in pwg:
                     pwg.append(p)
+
+                if (not status_i is None) and (not s in status_i):
+                    continue
 
                 # priority filtering
                 if (pr < p_min or (pr > p_max and p_max != -1)):
@@ -361,9 +371,11 @@ class GetLifetime():
         re['pwg'] = pwg
         return re
 
-    def get(self, query, probe=100, priority_min=0, priority_max=-1):
+    def get(self, query, probe=100, priority_min=0, priority_max=-1, i_status=None):
         return json.dumps(
-            {"results": self.prepare_response(query.split(','), probe, priority_min, priority_max)})
+            {"results": self.prepare_response(query.split(','), probe,
+                                              priority_min, priority_max,
+                                              i_status)})
 
 
 class GetSuggestions():

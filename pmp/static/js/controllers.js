@@ -435,10 +435,9 @@ pmpApp.controller('LifetimeController', function($http, $scope, $interval) {
 
     $scope.allRequests = [];
 
-    $scope.allStatus = [];
+    $scope.allStatus = {};
 
     $scope.load = function(request, add) {
-        console.log($scope.filterPriority);
         if (!request) {
             $scope.showPopUp('warning', 'Your request parameters are empty');
         } else {
@@ -446,6 +445,8 @@ pmpApp.controller('LifetimeController', function($http, $scope, $interval) {
             if (!add) {
                 $scope.allRequests = [];
             }
+
+            // Add priority filter
             var p = '';
             if($scope.filterPriority != undefined) {
                 if($scope.filterPriority[0] != undefined) {
@@ -459,9 +460,26 @@ pmpApp.controller('LifetimeController', function($http, $scope, $interval) {
                 p = ','
             }
 
+            // Add status filter
+            var s = '';
+            if (Object.keys($scope.allStatus).length) {
+                for (var i = 0; i < Object.keys($scope.allStatus).length; i++) {
+                    if ($scope.allStatus[Object.keys($scope.allStatus)[i]]) {
+                        s += Object.keys($scope.allStatus)[i] + ',';
+                    }
+                }
+                if (s.length) {
+                    s = s.substr(0, s.length-1);
+                } else {
+                    s = '_'
+                }
+            } else {
+                s = 'all'
+            }
+
             $scope.allRequests.push(request);
             var promise = $http.get("api/" + $scope.allRequests.join(',')
-                                    + '/lifetime/' + $scope.probing + '/' + p);
+                                    + '/lifetime/' + $scope.probing + '/' + p + '/' + s);
             promise.then(function(data) {
                 if (!data.data.results.data.length) {
                     $scope.showPopUp('error', 'No results for this request parameters');
