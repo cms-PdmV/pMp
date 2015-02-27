@@ -244,10 +244,10 @@ class GetLifetime():
                 prev = a
         return r
 
-    def prepare_response(self, query, probe, p_min, p_max, status_i):
+    def prepare_response(self, query, probe, p_min, p_max, status_i, pwg_i):
         r = []
         status = {}
-        pwg = []
+        pwg = {}
         ### Performance
         prev = int(round(time.time() * 1000))
         ###
@@ -270,8 +270,20 @@ class GetLifetime():
                                 break
 
                 if not p in pwg:
-                    pwg.append(p)
+                    pwg[p] = False
+                    if pwg_i is None:
+                        pwg[p] = True
+                    else:
+                        for i in pwg_i:
+                            if i == p:
+                                pwg[p] = True
+                                break
 
+                # pwg filtering 
+                if (not pwg_i is None) and (not p in pwg_i):
+                    continue
+
+                # status filtering 
                 if (not status_i is None) and (not s in status_i):
                     continue
 
@@ -371,11 +383,12 @@ class GetLifetime():
         re['pwg'] = pwg
         return re
 
-    def get(self, query, probe=100, priority_min=0, priority_max=-1, i_status=None):
+    def get(self, query, probe=100, priority_min=0, priority_max=-1,
+            status=None, pwg=None):
         return json.dumps(
             {"results": self.prepare_response(query.split(','), probe,
                                               priority_min, priority_max,
-                                              i_status)})
+                                              status, pwg)})
 
 
 class GetSuggestions():

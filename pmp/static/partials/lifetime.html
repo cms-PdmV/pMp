@@ -101,9 +101,10 @@
           <div class="input-group">
             <div class="col-lg-6 col-md-6 col-sm-12" ng-repeat="(key, status) in allStatus">
               <label class="checkbox-inline">
-                <input type="checkbox" ng-model="allStatus[key]" 
-                       ng-change="updateRequestData();setURL()">
-                <small>{{key}}</small>
+                <input type="checkbox" ng-model="allStatus[key]" ng-change="setURL()">
+                <small>
+                  {{key}}
+                </small>
               </label>
             </div>
           </div>
@@ -111,12 +112,11 @@
         
         <form class="form-group form-inline form-group-sm">
           <small class="text-uppercase col-sm-12 col-md-12 col-lg-12">PWG filter</small>
-          <div class="col-sm-6 col-md-4 col-lg-4" ng-repeat="(key, status) in allPWG">
+          <div class="col-sm-6 col-md-4 col-lg-4" ng-repeat="(key, pwg) in allPWG">
             <label class="checkbox-inline">
-              <input type="checkbox" ng-model="status.selected"
-                     ng-change="updateRequestData();setURL()">
+              <input type="checkbox" ng-model="allPWG[key]" ng-change="setURL()">
               <small>
-                {{status}}
+                {{key}}
               </small>
             </label>
           </div>

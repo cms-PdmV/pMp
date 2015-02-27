@@ -429,7 +429,7 @@ pmpApp.controller('TypeaheadCtrl', function($scope, $http) {
 
 pmpApp.controller('LifetimeController', function($http, $scope, $interval) {
 
-    $scope.allPWG = [];
+    $scope.allPWG = {};
 
     $scope.allRequestData = [];
 
@@ -477,9 +477,28 @@ pmpApp.controller('LifetimeController', function($http, $scope, $interval) {
                 s = 'all'
             }
 
+            // Add status filter
+            var w = '';
+            if (Object.keys($scope.allPWG).length) {
+                for (var i = 0; i < Object.keys($scope.allPWG).length; i++) {
+                    if ($scope.allPWG[Object.keys($scope.allPWG)[i]]) {
+                        w += Object.keys($scope.allPWG)[i] + ',';
+                        console.log(w);
+                    }
+                }
+                if (w.length) {
+                    w = w.substr(0, w.length-1);
+                } else {
+                    w = '_'
+                }
+            } else {
+                w = 'all'
+            }
+
             $scope.allRequests.push(request);
             var promise = $http.get("api/" + $scope.allRequests.join(',')
-                                    + '/lifetime/' + $scope.probing + '/' + p + '/' + s);
+                                    + '/lifetime/' + $scope.probing + '/'
+                                    + p + '/' + s + '/' + w);
             promise.then(function(data) {
                 if (!data.data.results.data.length) {
                     $scope.showPopUp('error', 'No results for this request parameters');
@@ -487,7 +506,6 @@ pmpApp.controller('LifetimeController', function($http, $scope, $interval) {
                     $scope.allRequestData = data.data.results.data;
                     $scope.allStatus = data.data.results.status;
                     $scope.allPWG = data.data.results.pwg;
-                    console.log($scope.allPWG)
                 }
                 $scope.loadingData = false;
             }, function() {
