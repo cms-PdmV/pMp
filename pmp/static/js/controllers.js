@@ -477,7 +477,7 @@ pmpApp.controller('LifetimeController', function($http, $scope, $interval) {
                 s = 'all'
             }
 
-            // Add status filter
+            // Add pwg filter
             var w = '';
             if (Object.keys($scope.allPWG).length) {
                 for (var i = 0; i < Object.keys($scope.allPWG).length; i++) {

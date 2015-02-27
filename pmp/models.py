@@ -217,9 +217,14 @@ class GetLifetime():
         if not len(iterable):
             try:
                 # check if the input is a request
-                iterable = [s['name'] for s in
-                            self.es.get('requests', 'request',
-                                        input)['_source']['reqmgr_name']]
+                s = self.es.get('requests', 'request', input)['_source']
+                i = {}
+                i['status'] = s['status']
+                i['pwg'] = s['pwg']
+                i['priority'] = s['priority']
+                for e in s['reqmgr_name']:
+                    i['name'] = e['name']
+                    iterable.append(i)
             except:
                 # input can be a reqmgr_name
                 iterable = [input]
