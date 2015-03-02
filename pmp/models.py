@@ -215,6 +215,7 @@ class GetLifetime():
             pass
 
         if not len(iterable):
+            print "Request"
             try:
                 # check if the input is a request
                 s = self.es.get('requests', 'request', input)['_source']
@@ -230,11 +231,18 @@ class GetLifetime():
                 iterable = [input]
 
         for i in iterable:
-            try:
-                yield [self.es.get('stats', 'stats', i['name'])['_source'],
-                       i['status'], i['pwg'], i['priority']]
-            except:
-                yield [None, None, None, None]
+            if not 'status' in i:
+                try:
+                    yield [self.es.get('stats', 'stats', i)['_source'],
+                           None, None, None]
+                except:
+                    yield [None, None, None, None]
+            else:
+                try:
+                    yield [self.es.get('stats', 'stats', i['name'])['_source'],
+                           i['status'], i['pwg'], i['priority']]
+                except:
+                    yield [None, None, None, None]
         ### Performance
         print "End yielding in ", (int(round(time.time() * 1000)) - prev)
         ###
@@ -260,11 +268,11 @@ class GetLifetime():
         for q in query:
             # Process the db documents
             for (d, s, p, pr) in self.db_query(q):
-                
+
                 if d is None:
                     continue
 
-                if not s in status:
+                if not s is None and not s in status:
                     status[s] = False
                     if status_i is None:
                         status[s] = True
@@ -274,7 +282,7 @@ class GetLifetime():
                                 status[s] = True
                                 break
 
-                if not p in pwg:
+                if not p is None and not p in pwg:
                     pwg[p] = False
                     if pwg_i is None:
                         pwg[p] = True
@@ -285,15 +293,15 @@ class GetLifetime():
                                 break
 
                 # pwg filtering 
-                if (not pwg_i is None) and (not p in pwg_i):
+                if not p is None and (not pwg_i is None) and (not p in pwg_i):
                     continue
 
                 # status filtering 
-                if (not status_i is None) and (not s in status_i):
+                if not s is None and (not status_i is None) and (not s in status_i):
                     continue
 
                 # priority filtering
-                if (pr < p_min or (pr > p_max and p_max != -1)):
+                if not pr is None and (pr < p_min or (pr > p_max and p_max != -1)):
                     continue
 
                 response = {}
