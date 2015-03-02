@@ -136,10 +136,10 @@
       </form>
 
       <div class="input-group input-group-sm spacing">
-        <span class="hidden-sm input-group-addon text-uppercase" ng-click="setURL()">
+        <span class="hidden-sm input-group-addon text-uppercase">
           Probing
         </span>
-        <input type="text" class="form-control" ng-model="probing"
+        <input type="text" class="form-control" ng-model="probing" ng-change="setURL()"
                placeholder="Default: 100">
       </div>
 

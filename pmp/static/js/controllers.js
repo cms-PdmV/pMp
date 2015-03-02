@@ -26,7 +26,7 @@ pmpApp.controller('MainController', function($location, $route, $rootScope, $sco
         }
         return original.apply($location, [path]);
     };
-3
+
     $scope.showPopUp = function(type, text) {
         switch (type) {
             case 'error':
@@ -427,7 +427,7 @@ pmpApp.controller('TypeaheadCtrl', function($scope, $http) {
     };
 });
 
-pmpApp.controller('LifetimeController', function($http, $scope, $interval) {
+pmpApp.controller('LifetimeController', function($http, $location, $scope, $interval) {
 
     $scope.allPWG = {};
 
@@ -528,6 +528,37 @@ pmpApp.controller('LifetimeController', function($http, $scope, $interval) {
 
     $scope.updateDate = function() {
         $scope.dt = new Date();
+    }
+
+    $scope.setURL = function() {
+        $location.path($location.path(), false);
+        var params = {}
+        if ($scope.allRequests.length) {
+            params.r = $scope.allRequests.join(',')
+        }
+        params.t = $scope.showDate + "";
+        params.x = $scope.filterPriority['0'] + ',' + $scope.filterPriority['1'];
+
+        var tmp = $scope.allPWG;
+        var w = [];
+        for (var i = 0; i < Object.keys(tmp).length; i++) {
+            if (tmp[Object.keys(tmp)[i]]) {
+                w.push(Object.keys(tmp)[i]);
+            }
+        }
+        params.w = w.join(',');
+        params.p = $scope.probing;
+
+        var s = [];
+        for (var i in $scope.allStatus) {
+            if ($scope.allStatus[i]) {
+                s.push(i);
+            }
+        }
+
+        params.s = s.join(',');
+        $location.search(params);
+        $scope.url = $location.absUrl();
     }
 
     $scope.title = 'Life-Time Representation of Requests';
