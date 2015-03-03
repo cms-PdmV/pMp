@@ -433,8 +433,6 @@ pmpApp.controller('LifetimeController', function($http, $location, $scope, $inte
 
     $scope.allRequestData = [];
 
-    $scope.allRequests = [];
-
     $scope.allStatus = {};
 
     $scope.init = function() {
@@ -473,7 +471,11 @@ pmpApp.controller('LifetimeController', function($http, $location, $scope, $inte
         }
 
         if ($location.search().r != undefined) {
-            $scope.load($location.search().r, false);
+            var tmp = $location.search().r.split(',');
+            for (var i = 0; i < tmp.length; i++) {
+                $scope.tags.addTag(tmp[i]);
+            }
+            $scope.query();
         }
 
         $scope.url = $location.absUrl();
@@ -485,78 +487,10 @@ pmpApp.controller('LifetimeController', function($http, $location, $scope, $inte
         } else {
             $scope.loadingData = true;
             if (!add) {
-                $scope.allRequests = [];
+                $scope.tagsRemoveAll();
             }
-
-            // Add priority filter
-            var x = '';
-            if($scope.filterPriority != undefined) {
-                if($scope.filterPriority[0] != undefined) {
-                    x += $scope.filterPriority[0];
-                }
-                x += ',';
-                if($scope.filterPriority[1] != undefined) {
-                    x += $scope.filterPriority[1];
-                }
-            } else {
-                x = ','
-            }
-
-            // Add status filter
-            var s = '';
-            if (Object.keys($scope.allStatus).length) {
-                for (var i = 0; i < Object.keys($scope.allStatus).length; i++) {
-                    if ($scope.allStatus[Object.keys($scope.allStatus)[i]]) {
-                        s += Object.keys($scope.allStatus)[i] + ',';
-                    }
-                }
-                if (s.length) {
-                    s = s.substr(0, s.length-1);
-                } else {
-                    s = '_'
-                }
-            } else {
-                s = 'all'
-            }
-
-            // Add pwg filter
-            var w = '';
-            if (Object.keys($scope.allPWG).length) {
-                for (var i = 0; i < Object.keys($scope.allPWG).length; i++) {
-                    if ($scope.allPWG[Object.keys($scope.allPWG)[i]]) {
-                        w += Object.keys($scope.allPWG)[i] + ',';
-                    }
-                }
-                if (w.length) {
-                    w = w.substr(0, w.length-1);
-                } else {
-                    w = '_'
-                }
-            } else {
-                w = 'all'
-            }
-
-            var p = 40;
-            if ($scope.probing != '') {
-                p = $scope.probing;
-            }
-
-            $scope.allRequests.push(request);
-            var promise = $http.get("api/" + $scope.allRequests.join(',')
-                                    + '/lifetime/' + p + '/' + x + '/' + s + '/' + w);
-            promise.then(function(data) {
-                if (!data.data.results.data.length) {
-                    $scope.showPopUp('error', 'No results for this request parameters');
-                } else {
-                    $scope.allRequestData = data.data.results.data;
-                    $scope.allStatus = data.data.results.status;
-                    $scope.allPWG = data.data.results.pwg;
-                }
-                $scope.loadingData = false;
-            }, function() {
-                $scope.showPopUp('error', 'Error getting requests');
-                $scope.loadingData = false;
-            });
+            $scope.tags.addTag(request);
+            $scope.query();
         }
     };
 
@@ -569,6 +503,83 @@ pmpApp.controller('LifetimeController', function($http, $location, $scope, $inte
         6: 63000
     };
 
+    $scope.query = function() {
+        if (!$scope.tags.getTags().length) {
+            return null;
+        }
+
+        $scope.loadingData = true;
+        
+        // Add priority filter
+        var x = '';
+        if($scope.filterPriority != undefined) {
+            if($scope.filterPriority[0] != undefined) {
+                x += $scope.filterPriority[0];
+            }
+            x += ',';
+            if($scope.filterPriority[1] != undefined) {
+                x += $scope.filterPriority[1];
+            }
+        } else {
+            x = ','
+        }
+        
+        // Add status filter
+        var s = '';
+        if (Object.keys($scope.allStatus).length) {
+            for (var i = 0; i < Object.keys($scope.allStatus).length; i++) {
+                if ($scope.allStatus[Object.keys($scope.allStatus)[i]]) {
+                    s += Object.keys($scope.allStatus)[i] + ',';
+                }
+            }
+            if (s.length) {
+                s = s.substr(0, s.length-1);
+            } else {
+                s = '_'
+                    }
+        } else {
+            s = 'all'
+        }
+
+        // Add pwg filter
+        var w = '';
+        if (Object.keys($scope.allPWG).length) {
+            for (var i = 0; i < Object.keys($scope.allPWG).length; i++) {
+                if ($scope.allPWG[Object.keys($scope.allPWG)[i]]) {
+                    w += Object.keys($scope.allPWG)[i] + ',';
+                }
+            }
+            if (w.length) {
+                w = w.substr(0, w.length-1);
+            } else {
+                w = '_'
+                    }
+        } else {
+            w = 'all'
+        }
+        
+        var p = 40;
+        if ($scope.probing != '') {
+            p = $scope.probing;
+        }
+        
+        var promise = $http.get("api/" + $scope.tags.getTags().join(',')
+                                + '/lifetime/' + p + '/' + x + '/' + s + '/' + w);
+        promise.then(function(data) {
+                if (!data.data.results.data.length) {
+                    $scope.showPopUp('error', 'No results for this request parameters');
+                } else {
+                    $scope.allRequestData = data.data.results.data;
+                    $scope.allStatus = data.data.results.status;
+                    $scope.allPWG = data.data.results.pwg;
+                }
+                $scope.loadingData = false;
+            }, function() {
+                $scope.showPopUp('error', 'Error getting requests');
+                $scope.loadingData = false;
+            });
+    }
+
     $scope.updateDate = function() {
         $scope.dt = new Date();
     }
@@ -577,36 +588,46 @@ pmpApp.controller('LifetimeController', function($http, $location, $scope, $inte
         $location.path($location.path(), false);
         var params = {}
         params.p = $scope.probing;
-        if ($scope.allRequests.length) {
-            params.r = $scope.allRequests.join(',')
+        if ($scope.tags.getTags().length) {
+            params.r = $scope.tags.getTags().join(',')
         }
         params.t = $scope.showDate + "";
         if ($scope.filterPriority['0'] != '' && $scope.filterPriority['1'] != '') {
             params.x = $scope.filterPriority['0'] + ',' + $scope.filterPriority['1'];
         }
 
-        if ($scope.allPWG.length) {
-            var w = [];
-            for (var i in $scope.allPWG) {
-                if ($scope.allPWG[i]) {
-                    w.push(i);
-                }
+        var w = [];
+        for (var i in $scope.allPWG) {
+            if ($scope.allPWG[i]) {
+                w.push(i);
             }
-            params.w = w.join(',');
         }
+        params.w = w.join(',');
 
-        if ($scope.allStatus.length) {
-            var s = [];
-            for (var i in $scope.allStatus) {
-                if ($scope.allStatus[i]) {
-                    s.push(i);
-                }
+        var s = [];
+        for (var i in $scope.allStatus) {
+            if ($scope.allStatus[i]) {
+                s.push(i);
             }
-            params.s = s.join(',');
         }
+        params.s = s.join(',');
 
         $location.search(params);
         $scope.url = $location.absUrl();
+    }
+
+    $scope.tags = angular.element('#campaignList').tags({
+        tagClass: 'btn btn-sm btn-primary',
+        afterDeletingTag: function(tag) {
+            $scope.query();
+        }
+    });
+
+    $scope.tagsRemoveAll = function() {
+        var tmp = angular.copy($scope.tags.getTags());
+        for (var i = 0; i < tmp.length; i++) {
+            $scope.tags.removeTag(tmp[i]);
+        }
     }
 
     $scope.title = 'Life-Time Representation of Requests';
