@@ -413,13 +413,13 @@ pmpApp.controller('TypeaheadCtrl', function($scope, $http) {
     $scope.suggestions = [];
     $scope.getSuggestions = function() {
         if ($scope.campaign) {
-            $http.get('http://cms-pdmv-pmpdev.cern.ch/api/suggest/'
+            $http.get('/api/suggest/'
                       + $scope.campaign + '/' + $scope.isChainUrl).then(function(response) {
                 $scope.suggestions = response.data.results;
             });
         }
         if ($scope.lifetime) {
-            $http.get('http://cms-pdmv-pmpdev.cern.ch/api/suggest/'
+            $http.get('/api/suggest/'
                       + $scope.lifetime + '/lifetime').then(function(response) {
                 $scope.suggestions = response.data.results;
             });
@@ -437,6 +437,48 @@ pmpApp.controller('LifetimeController', function($http, $location, $scope, $inte
 
     $scope.allStatus = {};
 
+    $scope.init = function() {
+        if ($location.search().p != undefined) {
+            $scope.probing = $location.search().p;
+        } else {
+            $scope.probing = 40;
+        }
+        
+        if ($location.search().t != undefined) {
+            $scope.showDate = ($location.search().t == 'true');
+        } else {
+            $scope.showDate = false;
+        }
+
+        if ($location.search().x != undefined) {
+            var tmp = $location.search().x.split(',');
+            $scope.filterPriority = {'0': tmp[0], '1': tmp[1]};
+            $scope.showDate = $location.search().t;
+        } else {
+            $scope.filterPriority = {'0': '', '1': ''};
+        }
+
+        if ($location.search().w != undefined) {
+            var tmp = $location.search().w.split(',');
+            for (var i = 0; i < tmp.length; i++) {
+                $scope.allPWG[tmp[i]] = true;
+            }
+        }
+
+        if ($location.search().s != undefined) {
+            var tmp = $location.search().s.split(',');
+            for (var i = 0; i < tmp.length; i++) {
+                $scope.allStatus[tmp[i]] = true;
+            }
+        }
+
+        if ($location.search().r != undefined) {
+            $scope.load($location.search().r, false);
+        }
+
+        $scope.url = $location.absUrl();
+    }
+
     $scope.load = function(request, add) {
         if (!request) {
             $scope.showPopUp('warning', 'Your request parameters are empty');
@@ -447,17 +489,17 @@ pmpApp.controller('LifetimeController', function($http, $location, $scope, $inte
             }
 
             // Add priority filter
-            var p = '';
+            var x = '';
             if($scope.filterPriority != undefined) {
                 if($scope.filterPriority[0] != undefined) {
-                    p += $scope.filterPriority[0];
+                    x += $scope.filterPriority[0];
                 }
-                p += ',';
+                x += ',';
                 if($scope.filterPriority[1] != undefined) {
-                    p += $scope.filterPriority[1];
+                    x += $scope.filterPriority[1];
                 }
             } else {
-                p = ','
+                x = ','
             }
 
             // Add status filter
@@ -483,7 +525,6 @@ pmpApp.controller('LifetimeController', function($http, $location, $scope, $inte
                 for (var i = 0; i < Object.keys($scope.allPWG).length; i++) {
                     if ($scope.allPWG[Object.keys($scope.allPWG)[i]]) {
                         w += Object.keys($scope.allPWG)[i] + ',';
-                        console.log(w);
                     }
                 }
                 if (w.length) {
@@ -495,10 +536,14 @@ pmpApp.controller('LifetimeController', function($http, $location, $scope, $inte
                 w = 'all'
             }
 
+            var p = 40;
+            if ($scope.probing != '') {
+                p = $scope.probing;
+            }
+
             $scope.allRequests.push(request);
             var promise = $http.get("api/" + $scope.allRequests.join(',')
-                                    + '/lifetime/' + $scope.probing + '/'
-                                    + p + '/' + s + '/' + w);
+                                    + '/lifetime/' + p + '/' + x + '/' + s + '/' + w);
             promise.then(function(data) {
                 if (!data.data.results.data.length) {
                     $scope.showPopUp('error', 'No results for this request parameters');
@@ -524,8 +569,6 @@ pmpApp.controller('LifetimeController', function($http, $location, $scope, $inte
         6: 63000
     };
 
-    $scope.probing = 40;
-
     $scope.updateDate = function() {
         $scope.dt = new Date();
     }
@@ -533,30 +576,35 @@ pmpApp.controller('LifetimeController', function($http, $location, $scope, $inte
     $scope.setURL = function() {
         $location.path($location.path(), false);
         var params = {}
+        params.p = $scope.probing;
         if ($scope.allRequests.length) {
             params.r = $scope.allRequests.join(',')
         }
         params.t = $scope.showDate + "";
-        params.x = $scope.filterPriority['0'] + ',' + $scope.filterPriority['1'];
-
-        var tmp = $scope.allPWG;
-        var w = [];
-        for (var i = 0; i < Object.keys(tmp).length; i++) {
-            if (tmp[Object.keys(tmp)[i]]) {
-                w.push(Object.keys(tmp)[i]);
-            }
-        }
-        params.w = w.join(',');
-        params.p = $scope.probing;
-
-        var s = [];
-        for (var i in $scope.allStatus) {
-            if ($scope.allStatus[i]) {
-                s.push(i);
-            }
+        if ($scope.filterPriority['0'] != '' && $scope.filterPriority['1'] != '') {
+            params.x = $scope.filterPriority['0'] + ',' + $scope.filterPriority['1'];
         }
 
-        params.s = s.join(',');
+        if ($scope.allPWG.length) {
+            var w = [];
+            for (var i in $scope.allPWG) {
+                if ($scope.allPWG[i]) {
+                    w.push(i);
+                }
+            }
+            params.w = w.join(',');
+        }
+
+        if ($scope.allStatus.length) {
+            var s = [];
+            for (var i in $scope.allStatus) {
+                if ($scope.allStatus[i]) {
+                    s.push(i);
+                }
+            }
+            params.s = s.join(',');
+        }
+
         $location.search(params);
         $scope.url = $location.absUrl();
     }
@@ -564,4 +612,8 @@ pmpApp.controller('LifetimeController', function($http, $location, $scope, $inte
     $scope.title = 'Life-Time Representation of Requests';
 
     $interval($scope.updateDate, 1000);
+
+    new ZeroClipboard(document.getElementById('copy'), {
+        moviePath: '/lib/zeroclipboard/ZeroClipboard.swf'
+    });
 });
