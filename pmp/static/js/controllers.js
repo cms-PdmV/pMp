@@ -484,6 +484,8 @@ pmpApp.controller('LifetimeController', function($http, $location, $scope, $inte
     $scope.load = function(request, add) {
         if (!request) {
             $scope.showPopUp('warning', 'Your request parameters are empty');
+        } else if (add & $scope.tags.hasTag(request)) {
+            $scope.showPopUp('warning', 'Your request is already loaded');
         } else {
             $scope.loadingData = true;
             if (!add) {
@@ -574,6 +576,7 @@ pmpApp.controller('LifetimeController', function($http, $location, $scope, $inte
                     $scope.allPWG = data.data.results.pwg;
                 }
                 $scope.loadingData = false;
+                $scope.setURL();
             }, function() {
                 $scope.showPopUp('error', 'Error getting requests');
                 $scope.loadingData = false;
