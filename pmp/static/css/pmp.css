@@ -25,7 +25,7 @@ body.dragging, body.dragging * {
 }
 
 .data1 {
-    stroke-width: 1;
+    stroke-width: 2;
     stroke: #666666;
 }
       
@@ -46,15 +46,15 @@ body.dragging, body.dragging * {
 .grid .tick {
     stroke: grey;
     opacity: 0.2;
-    stroke-width: 0.6;
-    stroke-dasharray: 2,2;
+    stroke-width: 0.5;
+    stroke-dasharray: 3, 1;
 }
 
 .minorx .tick, .minory .tick {
     stroke: grey;
     opacity: 0.2;
     stroke-width: 0.6;
-    stroke-dasharray: 2,2;
+    stroke-dasharray: 3, 1;
 }
 
 .grid path {
@@ -62,7 +62,7 @@ body.dragging, body.dragging * {
 }
 
 .hover-line line {
-    stroke-width: 0.5;
+    stroke-width: 1.5;
     stroke: #6E7B8B;
 }
 

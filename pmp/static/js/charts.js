@@ -9,9 +9,6 @@ function endall(transition, callback) {
 angular.module('mcm.charts', [])
     /*** 
     Life-Time Representation of Requests directive:
-
-    #notesforfutureme:
-    bug: data-label not updated onSee()
     ***/
     .directive('linearLifetime', function() {
         return {
@@ -21,7 +18,7 @@ angular.module('mcm.charts', [])
             },
             link: function(scope, element) {
                 scope.dataCopy = [];
-                var customWidth = 1200;
+                var customWidth = 1160;
                 // General attributes
                 var margin = {
                         top: 10,
@@ -30,7 +27,7 @@ angular.module('mcm.charts', [])
                         left: 50
                     },
                     width = customWidth - margin.left - margin.right,
-                    height = 400 - margin.top - margin.bottom,
+                    height = 500 - margin.top - margin.bottom,
                     l1, l2, l3, containerBox;
 
                 var svg = d3.select(element[0])
@@ -63,33 +60,34 @@ angular.module('mcm.charts', [])
                     .append("text")
                     .attr("id", "ytitle")
                     .attr("dy", "-20px")
-                    .attr("dx", '-30px')
-                    .attr("font-size", "10")
+                    .attr("dx", '-5px')
+                    .style("text-anchor", "end")
+                    .attr("font-size", "13")
                     .text('events');
 
                 // Data-label
                 var dateLabelGroup = svg.append("svg:g")
                     .attr("class", "date-label-group")
-                    .attr("font-size", "12");
+                    .attr("font-size", "14");
                 dateLabelGroup.append("svg:text")
                     .attr("class", "date-label")
-                    .attr("y", -20)
+                    .attr("y", -15)
                     .attr("x", 10);
                 dateLabelGroup.append("svg:text")
                     .attr("class", "expected-label")
                     .attr("style", "fill: rgb(106, 28, 0);")
-                    .attr("y", -20)
-                    .attr("x", 225);
+                    .attr("y", -15)
+                    .attr("x", 250);
                 dateLabelGroup.append("svg:text")
                     .attr("class", "indas-label")
                     .attr("style", "fill: rgb(106, 168, 79);")
-                    .attr("y", -20)
-                    .attr("x", 350);
+                    .attr("y", -15)
+                    .attr("x", 420);
                 dateLabelGroup.append("svg:text")
                     .attr("class", "openindas-label")
                     .attr("style", "fill: #666666;")
-                    .attr("y", -20)
-                    .attr("x", 500);
+                    .attr("y", -15)
+                    .attr("x", 620);
                 
                 // Draw lines
                 var areaAllEvents = d3.svg.area()
@@ -614,8 +612,8 @@ angular.module('mcm.charts', [])
                 sort: '=?' // should the values in columns be sorted
             },
             link: function(scope, element, attrs) {
-                var highlight_color = "#93cdff";
-                var margin = {top: 30, right: 50, bottom: 150, left: 50};
+                var highlight_color = "#bdbdbd";
+                var margin = {top: 20, right: 50, bottom: 150, left: 50};
                 //input data
                 var data, value, grouping, columns, stacking, yScaleType, valueOperation,
                     duration;
@@ -650,6 +648,49 @@ angular.module('mcm.charts', [])
 
                 svg.append("g")
                     .attr("class", "grid horizontal");
+
+
+
+                var colorMap = {
+                    approved: '#66bb6a', //green 400
+                    defined: '#ef5350', //red 400
+                    done: '#42a5f5', //blue 400
+                    new: '#ffa726', //orange 400
+                    submitted: '#ffee58', //yellow 400
+                    validation: '#8d6e63', //brown 400
+
+                    B2G: '#ef9a9a', //red 200
+                    BPH: '#f48fb1', //pink 200
+                    BTV: '#ce93d8', //purple 200
+                    EGM: '#b39ddb', //deep purple 200
+                    EWK: '#9fa8da', //indigo 200
+                    EXO: '#90caf9', //blue 200
+                    FSQ: '#81d4fa', //light blue 200
+                    FWD: '#80deea', //cyan 200
+                    HCA: '#80cbc4', //teal 200
+                    HIG: '#a5d6a7', //green 200
+                    HIN: '#c5e1a5', //light green 200
+                    JME: '#e6ee9c', //lime 200
+                    L1T: '#fff59d', //yellow 200
+                    MUO: '#ffe082', //amber 200
+                    QCD: '#ffcc80', //orange 200
+                    SMP: '#ffab91', //deep orange 200
+                    SUS: '#bcaaa4', //brown 200
+                    TAU: '#b0bec5', //blue gray 200
+                    TOP: '#e57373', //red 300
+                    TRK: '#f06292', //pink 300
+                    TSG: '#ba68c8', //purple 300
+                }; 
+
+                function colors(d) {
+                    var c = d.columnsXDomainAttribute;
+                    if (d.columnsYDomainAttribute == undefined) {
+                        if (colorMap[c] != undefined) {
+                            return colorMap[c];
+                        }
+                    }
+                    return colors_stacks[c](rows_color_domain.indexOf(d.columnsYDomainAttribute));
+                }
 
                 function prepareArguments() {
                     data = scope.data|| [];
@@ -1005,7 +1046,7 @@ angular.module('mcm.charts', [])
                            svg.selectAll("rect.grouping" + d).style("fill", highlight_color);
                         })
                         .on("mouseout", function(d) {
-                           svg.selectAll("rect.grouping" + d).style("fill", function(d) {return colors_stacks[d.columnsXDomainAttribute](rows_color_domain.indexOf(d.columnsYDomainAttribute));});
+                                svg.selectAll("rect.grouping" + d).style("fill", function(d) {return colors(d);});//return colors_stacks[d.columnsXDomainAttribute](rows_color_domain.indexOf(d.columnsYDomainAttribute));});
                         })
 
                 }
@@ -1200,7 +1241,10 @@ angular.module('mcm.charts', [])
                             d3.select(this).style("fill", highlight_color);
                         })
                         .on("mouseout", function() {
-                            d3.select(this).style("fill", function(d) {return colors_stacks[d.columnsXDomainAttribute](rows_color_domain.indexOf(d.columnsYDomainAttribute));});
+                                d3.select(this).style("fill", function(d) {                                console.log(d);
+                                console.log(colors_stacks);
+
+return colors(d)});
                         }).append("svg:title").text(setTitle);
 
                     // do something to old and new ones
@@ -1210,7 +1254,7 @@ angular.module('mcm.charts', [])
                         .duration(duration)
                         .delay(function(d,i){return i/(data.length) * duration;})
                         .attr("d", function(d){return d[value]})
-                        .style("fill", function(d) {return colors_stacks[d.columnsXDomainAttribute](rows_color_domain.indexOf(d.columnsYDomainAttribute));})
+                        .style("fill", function(d) {return colors(d)})
                         .attr("width", function(){if(column_width> max_column_width) return max_column_width; else return column_width})
                         .attr("y", function(d) { if(d.rowsYEndingAttribute==0) return 0;
                             return y_scale(d.rowsYEndingAttribute);
@@ -1254,7 +1298,14 @@ angular.module('mcm.charts', [])
                         new_leg.append("rect")
                             .attr("width", 20)
                             .attr("height", 20)
-                            .style("fill",function(d){ return colors_stacks[d](0); });
+                            .style("fill", function(d) {
+                                    if (colorMap[d] != undefined) {
+                                        return colorMap[d];
+                                    } else {
+                                        return colors_stacks[d](0);
+                                    }
+                                }
+                            );
 
                         new_leg.append("text")
                             .attr("x", 24)
@@ -1267,7 +1318,15 @@ angular.module('mcm.charts', [])
                         legend.select("rect")
                             .transition()
                             .duration(duration)
-                            .style("fill",function(d){return colors_stacks[d](rows_color_domain.length/2); });
+                            .style("fill", function(d) {
+                                    if (colorMap[d] != undefined) {
+                                        return colorMap[d];
+                                    } else {
+                                        return colors_stacks[d](0);
+                                    }
+                                });
+                                //if (colorMap[d]) != undefined) { return colorMap[d]} return  colors_stacks[d](0); });
+                //.style("fill", function(d){return colorMap[d];}) // colors_stacks[d](rows_color_domain.length/2); });
 
                         legend.select("text")
                             .text(function(d){return d;});
@@ -1295,7 +1354,7 @@ angular.module('mcm.charts', [])
                                svg.selectAll("rect.columning" + d).style("fill", highlight_color);
                             })
                             .on("mouseout", function(d) {
-                               svg.selectAll("rect.columning" + d).style("fill", function(d) {return colors_stacks[d.columnsXDomainAttribute](rows_color_domain.indexOf(d.columnsYDomainAttribute));});
+                                    svg.selectAll("rect.columning" + d).style("fill", function(d) {return colors(d)});// function(d) {return colors_stacks[d.columnsXDomainAttribute](rows_color_domain.indexOf(d.columnsYDomainAttribute));});
                             })
 
 

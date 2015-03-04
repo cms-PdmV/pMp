@@ -595,7 +595,7 @@ pmpApp.controller('LifetimeController', function($http, $location, $scope, $inte
             params.r = $scope.tags.getTags().join(',')
         }
         params.t = $scope.showDate + "";
-        if ($scope.filterPriority['0'] != '' && $scope.filterPriority['1'] != '') {
+        if ($scope.filterPriority['0'] != '' || $scope.filterPriority['1'] != '') {
             params.x = $scope.filterPriority['0'] + ',' + $scope.filterPriority['1'];
         }
 
