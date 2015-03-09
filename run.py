@@ -27,4 +27,5 @@ if __name__ == '__main__':
                 ))
         app.logger.addHandler(mail_handler)
 
-    app.run(host='0.0.0.0', port=80)
+    context = ('/home/crtkey/localhost.crt', '/home/crtkey/localhost.key')
+    app.run(host='0.0.0.0', port=443, ssl_context=context)
