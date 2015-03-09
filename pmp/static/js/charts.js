@@ -652,13 +652,16 @@ angular.module('mcm.charts', [])
 
 
                 var colorMap = {
+                    /*7*/
                     approved: '#66bb6a', //green 400
                     defined: '#ef5350', //red 400
                     done: '#42a5f5', //blue 400
                     new: '#ffa726', //orange 400
                     submitted: '#ffee58', //yellow 400
+                    upcoming: '#ec407a', //pink 400
                     validation: '#8d6e63', //brown 400
 
+                    /*23*/
                     B2G: '#ef9a9a', //red 200
                     BPH: '#f48fb1', //pink 200
                     BTV: '#ce93d8', //purple 200

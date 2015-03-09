@@ -85,7 +85,6 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval, $
     // all gathered data (before filtering)
     $scope.cachedRequestData = [];
 
-
     $scope.graphParam = ['selections', 'grouping', 'stacking', 'coloring'];
 
     $scope.graphTabs = ['member_of_campaign', 'total_events',
@@ -158,8 +157,13 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval, $
         if ($location.search().r != undefined) {
             $scope.loadingData = true;
             var tmp = $location.search().r.split(',');
+            if (Object.keys($scope.pwg).length) {
+                var arg = tmp.length;
+            } else {
+                var arg = false;
+            }
             for (var i = 0; i < tmp.length; i++) {
-                $scope.load(tmp[i], true, tmp.length);
+                $scope.load(tmp[i], true, arg);
             }
         } else {
             $location.search({});
