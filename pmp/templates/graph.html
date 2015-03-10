@@ -3,44 +3,45 @@
 
   <head>
     <title>Production Monitoring Platform</title>
+    <base href="https://cms-pdmv-dev.cern.ch/pmp/"/>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link href="/css/bootstrap.min.css" rel="stylesheet"/>
-    <link href="/lib/bootstrap-tags/bootstrap-tags.css" rel="stylesheet"/>
-    <link href="/lib/font-awesome/css/font-awesome.min.css" rel="stylesheet"/>
-    <link href="/lib/animate/animate.min.css" rel="stylesheet"/>
-    <link href="/css/pmp.css" rel="stylesheet"/>
-    <link href="http://fonts.googleapis.com/css?family=Roboto:900,400,400italic"
+    <link href="css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="lib/bootstrap-tags/bootstrap-tags.css" rel="stylesheet"/>
+    <link href="lib/font-awesome/css/font-awesome.min.css" rel="stylesheet"/>
+    <link href="lib/animate/animate.min.css" rel="stylesheet"/>
+    <link href="css/pmp.css" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css?family=Roboto:900,400,400italic"
           rel="stylesheet" type="text/css">
 
-    <script type="text/javascript" src="/lib/jquery/jquery-2.1.1.min.js"></script>
-    <script type="text/javascript" src="/lib/jquery-sortable/jquery-sortable.js"></script>
-    <script type="text/javascript" src="/lib/bootstrap/bootstrap.min.js"></script>
-    <script type="text/javascript" src="/lib/bootstrap-tags/bootstrap-tags.min.js"></script>
-    <script type="text/javascript" src="/lib/angular/angular.min.js"></script>
-    <script type="text/javascript" src="/lib/angular/angular-animate.min.js"></script>
-    <script type="text/javascript" src="/lib/angular/angular-route.js"></script>
-    <script type="text/javascript" src="/lib/d3/d3.min.js"></script>
-    <script type="text/javascript" src="/lib/zeroclipboard/ZeroClipboard.min.js"></script>
-    <script type="text/javascript" src="/lib/ui-bootstrap/ui-bootstrap-tpls-0.12.0.min.js"></script>
-    <script type="text/javascript" src="/lib/filesaver/FileSaver.min.js"></script>
+    <script type="text/javascript" src="lib/jquery/jquery-2.1.1.min.js"></script>
+    <script type="text/javascript" src="lib/jquery-sortable/jquery-sortable.js"></script>
+    <script type="text/javascript" src="lib/bootstrap/bootstrap.min.js"></script>
+    <script type="text/javascript" src="lib/bootstrap-tags/bootstrap-tags.min.js"></script>
+    <script type="text/javascript" src="lib/angular/angular.min.js"></script>
+    <script type="text/javascript" src="lib/angular/angular-animate.min.js"></script>
+    <script type="text/javascript" src="lib/angular/angular-route.js"></script>
+    <script type="text/javascript" src="lib/d3/d3.min.js"></script>
+    <script type="text/javascript" src="lib/zeroclipboard/ZeroClipboard.min.js"></script>
+    <script type="text/javascript" src="lib/ui-bootstrap/ui-bootstrap-tpls-0.12.0.min.js"></script>
+    <script type="text/javascript" src="lib/filesaver/FileSaver.min.js"></script>
 
-    <script src="/js/charts.js"></script>
-    <script src="/js/app.js"></script>
-    <script src="/js/controllers.js"></script>
+    <script src="js/charts.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/controllers.js"></script>
 
-    <link rel="shortcut icon" type="image/x-icon" href="/img/ic_fav.png">
+    <link rel="shortcut icon" type="image/x-icon" href="img/ic_fav.png">
   </head>
   <body ng-controller="MainController">
 
     <nav class="navbar navbar-inverse" role="navigation">
       <div class="container-fluid">
         <a href="#" ng-click="nav('/')">
-          <img src="/img/ic_fav.png" class="brand-adjust" alt="PMP"/>
+          <img src="img/ic_fav.png" class="brand-adjust" alt="PMP"/>
         </a>
         <ul class="nav navbar-header navbar-nav col-xs-12 col-sm-11 col-md-11 col-lg-11">
           <li><a href="#" ng-click="nav('/campaign')">Campaign Statistics</a></li>
           <li><a href="#" ng-click="nav('/chain')">Chains and Flows Statistics</a></li>
-          <li><a href="#" ng-click="nav('/lifetime')">Life-Time Statistics</a></li>
+          <li><a href="#" ng-click="nav('/lifetime')" ng-hide="true">Life-Time Statistics</a></li>
           <li><a href="https://github.com/cms-PdmV/pmp/issues"
                  target="_blank">Report</a></li>
           <li><a href="https://twiki.cern.ch/twiki/bin/viewauth/CMS/PdmVpMp"
