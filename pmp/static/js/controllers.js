@@ -236,9 +236,9 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval, $
     $scope.modeUpdate = function() {
         $scope.title = 'Chains and Flows';
         if (!$scope.isChainUrl) {
-            $scope.title = 'Campaign: Dashboard';
+            $scope.title = 'Campaign: Announced Mode';
             if ($scope.chainMode) {
-                $scope.title = 'Campaign: Get_Stats';
+                $scope.title = 'Campaign: Growing Mode';
             }
         }
         $scope.cachedRequestData = [];
@@ -405,7 +405,7 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval, $
     $interval($scope.updateDate, 1000);
 
     new ZeroClipboard(document.getElementById('copy'), {
-        moviePath: '/lib/zeroclipboard/ZeroClipboard.swf'
+        moviePath: 'lib/zeroclipboard/ZeroClipboard.swf'
     });
 });
 
@@ -417,13 +417,13 @@ pmpApp.controller('TypeaheadCtrl', function($scope, $http) {
     $scope.suggestions = [];
     $scope.getSuggestions = function() {
         if ($scope.campaign) {
-            $http.get('/api/suggest/'
+            $http.get('api/suggest/'
                       + $scope.campaign + '/' + $scope.isChainUrl).then(function(response) {
                 $scope.suggestions = response.data.results;
             });
         }
         if ($scope.lifetime) {
-            $http.get('/api/suggest/'
+            $http.get('api/suggest/'
                       + $scope.lifetime + '/lifetime').then(function(response) {
                 $scope.suggestions = response.data.results;
             });
@@ -642,6 +642,6 @@ pmpApp.controller('LifetimeController', function($http, $location, $scope, $inte
     $interval($scope.updateDate, 1000);
 
     new ZeroClipboard(document.getElementById('copy'), {
-        moviePath: '/lib/zeroclipboard/ZeroClipboard.swf'
+        moviePath: 'lib/zeroclipboard/ZeroClipboard.swf'
     });
 });
