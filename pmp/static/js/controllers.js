@@ -655,7 +655,15 @@ pmpApp.controller('HistoricalController', function($http, $location, $scope, $in
         }
     }
 
-    $scope.title = 'Life-Time Representation of Requests';
+    $scope.takeScreenshot = function() {
+        var tmp = document.getElementById("ctn");
+        var svg = tmp.getElementsByTagName("svg")[0];
+        var svg_xml = (new XMLSerializer).serializeToString(svg);
+        var blob = new Blob([svg_xml], {type: "text/plain;charset=utf-8"});
+        saveAs(blob, "screenshot.html");
+    }
+
+    $scope.title = 'Historical Representation of Requests';
 
     $scope.updateRequestData = function() {
         $scope.query();

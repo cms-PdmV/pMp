@@ -26,17 +26,17 @@ body.dragging, body.dragging * {
 
 .data1 {
     stroke-width: 2;
-    stroke: #666666;
+    stroke:  #607d8b;
 }
       
 .data2 {
     stroke-width: 2;
-    stroke: rgb(106, 168, 79);;
+    stroke: #689f38;
 }
 
 .data3 {
     stroke-width: 2;
-    stroke: rgb(166, 28, 0);
+    stroke: #b71c1c;
 }
 
 .grid .tick, .grid path {

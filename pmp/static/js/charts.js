@@ -36,7 +36,8 @@ angular.module('mcm.charts', [])
                     .attr("width", "100%")
                     .attr("height", "100%")
                     .append("svg:g")
-                    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+                    .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+                    .attr('style', 'fill: none');
 
                 var zoom = d3.behavior.zoom()
                     .on("zoom", onZoom);
@@ -71,21 +72,22 @@ angular.module('mcm.charts', [])
                     .attr("font-size", "14");
                 dateLabelGroup.append("svg:text")
                     .attr("class", "date-label")
+                    .attr("style", "fill: #263238")
                     .attr("y", -15)
                     .attr("x", 10);
                 dateLabelGroup.append("svg:text")
                     .attr("class", "expected-label")
-                    .attr("style", "fill: rgb(106, 28, 0);")
+                    .attr('style', 'fill: #b71c1c')
                     .attr("y", -15)
                     .attr("x", 250);
                 dateLabelGroup.append("svg:text")
                     .attr("class", "indas-label")
-                    .attr("style", "fill: rgb(106, 168, 79);")
+                    .attr("style", "fill: #689f38")
                     .attr("y", -15)
                     .attr("x", 420);
                 dateLabelGroup.append("svg:text")
                     .attr("class", "openindas-label")
-                    .attr("style", "fill: #666666;")
+                    .attr("style", "fill:  #607d8b;")
                     .attr("y", -15)
                     .attr("x", 620);
                 
@@ -126,11 +128,11 @@ angular.module('mcm.charts', [])
                     .attr("y2", "100%");
                 gradient.append("stop")
                     .attr("offset", "0%")
-                    .attr("stop-color", "#888")
+                    .attr('stop-color', '#607d8b')
                     .attr("stop-opacity", 0.4);
                 gradient.append("stop")
                     .attr("offset", "100%")
-                    .attr("stop-color", "#fff")
+                    .attr('stop-color', '#eceff1')
                     .attr("stop-opacity", 0.8);
 
                 // Zoom
@@ -193,18 +195,30 @@ angular.module('mcm.charts', [])
                     if (l1 == undefined || l2 == undefined || l3 == undefined) {
                         l1 = svg.append("svg:path")
                             .attr("d", areaAllEvents(a))
-                            .attr("class", "data1").attr("clip-path", "url(#clip)")
+                            .attr('class', 'data1')
+                            .attr("clip-path", "url(#clip)")
+                            .style('stroke-width', 2)
+                            .style('stroke', '#607d8b')
                             .style("fill", "url(#gradient)");
                         l2 = svg.append("svg:path")
                             .attr("d", pathNotOpenEvents(a))
-                            .attr("class", "data2").attr("clip-path", "url(#clip)");
+                            .attr("class", "data2")
+                            .style('stroke-width', 2)
+                            .style('stroke', '#689f38')
+                            .attr("clip-path", "url(#clip)");
                         l3 = svg.append("svg:path")
                             .attr("d", pathTargetEvents(a))
-                            .attr("class", "data3").attr("clip-path", "url(#clip)");
+                            .attr("class", "data3")
+                            .attr("clip-path", "url(#clip)")
+                            .style('stroke-width', 2)
+                            .style('stroke', '#b71c1c');
                         svg.append("rect")
                             .attr('id', 'lifetime')
                             .attr("class", "pane")
                             .attr("x", 1)
+                            .style('cursor', 'move')
+                            .style('fill', 'none')
+                            .style('pointer-events', 'all')
                             .attr("width", width)
                             .attr("height", height)
                             .call(zoom);
