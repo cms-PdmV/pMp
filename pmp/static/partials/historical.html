@@ -81,25 +81,25 @@
           <small class="text-uppercase col-sm-12 col-md-12 col-lg-12">Priority filter</small>
           <div class="input-group col-sm-12">
             <select class="form-control text-center" ng-model="filterPriority[0]"
-                    ng-change="updateRequestData();setURL()">
+                    ng-change="updateRequestData();setURL()" ng-disabled="loadingData">
               <option ng-repeat="(key, value) in priorityPerBlock"
                       value="{{value}}">
                 {{key}}
               </option>
             </select>
-            <input type="text" class="form-control" placeholder="min"
+            <input type="text" class="form-control" placeholder="min" ng-disabled="loadingData"
                    ng-model="filterPriority[0]" ng-change="updateRequestData();setURL()">
             <div class="input-group-addon">
               &le; x &le;
             </div>
             <select class="form-control text-center" ng-model="filterPriority[1]"
-                    ng-change="updateRequestData();setURL()">
+                    ng-change="updateRequestData();setURL()"  ng-disabled="loadingData">
               <option ng-repeat="(key, value) in priorityPerBlock"
                       value="{{value}}">
                 {{key}}
               </option>
             </select>
-            <input type="text" class="form-control" placeholder="max"
+            <input type="text" class="form-control" placeholder="max" ng-disabled="loadingData"
                    ng-model="filterPriority[1]" ng-change="updateRequestData();setURL()">
           </div>
         </form>
@@ -109,7 +109,8 @@
           <div class="input-group">
             <div class="col-lg-6 col-md-6 col-sm-12" ng-repeat="(key, status) in allStatus">
               <label class="checkbox-inline">
-                <input type="checkbox" ng-model="allStatus[key]" ng-change="setURL()">
+                <input type="checkbox" ng-model="allStatus[key]" ng-disabled="loadingData"
+                       ng-change="updateRequestData();setURL()">
                 <small>
                   {{key}}
                 </small>
@@ -122,7 +123,8 @@
           <small class="text-uppercase col-sm-12 col-md-12 col-lg-12">PWG filter</small>
           <div class="col-sm-6 col-md-4 col-lg-4" ng-repeat="(key, pwg) in allPWG">
             <label class="checkbox-inline">
-              <input type="checkbox" ng-model="allPWG[key]" ng-change="setURL()">
+              <input type="checkbox" ng-model="allPWG[key]" ng-disabled="loadingData"
+                     ng-change="updateRequestData();setURL()">
               <small>
                 {{key}}
               </small>

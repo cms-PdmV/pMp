@@ -657,6 +657,10 @@ pmpApp.controller('HistoricalController', function($http, $location, $scope, $in
 
     $scope.title = 'Life-Time Representation of Requests';
 
+    $scope.updateRequestData = function() {
+        $scope.query();
+    }
+
     $interval($scope.updateDate, 1000);
 
     new ZeroClipboard(document.getElementById('copy'), {
