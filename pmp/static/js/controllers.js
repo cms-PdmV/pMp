@@ -73,10 +73,10 @@ pmpApp.controller('MainController', function($location, $route, $rootScope, $sco
     $rootScope.showView = false;
     $timeout(function() {
         $scope.nav('');
-    }, 100);
+        }, 100);
 });
 
-pmpApp.controller('CampaignsController', function($http, $location, $interval, $q,
+pmpApp.controller('PresentController', function($http, $location, $interval, $q,
     $rootScope, $scope, $timeout) {
 
     // currently displayed data (after filtering)
@@ -92,7 +92,10 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval, $
     ];
 
     $scope.init = function() {
-        $scope.isChainUrl = ($location.path() === '/chain');
+        if ($scope.initialized) {
+            return null;
+        }
+        $scope.initialized = true;
         $scope.aOptionsValues = [1, 0, 3, 0, 0, 0];
         $scope.aRadioValues = [0, 0];
 
@@ -135,7 +138,8 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval, $
             $scope.requests.radio.mode = ['seconds', 'events', 'requests'];
         }
         $scope.showDate = $location.search().t === 'true';
-        $scope.chainMode = ($location.search().m === 'true') || $scope.isChainUrl;
+        $scope.growingMode = ($location.search().m === 'true');
+        
         $scope.filterPriority = ['', ''];
         if ($location.search().x != undefined) {
             var tmp = $location.search().x.split(',');
@@ -166,7 +170,7 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval, $
                 $scope.load(tmp[i], true, arg);
             }
         } else {
-            $location.search({});
+            //$location.search({});
             $scope.url = $location.absUrl();
         }
     }
@@ -193,7 +197,7 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval, $
             $scope.showPopUp('warning', 'Your request is already loaded');
         } else {
             $scope.loadingData = true;
-            if ($scope.chainMode) {
+            if ($scope.growingMode) {
                 var promise = $http.get("api/" + campaign + "/chain");
             } else {
                 var promise = $http.get("api/" + campaign + "/simple");
@@ -234,12 +238,10 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval, $
     };
 
     $scope.modeUpdate = function() {
-        $scope.title = 'Chains and Flows';
-        if (!$scope.isChainUrl) {
-            $scope.title = 'Campaign: Announced Mode';
-            if ($scope.chainMode) {
-                $scope.title = 'Campaign: Growing Mode';
-            }
+        if ($scope.growingMode) {
+            $scope.title = 'Present: Growing Mode';
+        } else {
+            $scope.title = 'Present: Announced Mode';
         }
         $scope.cachedRequestData = [];
         $scope.allRequestData = [];
@@ -284,7 +286,7 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval, $
         }
         params.p = $scope.aOptionsValues.join(',') + ',' + $scope.aRadioValues.join(',');
         params.t = $scope.showDate + "";
-        params.m = $scope.chainMode + "";
+        params.m = $scope.growingMode + "";
         params.x = $scope.filterPriority.join(',');
 
         var tmp = $scope.pwg;
@@ -405,7 +407,7 @@ pmpApp.controller('CampaignsController', function($http, $location, $interval, $
     $interval($scope.updateDate, 1000);
 
     new ZeroClipboard(document.getElementById('copy'), {
-        moviePath: 'lib/zeroclipboard/ZeroClipboard.swf'
+            moviePath: 'lib/zeroclipboard/ZeroClipboard.swf'
     });
 });
 
@@ -418,7 +420,7 @@ pmpApp.controller('TypeaheadCtrl', function($scope, $http) {
     $scope.getSuggestions = function() {
         if ($scope.campaign) {
             $http.get('api/suggest/'
-                      + $scope.campaign + '/' + $scope.isChainUrl).then(function(response) {
+                      + $scope.campaign + '/' + $scope.growingMode).then(function(response) {
                 $scope.suggestions = response.data.results;
             });
         }
@@ -431,7 +433,7 @@ pmpApp.controller('TypeaheadCtrl', function($scope, $http) {
     };
 });
 
-pmpApp.controller('LifetimeController', function($http, $location, $scope, $interval) {
+pmpApp.controller('HistoricalController', function($http, $location, $scope, $interval) {
 
     $scope.allPWG = {};
 

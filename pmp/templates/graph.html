@@ -3,7 +3,6 @@
 
   <head>
     <title>Production Monitoring Platform</title>
-    <base href="https://cms-pdmv-dev.cern.ch/pmp/"/>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="css/bootstrap.min.css" rel="stylesheet"/>
     <link href="lib/bootstrap-tags/bootstrap-tags.css" rel="stylesheet"/>
@@ -39,13 +38,19 @@
           <img src="img/ic_fav.png" class="brand-adjust" alt="PMP"/>
         </a>
         <ul class="nav navbar-header navbar-nav col-xs-12 col-sm-11 col-md-11 col-lg-11">
-          <li><a href="#" ng-click="nav('/campaign')">Campaign Statistics</a></li>
-          <li><a href="#" ng-click="nav('/chain')">Chains and Flows Statistics</a></li>
-          <li><a href="#" ng-click="nav('/lifetime')" ng-hide="true">Life-Time Statistics</a></li>
-          <li><a href="https://github.com/cms-PdmV/pmp/issues"
-                 target="_blank">Report</a></li>
+          <li><a href="#" ng-click="nav('/present')">
+              <i class="fa fa-bar-chart spacing-r"></i>
+              Present Statistics</a></li>
+          <li><a href="#" ng-click="nav('/historical')">
+              <i class="fa fa-line-chart spacing-r"></i>
+              Historical Statistics</a></li>
+          <li><a href="https://github.com/cms-PdmV/pmp/issues" target="_blank">
+              <i class="fa fa-github spacing-r"></i>
+              Report</a></li>
           <li><a href="https://twiki.cern.ch/twiki/bin/viewauth/CMS/PdmVpMp"
-                 target="_blank">About</a></li>
+                 target="_blank">
+              <i class="fa fa-info spacing-r"></i>  
+              About</a></li>
         </ul>
       </div>
     </nav>

@@ -1244,10 +1244,8 @@ angular.module('mcm.charts', [])
                             d3.select(this).style("fill", highlight_color);
                         })
                         .on("mouseout", function() {
-                                d3.select(this).style("fill", function(d) {                                console.log(d);
-                                console.log(colors_stacks);
-
-return colors(d)});
+                                d3.select(this).style("fill", function(d) {
+                                        return colors(d)});
                         }).append("svg:title").text(setTitle);
 
                     // do something to old and new ones

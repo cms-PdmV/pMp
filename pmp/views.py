@@ -16,9 +16,8 @@ def about():
 
 
 @app.route('/')
-@app.route('/campaign')
-@app.route('/chain')
-@app.route('/lifetime')
+@app.route('/present')
+@app.route('/historical')
 def dashboard():
     return make_response(open('pmp/templates/graph.html').read())
 

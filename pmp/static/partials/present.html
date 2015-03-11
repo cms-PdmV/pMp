@@ -22,11 +22,11 @@
                    See
                  </button>
                  <button type="button" class="btn btn-danger"
-                         ng-click="load(campaign, true)" ng-disabled="loadingData || chainMode">
+                         ng-click="load(campaign, true)" ng-disabled="loadingData || growingMode">
                    Append
                  </button>
                  <button type="button" class="btn btn-danger"
-                         ng-click="load('all')" ng-disabled="loadingData || chainMode">
+                         ng-click="load('all')" ng-disabled="loadingData || growingMode">
                    Load <strong>all</strong>
                  </button>
                </span>
@@ -38,7 +38,7 @@
          </div>
        </div>
      </div>
-     <div class="row" ng-hide="chainMode">
+     <div class="row" ng-hide="growingMode">
        <div class="panel-default">
          <div class="panel-body">
            <div id="campaignList" style="padding-bottom: 0px;"></div>
@@ -146,8 +146,8 @@
         </label>
         <br/>
         <label class="checkbox-inline col-lg-12 col-md-12 col-sm-12 spacing">
-          <input type="checkbox" ng-model="chainMode"
-                 ng-change="modeUpdate();setURL()" ng-disabled="isChainUrl">
+          <input type="checkbox" ng-model="growingMode"
+                 ng-change="modeUpdate();setURL()">
           <small>
             Growing Mode
           </small>

@@ -449,9 +449,12 @@ class GetSuggestions():
                 return json.dumps(
                     {"results": [s['_id'] for s in
                                  self.es.search(search_string,
-                                                index="chained_campaigns",
+                                                index="campaigns",
                                                 size=self.overflow)
                                  ['hits']['hits']]
+                     + [s['_id'] for s in
+                        self.es.search(search_string, index="chained_campaigns",
+                                       size=self.overflow)['hits']['hits']]
                      + [s['_id'] for s in
                         self.es.search(search_string, index="chained_requests",
                                        size=self.overflow)['hits']['hits']]})
