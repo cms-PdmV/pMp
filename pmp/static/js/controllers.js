@@ -191,6 +191,7 @@ pmpApp.controller('PresentController', function($http, $location, $interval, $q,
     }
 
     $scope.load = function(campaign, add, more) {
+        console.log('load');
         if (!campaign) {
             $scope.showPopUp('warning', 'Your request parameters are empty');
         } else if (add & $scope.tags.hasTag(campaign)) {
@@ -205,6 +206,8 @@ pmpApp.controller('PresentController', function($http, $location, $interval, $q,
             promise.then(function(data) {
                 if (!data.data.results.length) {
                     $scope.showPopUp('error', 'No results for this request parameters');
+                    $scope.tags.removeTag(campaign);
+                    $scope.setURL();
                     $scope.loadingData = false;
                 } else {
                     if (add) {
@@ -225,9 +228,13 @@ pmpApp.controller('PresentController', function($http, $location, $interval, $q,
                     $scope.updatePwg(data.data.results, !more);
                     $scope.cachedRequestData = data.data.results;
                     $scope.setURL();
+
+                    console.log($scope.cachedRequestData);
+                    console.log($scope.allRequestData);
                 }
                 if (!more || more == $scope.tags.getTags().length) {
                     $scope.updateRequestData();
+                    console.log($scope.allRequestData);
                     $scope.loadingData == false;
                 }
             }, function() {
@@ -238,6 +245,8 @@ pmpApp.controller('PresentController', function($http, $location, $interval, $q,
     };
 
     $scope.modeUpdate = function() {
+        var tmp = angular.copy($scope.tags.getTags());
+
         if ($scope.growingMode) {
             $scope.title = 'Present: Growing Mode';
         } else {
@@ -245,7 +254,13 @@ pmpApp.controller('PresentController', function($http, $location, $interval, $q,
         }
         $scope.cachedRequestData = [];
         $scope.allRequestData = [];
-        $scope.tagsRemoveAll([]);
+        if (tmp.length < 2) {
+            for (var i = 0; i < tmp.length; i++) {
+                $scope.load(tmp[i], false, false);
+            }
+        } else {
+            $scope.tagsRemoveAll([]);
+        }
     };
 
     $scope.piecharts = {};
@@ -398,10 +413,11 @@ pmpApp.controller('PresentController', function($http, $location, $interval, $q,
                 }
             }
             $scope.$apply(function() {
+                    console.log('heyrasd')
                 $scope.allRequestData = data;
                 $scope.loadingData = false;
             });
-        }, 500);
+        }, 0);
     }
 
     $interval($scope.updateDate, 1000);
