@@ -13,8 +13,9 @@ from subprocess import call
 class Config():
 
     def __init__(self, typeof):
+        self.dn = os.path.dirname(os.path.realpath(__file__))
         parser = SafeConfigParser()
-        parser.read('dev.conf')
+        parser.read(self.dn + '/dev.conf')
 
         self.cookie = os.environ['HOME'] + parser.get('cookie', 'path')
         self.exclude_list = re.split(", ", parser.get('exclude', 'list'))
@@ -34,7 +35,6 @@ class Config():
         self.pmp_db = self.pmp_db_index + parser.get(typeof, 'pmp_db')
         self.last_seq = self.pmp_db_index + parser.get(typeof, 'last_seq')
         self.mapping = parser.get(typeof, 'mapping')
-
 
 
 class Utils():

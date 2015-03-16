@@ -6,8 +6,10 @@ import time
 import utils
 import sys
 
-# logging.basicConfig(filename='info.log', level=logging.INFO)
-logging.basicConfig(level=logging.INFO)
+
+def setlog(cfg):
+    f = cfg.dn + '/info.log'
+    logging.basicConfig(filename=f, level=logging.INFO)
 
 
 def parse(data, rlist):
@@ -92,8 +94,8 @@ def get_changes(utl, cfg):
 if __name__ == "__main__":
 
     utl = utils.Utils()
-    logging.info('%s Getting configuration' % utl.get_time())
     cfg = utils.Config(sys.argv[1])
+    setlog(cfg)
 
     if not utl.is_file(cfg.cookie):
         logging.info('%s Getting SSO Cookie' % utl.get_time())
