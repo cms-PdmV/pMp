@@ -1293,34 +1293,39 @@ angular.module('mcm.charts', [])
                         .attr("width", 0)
                         .remove();
 
-                    //legend
-                    if(scope.legend && columns_domain[0]!=undefined)  {
-                        if(svg.select(".legend").empty()) {
-                            svg.append("g").attr("class", "legend");
+                    // draw legend
+                    if (scope.legend && columns_domain[0] != undefined) {
+                        var l = svg.select('g.legend');
+                        if (l.empty()) {
+                            svg.append('g').attr('class', 'legend');
+                        } else {
+                            l.selectAll('*').remove();
                         }
-                        var legend = svg.select(".legend")
-                            .attr("transform", "translate("+ width +",0)")
+
+                        l = svg.select(".legend")
+                            .attr("transform", "translate(" + width + ",0)")
                             .attr("width", margin.right)
-                            .attr("height", columns_domain.length*24)
+                            .attr("height", columns_domain.length * 24)
                             .selectAll("g")
                             .data(columns_domain);
 
-                        var new_leg = legend
+                        var new_leg = l
                             .enter()
                             .append("g")
-                            .attr("transform", function(d, i){return "translate(0, " + i*24 + ")";});
+                            .attr("transform", function(d, i) {
+                                return "translate(0, " + i * 24 + ")";
+                            });
 
                         new_leg.append("rect")
                             .attr("width", 20)
                             .attr("height", 20)
                             .style("fill", function(d) {
-                                    if (colorMap[d] != undefined) {
-                                        return colorMap[d];
-                                    } else {
-                                        return colors_stacks[d](0);
-                                    }
+                                if (colorMap[d] != undefined) {
+                                    return colorMap[d];
+                                } else {
+                                    return colors_stacks[d](0);
                                 }
-                            );
+                            });
 
                         new_leg.append("text")
                             .attr("x", 24)
@@ -1330,53 +1335,51 @@ angular.module('mcm.charts', [])
 
                         new_leg.append("title");
 
-                        legend.select("rect")
+                        l.select("rect")
                             .transition()
                             .duration(duration)
                             .style("fill", function(d) {
-                                    if (colorMap[d] != undefined) {
-                                        return colorMap[d];
-                                    } else {
-                                        return colors_stacks[d](0);
-                                    }
-                                });
-                                //if (colorMap[d]) != undefined) { return colorMap[d]} return  colors_stacks[d](0); });
-                //.style("fill", function(d){return colorMap[d];}) // colors_stacks[d](rows_color_domain.length/2); });
+                                if (colorMap[d] != undefined) {
+                                    return colorMap[d];
+                                } else {
+                                    return colors_stacks[d](0);
+                                }
+                            });
 
-                        legend.select("text")
-                            .text(function(d){return d;});
+                        l.select("text")
+                            .text(function(d) {
+                                return d;
+                            });
 
-                        legend.select("title")
-                            .text(function(d){
-                                    var string_to_show = '';
-                                    if (valueOperation == 'events') {
-                                        string_to_show = 'Number of events';
-                                    } else if (valueOperation == 'requests') {
-                                        string_to_show = 'Number of requests';
-                                    } else if (valueOperation == 'seconds') {
-                                        string_to_show = 'Seconds per event';
-                                    }
-                                    var sum_value = d3.sum(svg.selectAll("rect.columning" + d).data(),
-                                        function(d){
-                                            return d[value];
-                                        });
-                                    string_to_show += ": " + sum_value;
-                                    return d+"\n"+string_to_show;
-                                });
+                        l.select("title")
+                            .text(function(d) {
+                                var string_to_show = '';
+                                if (valueOperation == 'events') {
+                                    string_to_show = 'Number of events';
+                                } else if (valueOperation == 'requests') {
+                                    string_to_show = 'Number of requests';
+                                } else if (valueOperation == 'seconds') {
+                                    string_to_show = 'Seconds per event';
+                                }
+                                var sum_value = d3.sum(svg.selectAll("rect.columning" + d).data(),
+                                    function(d) {
+                                        return d[value];
+                                    });
+                                string_to_show += ": " + sum_value;
+                                return d + "\n" + string_to_show;
+                            });
 
-                        legend
-                            .on("mouseover", function(d) {
-                               svg.selectAll("rect.columning" + d).style("fill", highlight_color);
+                        l.on("mouseover", function(d) {
+                                svg.selectAll("rect.columning" + d).style("fill", highlight_color);
                             })
                             .on("mouseout", function(d) {
-                                    svg.selectAll("rect.columning" + d).style("fill", function(d) {return colors(d)});// function(d) {return colors_stacks[d.columnsXDomainAttribute](rows_color_domain.indexOf(d.columnsYDomainAttribute));});
+                                svg.selectAll("rect.columning" + d).style("fill", function(d) {
+                                    return colors(d)
+                                });
                             })
-
-
                     } else {
                         svg.select(".legend").remove();
                     }
-
                 }
 
                 function redraw() {
