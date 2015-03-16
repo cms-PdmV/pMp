@@ -659,54 +659,69 @@ angular.module('mcm.charts', [])
                         return "rotate(-90)"
                         });
 
-
                 svg.append("g")
                     .attr("class", "grid horizontal");
 
-
-
                 var colorMap = {
-                    /*7*/
-                    approved: '#66bb6a', //green 400
-                    defined: '#ef5350', //red 400
-                    done: '#42a5f5', //blue 400
-                    new: '#ffa726', //orange 400
-                    submitted: '#ffee58', //yellow 400
-                    upcoming: '#ec407a', //pink 400
-                    validation: '#8d6e63', //brown 400
+                    approved: '#4caf50', // green 500
+                    defined: '#f44336', // red 500
+                    done: '#2196f3', // blue 500
+                    new: '#ff9800', // orange 500
+                    submitted: '#9c27b0', // purple 500
+                    upcoming: '#e91e63', // pink 500
+                    validation: '#795548', // brown 500
 
-                    /*23*/
-                    B2G: '#ef9a9a', //red 200
-                    BPH: '#f48fb1', //pink 200
-                    BTV: '#ce93d8', //purple 200
-                    EGM: '#b39ddb', //deep purple 200
-                    EWK: '#9fa8da', //indigo 200
-                    EXO: '#90caf9', //blue 200
-                    FSQ: '#81d4fa', //light blue 200
-                    FWD: '#80deea', //cyan 200
-                    HCA: '#80cbc4', //teal 200
-                    HIG: '#a5d6a7', //green 200
-                    HIN: '#c5e1a5', //light green 200
-                    JME: '#e6ee9c', //lime 200
-                    L1T: '#fff59d', //yellow 200
-                    MUO: '#ffe082', //amber 200
-                    QCD: '#ffcc80', //orange 200
-                    SMP: '#ffab91', //deep orange 200
-                    SUS: '#bcaaa4', //brown 200
-                    TAU: '#b0bec5', //blue gray 200
-                    TOP: '#e57373', //red 300
-                    TRK: '#f06292', //pink 300
-                    TSG: '#ba68c8', //purple 300
-                }; 
+                    B2G: '#e57373', // red 300
+                    BPH: '#f06292', // pink 300
+                    BTV: '#ba68c8', // purple 300
+                    EGM: '#9575cd', // deep purple 300
+                    EWK: '#7986cb', // indigo 300
+                    EXO: '#64b5f6', // blue 300
+                    FSQ: '#4fc3f7', // light blue 300
+                    FWD: '#4dd0e1', // cyan 300
+                    HCA: '#4db6ac', // teal 300
+                    HIG: '#81c784', // green 300
+                    HIN: '#aed581', // light green 300
+                    JME: '#dce775', // lime 300
+                    L1T: '#fff176', // yellow 300
+                    MUO: '#ffd54f', // amber 300
+                    QCD: '#ffb74d', // orange 300
+                    SMP: '#ff8a65', // deep orange 300
+                    SUS: '#a1887f', // brown 300
+                    TAU: '#90a4ae', // blue gray 300
+                    TOP: '#e0e0e0', // gray 300
+                    TRK: '#f06292', // pink 300
+                    TSG: '#ffb74d', // orange 300
+                };
+
+                // credits: richard maloney 2006
+                function getTintedColor(color, v) {
+                    if (color.length > 6) {color = color.substring(1, color.length)}
+                    var rgb = parseInt(color, 16); 
+                    var r = Math.abs(((rgb >> 16) & 0xFF)+v); if (r>255) r = 255;
+                    var g = Math.abs(((rgb >> 8) & 0xFF)+v); if (g>255) g = 255;
+                    var b = Math.abs((rgb & 0xFF)+v); if (b>255) b = 255;
+                    r = Number(r < 0 || isNaN(r)) ? 0 : ((r > 255) ? 255 : r).toString(16); 
+                    if (r.length == 1) r = '0' + r;
+                    g = Number(g < 0 || isNaN(g)) ? 0 : ((g > 255) ? 255 : g).toString(16); 
+                    if (g.length == 1) g = '0' + g;
+                    b = Number(b < 0 || isNaN(b)) ? 0 : ((b > 255) ? 255 : b).toString(16); 
+                    if (b.length == 1) b = '0' + b;
+                    return "#" + r + g + b;
+                }
 
                 function colors(d) {
-                    var c = d.columnsXDomainAttribute;
-                    if (d.columnsYDomainAttribute == undefined) {
-                        if (colorMap[c] != undefined) {
-                            return colorMap[c];
+                    var b = d.columnsXDomainAttribute;
+                    if (colorMap[b] != undefined) {
+                        var c = colorMap[b];
+                        if (d.columnsYDomainAttribute == undefined) {
+                            return c;
+                        } else {
+                            v = rows_color_domain.indexOf(d.columnsYDomainAttribute);
+                            return getTintedColor(c, parseInt(100/rows_color_domain.length)*v);
                         }
                     }
-                    return colors_stacks[c](rows_color_domain.indexOf(d.columnsYDomainAttribute));
+                    return colors_stacks[b](rows_color_domain.indexOf(d.columnsYDomainAttribute));
                 }
 
                 function prepareArguments() {

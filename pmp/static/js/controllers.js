@@ -191,7 +191,6 @@ pmpApp.controller('PresentController', function($http, $location, $interval, $q,
     }
 
     $scope.load = function(campaign, add, more) {
-        console.log('load');
         if (!campaign) {
             $scope.showPopUp('warning', 'Your request parameters are empty');
         } else if (add & $scope.tags.hasTag(campaign)) {
@@ -228,13 +227,9 @@ pmpApp.controller('PresentController', function($http, $location, $interval, $q,
                     $scope.updatePwg(data.data.results, !more);
                     $scope.cachedRequestData = data.data.results;
                     $scope.setURL();
-
-                    console.log($scope.cachedRequestData);
-                    console.log($scope.allRequestData);
                 }
                 if (!more || more == $scope.tags.getTags().length) {
                     $scope.updateRequestData();
-                    console.log($scope.allRequestData);
                     $scope.loadingData == false;
                 }
             }, function() {
@@ -413,7 +408,6 @@ pmpApp.controller('PresentController', function($http, $location, $interval, $q,
                 }
             }
             $scope.$apply(function() {
-                    console.log('heyrasd')
                 $scope.allRequestData = data;
                 $scope.loadingData = false;
             });
