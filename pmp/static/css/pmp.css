@@ -51,7 +51,6 @@ body.dragging, body.dragging * {
 }
 
 .minorx .tick, .minory .tick {
-    stroke: grey;
     opacity: 0.2;
     stroke-width: 0.6;
     stroke-dasharray: 3, 1;

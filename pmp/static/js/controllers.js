@@ -3,12 +3,18 @@
 pmpApp.controller('MainController', function($location, $route, $rootScope, $scope, $timeout) {
 
     $scope.nav = function(where) {
-        $scope.showView = !$scope.showView;
+        if (where == '') {
+            $scope.showView = true;
+        } else {
+            $scope.showView = false;
+        }
+
         if (!$scope.showView) {
-            $location.search({});
             $timeout(function() {
+                $location.search({});
                 $location.path(where);
                 $timeout(function() {
+                    $scope.showView = !$scope.showView;
                     $scope.nav('');
                 }, 100);
             }, 1100);
@@ -70,7 +76,9 @@ pmpApp.controller('MainController', function($location, $route, $rootScope, $sco
                 break;
         }
     }
+
     $rootScope.showView = false;
+
     $timeout(function() {
         $scope.nav('');
         }, 100);
@@ -91,7 +99,7 @@ pmpApp.controller('PresentController', function($http, $location, $interval, $q,
         'status', 'prepid', 'priority', 'pwg'
     ];
 
-    $scope.init = function() {
+    $scope.initPresent = function() {
         if ($scope.initialized) {
             return null;
         }
@@ -451,20 +459,25 @@ pmpApp.controller('HistoricalController', function($http, $location, $scope, $in
 
     $scope.allStatus = {};
 
-    $scope.init = function() {
-        if ($location.search().p != undefined) {
+    $scope.initHistorical = function() {
+        if ($scope.initialized) {
+            return null;
+        }
+        $scope.initialized = true;
+
+        if ($location.search().p != undefined && $location.search().p != '') {
             $scope.probing = $location.search().p;
         } else {
             $scope.probing = 40;
         }
         
-        if ($location.search().t != undefined) {
+        if ($location.search().t != undefined && $location.search().t != '') {
             $scope.showDate = ($location.search().t == 'true');
         } else {
             $scope.showDate = false;
         }
 
-        if ($location.search().x != undefined) {
+        if ($location.search().x != undefined && $location.search().x != '') {
             var tmp = $location.search().x.split(',');
             $scope.filterPriority = {'0': tmp[0], '1': tmp[1]};
             $scope.showDate = $location.search().t;
@@ -472,7 +485,7 @@ pmpApp.controller('HistoricalController', function($http, $location, $scope, $in
             $scope.filterPriority = {'0': '', '1': ''};
         }
 
-        if ($location.search().w != undefined) {
+        if ($location.search().w != undefined && $location.search().w != '') {
             var tmp = $location.search().w.split(',');
             for (var i = 0; i < tmp.length; i++) {
                 $scope.allPWG[tmp[i]] = true;
@@ -486,16 +499,20 @@ pmpApp.controller('HistoricalController', function($http, $location, $scope, $in
             }
         }
 
-        if ($location.search().r != undefined) {
+        if ($location.search().r != undefined && $location.search().r != '') {
             var tmp = $location.search().r.split(',');
             for (var i = 0; i < tmp.length; i++) {
                 $scope.tags.addTag(tmp[i]);
             }
-            $scope.query();
+            $scope.query(true);
         }
 
         $scope.url = $location.absUrl();
     }
+
+    $scope.isEmpty = function (obj) {
+       return angular.equals({},obj); 
+    };
 
     $scope.load = function(request, add) {
         if (!request) {
@@ -508,9 +525,29 @@ pmpApp.controller('HistoricalController', function($http, $location, $scope, $in
                 $scope.tagsRemoveAll();
             }
             $scope.tags.addTag(request);
-            $scope.query();
+
+            var filter = add
+            if (filter) {
+                filter = false;
+                for (var i = 0; i < Object.keys($scope.allStatus).length; i++) {
+                    if (!$scope.allStatus[Object.keys($scope.allStatus)[i]]) {
+                        filter = true;
+                        break;
+                    }
+                }
+                if (!filter) {
+                    for (var i = 0; i < Object.keys($scope.allPWG).length; i++) {
+                        if (!$scope.allPWG[Object.keys($scope.allPWG)[i]]) {
+                            filter = true;
+                            break;
+                        }
+                    }
+                }
+            }
+            $scope.query(filter);
         }
     };
+
 
     $scope.priorityPerBlock = {
         1: 110000,
@@ -521,7 +558,7 @@ pmpApp.controller('HistoricalController', function($http, $location, $scope, $in
         6: 63000
     };
 
-    $scope.query = function() {
+    $scope.query = function(filter) {
         if (!$scope.tags.getTags().length) {
             return null;
         }
@@ -530,7 +567,7 @@ pmpApp.controller('HistoricalController', function($http, $location, $scope, $in
         
         // Add priority filter
         var x = '';
-        if($scope.filterPriority != undefined) {
+        if(filter && $scope.filterPriority != undefined) {
             if($scope.filterPriority[0] != undefined) {
                 x += $scope.filterPriority[0];
             }
@@ -544,34 +581,34 @@ pmpApp.controller('HistoricalController', function($http, $location, $scope, $in
         
         // Add status filter
         var s = '';
-        if (Object.keys($scope.allStatus).length) {
+        if (filter && Object.keys($scope.allStatus).length) {
             for (var i = 0; i < Object.keys($scope.allStatus).length; i++) {
                 if ($scope.allStatus[Object.keys($scope.allStatus)[i]]) {
                     s += Object.keys($scope.allStatus)[i] + ',';
                 }
             }
-            if (s.length) {
+            if (s.length > 1) {
                 s = s.substr(0, s.length-1);
             } else {
-                s = '_'
-                    }
+                s = '_';
+            }
         } else {
             s = 'all'
         }
 
         // Add pwg filter
         var w = '';
-        if (Object.keys($scope.allPWG).length) {
+        if (filter && Object.keys($scope.allPWG).length) {
             for (var i = 0; i < Object.keys($scope.allPWG).length; i++) {
                 if ($scope.allPWG[Object.keys($scope.allPWG)[i]]) {
                     w += Object.keys($scope.allPWG)[i] + ',';
                 }
             }
-            if (w.length) {
+            if (w.length > 1) {
                 w = w.substr(0, w.length-1);
             } else {
-                w = '_'
-                    }
+                w = '_';
+            }
         } else {
             w = 'all'
         }
@@ -584,9 +621,12 @@ pmpApp.controller('HistoricalController', function($http, $location, $scope, $in
         var promise = $http.get("api/" + $scope.tags.getTags().join(',')
                                 + '/lifetime/' + p + '/' + x + '/' + s + '/' + w);
         promise.then(function(data) {
-                if (!data.data.results.data.length) {
+                if (!data.data.results.status) {
                     $scope.showPopUp('error', 'No results for this request parameters');
                 } else {
+                    if (!data.data.results.data.length) {
+                        $scope.showPopUp('warning', 'All data is filtered');
+                    }
                     $scope.allRequestData = data.data.results.data;
                     $scope.allStatus = data.data.results.status;
                     $scope.allPWG = data.data.results.pwg;
@@ -638,7 +678,14 @@ pmpApp.controller('HistoricalController', function($http, $location, $scope, $in
     $scope.tags = angular.element('#campaignList').tags({
         tagClass: 'btn btn-sm btn-primary',
         afterDeletingTag: function(tag) {
-            $scope.query();
+            if ($scope.tags.getTags().length) {
+                $scope.query(true);
+            } else {
+                $scope.allRequestData = [];
+                $scope.allStatus = {};
+                $scope.allPWG = {};
+                $scope.setURL();
+            }
         }
     });
 
@@ -660,7 +707,7 @@ pmpApp.controller('HistoricalController', function($http, $location, $scope, $in
     $scope.title = 'Historical Representation of Requests';
 
     $scope.updateRequestData = function() {
-        $scope.query();
+        $scope.query(true);
     }
 
     $interval($scope.updateDate, 1000);
