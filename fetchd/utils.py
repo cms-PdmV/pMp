@@ -58,6 +58,8 @@ class Utils():
         curl = pycurl.Curl()
         curl.setopt(pycurl.URL, str(url))
         curl.setopt(pycurl.WRITEFUNCTION, out.write)
+        curl.setopt(pycurl.SSL_VERIFYPEER, 0)
+        curl.setopt(pycurl.SSL_VERIFYHOST, 0)
         if request == "GET" and cookie is not None:
             curl.setopt(pycurl.COOKIEFILE, cookie)
             curl.setopt(pycurl.COOKIEJAR, cookie)
