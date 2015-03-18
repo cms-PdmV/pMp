@@ -100,10 +100,6 @@ pmpApp.controller('PresentController', function($http, $location, $interval, $q,
     ];
 
     $scope.initPresent = function() {
-        if ($scope.initialized) {
-            return null;
-        }
-        $scope.initialized = true;
         $scope.aOptionsValues = [1, 0, 3, 0, 0, 0];
         $scope.aRadioValues = [0, 0];
 
@@ -145,6 +141,7 @@ pmpApp.controller('PresentController', function($http, $location, $interval, $q,
         if ($scope.aRadioValues[0] == 2) {
             $scope.requests.radio.mode = ['seconds', 'events', 'requests'];
         }
+
         $scope.showDate = $location.search().t === 'true';
         $scope.growingMode = ($location.search().m === 'true');
         
@@ -154,7 +151,7 @@ pmpApp.controller('PresentController', function($http, $location, $interval, $q,
             $scope.filterPriority = tmp;
         }
         $scope.initStatus();
-        $scope.modeUpdate();
+        $scope.modeUpdate(true);
         $scope.pwg = {};
         if ($location.search().w != undefined) {
             var tmp = $location.search().w.split(',');
@@ -178,7 +175,6 @@ pmpApp.controller('PresentController', function($http, $location, $interval, $q,
                 $scope.load(tmp[i], true, arg);
             }
         } else {
-            //$location.search({});
             $scope.url = $location.absUrl();
         }
     }
@@ -247,9 +243,7 @@ pmpApp.controller('PresentController', function($http, $location, $interval, $q,
         }
     };
 
-    $scope.modeUpdate = function() {
-        var tmp = angular.copy($scope.tags.getTags());
-
+    $scope.modeUpdate = function(onlyTitle) {
         if ($scope.growingMode) {
             $scope.title = 'Present: Growing Mode';
         } else {
@@ -257,7 +251,14 @@ pmpApp.controller('PresentController', function($http, $location, $interval, $q,
         }
         $scope.cachedRequestData = [];
         $scope.allRequestData = [];
+        
+        if (onlyTitle) {
+            return null;
+        }
+
+        var tmp = angular.copy($scope.tags.getTags());
         if (tmp.length < 2) {
+            console.log('loading');
             for (var i = 0; i < tmp.length; i++) {
                 $scope.load(tmp[i], false, false);
             }
@@ -451,7 +452,7 @@ pmpApp.controller('TypeaheadCtrl', function($scope, $http) {
     };
 });
 
-pmpApp.controller('HistoricalController', function($http, $location, $scope, $interval) {
+pmpApp.controller('HistoricalController', function($http, $location, $scope, $rootScope, $interval) {
 
     $scope.allPWG = {};
 
@@ -460,10 +461,12 @@ pmpApp.controller('HistoricalController', function($http, $location, $scope, $in
     $scope.allStatus = {};
 
     $scope.initHistorical = function() {
-        if ($scope.initialized) {
-            return null;
+
+        if ($location.search().y != undefined && $location.search().y != '') {
+            $scope.zoomOnY = ($location.search().y == 'true');
+        } else {
+            $scope.zoomOnY = false;
         }
-        $scope.initialized = true;
 
         if ($location.search().p != undefined && $location.search().p != '') {
             $scope.probing = $location.search().p;
@@ -502,6 +505,7 @@ pmpApp.controller('HistoricalController', function($http, $location, $scope, $in
         if ($location.search().r != undefined && $location.search().r != '') {
             var tmp = $location.search().r.split(',');
             for (var i = 0; i < tmp.length; i++) {
+                console.log(tmp[i]);
                 $scope.tags.addTag(tmp[i]);
             }
             $scope.query(true);
@@ -524,6 +528,7 @@ pmpApp.controller('HistoricalController', function($http, $location, $scope, $in
             if (!add) {
                 $scope.tagsRemoveAll();
             }
+            console.log('request');
             $scope.tags.addTag(request);
 
             var filter = add
@@ -670,6 +675,8 @@ pmpApp.controller('HistoricalController', function($http, $location, $scope, $in
             }
         }
         params.s = s.join(',');
+
+        $scope.zoomOnY != undefined ? params.y = $scope.zoomOnY + '': params.y = 'false';
 
         $location.search(params);
         $scope.url = $location.absUrl();

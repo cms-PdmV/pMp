@@ -145,6 +145,15 @@
         </label>
       </form>
 
+      <form class="form-group text-uppercase">
+        <label class="checkbox-inline col-lg-12 col-md-12 col-sm-12 spacing">
+          <input type="checkbox" ng-model="zoomOnY" ng-change="setURL()">
+          <small>
+            y axis zoom
+          </small>
+        </label>
+      </form>
+
       <div class="input-group input-group-sm spacing">
         <span class="hidden-sm input-group-addon text-uppercase">
           Probing
@@ -178,6 +187,6 @@
 
 <div class="row" ng-show="allRequestData.length">
   <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 text-center" id="measure">
-    <linear-lifetime chart-data="allRequestData"></linear-lifetime>
+    <linear-lifetime chart-data="allRequestData" zoom-y="zoomOnY"></linear-lifetime>
   </div>
 </div>
