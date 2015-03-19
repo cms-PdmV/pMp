@@ -8,8 +8,9 @@ import sys
 
 
 def setlog(cfg):
-    f = cfg.dn + '/info.log'
-    logging.basicConfig(filename=f, level=logging.INFO)
+    #f = cfg.dn + '/info.log'
+    #logging.basicConfig(filename=f, level=logging.INFO)
+    logging.basicConfig(level=logging.INFO)
 
 
 def parse(data, rlist):
@@ -19,6 +20,30 @@ def parse(data, rlist):
         except KeyError:
             continue
     return data
+
+
+def parse_taskchain(data):
+    ret = []
+    try:
+        dataset_list = data[0]['pdmv_dataset_statuses'].keys()
+        for ds in dataset_list:
+            r = {}
+            r['dataset'] = ds
+            r['monitor'] = []
+            for d in data:
+                try:
+                    monit = d['pdmv_dataset_statuses'][ds]
+                    m = {}
+                    m['pdmv_evts_in_DAS'] = monit['pdmv_evts_in_DAS']
+                    m['pdmv_open_evts_in_DAS'] = monit['pdmv_open_evts_in_DAS']
+                    m['pdmv_monitor_time'] = d['pdmv_monitor_time']
+                    r['monitor'].append(m)
+                except KeyError:
+                    continue
+            ret.append(r)
+    except KeyError:
+        pass
+    return ret
 
 
 def get_changes(utl, cfg):
@@ -62,7 +87,6 @@ def get_changes(utl, cfg):
                         if s not in [200, 201]:
                             logging.error('%s Cannot update last_seq' %
                                           utl.get_time())
-                    #!!! if r['id'].startswith('jbadillo_ACDC_B2G-Fall13'):
                     yield r['id'], ('deleted' in r)
             else:
                 logging.info('%s Nothing to do. No changes since last update' %
@@ -102,6 +126,7 @@ if __name__ == "__main__":
         utl.get_cookie(cfg.url_mcm, cfg.cookie)
 
     for r, deleted in get_changes(utl, cfg):
+
         if r not in cfg.exclude_list:
             if deleted:
                 _, s = utl.curl('DELETE', '%s%s' % (cfg.pmp_db, r))
@@ -114,21 +139,36 @@ if __name__ == "__main__":
             else:
                 url = str(cfg.url_db + r)
                 data, status = utl.curl('GET', url, cookie=cfg.cookie)
-                data = parse(data, cfg.remove_list)
+                # parsing stats documents
                 try:
-                    i = 0
-                    for _ in data['pdmv_monitor_history']:
+                    if data['pdmv_type'] == 'TaskChain':
+                        tc = parse_taskchain(data['pdmv_monitor_history'])
+                        if len(tc):
+                            data['pdmv_monitor_taskchain'] = tc
+                    for i, _ in enumerate(data['pdmv_monitor_history']):
                         data['pdmv_monitor_history'][i] = parse(
                             data['pdmv_monitor_history'][i], cfg.remove_list)
-                        i += 1
                 except KeyError:
                     pass
+
+                # yes... there is spelling mistake in stats db
                 try:
-                    i = 0
-                    for _ in data['reqmgr_name']:
+                    if data['pdmv_type'] == 'TaskChain':
+                        tc = parse_taskchain(data['pdvm_monitor_history'])
+                        if len(tc):
+                            data['pdmv_monitor_taskchain'] = tc
+
+                    for i, _ in enumerate(data['pdvm_monitor_history']):
+                        data['pdmv_monitor_history'][i] = parse(
+                            data['pdvm_monitor_history'][i], cfg.remove_list)
+                except KeyError:
+                    pass
+                data = parse(data, cfg.remove_list)
+
+                try:
+                    for i, _ in enumerate(data['reqmgr_name']):
                         data['reqmgr_name'][i] = parse(
                             data['reqmgr_name'][i], cfg.remove_list)
-                        i += 1
                 except KeyError:
                     pass
 

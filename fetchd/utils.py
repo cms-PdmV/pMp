@@ -43,6 +43,7 @@ class Utils():
         return os.path.isfile(file) and os.access(file, os.R_OK)
 
     def get_cookie(self, url, path):
+        self.rm(path)
         call(["cern-get-sso-cookie", "--krb", "--nocertverify", "-u", url,
               "-o", path])
 
