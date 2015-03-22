@@ -157,12 +157,17 @@ class GetCampaign():
     def get(self, campaign):
         if campaign == 'all':
             campaign = '*'
-        return json.dumps(
-            {"results": [s['_source'] for s in
-                         self.es.search(('member_of_campaign:%s' % campaign),
-                                        index='requests',
-                                        size=self.overflow)['hits']['hits']]})
-
+        ret = {}
+        ret['results'] = [s['_source'] for s in
+                          self.es.search(('member_of_campaign:%s' % campaign),
+                                         index='requests',
+                                         size=self.overflow)['hits']['hits']]
+        for r in ret['results']:
+            if r['status'] == 'done':
+                r['total_events'] = r['completed_events']
+            if r['total_events'] == -1:
+                r['total_events'] = 0
+        return json.dumps(ret)
 
 class GetLifetime():
 
@@ -183,23 +188,21 @@ class GetLifetime():
                        self.es.search(('member_of_campaign:%s' % input),
                                       index='requests',
                                       size=self.overflow)['hits']['hits']]
-            
+            print len(req_arr)
             for r in req_arr:
-                i = {}
-                i['status'] = r['status']
-                i['pwg'] = r['pwg']
-                i['priority'] = r['priority']
-                res = ([s['name'] for s in
-                        self.es.get('requests', 'request',
-                                    r['prepid'])['_source']['reqmgr_name']])
-
-                for e in res:
-                    i['name'] = e
-                    iterable.append(i)
-
+                try:
+                    for e in r['reqmgr_name']:
+                        i = {}
+                        i['status'] = r['status']
+                        i['pwg'] = r['pwg']
+                        i['priority'] = r['priority']
+                        i['name'] = e['name']
+                        iterable.append(i)
+                except:
+                    pass
         except:
             pass
-
+        print len(iterable)
         if not len(iterable):
             try:
                 # check if the input is a request
@@ -243,7 +246,7 @@ class GetLifetime():
 
     def prepare_response(self, query, probe, p_min, p_max, status_i, pwg_i):
         taskchain = True
-        request_type = None
+        #request_type = None
         r = []
         status = {}
         pwg = {}
@@ -251,16 +254,16 @@ class GetLifetime():
         for q in query:
             # Process the db documents
             for (d, s, p, pr) in self.db_query(q):
-
+                print d
                 if d is None:
                     continue
 
                 # set correct dataset to the first one
-                if request_type is None:
-                    request_type = d['pdmv_dataset_name'].split('/')[-1]
-                else:
-                    if request_type != d['pdmv_dataset_name'].split('/')[-1]:
-                        continue
+                #if request_type is None:
+                #    request_type = d['pdmv_dataset_name'].split('/')[-1]
+                #else:
+                #    if request_type != d['pdmv_dataset_name'].split('/')[-1]:
+                #        continue
 
                 if not s is None and not s in status:
                     status[s] = False
@@ -310,7 +313,7 @@ class GetLifetime():
                             data['x'] = d['pdmv_expected_events']
                             response['data'].append(data)
                 r.append(response)
-
+        # fix for requset should be here
         # Step 1: Get accumulated requests
         tmp = {}
         for x in r:
