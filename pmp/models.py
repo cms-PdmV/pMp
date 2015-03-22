@@ -178,21 +178,12 @@ class GetLifetime():
         """
         iterable = []
         try:
-            ### Performance
-            prev = int(round(time.time() * 1000))
-            ###
-
             # check if the input is a campaign
             req_arr = [s['_source'] for s in
                        self.es.search(('member_of_campaign:%s' % input),
                                       index='requests',
                                       size=self.overflow)['hits']['hits']]
             
-            ### Performance
-            print "MoC in ", (int(round(time.time() * 1000)) - prev)
-            prev = int(round(time.time() * 1000))
-            ###
-
             for r in req_arr:
                 i = {}
                 i['status'] = r['status']
@@ -206,24 +197,18 @@ class GetLifetime():
                     i['name'] = e
                     iterable.append(i)
 
-            ### Performance
-            print "ReqMgr in ", (int(round(time.time() * 1000)) - prev)
-            prev = int(round(time.time() * 1000))
-            ###
-
         except:
             pass
 
         if not len(iterable):
-            print "Request"
             try:
                 # check if the input is a request
                 s = self.es.get('requests', 'request', input)['_source']
-                i = {}
-                i['status'] = s['status']
-                i['pwg'] = s['pwg']
-                i['priority'] = s['priority']
                 for e in s['reqmgr_name']:
+                    i = {}
+                    i['status'] = s['status']
+                    i['pwg'] = s['pwg']
+                    i['priority'] = s['priority']
                     i['name'] = e['name']
                     iterable.append(i)
             except:
@@ -243,13 +228,12 @@ class GetLifetime():
                            i['status'], i['pwg'], i['priority']]
                 except:
                     yield [None, None, None, None]
-        ### Performance
-        print "End yielding in ", (int(round(time.time() * 1000)) - prev)
-        ###
 
     def rm_useless(self, arr):
         r = []
         prev = {'a': -1, 'e': -1, 'x': -1}
+        # remove first probe of resubmissions
+        # and points that are equal to previous measurement
         for (x, a) in enumerate(arr):
             if (a['a'] != 0 or x == 0) and (
                 a['a'] != prev['a'] or a['e'] != prev['e'] or a['x'] != prev['x']):
@@ -258,12 +242,11 @@ class GetLifetime():
         return r
 
     def prepare_response(self, query, probe, p_min, p_max, status_i, pwg_i):
+        taskchain = True
+        request_type = None
         r = []
         status = {}
         pwg = {}
-        ### Performance
-        prev = int(round(time.time() * 1000))
-        ###
 
         for q in query:
             # Process the db documents
@@ -271,6 +254,13 @@ class GetLifetime():
 
                 if d is None:
                     continue
+
+                # set correct dataset to the first one
+                if request_type is None:
+                    request_type = d['pdmv_dataset_name'].split('/')[-1]
+                else:
+                    if request_type != d['pdmv_dataset_name'].split('/')[-1]:
+                        continue
 
                 if not s is None and not s in status:
                     status[s] = False
@@ -304,9 +294,11 @@ class GetLifetime():
                 if not pr is None and (pr < p_min or (pr > p_max and p_max != -1)):
                     continue
 
+                # create an array of requests to be processed
                 response = {}
                 response['data'] = []
                 response['request'] = d['pdmv_prep_id']
+                taskchain = taskchain and (d['pdmv_type'] == 'TaskChain')
 
                 if 'pdmv_monitor_history' in d:
                     for record in d['pdmv_monitor_history']:
@@ -318,11 +310,6 @@ class GetLifetime():
                             data['x'] = d['pdmv_expected_events']
                             response['data'].append(data)
                 r.append(response)
-        
-        ### Performance
-        print "Data prepared in ", (int(round(time.time() * 1000)) - prev)
-        prev = int(round(time.time() * 1000))
-        ###
 
         # Step 1: Get accumulated requests
         tmp = {}
@@ -334,11 +321,6 @@ class GetLifetime():
                 tmp[s] = x['data']
             tmp[s] = sorted(tmp[s], key=lambda e: e['t'])
             tmp[s] = self.rm_useless(tmp[s])
-
-        ### Performance
-        print "Accum request in ", (int(round(time.time() * 1000)) - prev)
-        prev = int(round(time.time() * 1000))
-        ###
 
         # Step 2: Get and sort timestamps
         times = []
@@ -361,11 +343,6 @@ class GetLifetime():
                 filter_times.append(t)
                 i = 0
         
-        ### Performance
-        print "Sorted times in ", (int(round(time.time() * 1000)) - prev)
-        prev = int(round(time.time() * 1000))
-        ###
-
         # Step 3 & 4: Cycle through requests and add data points
         data = []
         for ft in filter_times:
@@ -387,13 +364,11 @@ class GetLifetime():
                         prevx = x
             data.append(d)
         
-        ### Performance
-        print "Dataset in ", (int(round(time.time() * 1000)) - prev)
-        ###
         re = {}
         re['data'] = data
         re['status'] = status
         re['pwg'] = pwg
+        re['taskchain'] = taskchain
         return re
 
     def get(self, query, probe=100, priority_min=0, priority_max=-1,
