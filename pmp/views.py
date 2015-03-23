@@ -33,8 +33,8 @@ def api(field, typeof):
     return make_response(gc.get(field))
 
 
-@app.route('/api/<f>/lifetime/<p>/<priority>/<status>/<pwg>')
-def api_extended(f, p, priority, status, pwg):
+@app.route('/api/<f>/historical/<p>/<priority>/<status>/<pwg>/<taskchain>')
+def api_extended(f, p, priority, status, pwg, taskchain):
     gc = models.GetLifetime()
 
     priority = priority.split(',')
@@ -54,8 +54,9 @@ def api_extended(f, p, priority, status, pwg):
     else:
         pwg = pwg.split(',')
 
+    taskchain = (taskchain == 'true')
     return make_response(gc.get(f, int(p), int(priority[0]), int(priority[1]),
-                                status, pwg))
+                                status, pwg, taskchain))
 
 
 @app.route('/api/suggest/<input>/<typeof>')

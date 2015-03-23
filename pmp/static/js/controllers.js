@@ -258,7 +258,6 @@ pmpApp.controller('PresentController', function($http, $location, $interval, $q,
 
         var tmp = angular.copy($scope.tags.getTags());
         if (tmp.length < 2) {
-            console.log('loading');
             for (var i = 0; i < tmp.length; i++) {
                 $scope.load(tmp[i], false, false);
             }
@@ -512,7 +511,6 @@ pmpApp.controller('HistoricalController', function($http, $location, $scope, $ro
         if ($location.search().r != undefined && $location.search().r != '') {
             var tmp = $location.search().r.split(',');
             for (var i = 0; i < tmp.length; i++) {
-                console.log(tmp[i]);
                 $scope.tags.addTag(tmp[i]);
             }
             $scope.query(true);
@@ -535,7 +533,6 @@ pmpApp.controller('HistoricalController', function($http, $location, $scope, $ro
             if (!add) {
                 $scope.tagsRemoveAll();
             }
-            console.log('request');
             $scope.tags.addTag(request);
 
             var filter = add
@@ -629,9 +626,14 @@ pmpApp.controller('HistoricalController', function($http, $location, $scope, $ro
         if ($scope.probing != '') {
             p = $scope.probing;
         }
+
+        var tc = false;
+        if ($scope.loadTaskChain != undefined) {
+            tc = $scope.loadTaskChain;
+        }
         
         var promise = $http.get("api/" + $scope.tags.getTags().join(',')
-                                + '/lifetime/' + p + '/' + x + '/' + s + '/' + w);
+                                + '/historical/' + p + '/' + x + '/' + s + '/' + w + '/' + tc);
         promise.then(function(data) {
                 if (!data.data.results.status) {
                     $scope.showPopUp('error', 'No results for this request parameters');
@@ -642,8 +644,7 @@ pmpApp.controller('HistoricalController', function($http, $location, $scope, $ro
                     $scope.allRequestData = data.data.results.data;
                     $scope.allStatus = data.data.results.status;
                     $scope.allPWG = data.data.results.pwg;
-                    console.log(data.data.results.taskchain)
-                    $scope.isTaskChain = (data.data.results.taskchain == true)
+                    $scope.isTaskChain = data.data.results.taskchain
                 }
                 $scope.loadingData = false;
                 $scope.setURL();
@@ -689,7 +690,6 @@ pmpApp.controller('HistoricalController', function($http, $location, $scope, $ro
         if ($scope.loadTaskChain != undefined && $scope.isTaskChain) {
             params.tc = $scope.loadTaskChain + '';
         }
-        console.log($scope.isTaskChain)
 
         $location.search(params);
         $scope.url = $location.absUrl();

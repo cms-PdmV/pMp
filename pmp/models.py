@@ -249,7 +249,7 @@ class GetLifetime():
                 prev = a
         return r
 
-    def prepare_response(self, query, probe, p_min, p_max, status_i, pwg_i):
+    def prepare_response(self, query, probe, p_min, p_max, status_i, pwg_i, tc):
         taskchain = True
         #request_type = None
         r = []
@@ -309,6 +309,35 @@ class GetLifetime():
                 response['type'] = d['pdmv_dataset_name'].split('/')[-1]
                 taskchain = taskchain and (d['pdmv_type'] == 'TaskChain')
 
+                if tc and taskchain:
+                    # load taskchain instead of normal req
+                    for t in d['pdmv_monitor_taskchain']:
+                        res = {}
+                        res['request'] = t['dataset']
+                        res['data'] = []
+                        for record in t['monitor']:
+                            print record
+                            if len(record['pdmv_monitor_time']):
+                                data = {}
+                                data['a'] = (record['pdmv_evts_in_DAS'] +
+                                             record['pdmv_open_evts_in_DAS'])
+                                data['t'] = time.mktime(time.strptime(
+                                        record['pdmv_monitor_time']))*1000
+                                data['x'] = d['pdmv_expected_events']
+                            print data
+                            res['data'].append(data)
+                        r.append(res)
+                    re = {}
+                    re['data'] = r  
+                    re['status'] = {}
+                    re['pwg'] = {}
+                    re['taskchain'] = taskchain
+                    return re
+                        
+                elif tc:
+                    # perhaps someone is playing with url
+                    return []
+
                 if 'pdmv_monitor_history' in d:
                     for record in d['pdmv_monitor_history']:
                         if len(record['pdmv_monitor_time']):
@@ -319,11 +348,10 @@ class GetLifetime():
                             data['x'] = d['pdmv_expected_events']
                             response['data'].append(data)
                 r.append(response)
-        # fix for requset should be here
+
         # Step 1: Get accumulated requests
         tmp = {}
         for x in r:
-            print x['type']
             s = x['request']
             try:
                 if x['type'] == tmp[s]['type']:
@@ -386,11 +414,11 @@ class GetLifetime():
         return re
 
     def get(self, query, probe=100, priority_min=0, priority_max=-1,
-            status=None, pwg=None):
+            status=None, pwg=None, taskchain=False):
         return json.dumps(
             {"results": self.prepare_response(query.split(','), probe,
                                               priority_min, priority_max,
-                                              status, pwg)})
+                                              status, pwg, taskchain)})
 
 
 class GetSuggestions():
