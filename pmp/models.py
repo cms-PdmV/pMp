@@ -162,11 +162,16 @@ class GetCampaign():
                           self.es.search(('member_of_campaign:%s' % campaign),
                                          index='requests',
                                          size=self.overflow)['hits']['hits']]
+
+        print len(ret['results'])
+
         for r in ret['results']:
             if r['status'] == 'done':
                 r['total_events'] = r['completed_events']
             if r['total_events'] == -1:
                 r['total_events'] = 0
+
+        print len(ret['results'])
         return json.dumps(ret)
 
 class GetLifetime():
@@ -254,13 +259,13 @@ class GetLifetime():
         for q in query:
             # Process the db documents
             for (d, s, p, pr) in self.db_query(q):
-                print d
+                #print d
                 if d is None:
                     continue
 
                 # set correct dataset to the first one
                 #if request_type is None:
-                #    request_type = d['pdmv_dataset_name'].split('/')[-1]
+                #    request_type = 
                 #else:
                 #    if request_type != d['pdmv_dataset_name'].split('/')[-1]:
                 #        continue
@@ -301,6 +306,7 @@ class GetLifetime():
                 response = {}
                 response['data'] = []
                 response['request'] = d['pdmv_prep_id']
+                response['type'] = d['pdmv_dataset_name'].split('/')[-1]
                 taskchain = taskchain and (d['pdmv_type'] == 'TaskChain')
 
                 if 'pdmv_monitor_history' in d:
@@ -317,18 +323,23 @@ class GetLifetime():
         # Step 1: Get accumulated requests
         tmp = {}
         for x in r:
+            print x['type']
             s = x['request']
             try:
-                tmp[s] += x['data']
+                if x['type'] == tmp[s]['type']:
+                    tmp[s]['data'] += x['data']
             except KeyError:
-                tmp[s] = x['data']
-            tmp[s] = sorted(tmp[s], key=lambda e: e['t'])
-            tmp[s] = self.rm_useless(tmp[s])
+                tmp[s] = {}
+                tmp[s]['type'] = x['type']
+                tmp[s]['data'] = x['data']
+
+            tmp[s]['data'] = sorted(tmp[s]['data'], key=lambda e: e['t'])
+            tmp[s]['data'] = self.rm_useless(tmp[s]['data'])
 
         # Step 2: Get and sort timestamps
         times = []
         for t in tmp:
-            times += (x['t'] for x in tmp[t])
+            times += (x['t'] for x in tmp[t]['data'])
 
         times = sorted(set(times))
 
@@ -352,13 +363,13 @@ class GetLifetime():
             d = {'a': 0, 'e':0, 't': ft, 'x': 0}
             for t in tmp:
                 prevx = {'a': 0, 'e':0, 'x': 0}
-                for (i, x) in enumerate(tmp[t]):
+                for (i, x) in enumerate(tmp[t]['data']):
                     if x['t'] > ft:
                         d['a'] += prevx['a']
                         d['e'] += prevx['e']
                         d['x'] += prevx['x']
                         break
-                    elif x['t'] == ft or i == len(tmp[t])-1:
+                    elif x['t'] == ft or i == len(tmp[t]['data'])-1:
                         d['a'] += x['a']
                         d['e'] += x['e']
                         d['x'] += x['x']
