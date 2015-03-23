@@ -121,9 +121,8 @@ if __name__ == "__main__":
     cfg = utils.Config(sys.argv[1])
     setlog(cfg)
 
-    if not utl.is_file(cfg.cookie):
-        logging.info('%s Getting SSO Cookie' % utl.get_time())
-        utl.get_cookie(cfg.url_mcm, cfg.cookie)
+    logging.info('%s Getting SSO Cookie' % utl.get_time())
+    utl.get_cookie(cfg.url_mcm, cfg.cookie)
 
     for r, deleted in get_changes(utl, cfg):
 
