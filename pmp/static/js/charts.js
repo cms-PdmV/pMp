@@ -31,7 +31,8 @@ angular.module('mcm.charts', [])
                     width = customWidth - margin.left - margin.right,
                     height = 500 - margin.top - margin.bottom,
                     l1, l2, l3, containerBox;
-
+                
+                var fiveShadesOfGrey = ['#212121', '#424242', '#616161', '#757575', '#9e9e9e'];
                 var svg = d3.select(element[0])
                     .append('svg:svg')
                     .attr("viewBox", "0 -20 " + (width + margin.left + margin.right) + " " + (height + margin.top + margin.bottom))
@@ -122,6 +123,15 @@ angular.module('mcm.charts', [])
                     })
                     .interpolate("step-after");
 
+                var taskChainLine = d3.svg.line()
+                    .x(function(d, i) {
+                        return x(d.t);
+                    })
+                    .y(function(d) {
+                        return y(d.a);
+                    })
+                    .interpolate("step-after");
+
                 // Area gradient
                 var gradient = svg.append("defs")
                     .append("linearGradient")
@@ -162,6 +172,76 @@ angular.module('mcm.charts', [])
                 var onLoad = function(a) {
                     if (scope.taskChain) {
                         console.log('This is TaskChain')
+                        // the monitor times for each dataset are the same
+                        currentMin = d3.min(a[0].data, function(d) {
+                                return d.t;
+                            });
+                        currentMax = d3.max(a[0].data, function(d) {
+                                return d.t;
+                            });
+
+                        // Axes
+                        x.domain([currentMin, currentMax]).range([0, width]);
+                        xAxis.scale(x);
+                        svg.selectAll("g .x.axis").transition().duration(200).ease("linear").call(xAxis);
+                        var yMax = 0;
+                        for (var i = 0; i < a.length; i++) {
+                            yMax = d3.max(a[0].data, function(d) {
+                                    return Math.max(d.x, d.a, yMax) * 1.05;
+                                });
+                        }
+                        y.domain([0, yMax]).range([height, 0]);
+                        yAxis.scale(y).tickFormat(formatY);
+                        svg.selectAll("g .y.axis").transition().duration(200).ease("linear").call(yAxis);
+                        d3.selectAll('.minory line').filter(function(d) {
+                                return d;
+                                }).transition().attr("x2", width);
+                        zoom.x(x);
+                        if (scope.zoomY) zoom.y(y);
+
+                        // Prevent hover over axis while moving
+                        svg.append("clipPath")
+                        .attr("id", "clip")
+                        .append("rect")
+                        .attr("x", 1)
+                        .attr("y", 0)
+                        .attr("width", width)
+                        .attr("height", height);
+
+                        // Draw lines
+                        for (var i = 0; i < a.length; i++) {
+                            var c = fiveShadesOfGrey[i % fiveShadesOfGrey.length]; 
+                            svg.append("svg:path")
+                                .attr("d", taskChainLine(a[i].data))
+                                .attr("class", a[i].request)
+                                .style('stroke-width', 2)
+                                .style('stroke', c)
+                                .attr("clip-path", "url(#clip)");
+                        }
+
+                        if (l3 == undefined) {
+                            l3 = svg.append("svg:path")
+                            .attr("d", pathTargetEvents(a[0].data))
+                            .attr("class", "data3")
+                            .attr("clip-path", "url(#clip)")
+                            .style('stroke-width', 2)
+                            .style('stroke', '#b71c1c');
+                        }
+                        l3.transition().duration(600).ease('linear').attr("d", pathTargetEvents(a[0].data));
+
+                        svg.append("rect")
+                        .attr('id', 'lifetime')
+                        .attr("class", "pane")
+                        .attr("x", 1)
+                        .style('cursor', 'move')
+                        .style('fill', 'none')
+                        .style('pointer-events', 'all')
+                        .attr("width", width)
+                        .attr("height", height)
+                        .call(zoom);
+
+                        console.log(currentMin);
+                        onZoom();
                     } else {
 
                     currentMin = d3.min(a, function(d) {
@@ -179,7 +259,6 @@ angular.module('mcm.charts', [])
                     y.domain([0, d3.max(a, function(d) {
                         return Math.max(d.x, d.a) * 1.1;
                     })]).range([height, 0]);
-
                     yAxis.scale(y).tickFormat(formatY);
                     svg.selectAll("g .y.axis").transition().duration(200).ease("linear").call(yAxis);
                     d3.selectAll('.minory line').filter(function(d) {
@@ -233,7 +312,7 @@ angular.module('mcm.charts', [])
                     l1.transition().duration(200).ease('linear').attr("d", areaAllEvents(a));
                     l2.transition().duration(400).ease('linear').attr("d", pathNotOpenEvents(a));
                     l3.transition().duration(600).ease('linear').attr("d", pathTargetEvents(a));
-
+                    /*
                     svg.selectAll("circle")
                     .data(a)
                     .enter().append("circle")
@@ -247,7 +326,7 @@ angular.module('mcm.charts', [])
                     svg.selectAll("circle")
                     .attr("cx", function(d) { return x(d.t); })
                     .attr("cy", function(d) { return y(d.a); });
-
+                    */
                     constructDataLabel();
                     onZoom();
                     }
