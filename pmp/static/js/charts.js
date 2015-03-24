@@ -15,6 +15,7 @@ angular.module('mcm.charts', [])
             restrict: 'AE',
             scope: {
                 chartData: '=',
+                    taskChain: '=',
                 zoomY: '='
             },
             link: function(scope, element) {
@@ -159,6 +160,10 @@ angular.module('mcm.charts', [])
 
                 // When new data to load
                 var onLoad = function(a) {
+                    if (scope.taskChain) {
+                        console.log('This is TaskChain')
+                    } else {
+
                     currentMin = d3.min(a, function(d) {
                         return d.t;
                     });
@@ -229,8 +234,23 @@ angular.module('mcm.charts', [])
                     l2.transition().duration(400).ease('linear').attr("d", pathNotOpenEvents(a));
                     l3.transition().duration(600).ease('linear').attr("d", pathTargetEvents(a));
 
+                    svg.selectAll("circle")
+                    .data(a)
+                    .enter().append("circle")
+                    .attr("r", 5)
+                    .style("fill","none")
+                    .style("stroke","none")
+                    .style("pointer-events","all")
+                    .append("title")
+                    .text(function(d) { return "Date: " });
+
+                    svg.selectAll("circle")
+                    .attr("cx", function(d) { return x(d.t); })
+                    .attr("cy", function(d) { return y(d.a); });
+
                     constructDataLabel();
                     onZoom();
+                    }
                 }
 
                 // Create a data label

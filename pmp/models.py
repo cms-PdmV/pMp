@@ -251,7 +251,7 @@ class GetLifetime():
 
     def prepare_response(self, query, probe, p_min, p_max, status_i, pwg_i, tc):
         taskchain = True
-        #request_type = None
+        stop = False
         r = []
         status = {}
         pwg = {}
@@ -262,13 +262,6 @@ class GetLifetime():
                 #print d
                 if d is None:
                     continue
-
-                # set correct dataset to the first one
-                #if request_type is None:
-                #    request_type = 
-                #else:
-                #    if request_type != d['pdmv_dataset_name'].split('/')[-1]:
-                #        continue
 
                 if not s is None and not s in status:
                     status[s] = False
@@ -316,7 +309,6 @@ class GetLifetime():
                         res['request'] = t['dataset']
                         res['data'] = []
                         for record in t['monitor']:
-                            print record
                             if len(record['pdmv_monitor_time']):
                                 data = {}
                                 data['a'] = (record['pdmv_evts_in_DAS'] +
@@ -324,7 +316,6 @@ class GetLifetime():
                                 data['t'] = time.mktime(time.strptime(
                                         record['pdmv_monitor_time']))*1000
                                 data['x'] = d['pdmv_expected_events']
-                            print data
                             res['data'].append(data)
                         r.append(res)
                     re = {}
@@ -332,22 +323,27 @@ class GetLifetime():
                     re['status'] = {}
                     re['pwg'] = {}
                     re['taskchain'] = taskchain
-                    return re
+                    stop = True
                         
                 elif tc:
                     # perhaps someone is playing with url
-                    return []
+                    stop = True
+                    re = {}
+                    
+                else:
+                    if 'pdmv_monitor_history' in d:
+                        for record in d['pdmv_monitor_history']:
+                            if len(record['pdmv_monitor_time']):
+                                data = {}
+                                data['a'] = record['pdmv_evts_in_DAS'] + record['pdmv_open_evts_in_DAS']
+                                data['e'] = record['pdmv_evts_in_DAS']
+                                data['t'] = time.mktime(time.strptime(record['pdmv_monitor_time']))*1000
+                                data['x'] = d['pdmv_expected_events']
+                                response['data'].append(data)
+                    r.append(response)
 
-                if 'pdmv_monitor_history' in d:
-                    for record in d['pdmv_monitor_history']:
-                        if len(record['pdmv_monitor_time']):
-                            data = {}
-                            data['a'] = record['pdmv_evts_in_DAS'] + record['pdmv_open_evts_in_DAS']
-                            data['e'] = record['pdmv_evts_in_DAS']
-                            data['t'] = time.mktime(time.strptime(record['pdmv_monitor_time']))*1000
-                            data['x'] = d['pdmv_expected_events']
-                            response['data'].append(data)
-                r.append(response)
+        if stop:
+            return re
 
         # Step 1: Get accumulated requests
         tmp = {}
@@ -415,11 +411,9 @@ class GetLifetime():
 
     def get(self, query, probe=100, priority_min=0, priority_max=-1,
             status=None, pwg=None, taskchain=False):
-        return json.dumps(
-            {"results": self.prepare_response(query.split(','), probe,
-                                              priority_min, priority_max,
-                                              status, pwg, taskchain)})
-
+        return json.dumps({"results": self.prepare_response(query.split(','), probe,
+                                                            priority_min, priority_max,
+                                                            status, pwg, taskchain)})
 
 class GetSuggestions():
 
