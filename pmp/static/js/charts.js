@@ -151,9 +151,18 @@ angular.module('mcm.charts', [])
                 function onZoom() {
                     svg.select("g.x.axis").call(xAxis);
                     svg.select("g.y.axis").call(yAxis);
-                    svg.select("path.data1").attr("d", areaAllEvents(scope.dataCopy));
-                    svg.select("path.data2").attr("d", pathNotOpenEvents(scope.dataCopy));
-                    svg.select("path.data3").attr("d", pathTargetEvents(scope.dataCopy));
+                    if (scope.taskChain) {
+                        svg.select("path.data3").attr("d", pathTargetEvents(scope.dataCopy[0].data));
+                        for (var i = 0; i < scope.dataCopy.length; i++) {
+                            var name = "path." + scope.dataCopy[i].request.replace(/\//g, '');
+                            console.log(name)
+                            svg.select(name).attr("d", taskChainLine(scope.dataCopy[i].data));
+                        }
+                    } else {
+                        svg.select("path.data1").attr("d", areaAllEvents(scope.dataCopy));
+                        svg.select("path.data2").attr("d", pathNotOpenEvents(scope.dataCopy));
+                        svg.select("path.data3").attr("d", pathTargetEvents(scope.dataCopy));
+                    }
                 }
 
                 function formatY(d) {
@@ -213,7 +222,7 @@ angular.module('mcm.charts', [])
                             var c = fiveShadesOfGrey[i % fiveShadesOfGrey.length]; 
                             svg.append("svg:path")
                                 .attr("d", taskChainLine(a[i].data))
-                                .attr("class", a[i].request)
+                                .attr("class", a[i].request.replace(/\//g, ''))
                                 .style('stroke-width', 2)
                                 .style('stroke', c)
                                 .attr("clip-path", "url(#clip)");
@@ -240,7 +249,6 @@ angular.module('mcm.charts', [])
                         .attr("height", height)
                         .call(zoom);
 
-                        console.log(currentMin);
                         onZoom();
                     } else {
 
