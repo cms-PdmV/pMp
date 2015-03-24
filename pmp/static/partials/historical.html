@@ -157,7 +157,7 @@
       <form class="form-group text-uppercase">
         <label class="checkbox-inline col-lg-12 col-md-12 col-sm-12 spacing">
           <input type="checkbox" ng-model="loadTaskChain" ng-disabled="!isTaskChain"
-                 ng-change="setURL()">
+                 ng-change="setURL();query(false)">
           <small>
             Load taskchain
           </small>
