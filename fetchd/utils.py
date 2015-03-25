@@ -42,17 +42,8 @@ class Utils():
     def is_file(self, file):
         return os.path.isfile(file) and os.access(file, os.R_OK)
 
-    def get_cookie(self, url, path):
-        self.rm(path)
-        call(["cern-get-sso-cookie", "--krb", "--nocertverify", "-u", url,
-              "-o", path])
-
     def get_time(self):
         return datetime.now()
-
-    def rm(self, file):
-        if self.is_file(file):
-            os.remove(file)
 
     def curl(self, request, url, data=None, cookie=None):
         out = StringIO()
