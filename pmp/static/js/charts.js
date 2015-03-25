@@ -153,10 +153,11 @@ angular.module('mcm.charts', [])
                     svg.select("g.y.axis").call(yAxis);
                     if (scope.taskChain) {
                         svg.select("path.data3").attr("d", pathTargetEvents(scope.dataCopy[0].data));
+                        svg.select("path.vdata3").attr("d", pathTargetEvents(scope.dataCopy[0].data));
                         for (var i = 0; i < scope.dataCopy.length; i++) {
-                            var name = "path." + scope.dataCopy[i].request.replace(/\//g, '');
-                            console.log(name)
-                            svg.select(name).attr("d", taskChainLine(scope.dataCopy[i].data));
+                            var name = scope.dataCopy[i].request.replace(/\//g, '');
+                            svg.select('path.' + name).attr("d", taskChainLine(scope.dataCopy[i].data));
+                            svg.select('path.v' + name).attr("d", taskChainLine(scope.dataCopy[i].data));
                         }
                     } else {
                         svg.select("path.data1").attr("d", areaAllEvents(scope.dataCopy));
@@ -196,9 +197,10 @@ angular.module('mcm.charts', [])
                         var yMax = 0;
                         for (var i = 0; i < a.length; i++) {
                             yMax = d3.max(a[0].data, function(d) {
-                                    return Math.max(d.x, d.a, yMax) * 1.05;
+                                    return Math.max(d.x, d.a, yMax);
                                 });
                         }
+                        yMax *= 1.1;
                         y.domain([0, yMax]).range([height, 0]);
                         yAxis.scale(y).tickFormat(formatY);
                         svg.selectAll("g .y.axis").transition().duration(200).ease("linear").call(yAxis);
@@ -238,16 +240,55 @@ angular.module('mcm.charts', [])
                         }
                         l3.transition().duration(600).ease('linear').attr("d", pathTargetEvents(a[0].data));
 
+                        // Hover-over functionality
                         svg.append("rect")
                         .attr('id', 'lifetime')
-                        .attr("class", "pane")
-                        .attr("x", 1)
+                        .attr('class', 'pane')
+                        .attr('x', 1)
                         .style('cursor', 'move')
                         .style('fill', 'none')
                         .style('pointer-events', 'all')
-                        .attr("width", width)
-                        .attr("height", height)
+                        .attr('width', width)
+                        .attr('height', height)
                         .call(zoom);
+
+                        for (var i = 0; i < a.length; i++) {
+                            var t = svg.append('svg:path')
+                                .attr('d', taskChainLine(a[i].data))
+                                .attr('class', 'v' + a[i].request.replace(/\//g, ''))
+                                .attr('name', a[i].request)
+                                .attr('clip-path', 'url(#clip)')
+                                .style('stroke-width', 2)
+                                .style('fill','none')
+                                .style('pointer-events','all')
+                                .style('stroke', 'none')
+                                .append('title')
+                                .text(function(d) { return a[i].request});
+                            svg.select('path.v' + a[i].request.replace(/\//g, '')).on('mouseover', function(d) {
+                                    var tmp = d3.select(this);
+                                    tmp.style('stroke',  '#9c27b0');
+                                    updateDataLabel('Dataset:' + tmp.attr('name'))
+                                        }).on('mouseout', function(d) {
+                                                d3.select(this).style('stroke', 'none');
+                                                updateDataLabel('');
+                                            });
+                        }
+
+                        svg.append('svg:path')
+                        .attr('d', pathTargetEvents(a[0].data))
+                        .attr('class', 'vdata3')
+                        .attr('name', 'Expected events')
+                        .attr('clip-path', 'url(#clip)')
+                        .style('stroke-width', 2)
+                        .style('fill','none')
+                        .style('pointer-events','all')
+                        .style('stroke', 'none')
+                        .append('title')
+                        .text(function(d) { return 'Expected events' });
+
+                        var updateDataLabel = function(data) {
+                            svg.select('text.date-label').text(data);
+                        }
 
                         onZoom();
                     } else {
@@ -267,6 +308,7 @@ angular.module('mcm.charts', [])
                     y.domain([0, d3.max(a, function(d) {
                         return Math.max(d.x, d.a) * 1.1;
                     })]).range([height, 0]);
+                    console.log(y.domain());
                     yAxis.scale(y).tickFormat(formatY);
                     svg.selectAll("g .y.axis").transition().duration(200).ease("linear").call(yAxis);
                     d3.selectAll('.minory line').filter(function(d) {
@@ -320,21 +362,7 @@ angular.module('mcm.charts', [])
                     l1.transition().duration(200).ease('linear').attr("d", areaAllEvents(a));
                     l2.transition().duration(400).ease('linear').attr("d", pathNotOpenEvents(a));
                     l3.transition().duration(600).ease('linear').attr("d", pathTargetEvents(a));
-                    /*
-                    svg.selectAll("circle")
-                    .data(a)
-                    .enter().append("circle")
-                    .attr("r", 5)
-                    .style("fill","none")
-                    .style("stroke","none")
-                    .style("pointer-events","all")
-                    .append("title")
-                    .text(function(d) { return "Date: " });
 
-                    svg.selectAll("circle")
-                    .attr("cx", function(d) { return x(d.t); })
-                    .attr("cy", function(d) { return y(d.a); });
-                    */
                     constructDataLabel();
                     onZoom();
                     }
