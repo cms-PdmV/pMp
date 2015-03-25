@@ -14,10 +14,9 @@ class Config():
     """
     configuration parser to make the service running
     """
-    def __init__(self, typeof):
-        self.dn = os.path.dirname(os.path.realpath(__file__))
+    def __init__(self, typeof, path):
         parser = SafeConfigParser()
-        parser.read(self.dn + '/dev.conf')
+        parser.read(path)
 
         self.cookie = parser.get('cookie', 'path')
         self.exclude_list = re.split(", ", parser.get('exclude', 'list'))

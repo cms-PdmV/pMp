@@ -118,7 +118,7 @@ def get_changes(utl, cfg):
 if __name__ == "__main__":
 
     utl = utils.Utils()
-    cfg = utils.Config(sys.argv[1])
+    cfg = utils.Config(sys.argv[1], sys.argv[2])
     setlog(cfg)
 
 
