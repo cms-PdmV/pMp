@@ -1,23 +1,25 @@
 #! /usr/bin/python
 
-from datetime import datetime
 import json
 import os
 import pycurl
 import re
+from datetime import datetime
 from ConfigParser import SafeConfigParser
 from cStringIO import StringIO
 from subprocess import call
 
 
 class Config():
-
+    """
+    configuration parser to make the service running
+    """
     def __init__(self, typeof):
         self.dn = os.path.dirname(os.path.realpath(__file__))
         parser = SafeConfigParser()
         parser.read(self.dn + '/dev.conf')
 
-        self.cookie = os.environ['HOME'] + parser.get('cookie', 'path')
+        self.cookie = parser.get('cookie', 'path')
         self.exclude_list = re.split(", ", parser.get('exclude', 'list'))
         self.remove_list = re.split(", ", parser.get('remove_params', 'list'))
 
@@ -38,9 +40,6 @@ class Config():
 
 
 class Utils():
-
-    def is_file(self, file):
-        return os.path.isfile(file) and os.access(file, os.R_OK)
 
     def get_time(self):
         return datetime.now()
