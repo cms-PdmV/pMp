@@ -30,7 +30,7 @@ angular.module('mcm.charts', [])
                     },
                     width = customWidth - margin.left - margin.right,
                     height = 500 - margin.top - margin.bottom,
-                    l1, l2, l3, containerBox;
+                        l1, l2, l3, containerBox, hoverLineGroup, clipPath, rect;
                 
                 var fiveShadesOfGrey = ['#212121', '#424242', '#616161', '#757575', '#9e9e9e'];
                 var svg = d3.select(element[0])
@@ -182,6 +182,39 @@ angular.module('mcm.charts', [])
                 var onLoad = function(a) {
                     if (scope.taskChain) {
                         console.log('This is TaskChain')
+
+                        if (l1 != undefined) {
+                            l1.remove();
+                            l1 = undefined;
+                        }
+                        if (l2 != undefined) {
+                            l2.remove();
+                            l2 = undefined;
+                        }
+                        if (l3 != undefined) {
+                            l3.remove();
+                            l3 = undefined;
+                        }
+                        console.log(clipPath)
+                        if (clipPath != undefined) {
+                            svg.selectAll('clipPath').remove();
+                            clipPath = undefined;
+                        }
+                        if (rect != undefined) {
+                            rect.remove();
+                            rect = undefined
+                        }
+                        svg.select('text.date-label').text('');
+                        svg.select('text.expected-label').text('');
+                        svg.select('text.indas-label').text('');
+                        svg.select('text.openindas-label').text('');
+
+                        if (hoverLineGroup != undefined) {
+                            hoverLineGroup.remove();
+                            hoverLineGroup = undefined;
+                            containerBox = undefined;
+                        }
+
                         // the monitor times for each dataset are the same
                         currentMin = d3.min(a[0].data, function(d) {
                                 return d.t;
@@ -211,7 +244,7 @@ angular.module('mcm.charts', [])
                         if (scope.zoomY) zoom.y(y);
 
                         // Prevent hover over axis while moving
-                        svg.append("clipPath")
+                        clipPath = svg.append("clipPath")
                         .attr("id", "clip")
                         .append("rect")
                         .attr("x", 1)
@@ -241,7 +274,7 @@ angular.module('mcm.charts', [])
                         l3.transition().duration(600).ease('linear').attr("d", pathTargetEvents(a[0].data));
 
                         // Hover-over functionality
-                        svg.append("rect")
+                        rect = svg.append("rect")
                         .attr('id', 'lifetime')
                         .attr('class', 'pane')
                         .attr('x', 1)
@@ -267,7 +300,7 @@ angular.module('mcm.charts', [])
                             svg.select('path.v' + a[i].request.replace(/\//g, '')).on('mouseover', function(d) {
                                     var tmp = d3.select(this);
                                     tmp.style('stroke',  '#9c27b0');
-                                    updateDataLabel('Dataset:' + tmp.attr('name'))
+                                    updateDataLabel('Dataset: ' + tmp.attr('name'))
                                         }).on('mouseout', function(d) {
                                                 d3.select(this).style('stroke', 'none');
                                                 updateDataLabel('');
@@ -292,6 +325,16 @@ angular.module('mcm.charts', [])
 
                         onZoom();
                     } else {
+                        svg.selectAll('path').remove();
+                        if (clipPath != undefined) {
+                            svg.selectAll('clipPath').remove();
+                            clipPath = undefined;
+                        }
+                        if (rect != undefined) {
+                            rect.remove();
+                            rect = undefined;
+                        }
+                        //RM
 
                     currentMin = d3.min(a, function(d) {
                         return d.t;
@@ -319,7 +362,7 @@ angular.module('mcm.charts', [])
                     if (scope.zoomY) zoom.y(y);
 
                     // Prevent hover over axis while moving
-                    svg.append("clipPath")
+                    clipPath = svg.append("clipPath")
                         .attr("id", "clip")
                         .append("rect")
                         .attr("x", 1)
@@ -348,7 +391,7 @@ angular.module('mcm.charts', [])
                             .attr("clip-path", "url(#clip)")
                             .style('stroke-width', 2)
                             .style('stroke', '#b71c1c');
-                        svg.append("rect")
+                        rect = svg.append("rect")
                             .attr('id', 'lifetime')
                             .attr("class", "pane")
                             .attr("x", 1)
@@ -375,12 +418,12 @@ angular.module('mcm.charts', [])
                         var hoverLineXOffset = $(containerBox).offset().left;
                         var hoverLineYOffset = margin.top + $(containerBox).offset().top;
 
-                        var hoverLineGroup = svg.append("svg:g")
+                        hoverLineGroup = svg.append("svg:g")
                             .attr("class", "hover-line");
 
                         var hoverLine = hoverLineGroup
-                            .append("svg:line")
-                            .attr("y1", 0).attr("y2", height + 10);
+                        .append("svg:line")
+                        .attr("y1", 0).attr("y2", height + 10);
                     }
 
                     var handleMouseOverGraph = function(event) {
