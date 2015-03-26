@@ -163,25 +163,58 @@ class GetCampaign():
                                          index='requests',
                                          size=self.overflow)['hits']['hits']]
 
-        print len(ret['results'])
-
         for r in ret['results']:
             if r['status'] == 'done':
                 r['total_events'] = r['completed_events']
             if r['total_events'] == -1:
                 r['total_events'] = 0
-
-        print len(ret['results'])
+            try:
+                if not len(r['output_dataset']):
+                    r['total_events'] = 0
+            except KeyError:
+                pass
         return json.dumps(ret)
 
 class GetLifetime():
 
     def __init__(self):
         self.es = ElasticSearch(config.DATABASE_URL)
-        # normally es will crop results
+        # normally es will crop results to 20
         # and a million rows is more than we have in db
         self.overflow = 1000000
 
+    def select_dataset(self, ds1, ds2):
+        """
+        This is inherit from Stats statsMonitoring.py
+        """
+        t1=ds1.split('/')[1:]
+        t2=ds2.split('/')[1:]
+        if len(t1[1]) > len(t2[1]):
+            return 1
+        else:
+            def tierP(t):
+                tierPriority=[
+                    '/RECO',
+                    'SIM-RECO',
+                    'DIGI-RECO',
+                    'AOD',
+                    'SIM-RAW-RECO',
+                    'DQM' ,
+                    'GEN-SIM',
+                    'RAW-RECO',
+                    'USER',
+                    'ALCARECO']
+                for (p, tier) in enumerate(tierPriority):
+                    print p
+                    print tier, t
+                    if tier in t:
+                        return p
+                return t
+            p1 = tierP(t1[2])
+            p2 = tierP(t2[2])
+            decision = (p1 > p2)
+            return decision * 2 - 1
+            
     def db_query(self, input):
         """
         Query DB and return array of raw documents
@@ -193,49 +226,80 @@ class GetLifetime():
                        self.es.search(('member_of_campaign:%s' % input),
                                       index='requests',
                                       size=self.overflow)['hits']['hits']]
-            print len(req_arr)
             for r in req_arr:
                 try:
+                    dataset_list = r['output_dataset']
+                    dataset_list.sort(cmp=self.select_dataset)
+                    request_output_type = dataset_list[0]
+                    print dataset_list
+                    """
+                    request_output_type = None
+                    for ods in r['output_dataset']:
+                        if request_output_type is None:
+                            request_output_type = ods
+                        else:
+                            if not self.select_dataset(ods, request_output_type):
+                                request_output_type = ods
+                                """
+                    request_output_type = request_output_type.split('/')[-1]
+                   
                     for e in r['reqmgr_name']:
                         i = {}
                         i['status'] = r['status']
                         i['pwg'] = r['pwg']
                         i['priority'] = r['priority']
                         i['name'] = e['name']
+                        i['request_output_type'] = request_output_type
                         iterable.append(i)
                 except:
                     pass
         except:
             pass
-        print len(iterable)
+
         if not len(iterable):
             try:
                 # check if the input is a request
                 s = self.es.get('requests', 'request', input)['_source']
+
+                dataset_list = s['output_dataset']
+                dataset_list.sort(cmp=self.select_dataset)
+                request_output_type = dataset_list[0]
+                """
+                request_output_type = None
+                for ods in s['output_dataset']:
+                    if request_output_type is None:
+                        request_output_type = ods
+                    else:
+                        if not self.select_dataset(ods, request_output_type):
+                            request_output_type = ods
+                            """
+                request_output_type = request_output_type.split('/')[-1]
+
                 for e in s['reqmgr_name']:
                     i = {}
                     i['status'] = s['status']
                     i['pwg'] = s['pwg']
                     i['priority'] = s['priority']
                     i['name'] = e['name']
+                    i['request_output_type'] = request_output_type
                     iterable.append(i)
             except:
                 # input can be a reqmgr_name
                 iterable = [input]
-
+        
         for i in iterable:
             if not 'status' in i:
                 try:
                     yield [self.es.get('stats', 'stats', i)['_source'],
-                           None, None, None]
+                           None, None, None, None]
                 except:
-                    yield [None, None, None, None]
+                    yield [None, None, None, None, None]
             else:
                 try:
                     yield [self.es.get('stats', 'stats', i['name'])['_source'],
-                           i['status'], i['pwg'], i['priority']]
+                           i['status'], i['pwg'], i['priority'], i['request_output_type']]
                 except:
-                    yield [None, None, None, None]
+                    yield [None, None, None, None, None]
 
     def rm_useless(self, arr):
         r = []
@@ -258,11 +322,9 @@ class GetLifetime():
 
         for q in query:
             # Process the db documents
-            for (d, s, p, pr) in self.db_query(q):
-                #print d
+            for (d, s, p, pr, rot) in self.db_query(q):
                 if d is None:
                     continue
-
                 if not s is None and not s in status:
                     status[s] = False
                     if status_i is None:
@@ -272,7 +334,6 @@ class GetLifetime():
                             if i == s:
                                 status[s] = True
                                 break
-
                 if not p is None and not p in pwg:
                     pwg[p] = False
                     if pwg_i is None:
@@ -282,26 +343,24 @@ class GetLifetime():
                             if i == p:
                                 pwg[p] = True
                                 break
-
                 # pwg filtering 
                 if not p is None and (not pwg_i is None) and (not p in pwg_i):
                     continue
-
                 # status filtering 
                 if not s is None and (not status_i is None) and (not s in status_i):
                     continue
-
                 # priority filtering
                 if not pr is None and (pr < p_min or (pr > p_max and p_max != -1)):
                     continue
-
                 # create an array of requests to be processed
                 response = {}
                 response['data'] = []
                 response['request'] = d['pdmv_prep_id']
                 response['type'] = d['pdmv_dataset_name'].split('/')[-1]
-                taskchain = taskchain and (d['pdmv_type'] == 'TaskChain')
 
+                print 'Type of this one is', response['type']
+                print 'So rot is', rot
+                taskchain = taskchain and (d['pdmv_type'] == 'TaskChain')
                 if tc and taskchain:
                     # load taskchain instead of normal req
                     for t in d['pdmv_monitor_taskchain']:
@@ -345,20 +404,25 @@ class GetLifetime():
         if stop:
             return re
 
+
         # Step 1: Get accumulated requests
         tmp = {}
         for x in r:
             s = x['request']
-            try:
+            try: 
                 if x['type'] == tmp[s]['type']:
                     tmp[s]['data'] += x['data']
+                    tmp[s]['data'] = sorted(tmp[s]['data'], key=lambda e: e['t'])
+                    tmp[s]['data'] = self.rm_useless(tmp[s]['data'])
             except KeyError:
-                tmp[s] = {}
-                tmp[s]['type'] = x['type']
-                tmp[s]['data'] = x['data']
+                if rot is None or rot == x['type']:
 
-            tmp[s]['data'] = sorted(tmp[s]['data'], key=lambda e: e['t'])
-            tmp[s]['data'] = self.rm_useless(tmp[s]['data'])
+                    tmp[s] = {}
+                    tmp[s]['type'] = x['type']
+                    tmp[s]['data'] = x['data']
+
+                    tmp[s]['data'] = sorted(tmp[s]['data'], key=lambda e: e['t'])
+                    tmp[s]['data'] = self.rm_useless(tmp[s]['data'])
 
         # Step 2: Get and sort timestamps
         times = []
