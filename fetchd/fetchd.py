@@ -8,8 +8,6 @@ import sys
 
 
 def setlog(cfg):
-    #f = cfg.dn + '/info.log'
-    #logging.basicConfig(filename=f, level=logging.INFO)
     logging.basicConfig(level=logging.INFO)
 
 
@@ -118,9 +116,11 @@ def get_changes(utl, cfg):
 if __name__ == "__main__":
 
     utl = utils.Utils()
-    cfg = utils.Config(sys.argv[1], sys.argv[2])
+    cfg = utils.Config(sys.argv[1])
     setlog(cfg)
 
+    logging.info('%s Getting SSO Cookie' % utl.get_time())
+    utl.get_cookie(cfg.url_mcm, cfg.cookie)
 
     for r, deleted in get_changes(utl, cfg):
 
@@ -182,3 +182,5 @@ if __name__ == "__main__":
                 else:
                     logging.error('%s Failed to receive information about %s' %
                                   (utl.get_time(), r))
+    logging.info('%s Removing SSO Cookie' % utl.get_time())
+    utl.rm(cfg.cookie)
