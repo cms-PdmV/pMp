@@ -18,7 +18,7 @@ angular.module('mcm.charts', [])
                     taskChain: '=',
                 zoomY: '='
             },
-            link: function(scope, element) {
+                link: function(scope, element) {
                 scope.dataCopy = [];
                 var customWidth = 1160;
                 // General attributes
@@ -30,7 +30,7 @@ angular.module('mcm.charts', [])
                     },
                     width = customWidth - margin.left - margin.right,
                     height = 500 - margin.top - margin.bottom,
-                        l1, l2, l3, containerBox, hoverLineGroup, clipPath, rect;
+                        l1, l2, l3, containerBox, hoverLineGroup, clipPath, rectLifetime, rectTaskChain;
                 
                 var fiveShadesOfGrey = ['#212121', '#424242', '#616161', '#757575', '#9e9e9e'];
                 var svg = d3.select(element[0])
@@ -93,6 +93,36 @@ angular.module('mcm.charts', [])
                     .attr("style", "fill:  #607d8b;")
                     .attr("y", -15)
                     .attr("x", 620);
+
+                var defs = svg.append("defs");
+
+                // Prevent hover over axis while moving
+                var clipPath = defs.append("svg:clipPath")
+                    .attr("id", "clip")
+                    .append("svg:rect")
+                    .attr("id", "clip-rect")
+                    .attr("x", "0")
+                    .attr("y", "0")
+                    .attr("width", width)
+                    .attr("height", height);
+
+                // Area gradient
+                var gradient = defs.append("linearGradient")
+                    .attr("id", "gradient")
+                    .attr("x2", "0%")
+                    .attr("y2", "100%");
+                gradient.append("stop")
+                    .attr("offset", "0%")
+                    .attr('stop-color', '#607d8b')
+                    .attr("stop-opacity", 0.4);
+                gradient.append("stop")
+                    .attr("offset", "100%")
+                    .attr('stop-color', '#eceff1')
+                    .attr("stop-opacity", 0.8);
+
+                var chartBody = svg.append("g")
+                    .attr("clip-path", "url(#clip)");
+                //.call(d3.behavior.zoom().scaleExtent([0.2, 5]).on("zoom", redraw));
                 
                 // Draw lines
                 var areaAllEvents = d3.svg.area()
@@ -132,21 +162,6 @@ angular.module('mcm.charts', [])
                     })
                     .interpolate("step-after");
 
-                // Area gradient
-                var gradient = svg.append("defs")
-                    .append("linearGradient")
-                    .attr("id", "gradient")
-                    .attr("x2", "0%")
-                    .attr("y2", "100%");
-                gradient.append("stop")
-                    .attr("offset", "0%")
-                    .attr('stop-color', '#607d8b')
-                    .attr("stop-opacity", 0.4);
-                gradient.append("stop")
-                    .attr("offset", "100%")
-                    .attr('stop-color', '#eceff1')
-                    .attr("stop-opacity", 0.8);
-
                 // Zoom
                 function onZoom() {
                     svg.select("g.x.axis").call(xAxis);
@@ -165,7 +180,8 @@ angular.module('mcm.charts', [])
                         svg.select("path.data3").attr("d", pathTargetEvents(scope.dataCopy));
                     }
                 }
-
+                
+                // Format y axis numbers
                 function formatY(d) {
                     var l = ['G', 'M', 'k', ''];
                     var s, j = 0
@@ -176,13 +192,12 @@ angular.module('mcm.charts', [])
                         }
                         j++;
                     }
+                    return '';
                 }
 
                 // When new data to load
                 var onLoad = function(a) {
                     if (scope.taskChain) {
-                        console.log('This is TaskChain')
-
                         if (l1 != undefined) {
                             l1.remove();
                             l1 = undefined;
@@ -195,7 +210,6 @@ angular.module('mcm.charts', [])
                             l3.remove();
                             l3 = undefined;
                         }
-                        console.log(clipPath)
                         if (clipPath != undefined) {
                             svg.selectAll('clipPath').remove();
                             clipPath = undefined;
@@ -226,7 +240,8 @@ angular.module('mcm.charts', [])
                         // Axes
                         x.domain([currentMin, currentMax]).range([0, width]);
                         xAxis.scale(x);
-                        svg.selectAll("g .x.axis").transition().duration(200).ease("linear").call(xAxis);
+                        svg.selectAll("g .x.axis").transition().duration(200)
+                        .ease("linear").call(xAxis);
                         var yMax = 0;
                         for (var i = 0; i < a.length; i++) {
                             yMax = d3.max(a[0].data, function(d) {
@@ -236,7 +251,8 @@ angular.module('mcm.charts', [])
                         yMax *= 1.1;
                         y.domain([0, yMax]).range([height, 0]);
                         yAxis.scale(y).tickFormat(formatY);
-                        svg.selectAll("g .y.axis").transition().duration(200).ease("linear").call(yAxis);
+                        svg.selectAll("g .y.axis").transition().duration(200)
+                        .ease("linear").call(yAxis);
                         d3.selectAll('.minory line').filter(function(d) {
                                 return d;
                                 }).transition().attr("x2", width);
@@ -271,10 +287,11 @@ angular.module('mcm.charts', [])
                             .style('stroke-width', 2)
                             .style('stroke', '#b71c1c');
                         }
-                        l3.transition().duration(600).ease('linear').attr("d", pathTargetEvents(a[0].data));
+                        l3.transition().duration(600)
+                        .ease('linear').attr("d", pathTargetEvents(a[0].data));
 
                         // Hover-over functionality
-                        rect = svg.append("rect")
+                        rectTaskChain = svg.append("rect")
                         .attr('id', 'lifetime')
                         .attr('class', 'pane')
                         .attr('x', 1)
@@ -297,7 +314,8 @@ angular.module('mcm.charts', [])
                                 .style('stroke', 'none')
                                 .append('title')
                                 .text(function(d) { return a[i].request});
-                            svg.select('path.v' + a[i].request.replace(/\//g, '')).on('mouseover', function(d) {
+                            svg.select('path.v' + a[i].request.replace(/\//g, ''))
+                                .on('mouseover', function(d) {
                                     var tmp = d3.select(this);
                                     tmp.style('stroke',  '#9c27b0');
                                     updateDataLabel('Dataset: ' + tmp.attr('name'))
@@ -325,92 +343,80 @@ angular.module('mcm.charts', [])
 
                         onZoom();
                     } else {
-                        if (l1 == undefined) {
-                            console.log('rm pahs')
+                        if (l1 == undefined && l2 == undefined) {
                             svg.selectAll('path').remove();
                         }
-                        if (clipPath != undefined) {
-                            svg.selectAll('clipPath').remove();
-                            clipPath = undefined;
+                        if (rectTaskChain != undefined) {
+                            rectTaskChain.remove();
+                            rectTaskChain = undefined;
                         }
-                        if (rect != undefined) {
-                            rect.remove();
-                            rect = undefined;
-                        }
-                        //RM
 
-                    currentMin = d3.min(a, function(d) {
-                        return d.t;
-                    });
-                    currentMax = d3.max(a, function(d) {
-                        return d.t;
-                    });
+                        currentMin = d3.min(a, function(d) {
+                            return d.t;
+                        });
+                        currentMax = d3.max(a, function(d) {
+                            return d.t;
+                        });
 
-                    // Axes
-                    x.domain([currentMin, currentMax]).range([0, width]);
-                    xAxis.scale(x);
-                    svg.selectAll("g .x.axis").transition().duration(200).ease("linear").call(xAxis);
+                        // Axes
+                        x.domain([currentMin, currentMax]).range([0, width]);
+                        xAxis.scale(x);
+                        svg.selectAll("g .x.axis")
+                        .transition().duration(200).ease("linear").call(xAxis);
 
-                    y.domain([0, d3.max(a, function(d) {
-                        return Math.max(d.x, d.a) * 1.1;
-                    })]).range([height, 0]);
-                    console.log(y.domain());
-                    yAxis.scale(y).tickFormat(formatY);
-                    svg.selectAll("g .y.axis").transition().duration(200).ease("linear").call(yAxis);
-                    d3.selectAll('.minory line').filter(function(d) {
-                        return d;
-                    }).transition().attr("x2", width);
-
-                    zoom.x(x);
-                    if (scope.zoomY) zoom.y(y);
-
-                    // Prevent hover over axis while moving
-                    clipPath = svg.append("clipPath")
-                        .attr("id", "clip")
-                        .append("rect")
-                        .attr("x", 1)
-                        .attr("y", 0)
-                        .attr("width", width)
-                        .attr("height", height);
+                        y.domain([0, d3.max(a, function(d) {
+                            return Math.max(d.x, d.a) * 1.1;
+                        })]).range([height, 0]);
+                        yAxis.scale(y).tickFormat(formatY);
+                        svg.selectAll("g .y.axis")
+                        .transition().duration(200).ease("linear").call(yAxis);
+                        d3.selectAll('.minory line').filter(function(d) {
+                            return d;
+                        }).transition().attr("x2", width);
+                        zoom.x(x);
+                        if (scope.zoomY) zoom.y(y);
 
                     // Draw lifetime
-                    if (l1 == undefined || l2 == undefined || l3 == undefined) {
-                        l1 = svg.append("svg:path")
-                            .attr("d", areaAllEvents(a))
-                            .attr('class', 'data1')
-                            .attr("clip-path", "url(#clip)")
-                            .style('stroke-width', 2)
-                            .style('stroke', '#607d8b')
-                            .style("fill", "url(#gradient)");
-                        l2 = svg.append("svg:path")
-                            .attr("d", pathNotOpenEvents(a))
-                            .attr("class", "data2")
-                            .style('stroke-width', 2)
-                            .style('stroke', '#689f38')
-                            .attr("clip-path", "url(#clip)");
-                        l3 = svg.append("svg:path")
-                            .attr("d", pathTargetEvents(a))
-                            .attr("class", "data3")
-                            .attr("clip-path", "url(#clip)")
-                            .style('stroke-width', 2)
-                            .style('stroke', '#b71c1c');
-                        rect = svg.append("rect")
+                        if (l1 == undefined) { 
+                            l1 = chartBody.append("svg:path")
+                                .attr("d", areaAllEvents(a))
+                                .attr('class', 'data1')
+                                .style('stroke-width', 2)
+                                .style('stroke', '#607d8b')
+                                .style("fill", "url(#gradient)");
+                        }
+                        if (l2 == undefined) {
+                            l2 = chartBody.append("svg:path")
+                                .attr("d", pathNotOpenEvents(a))
+                                .attr("class", "data2")
+                                .style('stroke-width', 2)
+                                .style('stroke', '#689f38');
+                        }
+                        if (l3 == undefined) {
+                            l3 = chartBody.append("svg:path")
+                                .attr("d", pathTargetEvents(a))
+                                .attr("class", "data3")
+                                .style('stroke-width', 2)
+                                .style('stroke', '#b71c1c');
+                        }
+                        if (rectLifetime == undefined) {
+                            rectLifetime = chartBody.append("rect")
                             .attr('id', 'lifetime')
                             .attr("class", "pane")
-                            .attr("x", 1)
+                            .attr("x", 0)
                             .style('cursor', 'move')
                             .style('fill', 'none')
                             .style('pointer-events', 'all')
                             .attr("width", width)
                             .attr("height", height)
                             .call(zoom);
-                    }
-                    l1.transition().duration(200).ease('linear').attr("d", areaAllEvents(a));
-                    l2.transition().duration(400).ease('linear').attr("d", pathNotOpenEvents(a));
-                    l3.transition().duration(600).ease('linear').attr("d", pathTargetEvents(a));
+                        }
+                        l1.transition().duration(200).ease('linear').attr('d', areaAllEvents(a));
+                        l2.transition().duration(400).ease('linear').attr('d', pathNotOpenEvents(a));
+                        l3.transition().duration(600).ease('linear').attr('d', pathTargetEvents(a));
 
-                    constructDataLabel();
-                    onZoom();
+                        constructDataLabel();
+                        onZoom();
                     }
                 }
 
@@ -421,7 +427,7 @@ angular.module('mcm.charts', [])
                         var hoverLineXOffset = $(containerBox).offset().left;
                         var hoverLineYOffset = margin.top + $(containerBox).offset().top;
 
-                        hoverLineGroup = svg.append("svg:g")
+                        hoverLineGroup = chartBody.append("svg:g")
                             .attr("class", "hover-line");
 
                         var hoverLine = hoverLineGroup
