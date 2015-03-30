@@ -534,7 +534,7 @@ pmpApp.controller('HistoricalController', function($http, $location, $scope, $ro
                 $scope.tagsRemoveAll();
             }
             $scope.tags.addTag(request);
-
+            console.log(add);
             var filter = add
             if (filter) {
                 filter = false;
@@ -553,7 +553,7 @@ pmpApp.controller('HistoricalController', function($http, $location, $scope, $ro
                     }
                 }
             }
-            $scope.query(filter);
+            $scope.query(filter, !add);
         }
     };
 
@@ -567,7 +567,7 @@ pmpApp.controller('HistoricalController', function($http, $location, $scope, $ro
         6: 63000
     };
 
-    $scope.query = function(filter) {
+    $scope.query = function(filter, see) {
         if (!$scope.tags.getTags().length) {
             return null;
         }
@@ -628,8 +628,11 @@ pmpApp.controller('HistoricalController', function($http, $location, $scope, $ro
         }
 
         var tc = false;
-        if ($scope.loadTaskChain != undefined) {
+        if (!see && $scope.loadTaskChain != undefined) {
             tc = $scope.loadTaskChain;
+            console.log(see);
+        } else {
+            $scope.loadTaskChain = false;
         }
         
         var promise = $http.get("api/" + $scope.tags.getTags().join(',')
