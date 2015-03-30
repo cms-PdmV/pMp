@@ -325,7 +325,10 @@ angular.module('mcm.charts', [])
 
                         onZoom();
                     } else {
-                        svg.selectAll('path').remove();
+                        if (l1 == undefined) {
+                            console.log('rm pahs')
+                            svg.selectAll('path').remove();
+                        }
                         if (clipPath != undefined) {
                             svg.selectAll('clipPath').remove();
                             clipPath = undefined;
