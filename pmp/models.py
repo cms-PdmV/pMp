@@ -148,32 +148,52 @@ class GetChain():
         return json.dumps({"results": list_of_request_for_ramunas})
 
 
-class GetCampaign():
-
+class GetAnnounced():
+    '''
+    Used to return list of requests with some properties in a given campaign
+    '''
     def __init__(self):
         self.es = ElasticSearch(config.DATABASE_URL)
         self.overflow = 1000000
 
     def get(self, campaign):
+
+        # change all to wildcard
         if campaign == 'all':
             campaign = '*'
-        ret = {}
-        ret['results'] = [s['_source'] for s in
-                          self.es.search(('member_of_campaign:%s' % campaign),
-                                         index='requests',
-                                         size=self.overflow)['hits']['hits']]
 
-        for r in ret['results']:
+        # get list of requests - field has to be not analysed by es
+        res = [s['_source'] for s in
+               self.es.search(('member_of_campaign:%s' % campaign),
+                              index='requests', size=self.overflow)
+               ['hits']['hits']]
+
+        # loop over and parse the db data
+        for r in res:
+            # requests that are done should have completed events value
             if r['status'] == 'done':
                 r['total_events'] = r['completed_events']
+
+            # requests that are new (-1) should have zero events
             if r['total_events'] == -1:
                 r['total_events'] = 0
+
+            # requests without output_dataset should have zero events
             try:
                 if not len(r['output_dataset']):
                     r['total_events'] = 0
+                del r['output_dataset']
             except KeyError:
+                r['total_events'] = 0
                 pass
-        return json.dumps(ret)
+
+            # remove unnecessary fields to speed up api
+            del r['completed_events']
+            del r['reqmgr_name']
+            del r['history']
+
+        return json.dumps({"results": res})
+
 
 class GetLifetime():
 
@@ -205,8 +225,6 @@ class GetLifetime():
                     'USER',
                     'ALCARECO']
                 for (p, tier) in enumerate(tierPriority):
-                    print p
-                    print tier, t
                     if tier in t:
                         return p
                 return t
@@ -479,64 +497,58 @@ class GetLifetime():
                                                             priority_min, priority_max,
                                                             status, pwg, taskchain)})
 
+
 class GetSuggestions():
+    '''
+    Used to search in elastic for simmilar prepid as given
+    '''
 
     def __init__(self, typeof):
         self.es = ElasticSearch(config.DATABASE_URL)
         self.overflow = 20
+        self.announced = (typeof == 'announced')
+        self.growing = (typeof == 'growing')
         self.lifetime = (typeof == 'lifetime')
-        self.on = (typeof == 'true')
 
     def get(self, query):
-
+        print query
         searchable = query.replace('-', '\-')
-
-        if self.lifetime:
-
-            if '-' in query:
-                search_string = ('prepid:%s' % searchable)
-                search_stats = ('pdmv_request_name:%s' % searchable)
-            else:
-                search_string = ('prepid:*%s*' % searchable)
-                search_stats = ('pdmv_request_name:*%s*' % searchable)
-
-            campa = [s['_id'] for s in
-                     self.es.search(search_string, index='campaigns',
-                                    size=self.overflow)['hits']['hits']]
-
-            reque = [s['_id'] for s in
-                     self.es.search(search_string, index='requests',
-                                    size=self.overflow)['hits']['hits']]
-
-            stats = [s['_id'] for s in
-                     self.es.search(search_stats, index='stats',
-                                    size=self.overflow)['hits']['hits']]
-
-            return json.dumps({'results': campa + reque + stats})
-
+        if '-' in query:
+            search = ('prepid:%s' % searchable)
+            search_stats = ('pdmv_request_name:%s' % searchable)
         else:
-            if '-' in query:
-                search_string = ('prepid:%s' % searchable)
-            else:
-                search_string = ('prepid:*%s*' % searchable)
+            search = ('prepid:*%s*' % searchable)
+            search_stats = ('pdmv_request_name:*%s*' % searchable)
+        print search
+        ext0 = []
+        ext1 = []
+        ext2 = []
 
-            if self.on:
-                return json.dumps(
-                    {"results": [s['_id'] for s in
-                                 self.es.search(search_string,
-                                                index="campaigns",
-                                                size=self.overflow)
-                                 ['hits']['hits']]
-                     + [s['_id'] for s in
-                        self.es.search(search_string, index="chained_campaigns",
+        if self.lifetime or self.growing or self.announced:
+            # campaigns are expected in all modes
+            ext0 = [s['_id'] for s in
+                    self.es.search(search, index='campaigns',
+                                   size=self.overflow)['hits']['hits']]
+            print ext0
+            # extended search for lifetime
+            if self.lifetime:
+                ext1 = [s['_id'] for s in
+                        self.es.search(search, index='requests',
                                        size=self.overflow)['hits']['hits']]
-                     + [s['_id'] for s in
-                        self.es.search(search_string, index="chained_requests",
-                                       size=self.overflow)['hits']['hits']]})
-            else:
-                return json.dumps(
-                    {"results": [s['_id'] for s in
-                                 self.es.search(search_string,
-                                                index="campaigns",
-                                                size=self.overflow)
-                                 ['hits']['hits']]})
+
+                ext2 = [s['_id'] for s in
+                        self.es.search(search_stats, index='stats',
+                                       size=self.overflow)['hits']['hits']]
+
+            # extended search fo growing
+            if self.growing:
+                ext1 = [s['_id'] for s in
+                        self.es.search(search, index="chained_campaigns",
+                                       size=self.overflow)['hits']['hits']]
+
+                ext2 = [s['_id'] for s in
+                        self.es.search(search, index="chained_requests",
+                                       size=self.overflow)['hits']['hits']]
+
+        # order of ext does matter because of the typeahead in bootstrap
+        return json.dumps({"results": ext0 + ext1 + ext2})

@@ -6,11 +6,17 @@ import json
 
 @app.route('/404')
 def four_oh_four():
+    '''
+    Redirect on 404
+    '''
     return render_template('page_not_found.html'), 404
 
 
 @app.route('/about')
 def about():
+    '''
+    Redirect to Twiki
+    '''
     return redirect('https://twiki.cern.ch/twiki/bin/viewauth/CMS/PdmVpMp',
                     code=302)
 
@@ -19,47 +25,71 @@ def about():
 @app.route('/present')
 @app.route('/historical')
 def dashboard():
+    '''
+    Redirect to graph template
+    '''
     return make_response(open('pmp/templates/graph.html').read())
 
 
-@app.route('/api/<field>/<typeof>')
-def api(field, typeof):
-    if typeof == 'simple':
-        gc = models.GetCampaign()
+@app.route('/api/<i>/<typeof>')
+def api(i, typeof):
+    '''
+    Simple API call
+    '''
+    if typeof == 'announced':
+        g = models.GetAnnounced()
     elif typeof == 'chain':
-        gc = models.GetChain()
+        g = models.GetChain()
     elif typeof == 'lifetime':
-        gc = models.GetLifetime()
-    return make_response(gc.get(field))
+        g = models.GetLifetime()
+    return make_response(g.get(i))
 
 
-@app.route('/api/<f>/historical/<p>/<priority>/<status>/<pwg>/<taskchain>')
-def api_extended(f, p, priority, status, pwg, taskchain):
-    gc = models.GetLifetime()
-
-    priority = priority.split(',')
-
-    if priority[0] == '':
-        priority[0] = 0
-    if priority[1] == '':
-        priority[1] = -1
-
-    if status == 'all':
-        status = None
-    else:
-        status = status.split(',')
-
-    if pwg == 'all':
-        pwg = None
-    else:
-        pwg = pwg.split(',')
-
-    taskchain = (taskchain == 'true')
-    return make_response(gc.get(f, int(p), int(priority[0]), int(priority[1]),
-                                status, pwg, taskchain))
+@app.route('/api/<i>/historical/<p>/<priority>/<status>/<pwg>/<taskchain>')
+def api_historical_extended(i, p, priority, status, pwg, taskchain):
+    '''
+    API call for complex historical queries
+    i - list of inputs (csv)
+    p - int number of probes
+    priority - in a for of min_pririty,max_priority
+    status - list of statuses to include (csv)
+    pwg - list of pwg to include (csv)
+    taskchain - boolean to load in taskchain mode
+    '''
+    gl = models.GetLifetime()
+    priority = parse_priority_csv(priority.split(','))
+    return make_response(gl.get(i, int(p), int(priority[0]), int(priority[1]),
+                                parse_csv(status), parse_csv(pwg),
+                                taskchain == 'true'))
 
 
 @app.route('/api/suggest/<input>/<typeof>')
 def suggest(input, typeof):
-    gc = models.GetSuggestions(typeof)
-    return make_response(gc.get(input))
+    '''
+    API call for typeahead
+    input - input string to search in db
+    typeof - lifetime/growing/announced
+    '''
+    # TODO change true false
+    gs = models.GetSuggestions(typeof)
+    return make_response(gs.get(input))
+
+
+def parse_csv(parsable):
+    '''
+    Generate array from csv
+    '''
+    if parsable == 'all':
+        return None
+    else:
+        return parsable.split(',')
+
+
+def parse_priority_csv(arr):
+    '''
+    Generate array from priority csv
+    '''
+    for p, _ in enumerate(arr):
+        if arr[p] == '':
+            arr[p] = -p
+    return arr

@@ -204,7 +204,7 @@ pmpApp.controller('PresentController', function($http, $location, $interval, $q,
             if ($scope.growingMode) {
                 var promise = $http.get("api/" + campaign + "/chain");
             } else {
-                var promise = $http.get("api/" + campaign + "/simple");
+                var promise = $http.get("api/" + campaign + "/announced");
             }
             promise.then(function(data) {
                 if (!data.data.results.length) {
@@ -437,14 +437,21 @@ pmpApp.controller('TypeaheadCtrl', function($scope, $http) {
     $scope.suggestions = [];
     $scope.getSuggestions = function() {
         if ($scope.campaign) {
-            $http.get('api/suggest/'
-                      + $scope.campaign + '/' + $scope.growingMode).then(function(response) {
-                $scope.suggestions = response.data.results;
-            });
+            if ($scope.growingMode) {
+                $http.get('api/suggest/' + $scope.campaign +
+                          '/growing').then(function(response) {
+                    $scope.suggestions = response.data.results;
+                });
+            } else {
+                $http.get('api/suggest/' + $scope.campaign +
+                          '/announced').then(function(response) {
+                    $scope.suggestions = response.data.results;
+                });
+            }
         }
         if ($scope.lifetime) {
-            $http.get('api/suggest/'
-                      + $scope.lifetime + '/lifetime').then(function(response) {
+            $http.get('api/suggest/' + $scope.lifetime +
+                      '/lifetime').then(function(response) {
                 $scope.suggestions = response.data.results;
             });
         }
