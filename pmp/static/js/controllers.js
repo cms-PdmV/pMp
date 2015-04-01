@@ -202,7 +202,7 @@ pmpApp.controller('PresentController', function($http, $location, $interval, $q,
         } else {
             $scope.loadingData = true;
             if ($scope.growingMode) {
-                var promise = $http.get("api/" + campaign + "/chain");
+                var promise = $http.get("api/" + campaign + "/growing");
             } else {
                 var promise = $http.get("api/" + campaign + "/announced");
             }
@@ -746,3 +746,9 @@ pmpApp.controller('HistoricalController', function($http, $location, $scope, $ro
         moviePath: 'lib/zeroclipboard/ZeroClipboard.swf'
     });
 });
+
+pmpApp.controller('PerformanceController', function() {
+
+        console.log('Performance Control');
+
+    });

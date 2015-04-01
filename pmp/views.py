@@ -22,8 +22,9 @@ def about():
 
 
 @app.route('/')
-@app.route('/present')
 @app.route('/historical')
+@app.route('/performance')
+@app.route('/present')
 def dashboard():
     '''
     Redirect to graph template
