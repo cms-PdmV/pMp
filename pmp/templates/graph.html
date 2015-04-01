@@ -3,6 +3,7 @@
 
   <head>
     <title>Production Monitoring Platform</title>
+    <base href="/pmp/"/>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="css/bootstrap.min.css" rel="stylesheet"/>
     <link href="lib/bootstrap-tags/bootstrap-tags.css" rel="stylesheet"/>
@@ -28,7 +29,6 @@
     <script src="js/app.js"></script>
     <script src="js/controllers.js"></script>
 
-
     <link rel="shortcut icon" type="image/x-icon" href="img/ic_fav.png">
   </head>
   <body ng-controller="MainController">
@@ -45,6 +45,9 @@
           <li><a href="#" ng-click="nav('/historical/')">
               <i class="fa fa-line-chart spacing-r"></i>
               Historical Statistics</a></li>
+          <li><a href="#" ng-click="nav('/performance/')">
+              <i class="fa fa-heartbeat spacing-r"></i>  
+              Performance</a></li>
           <li><a href="https://github.com/cms-PdmV/pmp/issues" target="_blank">
               <i class="fa fa-github spacing-r"></i>
               Report</a></li>
