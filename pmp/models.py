@@ -192,7 +192,7 @@ class GetAnnounced():
         if campaign == 'all':
             campaign = '*'
 
-        # get list of requests - field has to be not analysed by es
+        # get list of requests - field has to be not analyzed by es
         res = [s['_source'] for s in
                self.es.search(('member_of_campaign:%s' % campaign),
                               index='requests', size=self.overflow)
@@ -528,6 +528,34 @@ class GetLifetime():
         return json.dumps({"results": self.prepare_response(query.split(','), probe,
                                                             priority_min, priority_max,
                                                             status, pwg, taskchain)})
+
+class GetPerformance():
+    '''
+    Used to return list of requests with some history points
+    '''
+    def __init__(self):
+        self.es = ElasticSearch(config.DATABASE_URL)
+        self.overflow = 1000000
+
+    def get(self, campaign):
+
+        # change all to wildcard
+        if campaign == 'all':
+            campaign = '*'
+
+        # get list of requests - field has to be not analyzed by es
+        res = [s['_source'] for s in
+               self.es.search(('member_of_campaign:%s' % campaign),
+                              index='requests', size=self.overflow)
+               ['hits']['hits']]
+
+        # loop over and remove db documents
+        for r in res:
+            for field in ['time_event', 'total_events', 'reqmgr_name',
+                          'efficiency', 'output_dataset',
+                          'member_of_campaign', 'completed_events']:
+                del r[field]
+        return json.dumps({"results": res})
 
 
 class GetSuggestions():

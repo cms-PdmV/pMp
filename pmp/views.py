@@ -44,6 +44,8 @@ def api(i, typeof):
         g = models.GetGrowing()
     elif typeof == 'lifetime':
         g = models.GetLifetime()
+    elif typeof == 'performance':
+        g = models.GetPerformance()
     if g is None:
         return make_response('{}')
     return make_response(g.get(i))
