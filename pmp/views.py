@@ -36,12 +36,15 @@ def api(i, typeof):
     '''
     Simple API call
     '''
+    g = None
     if typeof == 'announced':
         g = models.GetAnnounced()
-    elif typeof == 'chain':
-        g = models.GetChain()
+    elif typeof == 'growing':
+        g = models.GetGrowing()
     elif typeof == 'lifetime':
         g = models.GetLifetime()
+    if g is None:
+        return make_response('{}')
     return make_response(g.get(i))
 
 
@@ -70,7 +73,6 @@ def suggest(input, typeof):
     input - input string to search in db
     typeof - lifetime/growing/announced
     '''
-    # TODO change true false
     gs = models.GetSuggestions(typeof)
     return make_response(gs.get(input))
 

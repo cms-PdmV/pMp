@@ -6,34 +6,38 @@ import math
 import time
 
 
-class GetChain():
+class GetGrowing():
 
     def __init__(self):
-        self.countDummy = 0
+        self.count_fake = 0
         self.es = ElasticSearch(config.DATABASE_URL)
         self.overflow = 1000000
 
-    def fakeId(self):
-        self.countDummy += 1
-        return 'X'*(5-len('%d' % (self.countDummy)))+'%d' % (self.countDummy)
+    def fake_suffix(self):
+        self.count_fake += 1
+        return 'X'*(5-min(len(str(self.count_fake)), 4))+str(self.count_fake)
 
-    def __createDummyRequest(self, req, memberOfCampaign, status='upcoming',
-                             total=None):
-        fake_r = {}
-        fake_r['status'] = status
-        fake_r['member_of_campaign'] = memberOfCampaign
-        for member in ['pwg', 'priority', 'total_events', 'time_event']:
-            fake_r[member] = req[member]
+    def create_fake_request(self, original_request, member_of_campaign,
+                            status='upcoming', total=None):
+        fake_request = {}
+        fake_request['status'] = status
+        fake_request['member_of_campaign'] = member_of_campaign
+
+        for f in ['pwg', 'priority', 'total_events', 'time_event']:
+            fake_request[f] = original_request[f]
+
         if total is not None:
-            fake_r['total_events'] = total
-        fake_r['prepid'] = '-'.join([req['pwg'],
-                                     memberOfCampaign, self.fakeId()])
-        fake_r['cloned_from'] = req['prepid']
-        return fake_r
+            fake_request['total_events'] = total
+        else:
+            fake_request['total_events'] = 0
+
+        fake_request['prepid'] = '-'.join([req['pwg'], member_of_campaign,
+                                           self.fake_suffix()])
+        return fake_request
 
     def get(self, campaign):
         arg_list = campaign.split(',')
-        # Get all chained campaigns which contain selected CAMPAIGN
+        # get all chained campaigns which contain selected CAMPAIGN
         # reduction to only cc
         while True:
             again = False
@@ -45,25 +49,28 @@ class GetChain():
                                           index='chained_campaigns',
                                           size=self.overflow)['hits']['hits']]
                     arg_list.extend(map(lambda cc: cc['prepid'], ccs))
+                    # arg is going to be duplicated
                     arg_list.remove(arg)
                     again = True
                     break
             if not again:
                 break
-        #  arg_list contains only chained campaigns
+        # arg_list contains only chained campaigns
         steps = []  # what are the successive campaigns
         all_cr = []  # what are the chained requests to look at
         all_cc = {}
         # unique it
         arg_list = list(set(arg_list))
-        # collect all crs
+        # collect all cr
         for a_cc in arg_list:
             try:
                 mcm_cc = self.es.get('chained_campaigns',
                                      'chain_campaign', a_cc)['_source']
             except Exception:
                 # try to see if that's a flow
+                # TODO: patch for this exception
                 return '%s does not exists' % (a_cc)
+
             all_cc[a_cc] = mcm_cc  # keep it in mind
             all_cr.extend([s['_source'] for s in
                            self.es.search(('member_of_campaign:%s' % a_cc),
@@ -88,6 +95,7 @@ class GetChain():
                 for check in range(new_start, len(these_steps)):
                     if these_steps[check] not in steps:
                         steps.append(these_steps[check])
+
         # preload all requests !!!
         all_requests = {}
         for step in steps:
@@ -127,6 +135,9 @@ class GetChain():
                             mcm_r.pop(member)
                     return mcm_r
 
+                if mcm_r['status'] == 'done':
+                    mcm_r['total_events'] = mcm_r['completed_events']
+
                 if mcm_r['status'] == 'submitted':
                     mcm_r_fake_done = copy.deepcopy(mcm_r)
                     mcm_r_fake_done['status'] = 'done'
@@ -142,8 +153,8 @@ class GetChain():
                     'member_of_campaign']]['campaigns'][stop_at+1:]:
                 # create a fake request with the proper member of campaign
                 processing_r = all_requests[cr['chain'][stop_at]]
-                fake_one = self.__createDummyRequest(processing_r, noyet[0],
-                                                     total=upcoming)
+                fake_one = self.create_fake_request(processing_r, noyet[0],
+                                                    total=upcoming)
                 list_of_request_for_ramunas.append(fake_one)
         return json.dumps({"results": list_of_request_for_ramunas})
 
@@ -173,24 +184,23 @@ class GetAnnounced():
             # requests that are done should have completed events value
             if r['status'] == 'done':
                 r['total_events'] = r['completed_events']
+                try:
+                    # requests without output_dataset should have zero events
+                    if not len(r['output_dataset']):
+                        r['total_events'] = 0
+                except KeyError:
+                    r['total_events'] = 0
+                    pass
 
             # requests that are new (-1) should have zero events
             if r['total_events'] == -1:
                 r['total_events'] = 0
 
-            # requests without output_dataset should have zero events
-            try:
-                if not len(r['output_dataset']):
-                    r['total_events'] = 0
-                del r['output_dataset']
-            except KeyError:
-                r['total_events'] = 0
-                pass
-
             # remove unnecessary fields to speed up api
             del r['completed_events']
             del r['reqmgr_name']
             del r['history']
+            del r['output_dataset']
 
         return json.dumps({"results": res})
 
@@ -511,7 +521,6 @@ class GetSuggestions():
         self.lifetime = (typeof == 'lifetime')
 
     def get(self, query):
-        print query
         searchable = query.replace('-', '\-')
         if '-' in query:
             search = ('prepid:%s' % searchable)
@@ -519,7 +528,7 @@ class GetSuggestions():
         else:
             search = ('prepid:*%s*' % searchable)
             search_stats = ('pdmv_request_name:*%s*' % searchable)
-        print search
+
         ext0 = []
         ext1 = []
         ext2 = []
@@ -529,7 +538,7 @@ class GetSuggestions():
             ext0 = [s['_id'] for s in
                     self.es.search(search, index='campaigns',
                                    size=self.overflow)['hits']['hits']]
-            print ext0
+
             # extended search for lifetime
             if self.lifetime:
                 ext1 = [s['_id'] for s in
