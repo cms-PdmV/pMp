@@ -455,6 +455,12 @@ pmpApp.controller('TypeaheadCtrl', function($scope, $http) {
                 $scope.suggestions = response.data.results;
             });
         }
+        if ($scope.performance) {
+            $http.get('api/suggest/' + $scope.performance +
+                      '/performance').then(function(response) {
+                $scope.suggestions = response.data.results;
+            });
+        }
     };
 });
 

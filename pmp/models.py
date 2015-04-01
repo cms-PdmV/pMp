@@ -541,6 +541,7 @@ class GetSuggestions():
         self.announced = (typeof == 'announced')
         self.growing = (typeof == 'growing')
         self.lifetime = (typeof == 'lifetime')
+        self.performance = (typeof == 'performance')
 
     def get(self, query):
         searchable = query.replace('-', '\-')
@@ -555,7 +556,7 @@ class GetSuggestions():
         ext1 = []
         ext2 = []
 
-        if self.lifetime or self.growing or self.announced:
+        if self.lifetime or self.growing or self.announced or self.performance:
             # campaigns are expected in all modes
             ext0 = [s['_id'] for s in
                     self.es.search(search, index='campaigns',

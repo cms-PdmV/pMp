@@ -72,7 +72,7 @@ def suggest(input, typeof):
     '''
     API call for typeahead
     input - input string to search in db
-    typeof - lifetime/growing/announced
+    typeof - lifetime/growing/announced/performance
     '''
     gs = models.GetSuggestions(typeof)
     return make_response(gs.get(input))
