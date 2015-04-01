@@ -30,8 +30,9 @@ class GetGrowing():
             fake_request['total_events'] = total
         else:
             fake_request['total_events'] = 0
-
-        fake_request['prepid'] = '-'.join([req['pwg'], member_of_campaign,
+            
+        fake_request['prepid'] = '-'.join([original_request['pwg'],
+                                           member_of_campaign,
                                            self.fake_suffix()])
         return fake_request
 
@@ -120,7 +121,17 @@ class GetGrowing():
                     # this is a reserved request, will count as upcoming later
                     continue
                 mcm_r = all_requests[r]
-                upcoming = mcm_r['total_events']
+                
+                upcoming = int(mcm_r['total_events']*abs(mcm_r['efficiency']))
+                """
+                if abs(mcm_r['efficiency']) != 1.0:
+                    print int(mcm_r['total_events']*abs(mcm_r['efficiency']))
+                    print mcm_r['total_events']
+                    print abs(mcm_r['efficiency'])
+                upcoming = int(mcm_r['total_events'])
+                """
+
+
                 if r in already_counted:
                     continue
                 else:
@@ -129,14 +140,18 @@ class GetGrowing():
                 # add it to emit
                 def pop(mcm_r):
                     for member in mcm_r.keys():
-                        if member not in ['prepid', 'pwg', 'priority',
-                                          'total_events', 'status',
+                        if member not in ['prepid', 'pwg', 'efficiency',
+                                          'total_events', 'status', 'priority',
                                           'member_of_campaign', 'time_event']:
                             mcm_r.pop(member)
                     return mcm_r
 
                 if mcm_r['status'] == 'done':
-                    mcm_r['total_events'] = mcm_r['completed_events']
+                    if (not len(mcm_r['output_dataset'])
+                        or mcm_r['total_events'] == -1):
+                        mcm_r['total_events'] = 0
+                    else:
+                        mcm_r['total_events'] = mcm_r['completed_events']
 
                 if mcm_r['status'] == 'submitted':
                     mcm_r_fake_done = copy.deepcopy(mcm_r)
@@ -147,7 +162,11 @@ class GetGrowing():
                         [0, mcm_r['total_events'] - mcm_r['completed_events']])
                     list_of_request_for_ramunas.append(pop(mcm_r_fake_subm))
                     list_of_request_for_ramunas.append(pop(mcm_r_fake_done))
+                    if mcm_r_fake_subm['total_events'] < 0:
+                        print mcm_r_fake_subm
                 else:
+                    if mcm_r['total_events'] == -1:
+                        mcm_r['total_events'] = 0
                     list_of_request_for_ramunas.append(pop(mcm_r))
             for noyet in all_cc[cr[
                     'member_of_campaign']]['campaigns'][stop_at+1:]:
@@ -195,6 +214,9 @@ class GetAnnounced():
             # requests that are new (-1) should have zero events
             if r['total_events'] == -1:
                 r['total_events'] = 0
+
+            if r['time_event'] == -1:
+                r['time_event'] = 0
 
             # remove unnecessary fields to speed up api
             del r['completed_events']
