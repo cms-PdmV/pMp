@@ -20,6 +20,42 @@ def parse(data, rlist):
     return data
 
 
+def parse_efficiency(data):
+    if len(data):
+        i = len(data)-1
+        return (float(data[i]['match_efficiency'])*
+                float(data[i]['filter_efficiency']))
+    return -1
+
+
+def parse_reqmgr(data):
+    res = []
+    for d in data:
+        try:
+            res.append(d['name'])
+        except KeyError:
+            res.append(d['pdmv_request_name'])
+    return res
+
+
+def parse_history(data):
+    res = []
+    for d in data:
+        r = {}
+        if d['action'] in ['created', 'clone']:
+            r['action'] = 'created'
+            r['time'] = d['updater']['submission_date']
+        elif d['action'] == 'set status' and d['step'] in ['approved',
+                                                           'submitted',
+                                                           'done']:
+            r['action'] = d['step']
+            r['time'] = d['updater']['submission_date']
+
+        if len(r.keys()):
+            res.append(r)
+    return res
+
+
 def parse_taskchain(data):
     ret = []
     try:
@@ -160,14 +196,24 @@ if __name__ == "__main__":
                             data['pdvm_monitor_history'][i], cfg.remove_list)
                 except KeyError:
                     pass
-                data = parse(data, cfg.remove_list)
 
                 try:
-                    for i, _ in enumerate(data['reqmgr_name']):
-                        data['reqmgr_name'][i] = parse(
-                            data['reqmgr_name'][i], cfg.remove_list)
+                    data['reqmgr_name'] = parse_reqmgr(data['reqmgr_name'])
                 except KeyError:
                     pass
+
+                try:
+                    data['history'] = parse_history(data['history'])
+                except KeyError:
+                    pass
+
+                try:
+                    data['efficiency'] = parse_efficiency(
+                        data['generator_parameters'])
+                except KeyError:
+                    pass
+
+                data = parse(data, cfg.remove_list)
 
                 if status == 200:
                     reason, s = utl.curl('PUT', '%s%s' % (cfg.pmp_db, r), data)
