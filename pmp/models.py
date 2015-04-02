@@ -517,9 +517,8 @@ class GetPerformance():
 
         # loop over and remove db documents
         for r in res:
-            for field in ['time_event', 'total_events', 'reqmgr_name',
-                          'efficiency', 'output_dataset',
-                          'member_of_campaign', 'completed_events']:
+            for field in ['time_event', 'total_events', 'completed_events',
+                          'reqmgr_name', 'efficiency', 'output_dataset']:
                 del r[field]
         return json.dumps({"results": res})
 

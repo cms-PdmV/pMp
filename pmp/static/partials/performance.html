@@ -17,15 +17,15 @@
                       placeholder="Start typing to search...">
                <span class="input-group-btn">
                  <button type="button" class="btn btn-danger"
-                         ng-click="" ng-disabled="loadingData">
+                         ng-click="load(performance, false)" ng-disabled="loadingData">
                    See
                  </button>
                  <button type="button" class="btn btn-danger"
-                         ng-click="" ng-disabled="loadingData">
+                         ng-click="load(performance, true)" ng-disabled="loadingData">
                    Append
                  </button>
                  <button type="button" class="btn btn-danger"
-                         ng-click="" ng-disabled="loadingData">
+                         ng-click="performance('all')" ng-disabled="loadingData">
                    Load <strong>all</strong>
                  </button>
                </span>

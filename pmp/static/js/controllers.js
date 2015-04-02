@@ -753,8 +753,33 @@ pmpApp.controller('HistoricalController', function($http, $location, $scope, $ro
     });
 });
 
-pmpApp.controller('PerformanceController', function() {
+pmpApp.controller('PerformanceController', function($http, $scope) {
+    console.log('Performance Control');
 
-        console.log('Performance Control');
-
-    });
+    $scope.load = function(input, add) {
+        if (!input) {
+            $scope.showPopUp('warning', 'Your request parameters are empty');
+            /*} else if (add & 
+              $scope.showPopUp('warning', 'Your request is already loaded');*/
+        } else {
+            $scope.loadingData = true;
+            var promise = $http.get("api/" + input + "/performance");
+            promise.then(function(data) {
+                if (!data.data.results.length) {
+                    $scope.showPopUp('error', 'No results for this request parameters');
+                    $scope.loadingData = false;
+                } else {
+                    if (add) {
+                        data.data.results.push.apply(data.data.results, $scope.allRequestData);
+                    } else {
+                        $scope.allRequestData = data.data.results;
+                    }
+                }
+                $scope.loadingData = false;
+            }, function() {
+                $scope.showPopUp('error', 'Error getting requests');
+                $scope.loadingData = false;
+            });
+        }
+    }
+});
