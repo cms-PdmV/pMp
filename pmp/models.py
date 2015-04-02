@@ -123,14 +123,6 @@ class GetGrowing():
                 mcm_r = all_requests[r]
                 
                 upcoming = int(mcm_r['total_events']*abs(mcm_r['efficiency']))
-                """
-                if abs(mcm_r['efficiency']) != 1.0:
-                    print int(mcm_r['total_events']*abs(mcm_r['efficiency']))
-                    print mcm_r['total_events']
-                    print abs(mcm_r['efficiency'])
-                upcoming = int(mcm_r['total_events'])
-                """
-
 
                 if r in already_counted:
                     continue
@@ -162,8 +154,6 @@ class GetGrowing():
                         [0, mcm_r['total_events'] - mcm_r['completed_events']])
                     list_of_request_for_ramunas.append(pop(mcm_r_fake_subm))
                     list_of_request_for_ramunas.append(pop(mcm_r_fake_done))
-                    if mcm_r_fake_subm['total_events'] < 0:
-                        print mcm_r_fake_subm
                 else:
                     if mcm_r['total_events'] == -1:
                         mcm_r['total_events'] = 0
@@ -281,16 +271,6 @@ class GetLifetime():
                     dataset_list = r['output_dataset']
                     dataset_list.sort(cmp=self.select_dataset)
                     request_output_type = dataset_list[0]
-                    print dataset_list
-                    """
-                    request_output_type = None
-                    for ods in r['output_dataset']:
-                        if request_output_type is None:
-                            request_output_type = ods
-                        else:
-                            if not self.select_dataset(ods, request_output_type):
-                                request_output_type = ods
-                                """
                     request_output_type = request_output_type.split('/')[-1]
                    
                     for e in r['reqmgr_name']:
@@ -298,7 +278,7 @@ class GetLifetime():
                         i['status'] = r['status']
                         i['pwg'] = r['pwg']
                         i['priority'] = r['priority']
-                        i['name'] = e['name']
+                        i['name'] = e
                         i['request_output_type'] = request_output_type
                         iterable.append(i)
                 except:
@@ -310,33 +290,21 @@ class GetLifetime():
             try:
                 # check if the input is a request
                 s = self.es.get('requests', 'request', input)['_source']
-
                 dataset_list = s['output_dataset']
                 dataset_list.sort(cmp=self.select_dataset)
                 request_output_type = dataset_list[0]
-                """
-                request_output_type = None
-                for ods in s['output_dataset']:
-                    if request_output_type is None:
-                        request_output_type = ods
-                    else:
-                        if not self.select_dataset(ods, request_output_type):
-                            request_output_type = ods
-                            """
                 request_output_type = request_output_type.split('/')[-1]
-
                 for e in s['reqmgr_name']:
                     i = {}
                     i['status'] = s['status']
                     i['pwg'] = s['pwg']
                     i['priority'] = s['priority']
-                    i['name'] = e['name']
+                    i['name'] = e
                     i['request_output_type'] = request_output_type
                     iterable.append(i)
             except:
                 # input can be a reqmgr_name
                 iterable = [input]
-        
         for i in iterable:
             if not 'status' in i:
                 try:
@@ -408,8 +376,6 @@ class GetLifetime():
                 response['request'] = d['pdmv_prep_id']
                 response['type'] = d['pdmv_dataset_name'].split('/')[-1]
 
-                print 'Type of this one is', response['type']
-                print 'So rot is', rot
                 taskchain = taskchain and (d['pdmv_type'] == 'TaskChain')
                 if tc and taskchain:
                     # load taskchain instead of normal req
