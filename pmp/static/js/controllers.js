@@ -754,32 +754,70 @@ pmpApp.controller('HistoricalController', function($http, $location, $scope, $ro
 });
 
 pmpApp.controller('PerformanceController', function($http, $scope) {
-    console.log('Performance Control');
-
     $scope.load = function(input, add) {
         if (!input) {
             $scope.showPopUp('warning', 'Your request parameters are empty');
-            /*} else if (add & 
-              $scope.showPopUp('warning', 'Your request is already loaded');*/
+        } else if (add & $scope.tags.hasTag(input)) {
+            $scope.showPopUp('warning', 'Your request is already loaded');
         } else {
             $scope.loadingData = true;
             var promise = $http.get("api/" + input + "/performance");
             promise.then(function(data) {
                 if (!data.data.results.length) {
                     $scope.showPopUp('error', 'No results for this request parameters');
+                    $scope.tags.removeTag(input);
                     $scope.loadingData = false;
                 } else {
+
                     if (add) {
                         data.data.results.push.apply(data.data.results, $scope.allRequestData);
                     } else {
-                        $scope.allRequestData = data.data.results;
+                        $scope.tagsRemoveAll([input]);
+                    }
+                    $scope.allRequestData = data.data.results;
+                    if (input == 'all') {
+                        for (var i = 0; i < data.data.results.length; i++) {
+                            if (!$scope.tags.hasTag(data.data.results[i].member_of_campaign)) {
+                                $scope.tags.addTag(data.data.results[i].member_of_campaign);
+                            }
+                        }
+                    } else {
+                        $scope.tags.addTag(input);
                     }
                 }
                 $scope.loadingData = false;
+                console.log($scope.allRequestData.length);
             }, function() {
                 $scope.showPopUp('error', 'Error getting requests');
                 $scope.loadingData = false;
             });
+        }
+    }
+
+    $scope.tags = angular.element('#campaignList').tags({
+        tagClass: 'btn btn-sm btn-primary',
+        afterDeletingTag: function(tag) {
+            $scope.loadingData = true;
+            setTimeout(function() {
+                var tmp = $scope.allRequestData;
+                var data = [];
+                for (var i = 0; i < tmp.length; i++) {
+                    if (tmp[i].member_of_campaign !== tag) {
+                        data.push(tmp[i]);
+                    }
+                }
+                $scope.allRequestData = data;
+                $scope.loadingData = false;
+            }, 500);
+        }
+    });
+
+    $scope.tagsRemoveAll = function(arr) {
+        var tmp = angular.copy($scope.tags.getTags());
+        for (var i = 0; i < tmp.length; i++) {
+            if (arr.indexOf(tmp[i]) == -1) {
+                $scope.tags.removeTag(tmp[i]);
+            }
         }
     }
 });

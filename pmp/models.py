@@ -519,7 +519,10 @@ class GetPerformance():
         for r in res:
             for field in ['time_event', 'total_events', 'completed_events',
                           'reqmgr_name', 'efficiency', 'output_dataset']:
-                del r[field]
+                try:
+                    del r[field]
+                except KeyError:
+                    pass
         return json.dumps({"results": res})
 
 

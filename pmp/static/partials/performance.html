@@ -25,7 +25,7 @@
                    Append
                  </button>
                  <button type="button" class="btn btn-danger"
-                         ng-click="performance('all')" ng-disabled="loadingData">
+                         ng-click="load('all')" ng-disabled="loadingData">
                    Load <strong>all</strong>
                  </button>
                </span>
@@ -34,6 +34,14 @@
            <div class="col-lg-1 col-md-1 col-sm-2" ng-show="loadingData">
              <i class="fa fa-spinner fa-spin fa-3x"></i>
            </div>
+         </div>
+       </div>
+     </div>
+
+     <div class="row" ng-hide="!allRequestData.length">
+       <div class="panel-default">
+         <div class="panel-body">
+           <div id="campaignList" style="padding-bottom: 0px;"></div>
          </div>
        </div>
      </div>
