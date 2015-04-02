@@ -183,9 +183,12 @@ angular.module('mcm.charts', [])
                 
                 // Format y axis numbers
                 function formatY(d) {
+                    if (d == 0) {
+                        return 0;
+                    }
                     var l = ['G', 'M', 'k', ''];
                     var s, j = 0
-                    for (var i = 1e9; i > 0; i = i / 1e3) {
+                    for (var i = 1e9; i >= 1; i = i / 1e3) {
                         s = d / i;
                         if (s >= 1) {
                             return s + l[j]
@@ -250,7 +253,7 @@ angular.module('mcm.charts', [])
                         }
                         yMax *= 1.1;
                         y.domain([0, yMax]).range([height, 0]);
-                        yAxis.scale(y).tickFormat(formatY);
+                        yAxis.scale(y);//.tickFormat(formatY);
                         svg.selectAll("g .y.axis").transition().duration(200)
                         .ease("linear").call(yAxis);
                         d3.selectAll('.minory line').filter(function(d) {
@@ -930,15 +933,19 @@ angular.module('mcm.charts', [])
                 }
 
                 function formatY(d) {
+                    if (d == 0) {
+                        return 0;
+                    }
                     var l = ['G', 'M', 'k', ''];
                     var s, j = 0
-                    for (var i = 1e9; i > 0; i = i / 1e3) {
+                    for (var i = 1e9; i >= 1; i = i / 1e3) {
                         s = d / i;
                         if (s >= 1) {
                             return s + l[j]
                         }
                         j++;
                     }
+                    return '';
                 }
 
                 function changeWidthHeight() {
@@ -1179,7 +1186,7 @@ angular.module('mcm.charts', [])
                             xAxis.scale(x_scale);
                         }
                     }
-                    //yAxis.tickFormat(d3.format(""));
+                    yAxis.tickFormat(d3.format(""));
                     yAxis.tickFormat(formatY);
                     if(yScaleType == "log" && ( columns || grouping.length ) && data.length) {
                         function prepareTicks(minimalValue, maximalTick, minimalTick) {
