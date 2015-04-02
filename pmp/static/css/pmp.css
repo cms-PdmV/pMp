@@ -199,3 +199,12 @@ ul.nav li.placeholder:before {
 .white {
     color: white;
 }
+/*Performance*/
+.y-axis g line {
+    stroke: grey;
+    fill: red;
+    stroke-width: 1px;
+}
+.graph-body .line circle {
+    opacity: 0.1;
+}

@@ -7,6 +7,103 @@ function endall(transition, callback) {
       }
 
 angular.module('mcm.charts', [])
+    .directive('someThing', function() {
+        return {
+            restrict: 'AE',
+            scope: {
+                chartData: '='
+            },
+            link: function(scope, element) {
+                var data = [{ name: "created", dates: [new Date('2014/09/15 13:24:54'), new Date('2014/09/15 13:25:03'), new Date('2014/09/15 13:25:05')] },{ name: "approved", dates: [new Date('2014/09/15 13:24:57'), new Date('2014/09/15 13:25:04'), new Date('2014/09/15 13:25:04')] }, { name: "submitted", dates: [new Date('2014/09/15 13:25:12')]}, { name: "done", dates: [new Date('2014/09/15 13:24:57'), new Date('2014/09/15 13:25:04'), new Date('2014/09/15 13:25:04')] },];
+
+                var config = {
+                    start: new Date('2014/09/15 13:20:00'),
+                    end: new Date('2014/09/15 13:30:00'),
+                    width: 1170,
+                    margin: {
+                        top: 40,
+                        left: 20,
+                        bottom: 20,
+                        right: 20
+                    },
+                    hasTopAxis: true,
+                    eventLineColor: 'black',
+                };
+
+                var eventLine = function(i, name) {
+                    graphBody.append('circle')
+                    .attr('cx', 80)
+                    .style('fill', 'pink')
+                    .attr('cy', config.margin.top+i)
+                    .attr('r', 10);
+                };
+
+                /*Starts here*/
+                var graphWidth = config.width - config.margin.right - config.margin.left -40;
+                var graphHeight = data.length * 40;
+                var height = graphHeight + config.margin.top + config.margin.bottom;
+                var svg = d3.select(element[0])
+                    .append('svg:svg')
+                    .attr("viewBox", "0 -20 " + (graphWidth) + " " + (height*1.5))
+                    .attr("width", "100%")
+                    .attr("height", "100%")
+                    .append("svg:g")
+                    .attr("transform", "translate(" + (config.margin.left+40) + ","
+                          + config.margin.top + ")")
+                    .attr('style', 'fill: none');
+
+                var x = d3.time.scale().domain([config.start, config.end]).range([0, graphWidth-100]);
+                var xAxis = d3.svg.axis().scale(x).ticks(4).tickSubdivide(1).orient('top');
+                var gx = svg.append('g')
+                    .classed('x axis', true)
+                    .attr('fill', '#666')
+                    .attr('transform', 'translate(' + config.margin.left + ', '
+                          + (config.margin.top-40) + ')')
+                    .call(xAxis);
+
+                var yDomain = [];
+                data.forEach(function (event, index) {
+                    yDomain.push(event.name);
+                });
+                var y = d3.scale.ordinal().domain(yDomain).rangePoints([0, graphHeight]);
+                var yAxis = d3.svg.axis().scale(y).orient("left");
+                var gy = svg.append("svg:g")
+                    .attr("class", "y axis minory")
+                    .attr('fill', '#666')
+                    .attr('transform', 'translate(' + (config.margin.left) + ', '
+                          + config.margin.top + ')')
+                    .call(yAxis)
+                    .append('line')
+                    .attr('fill', '#666')
+                    .classed('y-tick', true)
+                    .attr('x1', 0)
+                    .attr('x2', 0 + graphWidth-100)
+                    .attr('transform', 'translate(0,-40)');
+
+                function redraw() {
+                    svg.select('.graph-body').remove();
+                    var graphBody = svg.append('g')
+                        .classed('graph-body', true)
+                        .attr("width", "100")
+                        .attr("height", "100")
+                        .attr("fill", "pink")
+                        .attr('transform', 'translate(' + config.margin.left + ', '
+                              + (config.margin.top - 15) + ')');
+                    var lines = graphBody.selectAll('g').data(data);
+                    lines.enter()
+                        .append('g')
+                        .classed('line', true)
+                        .attr('transform', function(d, i) {
+                                eventLine(i*40, d.name);
+                                return 'translate(0,' + i*40 + ')';
+                            })
+                        .style('fill', config.eventLineColor);
+                    lines.exit().remove();
+                }
+                redraw();
+            }
+        }
+    })
     /*** 
     Life-Time Representation of Requests directive:
     ***/
@@ -15,10 +112,10 @@ angular.module('mcm.charts', [])
             restrict: 'AE',
             scope: {
                 chartData: '=',
-                    taskChain: '=',
+                taskChain: '=',
                 zoomY: '='
             },
-                link: function(scope, element) {
+            link: function(scope, element) {
                 scope.dataCopy = [];
                 var customWidth = 1160;
                 // General attributes
@@ -53,7 +150,7 @@ angular.module('mcm.charts', [])
                 var gx = svg.append("svg:g")
                     .attr("class", "x axis minorx")
                     .attr('fill', '#666')
-                    .attr("transform", "translate(0," + (height + 10) + ")")
+                    .attr("transform", "translate(0," + (height + 100) + ")")
                     .call(xAxis);
 
                 var yAxis = d3.svg.axis().scale(y).ticks(4).orient("left");
