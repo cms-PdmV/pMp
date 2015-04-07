@@ -4,8 +4,9 @@ import logging
 import os
 import utils
 
+## for now we should run through -int as -prod doesn't have latest update yet
 
-MCM_URL = 'https://cms-pdmv.cern.ch/mcm/'
+MCM_URL = 'https://cms-pdmv-int.cern.ch/mcm/'
 STATS_URL = 'https://cms-pdmv.cern.ch/stats/'
 
 
@@ -68,3 +69,7 @@ if __name__ == "__main__":
             print 'Events in McM: ', res['completed_events']
 
             # update field in mcm
+            url = str(MCM_URL + 'restapi/requests/update_stats/%s/no_refresh' %(request))
+            res_up, status_up = utl.curl('GET', url, cookie=mcm_cookie)
+            if status_up != 200:
+                print "\tIssues while updating %s result:\n%s" %(request, res_up)
