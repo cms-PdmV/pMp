@@ -7,7 +7,7 @@ import utils
 import sys
 
 
-def setlog(cfg):
+def setlog():
     logging.basicConfig(level=logging.INFO)
 
 
@@ -151,9 +151,9 @@ def get_changes(utl, cfg):
 
 if __name__ == "__main__":
 
+    setlog()
     utl = utils.Utils()
     cfg = utils.Config(sys.argv[1])
-    setlog(cfg)
 
     logging.info('%s Getting SSO Cookie' % utl.get_time())
     utl.get_cookie(cfg.url_mcm, cfg.cookie)
