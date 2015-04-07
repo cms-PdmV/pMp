@@ -15,62 +15,46 @@ angular.module('mcm.charts', [])
             },
             link: function(scope, element) {
                 var graphBody;
-                var definedColors = {
-                    created: '#ffd54f',
-                    approved: '#aed581',
-                    submitted: '#9575cd',
-                    done: '#4fc3f7'
-                }
-                var definedY = {
-                    created: 15,
-                    approved: 55 ,
-                    submitted: 95,
-                    done: 135
-                }
 
                 /**dummy*/
-                var data = [{ name: "created", date: '2014-09-15-13-24-54', prepid:'dummy1'},{ name: "approved", date: '2014-09-15-13-24-57', prepid: 'dummy2'},{name: "submitted", prepid: 'asda',date: '2014-09-15-13-25-12'}, {name: "done", prepid: 'asdad2', date: '2014-09-15-13-24-57'}];
-
+                var data = [{ name: "created", date: '2014-09-15-13-23-54', prepid:'dummy1'},{ name: "approved", date: '2014-09-15-13-24-57', prepid: 'dummy2'},{name: "submitted", prepid: 'asda',date: '2014-09-15-13-25-12'}, {name: "done", prepid: 'asdad2', date: '2014-09-15-13-24-57'},{name: "done", prepid: 'asdad2', date: '2014-09-15-13-25-57'}];
 
                 var config = {
-                    start: new Date('2014/09/15 13:24:45'),
-                    end: new Date('2014/09/15 13:30:00'),
-                    width: 1170,
+                    definedColors = {
+                        created: '#ffd54f',
+                        approved: '#aed581',
+                        submitted: '#9575cd',
+                        done: '#4fc3f7'
+                    }
+                    definedYOffset = {
+                        created: 15,
+                        approved: 55 ,
+                        submitted: 95,
+                        done: 135
+                    }
                     margin: {
                         top: 40,
-                        left: 20,
+                        left: 40,
                         bottom: 20,
                         right: 20
                     },
                     hasTopAxis: true,
+                    width: 1170,
                     eventLineColor: 'black',
                 };
 
                 var amountFn = function(d) {
-                    console.log(d)
-                    return definedY[d.name];
+                    return config.definedYOffset[d.name];
                 }
                 var format = d3.time.format("%Y-%m-%d-%H-%M-%S");
                 var dateFn = function(d) { return format.parse(d.date) }
 
                 var color = function(d) {
-                    return definedColors[d.name];
+                    return config.definedColors[d.name];
                 }
 
-                var eventLine = function(x, y, name) {
-
-                    
-                    /*console.log(name);
-                    graphBody.append('circle')
-
-                    .attr("cx", x)
-                    .attr('cy', config.margin.top + y)
-                    .attr('r', 10);*/
-                };
-
-                /*Starts here*/
-                var graphWidth = config.width - config.margin.right - config.margin.left -40;
-                var graphHeight = data.length * 30;
+                var graphWidth = config.width - config.margin.right - config.margin.left - 40;
+                var graphHeight = 120;
                 var height = graphHeight + config.margin.top + config.margin.bottom;
                 var svg = d3.select(element[0])
                     .append('svg:svg')
@@ -82,7 +66,7 @@ angular.module('mcm.charts', [])
                           + config.margin.top + ")")
                     .attr('style', 'fill: none');
 
-                var x = d3.time.scale().domain([config.start, config.end]).range([0, graphWidth-100]);
+                var x = d3.time.scale().range([0, graphWidth-100]);
                 var xAxis = d3.svg.axis().scale(x).ticks(4).tickSubdivide(1).orient('top');
                 var gx = svg.append('g')
                     .classed('x axis', true)
@@ -91,16 +75,29 @@ angular.module('mcm.charts', [])
                           + (config.margin.top-40) + ')')
                     .call(xAxis);
 
-                var yDomain = [];
-                data.forEach(function (event, index) {
-                    yDomain.push(event.name);
-                });
-                var y = d3.scale.ordinal().domain(yDomain).rangePoints([0, graphHeight]);
+                var yDomain = {
+                    created: 0, 
+                    approved: 0,
+                    submitted: 0, 
+                    done: 0
+                };
+                var asdf;
+                var yDomainCalc = function() {
+                    data.forEach(function (event, index) {                   
+                            yDomain[event.name] += 1
+                        });
+                    
+                    asdf = [];
+                    for(var k in yDomain) asdf.push(k + ' (' + yDomain[k]  + ')');
+                }
+                yDomainCalc();
+
+                var y = d3.scale.ordinal().domain(asdf).rangePoints([0, graphHeight]);
                 var yAxis = d3.svg.axis().scale(y).orient("left");
                 var gy = svg.append("svg:g")
                     .attr("class", "y axis minory")
                     .attr('fill', '#666')
-                    .attr('transform', 'translate(' + (config.margin.left) + ', '
+                    .attr('transform', 'translate(' + (config.margin.left-10) + ', '
                           + config.margin.top + ')')
                     .call(yAxis)
                     .append('line')
@@ -114,13 +111,9 @@ angular.module('mcm.charts', [])
                     svg.select('.graph-body').remove();
                     graphBody = svg.append('g')
                         .classed('graph-body', true)
-                        .attr("width", "100")
-                        .attr("height", "100")
-                        .attr("fill", "pink")
                         .attr('transform', 'translate(' + config.margin.left + ', '
                               + (config.margin.top - 15) + ')');
                     var lines = graphBody.selectAll('g').data(data);
-
                     lines.enter()
                         .append('g')
                         .classed('line', true)
@@ -130,7 +123,17 @@ angular.module('mcm.charts', [])
                         .style('fill', config.eventLineColor);
                     lines.exit().remove();
 
-                    eventLine(0,1,2);
+                    currentMin = d3.min(data, function(d) {
+                            return d.date;
+                        });
+                    currentMax = d3.max(data, function(d) {
+                            return d.date;
+                        });
+
+                    x.domain([format.parse(currentMin),format.parse(currentMax)]).range([0, graphWidth-140]);;
+                    xAxis.scale(x);
+                    gx.transition().duration(200)
+                        .ease("linear").call(xAxis);
 
                     graphBody.selectAll("circle").data(data).enter()
                         .append("svg:circle")
@@ -140,7 +143,6 @@ angular.module('mcm.charts', [])
                         .attr("cy", function(d) { return amountFn(d) })
                         .append('title')
                         .text(function(d) { return d.prepid});
-
                 }
                 redraw();
             }
