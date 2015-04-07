@@ -14,10 +14,26 @@ angular.module('mcm.charts', [])
                 chartData: '='
             },
             link: function(scope, element) {
-                var data = [{ name: "created", dates: [new Date('2014/09/15 13:24:54'), new Date('2014/09/15 13:25:03'), new Date('2014/09/15 13:25:05')] },{ name: "approved", dates: [new Date('2014/09/15 13:24:57'), new Date('2014/09/15 13:25:04'), new Date('2014/09/15 13:25:04')] }, { name: "submitted", dates: [new Date('2014/09/15 13:25:12')]}, { name: "done", dates: [new Date('2014/09/15 13:24:57'), new Date('2014/09/15 13:25:04'), new Date('2014/09/15 13:25:04')] },];
+                var graphBody;
+                var definedColors = {
+                    created: '#ffd54f',
+                    approved: '#aed581',
+                    submitted: '#9575cd',
+                    done: '#4fc3f7'
+                }
+                var definedY = {
+                    created: 15,
+                    approved: 55 ,
+                    submitted: 95,
+                    done: 135
+                }
+
+                /**dummy*/
+                var data = [{ name: "created", date: '2014-09-15-13-24-54', prepid:'dummy1'},{ name: "approved", date: '2014-09-15-13-24-57', prepid: 'dummy2'},{name: "submitted", prepid: 'asda',date: '2014-09-15-13-25-12'}, {name: "done", prepid: 'asdad2', date: '2014-09-15-13-24-57'}];
+
 
                 var config = {
-                    start: new Date('2014/09/15 13:20:00'),
+                    start: new Date('2014/09/15 13:24:45'),
                     end: new Date('2014/09/15 13:30:00'),
                     width: 1170,
                     margin: {
@@ -30,17 +46,31 @@ angular.module('mcm.charts', [])
                     eventLineColor: 'black',
                 };
 
-                var eventLine = function(i, name) {
+                var amountFn = function(d) {
+                    console.log(d)
+                    return definedY[d.name];
+                }
+                var format = d3.time.format("%Y-%m-%d-%H-%M-%S");
+                var dateFn = function(d) { return format.parse(d.date) }
+
+                var color = function(d) {
+                    return definedColors[d.name];
+                }
+
+                var eventLine = function(x, y, name) {
+
+                    
+                    /*console.log(name);
                     graphBody.append('circle')
-                    .attr('cx', 80)
-                    .style('fill', 'pink')
-                    .attr('cy', config.margin.top+i)
-                    .attr('r', 10);
+
+                    .attr("cx", x)
+                    .attr('cy', config.margin.top + y)
+                    .attr('r', 10);*/
                 };
 
                 /*Starts here*/
                 var graphWidth = config.width - config.margin.right - config.margin.left -40;
-                var graphHeight = data.length * 40;
+                var graphHeight = data.length * 30;
                 var height = graphHeight + config.margin.top + config.margin.bottom;
                 var svg = d3.select(element[0])
                     .append('svg:svg')
@@ -82,7 +112,7 @@ angular.module('mcm.charts', [])
 
                 function redraw() {
                     svg.select('.graph-body').remove();
-                    var graphBody = svg.append('g')
+                    graphBody = svg.append('g')
                         .classed('graph-body', true)
                         .attr("width", "100")
                         .attr("height", "100")
@@ -90,15 +120,27 @@ angular.module('mcm.charts', [])
                         .attr('transform', 'translate(' + config.margin.left + ', '
                               + (config.margin.top - 15) + ')');
                     var lines = graphBody.selectAll('g').data(data);
+
                     lines.enter()
                         .append('g')
                         .classed('line', true)
                         .attr('transform', function(d, i) {
-                                eventLine(i*40, d.name);
                                 return 'translate(0,' + i*40 + ')';
                             })
                         .style('fill', config.eventLineColor);
                     lines.exit().remove();
+
+                    eventLine(0,1,2);
+
+                    graphBody.selectAll("circle").data(data).enter()
+                        .append("svg:circle")
+                        .attr("r", 10)
+                        .style('fill', function(d) { return color(d) })
+                        .attr("cx", function(d) { return x(dateFn(d)) })
+                        .attr("cy", function(d) { return amountFn(d) })
+                        .append('title')
+                        .text(function(d) { return d.prepid});
+
                 }
                 redraw();
             }
@@ -126,7 +168,7 @@ angular.module('mcm.charts', [])
                         left: 50
                     },
                     width = customWidth - margin.left - margin.right,
-                    height = 500 - margin.top - margin.bottom,
+                        height = 500 - margin.top - margin.bottom,
                         l1, l2, l3, containerBox, hoverLineGroup, clipPath, rectLifetime, rectTaskChain;
                 
                 var fiveShadesOfGrey = ['#212121', '#424242', '#616161', '#757575', '#9e9e9e'];
@@ -314,9 +356,9 @@ angular.module('mcm.charts', [])
                             svg.selectAll('clipPath').remove();
                             clipPath = undefined;
                         }
-                        if (rect != undefined) {
-                            rect.remove();
-                            rect = undefined
+                        if (rectLifetime != undefined) {
+                            rectLifetime.remove();
+                            rectLifetime = undefined
                         }
                         svg.select('text.date-label').text('');
                         svg.select('text.expected-label').text('');
