@@ -66,7 +66,7 @@ class GetGrowing():
         for a_cc in arg_list:
             try:
                 mcm_cc = self.es.get('chained_campaigns',
-                                     'chain_campaign', a_cc)['_source']
+                                     'chained_campaign', a_cc)['_source']
             except Exception:
                 # try to see if that's a flow
                 # TODO: patch for this exception
