@@ -7,6 +7,57 @@ function endall(transition, callback) {
       }
 
 angular.module('mcm.charts', [])
+    .directive('statsTable', function() {
+        return {
+            restrict: 'AE',
+            scope: {
+                chartData: '='
+            },
+            link: function(scope) {
+                var dateFormat = d3.time.format("%Y-%m-%d-%H-%M");
+                var getDate = function(d) { return dateFormat.parse(d) }
+                var showTable = function() {
+
+                }
+                var statistics = {
+                    max: 0,
+                    mean: 0,
+                    median: 0,
+                    min: 0,
+                    population: 0,
+                    range: 0,
+                    sum: 0
+                }
+                
+                var updateStats = function() {
+                    statistics.max = d3.max(dataStats, function(d) {return d;});
+                    statistics.mean = d3.mean(dataStats, function(d) {return d})
+                    statistics.median = d3.median(dataStats, function(d) {return d;});
+                    statistics.min = d3.min(dataStats, function(d) {return d;});
+                    statistics.population = dataStats.length;
+                    statistics.range = statistics.max - statistics.min;
+                    statistics.sum = d3.sum(dataStats, function(d) {return d;});
+                }
+
+                scope.$watch('chartData', function(d) {
+                    dataStats = [];
+                    if (d != undefined) {
+                        d.forEach(function (e, i) {
+                            var history = e.history;
+                            if(Object.keys(history)) {
+                                if (history['done'] != undefined && history['created'] != undefined) {
+                                    var tmp = getDate(history['done']) - getDate(history['created']);
+                                    dataStats.push(tmp);
+                                }
+                            }
+                        });
+                        updateStats();
+                    }
+                });
+            }
+        }
+    })
+
     .directive('eventDrop', function() {
         return {
             restrict: 'AE',
@@ -195,11 +246,11 @@ angular.module('mcm.charts', [])
                     if (d != undefined) {
                         d.forEach(function (e, i) {
                             var history = e.history;
-                            if(history.length) {
-                                history.forEach(function (h, j) {
+                            if(Object.keys(history)) {
+                                Object.keys(history).forEach(function (h, j) {
                                     var tmp = {}
-                                    tmp['name'] = h.action;
-                                    tmp['date'] = h.time;
+                                    tmp['name'] = h;
+                                    tmp['date'] = history[h];
                                     tmp['prepid'] = e.prepid;
                                     data.push(tmp);
                                 });
@@ -208,8 +259,6 @@ angular.module('mcm.charts', [])
                         redraw();
                     }
                 });
-                
-                redraw();
             }
         }
     })
