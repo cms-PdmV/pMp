@@ -6,20 +6,37 @@ function endall(transition, callback) {
                             .each("end", function() { if (!--n) callback.apply(this, arguments); });
       }
 
-angular.module('mcm.charts', [])
-    .directive('statsTable', function() {
+angular.module('customFilters', [])
+    .filter('millSecondsToTimeString', function() {
+        return function (ms) {
+            var seconds = Math.floor(ms / 1000);
+            var days = Math.floor(seconds / 86400);
+            var hours = Math.floor((seconds % 86400) / 3600);
+            var minutes = Math.floor(((seconds % 86400) % 3600) / 60);
+            return days + "D " + hours + "h" + minutes + " m";
+         };
+    });
+
+angular.module('pmpCharts', [])
+
+    .directive('statsTable', function($compile) {
         return {
             restrict: 'AE',
             scope: {
                 chartData: '='
             },
-            link: function(scope) {
+                link: function(scope, element, compile) {
+                var isDrawn = false;
                 var dateFormat = d3.time.format("%Y-%m-%d-%H-%M");
                 var getDate = function(d) { return dateFormat.parse(d) }
-                var showTable = function() {
 
+                var showTable = function() {
+                    var innerHtml = '<table class="table table-bordered table-striped table-condensed col-lg-12 col-md-12 col-sm-12"><thead><tr><th class="text-center" ng-repeat="(key, _) in statistics">{{key}}</th></tr></thead><tbody><tr><td class="text-center" ng-repeat="(key, element) in statistics"><span ng-show="key == \'population\'">{{element}}</span><span ng-hide="key == \'population\'">{{element | millSecondsToTimeString}}</span></td></tr></tbody></table>';
+                    element.append($compile(innerHtml)(scope));
+                    isDrawn = true;
                 }
-                var statistics = {
+
+                scope.statistics = {
                     max: 0,
                     mean: 0,
                     median: 0,
@@ -30,13 +47,13 @@ angular.module('mcm.charts', [])
                 }
                 
                 var updateStats = function() {
-                    statistics.max = d3.max(dataStats, function(d) {return d;});
-                    statistics.mean = d3.mean(dataStats, function(d) {return d})
-                    statistics.median = d3.median(dataStats, function(d) {return d;});
-                    statistics.min = d3.min(dataStats, function(d) {return d;});
-                    statistics.population = dataStats.length;
-                    statistics.range = statistics.max - statistics.min;
-                    statistics.sum = d3.sum(dataStats, function(d) {return d;});
+                    scope.statistics.max = d3.max(dataStats, function(d) {return d;});
+                    scope.statistics.mean = d3.mean(dataStats, function(d) {return d})
+                    scope.statistics.median = d3.median(dataStats, function(d) {return d;});
+                    scope.statistics.min = d3.min(dataStats, function(d) {return d;});
+                    scope.statistics.population = dataStats.length;
+                    scope.statistics.range = scope.statistics.max - scope.statistics.min;
+                    scope.statistics.sum = d3.sum(dataStats, function(d) {return d;});
                 }
 
                 scope.$watch('chartData', function(d) {
@@ -52,6 +69,9 @@ angular.module('mcm.charts', [])
                             }
                         });
                         updateStats();
+                        if (!isDrawn) {
+                            showTable();
+                        }
                     }
                 });
             }
