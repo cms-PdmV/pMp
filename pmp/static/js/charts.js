@@ -20,57 +20,67 @@ angular.module('mcm.charts', [])
                 var data = [{ name: "created", date: '2014-09-15-13-23-54', prepid:'dummy1'},{ name: "approved", date: '2014-09-15-13-24-57', prepid: 'dummy2'},{name: "submitted", prepid: 'asda',date: '2014-09-15-13-25-12'}, {name: "done", prepid: 'asdad2', date: '2014-09-15-13-24-57'},{name: "done", prepid: 'asdad2', date: '2014-09-15-13-25-57'}];
 
                 var config = {
-                    definedColors = {
+                    definedColors: {
                         created: '#ffd54f',
                         approved: '#aed581',
                         submitted: '#9575cd',
                         done: '#4fc3f7'
-                    }
-                    definedYOffset = {
+                    },
+                    definedYOffset: {
                         created: 15,
                         approved: 55 ,
                         submitted: 95,
                         done: 135
-                    }
+                    },
                     margin: {
                         top: 40,
                         left: 40,
                         bottom: 20,
                         right: 20
                     },
-                    hasTopAxis: true,
+                    height: 120,
                     width: 1170,
-                    eventLineColor: 'black',
+                    axisLineColor: '#9e9e9e',
                 };
 
-                var amountFn = function(d) {
-                    return config.definedYOffset[d.name];
-                }
-                var format = d3.time.format("%Y-%m-%d-%H-%M-%S");
-                var dateFn = function(d) { return format.parse(d.date) }
+                var zoom = d3.behavior.zoom()
+                    .on("zoom", onZoom);
 
-                var color = function(d) {
-                    return config.definedColors[d.name];
-                }
-
+                var dateFormat = d3.time.format("%Y-%m-%d-%H-%M-%S");
+                var getYOffset = function(d) { return config.definedYOffset[d.name]; }
+                var getDate = function(d) { return dateFormat.parse(d.date) }
+                var getColor = function(d) { return config.definedColors[d.name]; }
                 var graphWidth = config.width - config.margin.right - config.margin.left - 40;
-                var graphHeight = 120;
-                var height = graphHeight + config.margin.top + config.margin.bottom;
+                var graphHeight = config.height + config.margin.top + config.margin.bottom;
+
+                // Start to draw
                 var svg = d3.select(element[0])
                     .append('svg:svg')
-                    .attr("viewBox", "0 -20 " + (graphWidth) + " " + (height*1.5))
-                    .attr("width", "100%")
-                    .attr("height", "100%")
-                    .append("svg:g")
-                    .attr("transform", "translate(" + (config.margin.left+40) + ","
-                          + config.margin.top + ")")
+                    .attr('viewBox', '0 -20 ' + (graphWidth) + ' ' + (graphHeight*1.5))
+                    .attr('width', '100%')
+                    .attr('height', '100%')
+                    .append('svg:g')
+                    .attr('transform', 'translate(' + (config.margin.left+40) + ','
+                          + config.margin.top + ')')
                     .attr('style', 'fill: none');
+                
+                // Croping graph
+                var defs = svg.append('defs');
+                var clipPath = defs.append('svg:clipPath')
+                    .attr('id', 'clip')
+                    .append('svg:rect')
+                    .attr('id', 'clip-rect')
+                    .attr('x', '0')
+                    .attr('y', '0')
+                    .attr('transform', 'translate(-10, 0)')
+                    .attr('width', graphWidth)
+                    .attr('height', graphHeight);
 
-                var x = d3.time.scale().range([0, graphWidth-100]);
+                var x = d3.time.scale();
                 var xAxis = d3.svg.axis().scale(x).ticks(4).tickSubdivide(1).orient('top');
-                var gx = svg.append('g')
+                var xAxisG = svg.append('g')
                     .classed('x axis', true)
-                    .attr('fill', '#666')
+                    .attr('fill', config.axisLineColor)
                     .attr('transform', 'translate(' + config.margin.left + ', '
                           + (config.margin.top-40) + ')')
                     .call(xAxis);
@@ -82,26 +92,26 @@ angular.module('mcm.charts', [])
                     done: 0
                 };
                 var asdf;
+
                 var yDomainCalc = function() {
                     data.forEach(function (event, index) {                   
                             yDomain[event.name] += 1
                         });
-                    
                     asdf = [];
                     for(var k in yDomain) asdf.push(k + ' (' + yDomain[k]  + ')');
                 }
                 yDomainCalc();
 
-                var y = d3.scale.ordinal().domain(asdf).rangePoints([0, graphHeight]);
+                var y = d3.scale.ordinal().domain(asdf).rangePoints([0, config.height]);
                 var yAxis = d3.svg.axis().scale(y).orient("left");
                 var gy = svg.append("svg:g")
                     .attr("class", "y axis minory")
-                    .attr('fill', '#666')
+                    .attr('fill', config.axisLineColor)
                     .attr('transform', 'translate(' + (config.margin.left-10) + ', '
                           + config.margin.top + ')')
                     .call(yAxis)
                     .append('line')
-                    .attr('fill', '#666')
+                    .attr('fill', config.axisLineColor)
                     .classed('y-tick', true)
                     .attr('x1', 0)
                     .attr('x2', 0 + graphWidth-100)
@@ -109,10 +119,23 @@ angular.module('mcm.charts', [])
 
                 function redraw() {
                     svg.select('.graph-body').remove();
+
+                    svg.append('rect')
+                        .attr('transform', 'translate(' + config.margin.left + ', 0)')
+                        .style('cursor', 'move')
+                        .style('fill', 'none')
+                        .style('pointer-events', 'all')
+                        .attr('class', 'pane')
+                        .attr('width', graphWidth)
+                        .attr('height', graphHeight)
+                        .call(zoom);
+
                     graphBody = svg.append('g')
                         .classed('graph-body', true)
+                        .attr('clip-path', 'url(#clip)')
                         .attr('transform', 'translate(' + config.margin.left + ', '
                               + (config.margin.top - 15) + ')');
+
                     var lines = graphBody.selectAll('g').data(data);
                     lines.enter()
                         .append('g')
@@ -120,7 +143,7 @@ angular.module('mcm.charts', [])
                         .attr('transform', function(d, i) {
                                 return 'translate(0,' + i*40 + ')';
                             })
-                        .style('fill', config.eventLineColor);
+                        .style('fill', config.axisLineColor);
                     lines.exit().remove();
 
                     currentMin = d3.min(data, function(d) {
@@ -130,19 +153,29 @@ angular.module('mcm.charts', [])
                             return d.date;
                         });
 
-                    x.domain([format.parse(currentMin),format.parse(currentMax)]).range([0, graphWidth-140]);;
+                    x.domain([dateFormat.parse(currentMin),dateFormat.parse(currentMax)]).range([0, graphWidth-140]);;
                     xAxis.scale(x);
-                    gx.transition().duration(200)
+                    xAxisG.transition().duration(200)
                         .ease("linear").call(xAxis);
+                    zoom.x(x);
 
                     graphBody.selectAll("circle").data(data).enter()
                         .append("svg:circle")
                         .attr("r", 10)
-                        .style('fill', function(d) { return color(d) })
-                        .attr("cx", function(d) { return x(dateFn(d)) })
-                        .attr("cy", function(d) { return amountFn(d) })
+                        .attr('id', 'point')
+                        .style('fill', function(d) { return getColor(d) })
+                        .attr("cx", function(d) { return x(getDate(d)) })
+                        .attr("cy", function(d) { return getYOffset(d) })
                         .append('title')
                         .text(function(d) { return d.prepid});
+
+
+                }
+
+                // Zoom
+                function onZoom() {
+                    xAxisG.call(xAxis);
+                    svg.selectAll('circle').attr('cx', function(d) { return x(getDate(d)) });
                 }
                 redraw();
             }
