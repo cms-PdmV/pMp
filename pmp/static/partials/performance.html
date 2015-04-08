@@ -77,8 +77,8 @@
   </div>
 </div>
 
-<div class="row">
+<div class="row" ng-hide="!allRequestData.length">
   <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 text-center">
-    <some-thing></some-thing>
+    <event-drop chart-data="allRequestData"></event-drop>
   </div>
 </div>

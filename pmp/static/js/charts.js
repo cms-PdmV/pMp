@@ -7,7 +7,7 @@ function endall(transition, callback) {
       }
 
 angular.module('mcm.charts', [])
-    .directive('someThing', function() {
+    .directive('eventDrop', function() {
         return {
             restrict: 'AE',
             scope: {
@@ -15,9 +15,6 @@ angular.module('mcm.charts', [])
             },
             link: function(scope, element) {
                 var graphBody;
-
-                /**dummy*/
-                var data = [{ name: "created", date: '2014-09-15-13-23-54', prepid:'dummy1'},{ name: "approved", date: '2014-09-15-13-24-57', prepid: 'dummy2'},{name: "submitted", prepid: 'asda',date: '2014-09-15-13-25-12'}, {name: "done", prepid: 'asdad2', date: '2014-09-15-13-24-57'},{name: "done", prepid: 'asdad2', date: '2014-09-15-13-25-57'}];
 
                 var config = {
                     definedColors: {
@@ -38,6 +35,7 @@ angular.module('mcm.charts', [])
                         bottom: 20,
                         right: 20
                     },
+                    pointsOpacity: 0.2,
                     height: 120,
                     width: 1170,
                     axisLineColor: '#9e9e9e',
@@ -46,7 +44,7 @@ angular.module('mcm.charts', [])
                 var zoom = d3.behavior.zoom()
                     .on("zoom", onZoom);
 
-                var dateFormat = d3.time.format("%Y-%m-%d-%H-%M-%S");
+                var dateFormat = d3.time.format("%Y-%m-%d-%H-%M");
                 var getYOffset = function(d) { return config.definedYOffset[d.name]; }
                 var getDate = function(d) { return dateFormat.parse(d.date) }
                 var getColor = function(d) { return config.definedColors[d.name]; }
@@ -105,18 +103,21 @@ angular.module('mcm.charts', [])
                     for(var k in yLabelCount) yLabels.push(k + ' (' + yLabelCount[k]  + ')');
                 }
                 var y = d3.scale.ordinal();
-                var yAxis = d3.svg.axis().scale(y).orient("left");
-                var yAxisG = svg.append("svg:g")
-                    .attr("class", "y axis minory")
+                var yAxis = d3.svg.axis().scale(y).orient('left');
+                var yAxisG = svg.append('svg:g')
+                    .attr('class', 'y axis minory')
                     .attr('fill', config.axisLineColor)
                     .attr('transform', 'translate(' + (config.margin.left-10) + ', '
                           + config.margin.top + ')')
-                    .call(yAxis)
+                    .call(yAxis);
 
                 function redraw() {
                     svg.select('.graph-body').remove();
+                    svg.select('.graph-zoom').remove();
+                    svg.selectAll('.point').remove();
 
                     svg.append('rect')
+                        .classed('graph-zoom', true)
                         .attr('transform', 'translate(' + config.margin.left + ', 0)')
                         .style('cursor', 'move')
                         .style('fill', 'none')
@@ -125,7 +126,6 @@ angular.module('mcm.charts', [])
                         .attr('width', graphWidth)
                         .attr('height', graphHeight)
                         .call(zoom);
-
                     graphBody = svg.append('g')
                         .classed('graph-body', true)
                         .attr('clip-path', 'url(#clip)')
@@ -141,7 +141,7 @@ angular.module('mcm.charts', [])
                             })
                         .style('fill', config.axisLineColor);
                     lines.exit().remove();
-
+                    
                     currentMin = d3.min(data, function(d) {
                             return d.date;
                         });
@@ -149,7 +149,8 @@ angular.module('mcm.charts', [])
                             return d.date;
                         });
 
-                    x.domain([dateFormat.parse(currentMin),dateFormat.parse(currentMax)]).range([0, graphWidth-config.margin.left-90]);;
+                    x.domain([dateFormat.parse(currentMin),dateFormat.parse(currentMax)])
+                        .range([0, graphWidth-config.margin.left-90]);
                     xAxis.scale(x);
                     xAxisG.transition().duration(500)
                         .ease("linear").call(xAxis);
@@ -167,13 +168,14 @@ angular.module('mcm.charts', [])
                         .attr('x2', 0 + graphWidth-100)
                         .attr('transform', 'translate(0,-40)');
                         
-                    graphBody.selectAll("circle").data(data).enter()
-                        .append("svg:circle")
-                        .attr("r", 10)
+                    graphBody.selectAll('circle').data(data).enter()
+                        .append('svg:circle')
+                        .attr('r', 10)
                         .attr('id', 'point')
+                        .attr('cx', function(d) { return x(getDate(d)) })
+                        .attr('cy', function(d) { return getYOffset(d) })
+                        .style('opacity', config.pointsOpacity)
                         .style('fill', function(d) { return getColor(d) })
-                        .attr("cx", function(d) { return x(getDate(d)) })
-                        .attr("cy", function(d) { return getYOffset(d) })
                         .append('title')
                         .text(function(d) { return d.prepid});
                 }
@@ -187,6 +189,26 @@ angular.module('mcm.charts', [])
                     yAxisG.call(yAxis);
                     svg.selectAll('circle').attr('cx', function(d) { return x(getDate(d)) });
                 }
+
+                scope.$watch('chartData', function(d) {
+                    data = [];
+                    if (d != undefined) {
+                        d.forEach(function (e, i) {
+                            var history = e.history;
+                            if(history.length) {
+                                history.forEach(function (h, j) {
+                                    var tmp = {}
+                                    tmp['name'] = h.action;
+                                    tmp['date'] = h.time;
+                                    tmp['prepid'] = e.prepid;
+                                    data.push(tmp);
+                                });
+                            }
+                        });
+                        redraw();
+                    }
+                });
+                
                 redraw();
             }
         }

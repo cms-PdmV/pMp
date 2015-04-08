@@ -523,6 +523,20 @@ class GetPerformance():
                     del r[field]
                 except KeyError:
                     pass
+
+                # duplicates fix
+                patch_history = {}
+                for h in r['history']:
+                    patch_history[h['action']] = h['time']
+
+                new_history = []
+                for h in patch_history.keys():
+                    tmp = {}
+                    tmp['action'] = h
+                    tmp['time'] = patch_history[h]
+                    new_history.append(tmp)
+                r['history'] = new_history
+
         return json.dumps({"results": res})
 
 
