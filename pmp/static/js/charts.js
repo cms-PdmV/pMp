@@ -76,6 +76,7 @@ angular.module('mcm.charts', [])
                     .attr('width', graphWidth)
                     .attr('height', graphHeight);
 
+                // x Axis
                 var x = d3.time.scale();
                 var xAxis = d3.svg.axis().scale(x).ticks(4).tickSubdivide(1).orient('top');
                 var xAxisG = svg.append('g')
@@ -85,37 +86,32 @@ angular.module('mcm.charts', [])
                           + (config.margin.top-40) + ')')
                     .call(xAxis);
 
-                var yDomain = {
-                    created: 0, 
-                    approved: 0,
-                    submitted: 0, 
-                    done: 0
-                };
-                var asdf;
-
-                var yDomainCalc = function() {
-                    data.forEach(function (event, index) {                   
-                            yDomain[event.name] += 1
-                        });
-                    asdf = [];
-                    for(var k in yDomain) asdf.push(k + ' (' + yDomain[k]  + ')');
+                // y Axis
+                var yLabelCount;
+                var yLabels;
+                var resetLabelCount = function() {
+                    yLabelCount = { created: 0, approved: 0, submitted: 0, done: 0};
                 }
-                yDomainCalc();
-
-                var y = d3.scale.ordinal().domain(asdf).rangePoints([0, config.height]);
+                var updateLabels = function() {
+                    resetLabelCount();
+                    var xDomain = x.domain();
+                    data.forEach(function (event, index) {
+                        if (dateFormat.parse(event.date) >= xDomain[0] &&
+                            dateFormat.parse(event.date) <= xDomain[1]) {
+                            yLabelCount[event.name] += 1;
+                        }
+                    });
+                    yLabels = [];
+                    for(var k in yLabelCount) yLabels.push(k + ' (' + yLabelCount[k]  + ')');
+                }
+                var y = d3.scale.ordinal();
                 var yAxis = d3.svg.axis().scale(y).orient("left");
-                var gy = svg.append("svg:g")
+                var yAxisG = svg.append("svg:g")
                     .attr("class", "y axis minory")
                     .attr('fill', config.axisLineColor)
                     .attr('transform', 'translate(' + (config.margin.left-10) + ', '
                           + config.margin.top + ')')
                     .call(yAxis)
-                    .append('line')
-                    .attr('fill', config.axisLineColor)
-                    .classed('y-tick', true)
-                    .attr('x1', 0)
-                    .attr('x2', 0 + graphWidth-100)
-                    .attr('transform', 'translate(0,-40)');
 
                 function redraw() {
                     svg.select('.graph-body').remove();
@@ -153,12 +149,24 @@ angular.module('mcm.charts', [])
                             return d.date;
                         });
 
-                    x.domain([dateFormat.parse(currentMin),dateFormat.parse(currentMax)]).range([0, graphWidth-140]);;
+                    x.domain([dateFormat.parse(currentMin),dateFormat.parse(currentMax)]).range([0, graphWidth-config.margin.left-90]);;
                     xAxis.scale(x);
-                    xAxisG.transition().duration(200)
+                    xAxisG.transition().duration(500)
                         .ease("linear").call(xAxis);
                     zoom.x(x);
 
+                    svg.select('.y-tick').remove();
+                    updateLabels();
+                    y.domain(yLabels).rangePoints([0, config.height]);
+                    yAxis.scale(y);
+                    yAxisG.call(yAxis);
+                    yAxisG.append('line')
+                        .attr('fill', config.axisLineColor)
+                        .classed('y-tick', true)
+                        .attr('x1', 0)
+                        .attr('x2', 0 + graphWidth-100)
+                        .attr('transform', 'translate(0,-40)');
+                        
                     graphBody.selectAll("circle").data(data).enter()
                         .append("svg:circle")
                         .attr("r", 10)
@@ -168,13 +176,15 @@ angular.module('mcm.charts', [])
                         .attr("cy", function(d) { return getYOffset(d) })
                         .append('title')
                         .text(function(d) { return d.prepid});
-
-
                 }
 
                 // Zoom
                 function onZoom() {
                     xAxisG.call(xAxis);
+                    updateLabels();
+                    y.domain(yLabels).rangePoints([0, config.height]);
+                    yAxis.scale(y);
+                    yAxisG.call(yAxis);
                     svg.selectAll('circle').attr('cx', function(d) { return x(getDate(d)) });
                 }
                 redraw();
