@@ -144,6 +144,13 @@
           </small>
         </label>
         <br/>
+        <label class="checkbox-inline col-lg-12 col-md-12 col-sm-12">
+          <input type="checkbox" ng-model="humanReadableNumbers">
+          <small>
+            Human Readable Numbers
+          </small>
+        </label>
+        <br/>
         <label class="checkbox-inline col-lg-12 col-md-12 col-sm-12 spacing">
           <input type="checkbox" ng-model="growingMode"
                  ng-change="modeUpdate();setURL()">
@@ -188,7 +195,8 @@
     <multiple-pie-charts color-domain="piecharts.domain" table-title="Campaigns"
                          data="allRequestData" full-terms="piecharts.fullTerms"
                          compact-terms="piecharts.compactTerms" sum-by="piecharts.sum"
-                         nest-by="piecharts.nestBy" show-upcoming="growingMode">
+                         nest-by="piecharts.nestBy" show-upcoming="growingMode"
+                         human-readable-numbers="humanReadableNumbers">
     </multiple-pie-charts>
     
   </div>

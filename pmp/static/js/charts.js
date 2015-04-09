@@ -14,7 +14,31 @@ angular.module('customFilters', [])
             var hours = Math.floor((seconds % 86400) / 3600);
             var minutes = Math.floor(((seconds % 86400) % 3600) / 60);
             return days + "D " + hours + "h" + minutes + " m";
-         };
+        };
+    })
+    .filter('humanReadableNumbers', function() {
+        return function (d) {
+
+            if (d == 0) {
+                return 0;
+            }
+
+            var l = ['G', 'M', 'k', ''];
+
+            var s, j = 0
+
+                for (var i = 1e9; i >= 1; i = i / 1e3) {
+                    s = d / i;
+                    if (s >= 1) { 
+                        if ((s + '').substring(0, 3).endsWith('.')) {
+                            return (s + '').substring(0, 4) + l[j];
+                        }
+                        return (s + '').substring(0, 3) + l[j];
+                    }
+                    j++;
+                }
+            return '';
+        };
     });
 
 angular.module('pmpCharts', [])
@@ -2042,6 +2066,7 @@ angular.module('pmpCharts', [])
             showTable: "=?", // should the table be shown below piecharts (by default true)
             tableTitle: "@", // title of the left column in table
             showUpcoming: '=',
+            humanReadableNumbers: '=',
             colorDomain: "=?" // order of colors (colors are taken as 10 basic colors from d3.js)
         },
         link: function(scope, element, attrs) {
@@ -2169,7 +2194,7 @@ angular.module('pmpCharts', [])
 
             var innerHtml = '<mcm-donut-chart ng-repeat="(key, terms) in current_data" data="terms.data" outer-radius="100" inner-radius="40" inner-title="{{key}}" on-click-title="changeChart" domain="domain"></mcm-donut-chart>';
             if (showTable) {
-                innerHtml += '<table class="table table-bordered table-striped table-condensed col-lg-12 col-md-12 col-sm-12"><thead><tr><th class="text-center">{{tableTitle}}</th><th class="text-center" ng-repeat="term in fullTerms">{{term}}</th></tr></thead><tbody><tr ng-repeat="(key, terms) in piechart_data_full"><td class="text-left">{{key}}</td><td class="text-right" ng-show="element.term !== \'upcoming\' || showUpcoming" ng-repeat="element in terms.terms">{{element.count}}</td></tr></tbody></table>';
+                innerHtml += '<table class="table table-bordered table-striped table-condensed col-lg-12 col-md-12 col-sm-12"><thead><tr><th class="text-center">{{tableTitle}}</th><th class="text-center" ng-repeat="term in fullTerms">{{term}}</th></tr></thead><tbody><tr ng-repeat="(key, terms) in piechart_data_full"><td class="text-left">{{key}}</td><td class="text-right" ng-show="element.term !== \'upcoming\' || showUpcoming" ng-repeat="element in terms.terms"><span ng-show=\'humanReadableNumbers\'>{{element.count | humanReadableNumbers}}</span><span ng-hide=\'humanReadableNumbers\'>{{element.count}}</span></td></tr></tbody></table>';
             }
             element.append($compile(innerHtml)(scope));
         }
