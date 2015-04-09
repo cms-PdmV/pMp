@@ -4,7 +4,12 @@ import logging
 import os
 import utils
 
-## for now we should run through -int as -prod doesn't have latest update yet
+'''
+An update deamon ensuring the sych between McM DB and Stats DB
+for "completed_events" and "pdmv_evts_in_DAS" fields
+'''
+
+## TEMP: for now we should run through -int as -prod doesn't have latest update yet
 
 MCM_URL = 'https://cms-pdmv-int.cern.ch/mcm/'
 STATS_URL = 'https://cms-pdmv.cern.ch/stats/'
@@ -48,9 +53,12 @@ if __name__ == "__main__":
         res, status = utl.curl('GET', url, cookie=mcm_cookie)
 
         if status != 200:
+            logging.error('%s Getting Error while querying for %s' %
+                          (utl.get_time(), request))
             continue
 
-        if res['completed_events'] == -1:
+        # skip not done
+        if res['status'] != 'done':
             continue
 
         ce = 0
@@ -64,12 +72,10 @@ if __name__ == "__main__":
             ce = max(ce, res_s['pdmv_evts_in_DAS'])
 
         if res['completed_events'] != ce:
-            print 'Request: ', request
-            print 'Events in Stats: ', ce
-            print 'Events in McM: ', res['completed_events']
+            print 'Updating ', request
 
             # update field in mcm
             url = str(MCM_URL + 'restapi/requests/update_stats/%s/no_refresh' %(request))
             res_up, status_up = utl.curl('GET', url, cookie=mcm_cookie)
             if status_up != 200:
-                print "\tIssues while updating %s result:\n%s" %(request, res_up)
+               print "\tIssues while updating %s result:\n%s" %(request, res_up)
