@@ -217,6 +217,18 @@ class GetAnnounced():
         return json.dumps({"results": res})
 
 
+class GetLastUpdate():
+
+    def __init__(self):
+        self.es = ElasticSearch(config.DATABASE_URL)
+
+    def get(self, query):
+        query = query.split(',')
+        lu = {}
+        lu['last_update'] = query
+        return json.dumps({"results": lu})
+
+
 class GetLifetime():
 
     def __init__(self):

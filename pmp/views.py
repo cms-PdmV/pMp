@@ -46,6 +46,8 @@ def api(i, typeof):
         g = models.GetLifetime()
     elif typeof == 'performance':
         g = models.GetPerformance()
+    elif typeof == 'lastupdate':
+        g = models.GetLastUpdate()
     if g is None:
         return make_response('{}')
     return make_response(g.get(i))

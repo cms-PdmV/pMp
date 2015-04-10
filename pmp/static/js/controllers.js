@@ -382,6 +382,20 @@ pmpApp.controller('PresentController', function($http, $location, $interval, $q,
         $scope.dt = new Date();
     }
 
+    $scope.updateUpdate = function() {
+        $scope.lastUpdate = 'Malaka';
+        if ($scope.growingMode) {
+            var promise = $http.get("api/campaigns,chained_campaigns," +
+                                    "requests,chained_requests/lastupdate");
+        } else {
+            var promise = $http.get("api/campaigns/lastupdate");
+        }
+        promise.then(function(data) {
+                console.log(data);
+
+            });
+    }
+
     $scope.updatePwg = function(x, vDefault) {
         var data = $scope.pwg;
         for (var i = 0; i < x.length; i++) {
@@ -423,6 +437,8 @@ pmpApp.controller('PresentController', function($http, $location, $interval, $q,
     }
 
     $interval($scope.updateDate, 1000);
+    $interval($scope.updateUpdate, 2*60*1000);
+    $scope.updateUpdate();
 
     new ZeroClipboard(document.getElementById('copy'), {
             moviePath: 'lib/zeroclipboard/ZeroClipboard.swf'
@@ -817,4 +833,6 @@ pmpApp.controller('PerformanceController', function($http, $scope) {
             }
         }
     }
+
+    $scope.title = 'Request Performance';
 });
