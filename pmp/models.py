@@ -66,7 +66,7 @@ class GetGrowing():
         for a_cc in arg_list:
             try:
                 mcm_cc = self.es.get('chained_campaigns',
-                                     'chain_campaign', a_cc)['_source']
+                                     'chained_campaign', a_cc)['_source']
             except Exception:
                 # try to see if that's a flow
                 # TODO: patch for this exception
@@ -209,10 +209,13 @@ class GetAnnounced():
                 r['time_event'] = 0
 
             # remove unnecessary fields to speed up api
-            del r['completed_events']
-            del r['reqmgr_name']
-            del r['history']
-            del r['output_dataset']
+            try:
+                del r['completed_events']
+                del r['reqmgr_name']
+                del r['history']
+                del r['output_dataset']
+            except KeyError:
+                print r['prepid']
 
         return json.dumps({"results": res})
 
@@ -224,8 +227,13 @@ class GetLastUpdate():
 
     def get(self, query):
         query = query.split(',')
+        last_update = None
+        for q in query:
+            l = self.es.get(q, 'seq', 'time')['_source']
+            if last_udpate is None or l < last_update:
+                last_update = l
         lu = {}
-        lu['last_update'] = query
+        lu['last_update'] = last_update
         return json.dumps({"results": lu})
 
 
