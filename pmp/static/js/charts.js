@@ -7,6 +7,11 @@ function endall(transition, callback) {
       }
 
 angular.module('customFilters', [])
+
+/*
+Parse time in milliseconds to the human readable format
+ */
+
     .filter('millSecondsToTimeString', function() {
         return function (ms) {
             var seconds = Math.floor(ms / 1000);
@@ -16,24 +21,24 @@ angular.module('customFilters', [])
             return days + "D " + hours + "h" + minutes + " m";
         };
     })
+
+/*
+Parse numbers to the human readable format
+ */
+
     .filter('humanReadableNumbers', function() {
         return function (d) {
-
-            if (d == 0) {
-                return 0;
-            }
-
+            var significantFigures = 3;
+            if (!d) { return 0;}
             var l = ['G', 'M', 'k', ''];
-
             var s, j = 0
-
                 for (var i = 1e9; i >= 1; i = i / 1e3) {
                     s = d / i;
                     if (s >= 1) { 
-                        if ((s + '').substring(0, 3).endsWith('.')) {
-                            return (s + '').substring(0, 4) + l[j];
+                        if ((s + '').substring(0, significantFigures).endsWith('.')) {
+                            return (s + '').substring(0, significantFigures+1) + l[j];
                         }
-                        return (s + '').substring(0, 3) + l[j];
+                        return (s + '').substring(0, significantFigures) + l[j];
                     }
                     j++;
                 }
@@ -114,15 +119,17 @@ angular.module('pmpCharts', [])
                 var config = {
                     definedColors: {
                         created: '#ffd54f',
+                        validation: '#795548',
                         approved: '#aed581',
                         submitted: '#9575cd',
                         done: '#4fc3f7'
                     },
                     definedYOffset: {
                         created: 15,
-                        approved: 55 ,
-                        submitted: 95,
-                        done: 135
+                        validation: 55,
+                        approved: 95,
+                        submitted: 135,
+                        done: 175
                     },
                     margin: {
                         top: 40,
@@ -131,7 +138,7 @@ angular.module('pmpCharts', [])
                         right: 20
                     },
                     pointsOpacity: 0.2,
-                    height: 120,
+                    height: 160,
                     width: 1170,
                     axisLineColor: '#9e9e9e',
                 };
@@ -183,7 +190,7 @@ angular.module('pmpCharts', [])
                 var yLabelCount;
                 var yLabels;
                 var resetLabelCount = function() {
-                    yLabelCount = { created: 0, approved: 0, submitted: 0, done: 0};
+                    yLabelCount = { created: 0, validation: 0, approved: 0, submitted: 0, done: 0};
                 }
                 var updateLabels = function() {
                     resetLabelCount();
