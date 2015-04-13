@@ -227,11 +227,11 @@ class GetLastUpdate():
 
     def get(self, query):
         query = query.split(',')
-        last_update = None
+        last_update = 0
         for q in query:
-            l = self.es.get(q, 'seq', 'time')['_source']
-            if last_udpate is None or l < last_update:
-                last_update = l
+            l = self.es.get(q, 'seq', 'last_seq')['_source']
+            if last_update == 0 or l['time'] < last_update:
+                last_update = l['time']
         lu = {}
         lu['last_update'] = last_update
         return json.dumps({"results": lu})

@@ -383,7 +383,6 @@ pmpApp.controller('PresentController', function($http, $location, $interval, $q,
     }
 
     $scope.updateUpdate = function() {
-        $scope.lastUpdate = 'Malaka';
         if ($scope.growingMode) {
             var promise = $http.get("api/campaigns,chained_campaigns," +
                                     "requests,chained_requests/lastupdate");
@@ -391,9 +390,8 @@ pmpApp.controller('PresentController', function($http, $location, $interval, $q,
             var promise = $http.get("api/campaigns/lastupdate");
         }
         promise.then(function(data) {
-                console.log(data);
-
-            });
+            $scope.lastUpdate = data.data.results.last_update
+        });
     }
 
     $scope.updatePwg = function(x, vDefault) {
@@ -760,7 +758,16 @@ pmpApp.controller('HistoricalController', function($http, $location, $scope, $ro
         $scope.query(true);
     }
 
+    $scope.updateUpdate = function() {
+        var promise = $http.get("api/stats/lastupdate");
+        promise.then(function(data) {
+            $scope.lastUpdate = data.data.results.last_update
+        });
+    }
+
     $interval($scope.updateDate, 1000);
+    $interval($scope.updateUpdate, 2*60*1000);
+    $scope.updateUpdate();
 
     new ZeroClipboard(document.getElementById('copy'), {
         moviePath: 'lib/zeroclipboard/ZeroClipboard.swf'
