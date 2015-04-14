@@ -348,13 +348,9 @@ class GetHistorical():
                 prev = a
         return r
 
-    def prepare_response(self, query, probe, p_min, p_max,
-                         status_i, pwg_i, tc):
-        taskchain = True
+    def prepare_response(self, query, probe, p_min, p_max, status_i, pwg_i):
         stop = False
-
         r = []
-
         status = {}
         pwg = {}
 
@@ -362,8 +358,6 @@ class GetHistorical():
             
             # Process the db documents
             for (is_request, document, details) in self.db_query(q):
-
-                print document
 
                 # skip empty documents
                 if document is None:
@@ -413,11 +407,7 @@ class GetHistorical():
                 response['request'] = document['pdmv_prep_id']
 
                 # taskchain handiling
-                #taskchain = taskchain and (document['pdmv_type'] == 'TaskChain')
-                if False:
-                #tc and taskchain:
-                    print tc
-                    '''
+                if not is_request and (document['pdmv_type'] == 'TaskChain'):
                     # load taskchain instead of normal req
                     for t in document['pdmv_monitor_taskchain']:
                         res = {}
@@ -437,14 +427,9 @@ class GetHistorical():
                     re['data'] = r  
                     re['status'] = {}
                     re['pwg'] = {}
-                    re['taskchain'] = taskchain
+                    re['taskchain'] = True
                     stop = True
                         
-                    elif tc:
-                    # perhaps someone is playing with url
-                    stop = True
-                    re = {}
-                    '''
                 else:
                     if 'pdmv_monitor_history' in document:
                         for record in document['pdmv_monitor_history']:
@@ -467,12 +452,8 @@ class GetHistorical():
                                 response['data'].append(data)
                     r.append(response)
 
-        print len(r)
-        '''
         if stop:
             return re
-            # taskchain
-            '''
 
         # Step 1: Get accumulated requests
         tmp = {}
@@ -485,8 +466,6 @@ class GetHistorical():
             tmp[s]['data'] = sorted(tmp[s]['data'], key=lambda e: e['t'])
             tmp[s]['data'] = self.rm_useless(tmp[s]['data'])
         
-        print len(tmp)
-
         # Step 2: Get and sort timestamps
         times = []
         for t in tmp:
@@ -536,10 +515,10 @@ class GetHistorical():
         return re
 
     def get(self, query, probe=100, priority_min=0, priority_max=-1,
-            status=None, pwg=None, taskchain=False):
-        return json.dumps({"results": self.prepare_response(query.split(','), probe,
-                                                            priority_min, priority_max,
-                                                            status, pwg, taskchain)})
+            status=None, pwg=None):
+        return json.dumps({"results": self.prepare_response(
+                    query.split(','), probe, priority_min, priority_max,
+                    status, pwg)})
 
 class GetPerformance():
     '''

@@ -53,8 +53,8 @@ def api(i, typeof):
     return make_response(g.get(i))
 
 
-@app.route('/api/<i>/historical/<p>/<priority>/<status>/<pwg>/<taskchain>')
-def api_historical_extended(i, p, priority, status, pwg, taskchain):
+@app.route('/api/<i>/historical/<p>/<priority>/<status>/<pwg>')
+def api_historical_extended(i, p, priority, status, pwg):
     '''
     API call for complex historical queries
     i - list of inputs (csv)
@@ -67,8 +67,7 @@ def api_historical_extended(i, p, priority, status, pwg, taskchain):
     gl = models.GetHistorical()
     priority = parse_priority_csv(priority.split(','))
     return make_response(gl.get(i, int(p), int(priority[0]), int(priority[1]),
-                                parse_csv(status), parse_csv(pwg),
-                                taskchain == 'true'))
+                                parse_csv(status), parse_csv(pwg)))
 
 
 @app.route('/api/suggest/<input>/<typeof>')

@@ -494,13 +494,6 @@ pmpApp.controller('HistoricalController', function($http, $location, $scope, $ro
             $scope.zoomOnY = false;
         }
         
-        $scope.isTaskChain = false;
-        if ($location.search().tc != undefined && $location.search().tc != '') {
-            $scope.loadTaskChain = ($location.search().tc == 'true');
-        } else {
-            $scope.loadTaskChain = false;
-        }
-
         if ($location.search().p != undefined && $location.search().p != '') {
             $scope.probing = $location.search().p;
         } else {
@@ -653,15 +646,8 @@ pmpApp.controller('HistoricalController', function($http, $location, $scope, $ro
             p = $scope.probing;
         }
 
-        var tc = false;
-        if (!see && $scope.loadTaskChain != undefined) {
-            tc = $scope.loadTaskChain;
-        } else {
-            $scope.loadTaskChain = false;
-        }
-        
         var promise = $http.get("api/" + $scope.tags.getTags().join(',')
-                                + '/historical/' + p + '/' + x + '/' + s + '/' + w + '/' + tc);
+                                + '/historical/' + p + '/' + x + '/' + s + '/' + w);
         promise.then(function(data) {
                 if (!data.data.results.status) {
                     $scope.showPopUp('error', 'No results for this request parameters');
@@ -672,7 +658,7 @@ pmpApp.controller('HistoricalController', function($http, $location, $scope, $ro
                     $scope.allRequestData = data.data.results.data;
                     $scope.allStatus = data.data.results.status;
                     $scope.allPWG = data.data.results.pwg;
-                    $scope.isTaskChain = data.data.results.taskchain
+                    $scope.loadTaskChain = data.data.results.taskchain;
                 }
                 $scope.loadingData = false;
                 $scope.setURL();
@@ -715,10 +701,6 @@ pmpApp.controller('HistoricalController', function($http, $location, $scope, $ro
         params.s = s.join(',');
 
         $scope.zoomOnY != undefined ? params.y = $scope.zoomOnY + '': params.y = 'false';
-        if ($scope.loadTaskChain != undefined && $scope.isTaskChain) {
-            params.tc = $scope.loadTaskChain + '';
-        }
-
         $location.search(params);
         $scope.url = $location.absUrl();
     }
