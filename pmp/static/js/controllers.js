@@ -465,7 +465,7 @@ pmpApp.controller('TypeaheadCtrl', function($scope, $http) {
         }
         if ($scope.lifetime) {
             $http.get('api/suggest/' + $scope.lifetime +
-                      '/lifetime').then(function(response) {
+                      '/historical').then(function(response) {
                 $scope.suggestions = response.data.results;
             });
         }
@@ -842,4 +842,12 @@ pmpApp.controller('PerformanceController', function($http, $scope) {
     }
 
     $scope.title = 'Request Performance';
+
+    $scope.selections = ['validation', 'approved', 'submitted'];
+    $scope.difference = {minuend: 'done', subtrahend: 'created'}
+
+    $scope.applyDifference = function(d) {
+        $scope.differnece = d;
+        console.log(d);
+    }
 });

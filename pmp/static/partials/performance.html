@@ -78,10 +78,17 @@
 </div>
 
 <div class="row" ng-hide="!allRequestData.length">
+
   <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 text-center">
-    <event-drop chart-data="allRequestData"></event-drop>
+    <drop-selections difference="difference"
+                     selections="selections"></drop-selections>
   </div>
   <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 text-center">
     <stats-table chart-data="allRequestData"></stats-table>
   </div>
+  <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 text-center">
+    <event-drop chart-data="allRequestData"></event-drop>
+  </div>
+
+
 </div>

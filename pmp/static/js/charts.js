@@ -48,6 +48,71 @@ Parse numbers to the human readable format
 
 angular.module('pmpCharts', [])
 
+    .directive('dropSelections', function($compile) {
+        return {
+            restrict: 'E',
+            scope: {
+                difference: '=?',
+                selections: '=?'
+            },
+            link: function(scope, element, attrs) {
+                scope.difference =  scope.difference || {};
+                scope.selections = scope.selections || [];
+
+                scope.removeOption = function(optionName) {
+                    scope.difference[optionName] = "";
+                    scope.$apply();
+                };
+
+                scope.addOption = function(optionName, optionValue) {
+                    scope.difference[optionName] = optionValue;
+                    scope.$apply();
+                };
+
+                var innerHtml = "<style>.nav.dnd {margin-bottom: 0;}</style><div class='row'><div class='col-lg-9 col-md-12 col-sm-12' style='margin-bottom: 3px'><span class='col-lg-2 col-md-2 col-sm-2 nav-header text-muted'>selections</span><ul id='possible-selections' class='nav nav-pills dnd col-lg-10 col-md-10 col-sm-10 inline' style='min-height:22px'><li class='btn btn-default btn-xs text-uppercase' ng-repeat='value in selections'>{{value}}</li></ul></div>";
+
+                // drag and drop options
+                for(var key in scope.difference) {
+                    innerHtml += "<div class='col-lg-6 col-md-12 col-sm-12'><span class='col-lg-3 col-md-2 col-sm-2 nav-header' style='margin-bottom: 3px'>" + key + "</span><ul id='" + key + "' class='nav nav-pills dnd single col-lg-9 col-md-10 col-sm-10 inline alert-info' style='min-height:23px; margin-top:1px'>";
+                    if(scope.difference[key] !="") {
+                        innerHtml+="<li class='btn btn-default btn-xs text-uppercase'>" + scope.difference[key] + "</li>";
+                    }
+                    innerHtml+="</ul></div>";
+                }
+
+                innerHtml +="</div>";
+
+
+                var chart = $compile(innerHtml)(scope);
+                element.append(chart);
+
+                $("ul.nav.dnd", element).sortable({
+                    group: Math.random(),
+                    nested: false,
+                    vertical: false,
+                    exclude: 'nav-header',
+                    title: 'nav-header',
+                    pullPlaceholder: false,
+                    isValidTarget: function($item, container) {
+                        return !($(container.el[0]).hasClass('single') && container.items.length > 0);
+                    },
+                    onDrop: function($item, container, _super) {
+                        if(container.el[0].id!='possible-selections') {
+                            scope.addOption(container.el[0].id, $item[0].textContent, $(container.el[0].children).index($item[0]));
+                        }
+                        _super($item, container);
+                        },
+                            onDragStart: function($item, container, _super) {
+                        if(container.el[0].id!='possible-selections') {
+                            scope.removeOption(container.el[0].id, $item[0].textContent);
+                        }
+                        _super($item, container);
+                        }
+                });
+            }
+        }
+    })
+
     .directive('statsTable', function($compile) {
         return {
             restrict: 'AE',
