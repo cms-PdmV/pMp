@@ -19,7 +19,7 @@ class Config():
 
         self.cookie = os.environ['HOME'] + parser.get('cookie', 'path')
         self.exclude_list = re.split(", ", parser.get('exclude', 'list'))
-        self.remove_list = re.split(", ", parser.get('remove_params', 'list'))
+        self.fetch_fields = re.split(", ", parser.get(typeof, 'fetch_fields'))
 
         self.url_mcm = parser.get(typeof, 'db_source')
         self.db = parser.get(typeof, 'db')

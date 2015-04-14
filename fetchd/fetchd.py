@@ -11,13 +11,14 @@ def setlog():
     logging.basicConfig(level=logging.INFO)
 
 
-def parse(data, rlist):
-    for remove in rlist:
+def parse(data, fields):
+    d = {}
+    for f in fields:
         try:
-            del data[remove]
+            d[f] = data[f]
         except KeyError:
             continue
-    return data
+    return d
 
 
 def parse_efficiency(data):
@@ -25,7 +26,7 @@ def parse_efficiency(data):
         i = len(data)-1
         return (float(data[i]['match_efficiency'])*
                 float(data[i]['filter_efficiency']))
-    return -1
+    return 1
 
 
 def parse_reqmgr(data):
@@ -40,17 +41,15 @@ def parse_reqmgr(data):
 
 def parse_history(data):
     res = []
-    for d in data:
+    for (i, d) in enumerate(data):
         r = {}
-        if d['action'] in ['created', 'clone']:
+        if not i:
             r['action'] = 'created'
             r['time'] = d['updater']['submission_date']
-        elif d['action'] == 'set status' and d['step'] in ['approved',
-                                                           'submitted',
-                                                           'done']:
+        elif (d['action'] == 'set status' and
+              d['step'] in ['approved', 'submitted', 'validation', 'done']):
             r['action'] = d['step']
             r['time'] = d['updater']['submission_date']
-
         if len(r.keys()):
             res.append(r)
     return res
@@ -82,6 +81,7 @@ def parse_taskchain(data):
 
 def get_changes(utl, cfg):
     # get pointer to last change
+
     res, status = utl.curl('GET', cfg.last_seq)
     if status == 200:
         last_seq = res['_source']['val']
@@ -98,6 +98,7 @@ def get_changes(utl, cfg):
         else:
             logging.warning('%s Index not created. Reason %s' %
                             (utl.get_time(), s))
+
         # create mapping
         if cfg.mapping != '':
             r, s = utl.curl('PUT', (cfg.pmp_db + '_mapping'),
@@ -108,45 +109,35 @@ def get_changes(utl, cfg):
                 logging.warning('%s Mapping not implemented. Reason %s' %
                                 (utl.get_time()))
 
+    # get list of documents to fetch
     if last_seq:
         res, status = utl.curl('GET', '%s=%s' % (cfg.url_db_changes, last_seq),
                                cookie=cfg.cookie)
-        if status == 200:
-            if len(res['results']):
-                for r in res['results']:
-                    if r['seq'] == res['last_seq']:
-                        _, s = utl.curl('PUT', cfg.last_seq,
-                                        json.loads('{"val": %s}' %
-                                                   res['last_seq']))
-                        if s not in [200, 201]:
-                            logging.error('%s Cannot update last_seq' %
-                                          utl.get_time())
-                    yield r['id'], ('deleted' in r)
-            else:
-                logging.info('%s Nothing to do. No changes since last update' %
-                             utl.get_time())
-        else:
-            logging.error('%s Status %s while getting list of changes' %
-                          (utl.get_time(), status))
+        string = 'results'
     else:
         res, status = utl.curl('GET', '%s' % cfg.url_db_all, cookie=cfg.cookie)
-        if status == 200:
-            if len(res['rows']):
-                for r in res['rows']:
-                    yield r['id'], ('deleted' in r)
+        string = 'rows'
 
-                r, status = utl.curl('GET', cfg.url_db_first,
-                                     cookie=cfg.cookie)
-                _, s = utl.curl('PUT', cfg.last_seq, json.loads('{"val": %s}' %
-                                                                r['last_seq']))
-                if s not in [200, 201]:
-                    logging.error('%s Cannot update last_seq' %
-                                  utl.get_time())
-            else:
-                logging.info('%s Nothing to do. Empty index.' % utl.get_time())
+
+    if status == 200:
+        if len(res[string]):
+            for r in res[string]:
+                yield r['id'], ('deleted' in r)
+
         else:
-            logging.error('%s Status %s while getting list of documents' %
-                          (utl.get_time(), status))
+            logging.info('%s No changes since last update' % utl.get_time())
+
+        if string == 'rows':
+            res, status = utl.curl('GET', cfg.url_db_first, cookie=cfg.cookie)
+
+        _, s = utl.curl('PUT', cfg.last_seq, json.loads(
+                '{"val":%s, "time":%s}' % (res['last_seq'],
+                                           int(round(time.time() * 1000)))))
+        if s not in [200, 201]:
+            logging.error('%s Cannot update last_seq' % utl.get_time())
+    else:
+        logging.error('%s Status %s while getting list of documents' %
+                      (utl.get_time(), status))
 
 
 if __name__ == "__main__":
@@ -172,61 +163,47 @@ if __name__ == "__main__":
             else:
                 url = str(cfg.url_db + r)
                 data, status = utl.curl('GET', url, cookie=cfg.cookie)
+
                 # parsing stats documents
-                try:
-                    if data['pdmv_type'] == 'TaskChain':
-                        tc = parse_taskchain(data['pdmv_monitor_history'])
-                        if len(tc):
-                            data['pdmv_monitor_taskchain'] = tc
-                    for i, _ in enumerate(data['pdmv_monitor_history']):
-                        data['pdmv_monitor_history'][i] = parse(
-                            data['pdmv_monitor_history'][i], cfg.remove_list)
-                except KeyError:
-                    pass
-
-                # yes... there is spelling mistake in stats db
-                try:
-                    if data['pdmv_type'] == 'TaskChain':
-                        tc = parse_taskchain(data['pdvm_monitor_history'])
-                        if len(tc):
-                            data['pdmv_monitor_taskchain'] = tc
-
-                    for i, _ in enumerate(data['pdvm_monitor_history']):
-                        data['pdmv_monitor_history'][i] = parse(
-                            data['pdvm_monitor_history'][i], cfg.remove_list)
-                except KeyError:
-                    pass
-
-                try:
+                for misspelled in ['pdmv_monitor_history', 'pdvm_monitor_history']:
+                    try:
+                        if data['pdmv_type'] == 'TaskChain':
+                            tc = parse_taskchain(data[misspelled])
+                            if len(tc):
+                                data['pdmv_monitor_taskchain'] = tc
+                        if len(data[misspelled]):
+                            for i, _ in enumerate(data[misspelled]):
+                                data[misspelled][i] = parse(
+                                    data[misspelled][i], ['pdmv_evts_in_DAS',
+                                                          'pdmv_monitor_time',
+                                                          'pdmv_open_evts_in_DAS'])
+                            data['pdmv_monitor_history'] = data[misspelled]
+                    except KeyError:
+                        pass
+                    
+                # parsing requests
+                if 'reqmgr_name' in data:
                     data['reqmgr_name'] = parse_reqmgr(data['reqmgr_name'])
-                except KeyError:
-                    pass
 
-                try:
+                if 'history' in data:
                     data['history'] = parse_history(data['history'])
-                except KeyError:
-                    pass
 
-                try:
+                if 'generator_parameters' in data:
                     data['efficiency'] = parse_efficiency(
                         data['generator_parameters'])
-                except KeyError:
-                    pass
 
-                data = parse(data, cfg.remove_list)
+                data = parse(data, cfg.fetch_fields)
 
                 if status == 200:
-                    reason, s = utl.curl('PUT', '%s%s' % (cfg.pmp_db, r), data)
+                    re, s = utl.curl('PUT', '%s%s' % (cfg.pmp_db, r), data)
                     if s in [200, 201]:
-                        logging.info('%s New record at %s' %
-                                     (utl.get_time(), r))
+                        logging.info('%s New record %s' % (utl.get_time(), r))
                     else:
                         logging.error(('%s Failed to update record at %s. ' +
-                                       'Status: %s. Reason: %s') %
-                                      (utl.get_time(), r,
-                                       json.dumps(s), reason))
+                                       'Reason: %s') % (utl.get_time(), r, re))
                 else:
                     logging.error('%s Failed to receive information about %s' %
                                   (utl.get_time(), r))
+
     logging.info('%s Removing SSO Cookie' % utl.get_time())
     utl.rm(cfg.cookie)
