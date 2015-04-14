@@ -59,13 +59,9 @@ angular.module('pmpCharts', [])
                 scope.difference =  scope.difference || {};
                 scope.selections = scope.selections || [];
 
-                scope.removeOption = function(optionName) {
-                    scope.difference[optionName] = "";
-                    scope.$apply();
-                };
-
-                scope.addOption = function(optionName, optionValue) {
+                scope.applyChange = function(optionName, optionValue) {
                     scope.difference[optionName] = optionValue;
+                    scope.$parent.applyDifference(scope.difference);
                     scope.$apply();
                 };
 
@@ -98,16 +94,16 @@ angular.module('pmpCharts', [])
                     },
                     onDrop: function($item, container, _super) {
                         if(container.el[0].id!='possible-selections') {
-                            scope.addOption(container.el[0].id, $item[0].textContent, $(container.el[0].children).index($item[0]));
+                            scope.applyChange(container.el[0].id, $item[0].textContent);
                         }
                         _super($item, container);
-                        },
-                            onDragStart: function($item, container, _super) {
+                    },
+                    onDragStart: function($item, container, _super) {
                         if(container.el[0].id!='possible-selections') {
-                            scope.removeOption(container.el[0].id, $item[0].textContent);
+                            scope.applyChange(container.el[0].id, '');
                         }
                         _super($item, container);
-                        }
+                    }
                 });
             }
         }
@@ -117,7 +113,9 @@ angular.module('pmpCharts', [])
         return {
             restrict: 'AE',
             scope: {
-                chartData: '='
+                chartData: '=',
+                    minuend: '=',
+                    subtrahend: '='
             },
                 link: function(scope, element, compile) {
                 var isDrawn = false;
@@ -150,14 +148,20 @@ angular.module('pmpCharts', [])
                     scope.statistics.sum = d3.sum(dataStats, function(d) {return d;});
                 }
 
-                scope.$watch('chartData', function(d) {
+                var inputChange = function() {
+                    var m = scope.minuend;
+                    var s = scope.subtrahend;
+                    if (m == '' || s == '') {
+                        return null;
+                    }
                     dataStats = [];
+                    var d = scope.chartData;
                     if (d != undefined) {
                         d.forEach(function (e, i) {
                             var history = e.history;
                             if(Object.keys(history)) {
-                                if (history['done'] != undefined && history['created'] != undefined) {
-                                    var tmp = getDate(history['done']) - getDate(history['created']);
+                                if (history[m] != undefined && history[s] != undefined) {
+                                    var tmp = getDate(history[m]) - getDate(history[s]);
                                     dataStats.push(tmp);
                                 }
                             }
@@ -167,7 +171,10 @@ angular.module('pmpCharts', [])
                             showTable();
                         }
                     }
-                });
+                }
+                scope.$watch('chartData', function(d) {inputChange()});
+                scope.$watch('minuend', function(d) {inputChange()});
+                scope.$watch('subtrahend', function(d) {inputChange()});
             }
         }
     })

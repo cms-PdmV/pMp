@@ -847,7 +847,6 @@ pmpApp.controller('PerformanceController', function($http, $scope) {
     $scope.difference = {minuend: 'done', subtrahend: 'created'}
 
     $scope.applyDifference = function(d) {
-        $scope.differnece = d;
-        console.log(d);
+        $scope.difference = d;
     }
 });
