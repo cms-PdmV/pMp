@@ -121,7 +121,6 @@ class GetGrowing():
                     # this is a reserved request, will count as upcoming later
                     continue
                 mcm_r = all_requests[r]
-                
                 upcoming = int(mcm_r['total_events']*abs(mcm_r['efficiency']))
 
                 if r in already_counted:
@@ -237,7 +236,10 @@ class GetLastUpdate():
         return json.dumps({"results": lu})
 
 
-class GetLifetime():
+class GetHistorical():
+    '''
+    Used to return list of point for historical plots
+    '''
 
     def __init__(self):
         self.es = ElasticSearch(config.DATABASE_URL)
@@ -246,9 +248,9 @@ class GetLifetime():
         self.overflow = 1000000
 
     def select_dataset(self, ds1, ds2):
-        """
-        This is inherit from Stats statsMonitoring.py
-        """
+        '''
+        This selection is from statsMonitoring.py
+        '''
         t1=ds1.split('/')[1:]
         t2=ds2.split('/')[1:]
         if len(t1[1]) > len(t2[1]):
@@ -276,130 +278,148 @@ class GetLifetime():
             return decision * 2 - 1
             
     def db_query(self, input):
-        """
+        '''
         Query DB and return array of raw documents
-        """
-        iterable = []
-        try:
-            # check if the input is a campaign
-            req_arr = [s['_source'] for s in
-                       self.es.search(('member_of_campaign:%s' % input),
-                                      index='requests',
-                                      size=self.overflow)['hits']['hits']]
-            for r in req_arr:
-                try:
-                    dataset_list = r['output_dataset']
-                    dataset_list.sort(cmp=self.select_dataset)
-                    request_output_type = dataset_list[0]
-                    request_output_type = request_output_type.split('/')[-1]
-                   
-                    for e in r['reqmgr_name']:
-                        i = {}
-                        i['status'] = r['status']
-                        i['pwg'] = r['pwg']
-                        i['priority'] = r['priority']
-                        i['name'] = e
-                        i['request_output_type'] = request_output_type
-                        iterable.append(i)
-                except:
-                    pass
-        except:
-            pass
+        '''
 
-        if not len(iterable):
+        iterable = []
+
+        # try to query for campaign and get list of requests
+        req_arr = [s['_source'] for s in
+                   self.es.search(('member_of_campaign:%s' % input),
+                                  index='requests',
+                                  size=self.overflow)['hits']['hits']]
+
+        # if empty, assume input is a request
+        if not len(req_arr):
             try:
-                # check if the input is a request
-                s = self.es.get('requests', 'request', input)['_source']
-                dataset_list = s['output_dataset']
+                req_arr = [self.es.get('requests',
+                                       'request', input)['_source']]
+            except:
+                # if exception thrown this may be a workglow
+                iterable = [input]
+
+        # iterate over array and collect details
+        for req in req_arr:
+            try:
+                dataset_list = req['output_dataset']
                 dataset_list.sort(cmp=self.select_dataset)
-                request_output_type = dataset_list[0]
-                request_output_type = request_output_type.split('/')[-1]
-                for e in s['reqmgr_name']:
+
+                for reqmgr in req['reqmgr_name']:
                     i = {}
-                    i['status'] = s['status']
-                    i['pwg'] = s['pwg']
-                    i['priority'] = s['priority']
-                    i['name'] = e
-                    i['request_output_type'] = request_output_type
+                    i['expected'] = req['total_events']
+                    i['name'] = reqmgr
+                    i['output_dataset'] = dataset_list[0]
+                    i['priority'] = req['priority']
+                    i['pwg'] = req['pwg']
+                    i['request'] = True
+                    i['status'] = req['status']
                     iterable.append(i)
             except:
-                # input can be a reqmgr_name
-                iterable = [input]
+                pass
+
+        # iterate over workflows and yield documents 
         for i in iterable:
-            if not 'status' in i:
+            if 'request' in i:
                 try:
-                    yield [self.es.get('stats', 'stats', i)['_source'],
-                           None, None, None, None]
+                    yield [i['request'], self.es.get(
+                            'stats', 'stats', i['name'])['_source'], i]
                 except:
-                    yield [None, None, None, None, None]
+                    yield [True, None, i]
             else:
                 try:
-                    yield [self.es.get('stats', 'stats', i['name'])['_source'],
-                           i['status'], i['pwg'], i['priority'], i['request_output_type']]
+                    yield [False, self.es.get(
+                            'stats', 'stats', i)['_source'], None]
                 except:
-                    yield [None, None, None, None, None]
+                    yield [False, None, None]
+
 
     def rm_useless(self, arr):
+        '''
+        Compressing data: remove first probe of resubmissions and points that
+        are equal to previous measurement
+        '''
         r = []
         prev = {'a': -1, 'e': -1, 'x': -1}
-        # remove first probe of resubmissions
-        # and points that are equal to previous measurement
         for (x, a) in enumerate(arr):
-            if (a['a'] != 0 or x == 0) and (
-                a['a'] != prev['a'] or a['e'] != prev['e'] or a['x'] != prev['x']):
+            if (a['a'] != prev['a'] or a['e'] != prev['e']
+                or a['x'] != prev['x']) and (a['a'] != 0 or x == 0):
                 r.append(a)
                 prev = a
         return r
 
-    def prepare_response(self, query, probe, p_min, p_max, status_i, pwg_i, tc):
+    def prepare_response(self, query, probe, p_min, p_max,
+                         status_i, pwg_i, tc):
         taskchain = True
         stop = False
+
         r = []
+
         status = {}
         pwg = {}
 
         for q in query:
+            
             # Process the db documents
-            for (d, s, p, pr, rot) in self.db_query(q):
-                if d is None:
+            for (is_request, document, details) in self.db_query(q):
+
+                print document
+
+                # skip empty documents
+                if document is None:
                     continue
-                if not s is None and not s in status:
-                    status[s] = False
-                    if status_i is None:
-                        status[s] = True
-                    else:
-                        for i in status_i:
-                            if i == s:
-                                status[s] = True
-                                break
-                if not p is None and not p in pwg:
-                    pwg[p] = False
-                    if pwg_i is None:
-                        pwg[p] = True
-                    else:
-                        for i in pwg_i:
-                            if i == p:
-                                pwg[p] = True
-                                break
-                # pwg filtering 
-                if not p is None and (not pwg_i is None) and (not p in pwg_i):
-                    continue
-                # status filtering 
-                if not s is None and (not status_i is None) and (not s in status_i):
-                    continue
-                # priority filtering
-                if not pr is None and (pr < p_min or (pr > p_max and p_max != -1)):
-                    continue
+
+                # filter out requests
+                if is_request:
+
+                    def get_filter_dict(doc, arr, inp):
+                        if doc not in arr:
+                            arr[doc] = False
+                            if inp is None:
+                                arr[doc] = True
+                            else:
+                                for i in inp:
+                                    if i == doc:
+                                        arr[doc] = True
+                                        break
+                        return arr
+
+                    # generate stauts dict
+                    status = get_filter_dict(details['status'], status,
+                                             status_i)
+
+                    # generate pwg dict
+                    pwg = get_filter_dict(details['pwg'], pwg, pwg_i)
+
+                    # pwg filtering 
+                    if not (pwg_i is None or details['pwg'] in pwg_i):
+                        continue
+                    # status filtering
+                    if not (status_i is None or details['status'] in status_i):
+                        continue
+                    # priority filtering
+                    if (details['priority'] < p_min or (
+                            details['priority'] > p_max and p_max != -1)):
+                        continue
+
+                    # skip requests with not desired output dataset
+                    if (document['pdmv_dataset_name'] !=
+                        details['output_dataset']):
+                        continue
+
                 # create an array of requests to be processed
                 response = {}
                 response['data'] = []
-                response['request'] = d['pdmv_prep_id']
-                response['type'] = d['pdmv_dataset_name'].split('/')[-1]
+                response['request'] = document['pdmv_prep_id']
 
-                taskchain = taskchain and (d['pdmv_type'] == 'TaskChain')
-                if tc and taskchain:
+                # taskchain handiling
+                #taskchain = taskchain and (document['pdmv_type'] == 'TaskChain')
+                if False:
+                #tc and taskchain:
+                    print tc
+                    '''
                     # load taskchain instead of normal req
-                    for t in d['pdmv_monitor_taskchain']:
+                    for t in document['pdmv_monitor_taskchain']:
                         res = {}
                         res['request'] = t['dataset']
                         res['data'] = []
@@ -410,7 +430,7 @@ class GetLifetime():
                                              record['pdmv_open_evts_in_DAS'])
                                 data['t'] = time.mktime(time.strptime(
                                         record['pdmv_monitor_time']))*1000
-                                data['x'] = d['pdmv_expected_events']
+                                data['x'] = document['pdmv_expected_events']
                             res['data'].append(data)
                         r.append(res)
                     re = {}
@@ -420,51 +440,57 @@ class GetLifetime():
                     re['taskchain'] = taskchain
                     stop = True
                         
-                elif tc:
+                    elif tc:
                     # perhaps someone is playing with url
                     stop = True
                     re = {}
-                    
+                    '''
                 else:
-                    if 'pdmv_monitor_history' in d:
-                        for record in d['pdmv_monitor_history']:
+                    if 'pdmv_monitor_history' in document:
+                        for record in document['pdmv_monitor_history']:
                             if len(record['pdmv_monitor_time']):
                                 data = {}
-                                data['a'] = record['pdmv_evts_in_DAS'] + record['pdmv_open_evts_in_DAS']
+                                # a is all events in das
+                                data['a'] = (record['pdmv_evts_in_DAS'] +
+                                             record['pdmv_open_evts_in_DAS'])
+                                # e is events in das
                                 data['e'] = record['pdmv_evts_in_DAS']
-                                data['t'] = time.mktime(time.strptime(record['pdmv_monitor_time']))*1000
-                                data['x'] = d['pdmv_expected_events']
+                                # t is time in ms
+                                data['t'] = time.mktime(time.strptime(
+                                        record['pdmv_monitor_time']))*1000
+                                # x is expected events
+                                if is_request:
+                                    data['x'] = details['expected']
+                                else:
+                                    data['x'] = document[
+                                        'pdmv_expected_events']
                                 response['data'].append(data)
                     r.append(response)
 
+        print len(r)
+        '''
         if stop:
             return re
-
+            # taskchain
+            '''
 
         # Step 1: Get accumulated requests
         tmp = {}
         for x in r:
             s = x['request']
-            try: 
-                if x['type'] == tmp[s]['type']:
-                    tmp[s]['data'] += x['data']
-                    tmp[s]['data'] = sorted(tmp[s]['data'], key=lambda e: e['t'])
-                    tmp[s]['data'] = self.rm_useless(tmp[s]['data'])
-            except KeyError:
-                if rot is None or rot == x['type']:
-
-                    tmp[s] = {}
-                    tmp[s]['type'] = x['type']
-                    tmp[s]['data'] = x['data']
-
-                    tmp[s]['data'] = sorted(tmp[s]['data'], key=lambda e: e['t'])
-                    tmp[s]['data'] = self.rm_useless(tmp[s]['data'])
+            if s not in tmp:
+                tmp[s] = {}
+                tmp[s]['data'] = []
+            tmp[s]['data'] += x['data']
+            tmp[s]['data'] = sorted(tmp[s]['data'], key=lambda e: e['t'])
+            tmp[s]['data'] = self.rm_useless(tmp[s]['data'])
+        
+        print len(tmp)
 
         # Step 2: Get and sort timestamps
         times = []
         for t in tmp:
             times += (x['t'] for x in tmp[t]['data'])
-
         times = sorted(set(times))
 
         if len(times) > (probe-1):
@@ -506,7 +532,7 @@ class GetLifetime():
         re['data'] = data
         re['status'] = status
         re['pwg'] = pwg
-        re['taskchain'] = taskchain
+        re['taskchain'] = False
         return re
 
     def get(self, query, probe=100, priority_min=0, priority_max=-1,
@@ -564,7 +590,7 @@ class GetSuggestions():
         self.overflow = 20
         self.announced = (typeof == 'announced')
         self.growing = (typeof == 'growing')
-        self.lifetime = (typeof == 'lifetime')
+        self.historical = (typeof == 'historical')
         self.performance = (typeof == 'performance')
 
     def get(self, query):
@@ -580,14 +606,15 @@ class GetSuggestions():
         ext1 = []
         ext2 = []
 
-        if self.lifetime or self.growing or self.announced or self.performance:
+        if (self.historical or self.growing or self.announced
+            or self.performance):
             # campaigns are expected in all modes
             ext0 = [s['_id'] for s in
                     self.es.search(search, index='campaigns',
                                    size=self.overflow)['hits']['hits']]
 
-            # extended search for lifetime
-            if self.lifetime:
+            # extended search for historical
+            if self.historical:
                 ext1 = [s['_id'] for s in
                         self.es.search(search, index='requests',
                                        size=self.overflow)['hits']['hits']]

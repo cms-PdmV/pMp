@@ -42,8 +42,8 @@ def api(i, typeof):
         g = models.GetAnnounced()
     elif typeof == 'growing':
         g = models.GetGrowing()
-    elif typeof == 'lifetime':
-        g = models.GetLifetime()
+    elif typeof == 'historical':
+        g = models.GetHistorical()
     elif typeof == 'performance':
         g = models.GetPerformance()
     elif typeof == 'lastupdate':
@@ -64,7 +64,7 @@ def api_historical_extended(i, p, priority, status, pwg, taskchain):
     pwg - list of pwg to include (csv)
     taskchain - boolean to load in taskchain mode
     '''
-    gl = models.GetLifetime()
+    gl = models.GetHistorical()
     priority = parse_priority_csv(priority.split(','))
     return make_response(gl.get(i, int(p), int(priority[0]), int(priority[1]),
                                 parse_csv(status), parse_csv(pwg),
