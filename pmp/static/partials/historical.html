@@ -135,24 +135,22 @@
     </div>
 
     <div id="advanced" class="collapse col-xs-12 col-sm-12 col-md-12 col-lg-12 spacing">
-
       <form class="form-group text-uppercase">
-        <label class="checkbox-inline col-lg-12 col-md-12 col-sm-12 spacing">
+        <label class="checkbox-inline col-lg-12 col-md-12 col-sm-12">
           <input type="checkbox" ng-model="showDate" ng-change="setURL()">
           <small>
             Show time
           </small>
         </label>
-      </form>
-
-      <form class="form-group text-uppercase">
-        <label class="checkbox-inline col-lg-12 col-md-12 col-sm-12 spacing">
-          <input type="checkbox" ng-model="zoomOnY" ng-change="setURL()">
-          <small>
-            y axis zoom
-          </small>
-        </label>
-      </form>
+        <br/>
+          <label class="checkbox-inline col-lg-12 col-md-12 col-sm-12">
+            <input type="checkbox" ng-model="zoomOnY" ng-change="setURL()">
+            <small>
+              y axis zoom
+            </small>
+          </label>
+          
+        </form>
 
       <div class="input-group input-group-sm spacing">
         <span class="hidden-sm input-group-addon text-uppercase">

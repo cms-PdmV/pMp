@@ -410,7 +410,7 @@ angular.module('pmpCharts', [])
                         height = 500 - margin.top - margin.bottom,
                         l1, l2, l3, containerBox, hoverLineGroup, clipPath, rectLifetime, rectTaskChain;
                 
-                var fiveShadesOfGrey = ['#212121', '#424242', '#616161', '#757575', '#9e9e9e'];
+                    var fiveShadesOfGrey = ['#4fc3f7', '#4dd0e1', '#4db6ac', '#81c784', '#aed581', '#dce775'];
                 var svg = d3.select(element[0])
                     .append('svg:svg')
                     .attr("viewBox", "0 -20 " + (width + margin.left + margin.right) + " " + (height + margin.top + margin.bottom))
@@ -431,7 +431,7 @@ angular.module('pmpCharts', [])
                 var gx = svg.append("svg:g")
                     .attr("class", "x axis minorx")
                     .attr('fill', '#666')
-                    .attr("transform", "translate(0," + (height + 100) + ")")
+                    .attr("transform", "translate(0," + (height + margin.top) + ")")
                     .call(xAxis);
 
                 var yAxis = d3.svg.axis().scale(y).ticks(4).orient("left");
@@ -485,6 +485,7 @@ angular.module('pmpCharts', [])
                     .attr("height", height);
 
                 // Area gradient
+                /*
                 var gradient = defs.append("linearGradient")
                     .attr("id", "gradient")
                     .attr("x2", "0%")
@@ -497,7 +498,7 @@ angular.module('pmpCharts', [])
                     .attr("offset", "100%")
                     .attr('stop-color', '#eceff1')
                     .attr("stop-opacity", 0.8);
-
+                */
                 var chartBody = svg.append("g")
                     .attr("clip-path", "url(#clip)");
                 //.call(d3.behavior.zoom().scaleExtent([0.2, 5]).on("zoom", redraw));
@@ -545,8 +546,6 @@ angular.module('pmpCharts', [])
                     svg.select("g.x.axis").call(xAxis);
                     svg.select("g.y.axis").call(yAxis);
                     if (scope.taskChain) {
-                        svg.select("path.data3").attr("d", pathTargetEvents(scope.dataCopy[0].data));
-                        svg.select("path.vdata3").attr("d", pathTargetEvents(scope.dataCopy[0].data));
                         for (var i = 0; i < scope.dataCopy.length; i++) {
                             var name = scope.dataCopy[i].request.replace(/\//g, '');
                             svg.select('path.' + name).attr("d", taskChainLine(scope.dataCopy[i].data));
@@ -579,6 +578,7 @@ angular.module('pmpCharts', [])
                 // When new data to load
                 var onLoad = function(a) {
                     if (scope.taskChain) {
+                        // remove
                         if (l1 != undefined) {
                             l1.remove();
                             l1 = undefined;
@@ -603,7 +603,6 @@ angular.module('pmpCharts', [])
                         svg.select('text.expected-label').text('');
                         svg.select('text.indas-label').text('');
                         svg.select('text.openindas-label').text('');
-
                         if (hoverLineGroup != undefined) {
                             hoverLineGroup.remove();
                             hoverLineGroup = undefined;
@@ -631,7 +630,7 @@ angular.module('pmpCharts', [])
                         }
                         yMax *= 1.1;
                         y.domain([0, yMax]).range([height, 0]);
-                        yAxis.scale(y);//.tickFormat(formatY);
+                        yAxis.scale(y).tickFormat(formatY);
                         svg.selectAll("g .y.axis").transition().duration(200)
                         .ease("linear").call(yAxis);
                         d3.selectAll('.minory line').filter(function(d) {
@@ -655,21 +654,10 @@ angular.module('pmpCharts', [])
                             svg.append("svg:path")
                                 .attr("d", taskChainLine(a[i].data))
                                 .attr("class", a[i].request.replace(/\//g, ''))
-                                .style('stroke-width', 2)
+                                .style('stroke-width', 1.5)
                                 .style('stroke', c)
                                 .attr("clip-path", "url(#clip)");
                         }
-
-                        if (l3 == undefined) {
-                            l3 = svg.append("svg:path")
-                            .attr("d", pathTargetEvents(a[0].data))
-                            .attr("class", "data3")
-                            .attr("clip-path", "url(#clip)")
-                            .style('stroke-width', 2)
-                            .style('stroke', '#b71c1c');
-                        }
-                        l3.transition().duration(600)
-                        .ease('linear').attr("d", pathTargetEvents(a[0].data));
 
                         // Hover-over functionality
                         rectTaskChain = svg.append("rect")
@@ -689,7 +677,7 @@ angular.module('pmpCharts', [])
                                 .attr('class', 'v' + a[i].request.replace(/\//g, ''))
                                 .attr('name', a[i].request)
                                 .attr('clip-path', 'url(#clip)')
-                                .style('stroke-width', 2)
+                                .style('stroke-width', 3)
                                 .style('fill','none')
                                 .style('pointer-events','all')
                                 .style('stroke', 'none')
@@ -698,25 +686,13 @@ angular.module('pmpCharts', [])
                             svg.select('path.v' + a[i].request.replace(/\//g, ''))
                                 .on('mouseover', function(d) {
                                     var tmp = d3.select(this);
-                                    tmp.style('stroke',  '#9c27b0');
+                                    tmp.style('stroke',  '#aeea00');
                                     updateDataLabel('Dataset: ' + tmp.attr('name'))
                                         }).on('mouseout', function(d) {
                                                 d3.select(this).style('stroke', 'none');
                                                 updateDataLabel('');
                                             });
                         }
-
-                        svg.append('svg:path')
-                        .attr('d', pathTargetEvents(a[0].data))
-                        .attr('class', 'vdata3')
-                        .attr('name', 'Expected events')
-                        .attr('clip-path', 'url(#clip)')
-                        .style('stroke-width', 2)
-                        .style('fill','none')
-                        .style('pointer-events','all')
-                        .style('stroke', 'none')
-                        .append('title')
-                        .text(function(d) { return 'Expected events' });
 
                         var updateDataLabel = function(data) {
                             svg.select('text.date-label').text(data);
@@ -725,6 +701,10 @@ angular.module('pmpCharts', [])
                         onZoom();
                     } else {
                         if (l1 == undefined && l2 == undefined) {
+                            svg.selectAll('path').remove();
+                        }
+                        if (l3 == undefined) {
+                            l3 = undefined
                             svg.selectAll('path').remove();
                         }
                         if (rectTaskChain != undefined) {
@@ -762,23 +742,24 @@ angular.module('pmpCharts', [])
                             l1 = chartBody.append("svg:path")
                                 .attr("d", areaAllEvents(a))
                                 .attr('class', 'data1')
-                                .style('stroke-width', 2)
+                                .style('stroke-width', 1)
                                 .style('stroke', '#607d8b')
-                                .style("fill", "url(#gradient)");
+                                .style('opacity', '0.4')
+                                .style("fill",   '#607d8b');
                         }
                         if (l2 == undefined) {
                             l2 = chartBody.append("svg:path")
                                 .attr("d", pathNotOpenEvents(a))
                                 .attr("class", "data2")
-                                .style('stroke-width', 2)
-                                .style('stroke', '#689f38');
+                                .style('stroke-width', 1)
+                                .style('stroke', '#388e3c');
                         }
                         if (l3 == undefined) {
                             l3 = chartBody.append("svg:path")
-                                .attr("d", pathTargetEvents(a))
-                                .attr("class", "data3")
-                                .style('stroke-width', 2)
-                                .style('stroke', '#b71c1c');
+                            .attr("d", pathTargetEvents(a))
+                            .attr("class", "data3")
+                            .style('stroke-width', 1)
+                            .style('stroke', '#d50000');
                         }
                         if (rectLifetime == undefined) {
                             rectLifetime = chartBody.append("rect")
