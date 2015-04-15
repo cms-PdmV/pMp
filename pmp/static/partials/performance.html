@@ -84,6 +84,12 @@
   </div>
 
   <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 text-center">
+    <performance-histogram chart-data="allRequestData" minuend="difference.minuend"
+                           subtrahend="difference.subtrahend">
+    </performance-histogram>
+  </div>
+
+  <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 text-center">
     <stats-table chart-data="allRequestData" minuend="difference.minuend"
                  subtrahend="difference.subtrahend"></stats-table>
   </div>

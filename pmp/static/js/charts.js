@@ -48,6 +48,109 @@ Parse numbers to the human readable format
 
 angular.module('pmpCharts', [])
 
+    .directive('performanceHistogram', function($compile) {
+        return {
+            restrict: 'E',
+            scope: {
+                chartData: '=',
+                minuend: '=',
+                subtrahend: '='
+            },
+            link: function(scope, element, attrs) {
+
+                var dateFormat = d3.time.format("%Y-%m-%d-%H-%M");
+                var getDate = function(d) { return dateFormat.parse(d) }
+
+                var inputChange = function() {
+                    var m = scope.minuend;
+                    var s = scope.subtrahend;
+                    if (m == '' || s == '') {
+                        return null;
+                    }
+                    dataStats = [];
+                    var d = scope.chartData;
+                    if (d != undefined) {
+                        d.forEach(function (e, i) {
+                            var history = e.history;
+                            if(Object.keys(history)) {
+                                if (history[m] != undefined && history[s] != undefined) {
+                                    var tmp = getDate(history[m]) - getDate(history[s]);
+                                    dataStats.push(tmp/(8*1825800000));
+                                }
+                            }
+                        });
+                        updateHistogram();
+                    }
+                }
+
+                var updateHistogram = function() {
+                    console.log(dataStats);
+
+                    values = dataStats
+
+                    // Formatters for counts and times (converting numbers to Dates).
+                    var formatCount = d3.format(",.0f"),
+                    formatTime = d3.time.format("%H:%M"),
+                    formatMinutes = function(d) { return formatTime(new Date(2012, 0, 1, 0, d)); };
+                    
+                    var margin = {top: 10, right: 30, bottom: 30, left: 30},
+                    width = 960 - margin.left - margin.right,
+                    height = 500 - margin.top - margin.bottom;
+                    
+                    var x = d3.scale.linear()
+                    .domain([0, 1])
+                    .range([0, width]);
+                    
+                    // Generate a histogram using twenty uniformly-spaced bins.
+                    var data = d3.layout.histogram()
+                    .bins(x.ticks(10))
+                    (values);
+                    
+                    var y = d3.scale.linear()
+                    .domain([0, d3.max(data, function(d) { return d.y; })])
+                    .range([height, 0]);
+                    
+                    var xAxis = d3.svg.axis()
+                    .scale(x)
+                    .orient("bottom");
+                    
+                    var svg = d3.select("body").append("svg")
+                    .attr("width", width + margin.left + margin.right)
+                    .attr("height", height + margin.top + margin.bottom)
+                    .append("g")
+                    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+                    
+                    var bar = svg.selectAll(".bar")
+                    .data(data)
+                    .enter().append("g")
+                    .attr("class", "bar")
+                    .attr("transform", function(d) { return "translate(" + x(d.x) + "," + y(d.y) + ")"; });
+                    
+                    bar.append("rect")
+                    .attr("x", 1)
+                    .attr("width", x(data[0].dx) - 1)
+                    .attr("height", function(d) { return height - y(d.y); });
+                    
+                    bar.append("text")
+                    .attr("dy", ".75em")
+                    .attr("y", 6)
+                    .attr("x", x(data[0].dx) / 2)
+                    .attr("text-anchor", "middle")
+                    .text(function(d) { return formatCount(d.y); });
+                    
+                    svg.append("g")
+                    .attr("class", "x axis")
+                    .attr("transform", "translate(0," + height + ")")
+                    .call(xAxis);
+                }
+
+                scope.$watch('chartData', function(d) {inputChange()});
+                scope.$watch('minuend', function(d) {inputChange()});
+                scope.$watch('subtrahend', function(d) {inputChange()});
+            }
+        }
+    })
+
     .directive('dropSelections', function($compile) {
         return {
             restrict: 'E',
