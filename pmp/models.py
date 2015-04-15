@@ -105,6 +105,7 @@ class GetGrowing():
                                      index='requests',
                                      size=self.overflow)['hits']['hits']]:
                 all_requests[r['prepid']] = r
+        req_copy = dict(all_requests)
         # avoid double counting
         already_counted = set()
         # the list of requests to be emitted to d3js
@@ -121,6 +122,10 @@ class GetGrowing():
                     # this is a reserved request, will count as upcoming later
                     continue
                 mcm_r = all_requests[r]
+                try:
+                    del req_copy[r]
+                except KeyError:
+                    pass
                 upcoming = int(mcm_r['total_events']*abs(mcm_r['efficiency']))
 
                 if r in already_counted:
@@ -164,6 +169,19 @@ class GetGrowing():
                 fake_one = self.create_fake_request(processing_r, noyet[0],
                                                     total=upcoming)
                 list_of_request_for_ramunas.append(fake_one)
+        # add req that does not belong to chain (from org campaign)
+        for r in req_copy:
+            r = req_copy[r]
+            if r['member_of_campaign'] == campaign:
+                if r['status'] == 'done':
+                    if (not len(r['output_dataset'])
+                        or r['total_events'] == -1):
+                        r['total_events'] = 0
+                    else:
+                        r['total_events'] = r['completed_events']
+                if r['total_events'] == -1:
+                    r['total_events'] = 0
+                list_of_request_for_ramunas.append(r)
         return json.dumps({"results": list_of_request_for_ramunas})
 
 
