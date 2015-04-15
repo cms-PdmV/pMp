@@ -828,6 +828,10 @@ pmpApp.controller('PerformanceController', function($http, $scope) {
     $scope.selections = ['validation', 'approved', 'submitted'];
     $scope.difference = {minuend: 'done', subtrahend: 'created'}
 
+    $scope.applyHistogram = function(d) {
+        $scope.histogramData = d;
+    }
+
     $scope.applyDifference = function(d) {
         $scope.difference = d;
     }

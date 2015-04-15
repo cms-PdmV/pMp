@@ -52,59 +52,27 @@ angular.module('pmpCharts', [])
         return {
             restrict: 'E',
             scope: {
-                chartData: '=',
-                minuend: '=',
-                subtrahend: '='
+                chartData: '='
             },
             link: function(scope, element, attrs) {
-                var dateFormat = d3.time.format("%Y-%m-%d-%H-%M");
-                var getDate = function(d) { return dateFormat.parse(d) }
-
-                var inputChange = function() {
-                    var m = scope.minuend;
-                    var s = scope.subtrahend;
-                    if (m == '' || s == '') {
-                        return null;
-                    }
-                    dataStats = [];
-                    var d = scope.chartData;
-                    if (d != undefined) {
-                        d.forEach(function (e, i) {
-                            var history = e.history;
-                            if(Object.keys(history)) {
-                                if (history[m] != undefined && history[s] != undefined) {
-                                    var tmp = getDate(history[m]) - getDate(history[s]);
-                                    dataStats.push(tmp/(8*1825800000));
-                                }
-                            }
-                        });
-                        updateHistogram();
-                    }
-                }
-
-                var updateHistogram = function() {
-                    var formatCount = d3.format(",.0f");
-                    var margin = {top: 10, right: 40, bottom: 80, left: 40},
-                    width = 1170 - margin.left - margin.right,
-                    height = 300 - margin.top - margin.bottom;
+                var dataStats = [];
+                var formatCount = d3.format(",.0f");
+                var margin = {top: 10, right: 40, bottom: 80, left: 40};
+                var width = 1170 - margin.left - margin.right;
+                var height = 300 - margin.top - margin.bottom;
+                var data, bar;
                     
-                    var x = d3.scale.linear()
+                var x = d3.scale.linear()
                     .domain([0, 1])
                     .range([0, width]);
-
-                    var xAxis = d3.svg.axis()
+                
+                var xAxis = d3.svg.axis()
                     .scale(x)
                     .orient('bottom');
-                    
-                    var data = d3.layout.histogram()
-                    .bins(x.ticks(10))
-                    (dataStats);
-                    
-                    var y = d3.scale.linear()
-                    .domain([0, d3.max(data, function(d) { return d.y; })])
-                    .range([height, 0]);
-                    
-                    var svg = d3.select(element[0])
+
+                var y = d3.scale.linear().range([height, 0]).domain([0, 10]);
+                
+                var svg = d3.select(element[0])
                     .append('svg:svg')
                     .attr('viewBox', '0 -20 ' + (width+margin.left+margin.right)
                           + ' ' + (height+margin.top+margin.bottom))
@@ -115,33 +83,78 @@ angular.module('pmpCharts', [])
                           + margin.top + ')')
                     .attr('style', 'fill: none');
 
-                    var bar = svg.selectAll(".bar")
-                    .data(data)
-                    .enter().append("g")
-                    .attr("class", "bar")
-                    .attr("transform", function(d) { return "translate(" + x(d.x) + "," + y(d.y) + ")"; });
-                    
-                    bar.append("rect")
-                    .attr("x", 1)
-                    .attr("width", x(data[0].dx) - 1)
-                    .attr("height", function(d) { return height - y(d.y); });
-                    
-                    bar.append("text")
-                    .attr("dy", ".75em")
-                    .attr("y", 6)
-                    .attr("x", x(data[0].dx) / 2)
-                    .attr("text-anchor", "middle")
-                    .text(function(d) { return formatCount(d.y); });
-                    
-                    svg.append("g")
+                svg.append("g")
                     .attr("class", "x axis")
-                    .attr("transform", "translate(0," + height + ")")
+                    .attr('style', 'fill: black')
+                    .attr("transform", "translate(0," + (height) + ")")
                     .call(xAxis);
+                
+                var inputChange = function() {
+                    dataStats = [];
+                    if (scope.chartData == undefined) {
+                        return null;
+                    }
+                    mMin = d3.min(scope.chartData, function(d) { return d;});
+                    mMax = d3.max(scope.chartData, function(d) { return d;});
+                    for(var a=0; a<scope.chartData.length; a++) {
+                        dataStats.push((scope.chartData[a]-mMin)/(mMax-mMin));
+                    }
+                    updateHistogram();
+                }
+
+                var updateHistogram = function() {
+                    var data = d3.layout.histogram()
+                    .bins(x.ticks(10))
+                    (dataStats);
+                    
+                    y.domain([0, d3.max(data, function(d) { return d.y; })]);
+
+                    if (bar == undefined) {
+                        console.log('tx2');
+                        bar = svg.selectAll(".bar")
+                            .data(data)
+                            .enter().append("g")
+                            .attr("class", "bar")
+                            .attr("transform", function(d) { return "translate(" + x(d.x) + ","
+                                                             + y(d.y) + ")"; });
+                        
+                        bar.append("rect")
+                            .attr("x", 1)
+                            .attr("width", x(data[0].dx) - 1)
+                            .attr("height", function(d) { return height - y(d.y); });
+                    
+                        bar.append("text")
+                            .attr("dy", ".75em")
+                            .attr("y", 6)
+                            .attr("x", x(data[0].dx) / 2)
+                            .attr("text-anchor", "middle")
+                            .text(function(d) { return formatCount(d.y); });
+                    } else {
+                        bar = svg.selectAll('.bar')
+                        .data(data, function(d) { return d; });
+
+                        bar.enter().append("g")
+                        .attr("class", "bar")
+                        .attr("transform", function(d) { return "translate(" + x(d.x) + ","
+                                    + y(d.y) + ")"; });
+
+                        bar.append("rect")
+                            .attr("x", 1)
+                            .attr("width", x(data[0].dx) - 1)
+                            .attr("height", function(d) { return height - y(d.y); });
+
+                        bar.append("text")
+                        .attr("dy", ".75em")
+                        .attr("y", 6)
+                        .attr("x", x(data[0].dx) / 2)
+                        .attr("text-anchor", "middle")
+                        .text(function(d) { return formatCount(d.y); });
+
+                        bar.exit().remove();
+                    }
                 }
 
                 scope.$watch('chartData', function(d) {inputChange()});
-                scope.$watch('minuend', function(d) {inputChange()});
-                scope.$watch('subtrahend', function(d) {inputChange()});
             }
         }
     })
@@ -264,6 +277,7 @@ angular.module('pmpCharts', [])
                                 }
                             }
                         });
+                        scope.$parent.applyHistogram(dataStats)
                         updateStats();
                         if (!isDrawn) {
                             showTable();
