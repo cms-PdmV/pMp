@@ -209,14 +209,13 @@ ul.nav li.placeholder:before {
     opacity: 0.1;
 }
 
-
 .bar rect {
-  fill: steelblue;
+  fill: #b0bec5;
   shape-rendering: crispEdges;
 }
 
 .bar text {
-  fill: #fff;
+  fill: #eeeeee;
 }
 
 .axis path, .axis line {

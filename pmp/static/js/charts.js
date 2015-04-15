@@ -57,7 +57,6 @@ angular.module('pmpCharts', [])
                 subtrahend: '='
             },
             link: function(scope, element, attrs) {
-
                 var dateFormat = d3.time.format("%Y-%m-%d-%H-%M");
                 var getDate = function(d) { return dateFormat.parse(d) }
 
@@ -84,42 +83,38 @@ angular.module('pmpCharts', [])
                 }
 
                 var updateHistogram = function() {
-                    console.log(dataStats);
-
-                    values = dataStats
-
-                    // Formatters for counts and times (converting numbers to Dates).
-                    var formatCount = d3.format(",.0f"),
-                    formatTime = d3.time.format("%H:%M"),
-                    formatMinutes = function(d) { return formatTime(new Date(2012, 0, 1, 0, d)); };
-                    
-                    var margin = {top: 10, right: 30, bottom: 30, left: 30},
-                    width = 960 - margin.left - margin.right,
-                    height = 500 - margin.top - margin.bottom;
+                    var formatCount = d3.format(",.0f");
+                    var margin = {top: 10, right: 40, bottom: 80, left: 40},
+                    width = 1170 - margin.left - margin.right,
+                    height = 300 - margin.top - margin.bottom;
                     
                     var x = d3.scale.linear()
                     .domain([0, 1])
                     .range([0, width]);
+
+                    var xAxis = d3.svg.axis()
+                    .scale(x)
+                    .orient('bottom');
                     
-                    // Generate a histogram using twenty uniformly-spaced bins.
                     var data = d3.layout.histogram()
                     .bins(x.ticks(10))
-                    (values);
+                    (dataStats);
                     
                     var y = d3.scale.linear()
                     .domain([0, d3.max(data, function(d) { return d.y; })])
                     .range([height, 0]);
                     
-                    var xAxis = d3.svg.axis()
-                    .scale(x)
-                    .orient("bottom");
-                    
-                    var svg = d3.select("body").append("svg")
-                    .attr("width", width + margin.left + margin.right)
-                    .attr("height", height + margin.top + margin.bottom)
-                    .append("g")
-                    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-                    
+                    var svg = d3.select(element[0])
+                    .append('svg:svg')
+                    .attr('viewBox', '0 -20 ' + (width+margin.left+margin.right)
+                          + ' ' + (height+margin.top+margin.bottom))
+                    .attr('width', '100%')
+                    .attr('height', '100%')
+                    .append('svg:g')
+                    .attr('transform', 'translate(' + (margin.left) + ','
+                          + margin.top + ')')
+                    .attr('style', 'fill: none');
+
                     var bar = svg.selectAll(".bar")
                     .data(data)
                     .enter().append("g")
