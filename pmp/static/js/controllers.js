@@ -757,6 +757,10 @@ pmpApp.controller('HistoricalController', function($http, $location, $scope, $ro
 });
 
 pmpApp.controller('PerformanceController', function($http, $scope) {
+
+        $scope.cachedRequestData = [];
+        $scope.allRequestData = [];
+
     $scope.load = function(input, add) {
         if (!input) {
             $scope.showPopUp('warning', 'Your request parameters are empty');
@@ -771,13 +775,12 @@ pmpApp.controller('PerformanceController', function($http, $scope) {
                     $scope.tags.removeTag(input);
                     $scope.loadingData = false;
                 } else {
-
                     if (add) {
                         data.data.results.push.apply(data.data.results, $scope.allRequestData);
                     } else {
                         $scope.tagsRemoveAll([input]);
                     }
-                    $scope.allRequestData = data.data.results;
+                    $scope.cachedRequestData = data.data.results;
                     if (input == 'all') {
                         for (var i = 0; i < data.data.results.length; i++) {
                             if (!$scope.tags.hasTag(data.data.results[i].member_of_campaign)) {
@@ -787,6 +790,8 @@ pmpApp.controller('PerformanceController', function($http, $scope) {
                     } else {
                         $scope.tags.addTag(input);
                     }
+                    $scope.update(data.data.results, true, 'pwg');
+                    $scope.update(data.data.results, true, 'status');
                 }
                 $scope.loadingData = false;
             }, function() {
@@ -823,6 +828,21 @@ pmpApp.controller('PerformanceController', function($http, $scope) {
         }
     }
 
+    $scope.update = function(x, def, update) {
+        var data = $scope[update];
+        for (var i = 0; i < x.length; i++) {
+            if (data[x[i][update]] == undefined) {
+                data[x[i][update]] = def;
+            }
+        }
+        $scope[update] = data;
+        console.log($scope[update]);
+    }
+
+    $scope.pwg = {};
+    $scope.status = {};
+    $scope.priority = {min: '', max: ''};
+
     $scope.title = 'Request Performance';
 
     $scope.selections = ['validation', 'approved', 'submitted'];
@@ -838,7 +858,6 @@ pmpApp.controller('PerformanceController', function($http, $scope) {
 
     $scope.linearScale = true;
     $scope.changeScale = function (a) {
-        console.log(a);
         $scope.linearScale = a;
     }
 });
