@@ -210,7 +210,7 @@ ul.nav li.placeholder:before {
 }
 
 .bar rect {
-  fill: #b0bec5;
+  fill: #263238;
   shape-rendering: crispEdges;
 }
 
@@ -222,4 +222,8 @@ ul.nav li.placeholder:before {
   fill: none;
   stroke: #000;
   shape-rendering: crispEdges;
+}
+
+.update {
+  fill: #b0bec5;
 }

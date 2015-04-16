@@ -109,49 +109,44 @@ angular.module('pmpCharts', [])
                     
                     y.domain([0, d3.max(data, function(d) { return d.y; })]);
 
-                    if (bar == undefined) {
-                        console.log('tx2');
-                        bar = svg.selectAll(".bar")
-                            .data(data)
-                            .enter().append("g")
-                            .attr("class", "bar")
-                            .attr("transform", function(d) { return "translate(" + x(d.x) + ","
-                                                             + y(d.y) + ")"; });
-                        
-                        bar.append("rect")
-                            .attr("x", 1)
-                            .attr("width", x(data[0].dx) - 1)
-                            .attr("height", function(d) { return height - y(d.y); });
+                    bar = svg.selectAll('.bar')
+                    .data(data, function(d) { return d; });
                     
-                        bar.append("text")
-                            .attr("dy", ".75em")
-                            .attr("y", 6)
-                            .attr("x", x(data[0].dx) / 2)
-                            .attr("text-anchor", "middle")
-                            .text(function(d) { return formatCount(d.y); });
-                    } else {
-                        bar = svg.selectAll('.bar')
-                        .data(data, function(d) { return d; });
-
-                        bar.enter().append("g")
-                        .attr("class", "bar")
-                        .attr("transform", function(d) { return "translate(" + x(d.x) + ","
-                                    + y(d.y) + ")"; });
-
-                        bar.append("rect")
-                            .attr("x", 1)
-                            .attr("width", x(data[0].dx) - 1)
-                            .attr("height", function(d) { return height - y(d.y); });
-
-                        bar.append("text")
-                        .attr("dy", ".75em")
-                        .attr("y", 6)
-                        .attr("x", x(data[0].dx) / 2)
-                        .attr("text-anchor", "middle")
-                        .text(function(d) { return formatCount(d.y); });
-
-                        bar.exit().remove();
-                    }
+                    bar.attr('class', 'bar')
+                    .transition()
+                    .duration(500)
+                    .attr('x', function(d, i) { return i * 32; });
+                    
+                    bar.enter().append('g')
+                    .attr('class', 'bar')
+                    .attr('transform', function(d) { return 'translate(' + x(d.x) + ','
+                                + y(d.y) + ')'; })
+                    .transition()
+                    .duration(1000)
+                    .attr('y', 0)
+                    .style('fill-opacity', 1);
+                    
+                    bar.append('rect')
+                    .attr('x', 1)
+                    .attr('class', 'update')
+                    .attr('width', x(data[0].dx) - 1)
+                    .attr('height', function(d) { return height - y(d.y); });
+                    
+                    bar.append('text')
+                    .attr('dy', '.75em')
+                    .attr('y', 6)
+                    .attr('x', x(data[0].dx) / 2)
+                    .attr('text-anchor', 'middle')
+                    .text(function(d) { return formatCount(d.y); });
+                    
+                    bar.exit()
+                    .attr('class', 'update')
+                    .transition()
+                    .duration(1500)
+                    .attr('y', 60)
+                    .style('fill-opacity', 1e-6)
+                    .remove();
+                    //}
                 }
 
                 scope.$watch('chartData', function(d) {inputChange()});
