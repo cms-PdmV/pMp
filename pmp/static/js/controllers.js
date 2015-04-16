@@ -82,6 +82,10 @@ pmpApp.controller('MainController', function($location, $route, $rootScope, $sco
     $timeout(function() {
         $scope.nav('');
         }, 100);
+
+    $scope.isEmpty = function (obj) {
+        return angular.equals({},obj); 
+    };
 });
 
 pmpApp.controller('PresentController', function($http, $location, $interval, $q,
@@ -539,10 +543,6 @@ pmpApp.controller('HistoricalController', function($http, $location, $scope, $ro
         $scope.url = $location.absUrl();
     }
 
-    $scope.isEmpty = function (obj) {
-       return angular.equals({},obj); 
-    };
-
     $scope.load = function(request, add) {
         if (!request) {
             $scope.showPopUp('warning', 'Your request parameters are empty');
@@ -860,4 +860,13 @@ pmpApp.controller('PerformanceController', function($http, $scope) {
     $scope.changeScale = function (a) {
         $scope.linearScale = a;
     }
+
+    $scope.priorityPerBlock = {
+        1: 110000,
+        2: 90000,
+        3: 85000,
+        4: 80000,
+        5: 70000,
+        6: 63000
+    };
 });

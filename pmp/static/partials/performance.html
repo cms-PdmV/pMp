@@ -64,8 +64,69 @@
     </a>
     
     <div id="filter" class="collapse col-xs-12 col-sm-12 col-md-12 col-lg-12 spacing">
-      Filter
+
+      <div ng-show="isEmpty(status)">
+        <small>No data to filter</small>
+      </div>
+
+      <div ng-show="!isEmpty(status)">
+        <form class="form-group form-inline form-group-sm">
+          <small class="text-uppercase col-sm-12 col-md-12 col-lg-12">Priority filter</small>
+          <div class="input-group col-sm-12">
+            <select class="form-control text-center" ng-model="priority.min"
+                    ng-change="updateRequestData();setURL()" ng-disabled="loadingData">
+              <option ng-repeat="(key, value) in priorityPerBlock"
+                      value="{{value}}">
+                {{key}}
+              </option>
+            </select>
+            <input type="text" class="form-control" placeholder="min" ng-disabled="loadingData"
+                   ng-model="priority.min" ng-change="updateRequestData();setURL()">
+            <div class="input-group-addon">
+              &le; x &le;
+            </div>
+            <select class="form-control text-center" ng-model="priority.max"
+                    ng-change="updateRequestData();setURL()"  ng-disabled="loadingData">
+              <option ng-repeat="(key, value) in priorityPerBlock"
+                      value="{{value}}">
+                {{key}}
+              </option>
+            </select>
+            <input type="text" class="form-control" placeholder="max" ng-disabled="loadingData"
+                   ng-model="priority.max" ng-change="updateRequestData();setURL()">
+          </div>
+        </form>
+        
+        <form class="form-group form-inline form-group-sm spacing">
+          <small class="text-uppercase col-sm-12 col-md-12 col-lg-12">Status filter</small>
+          <div class="input-group">
+            <div class="col-lg-6 col-md-6 col-sm-12" ng-repeat="(key, s) in status">
+              <label class="checkbox-inline">
+                <input type="checkbox" ng-model="status[key]" ng-disabled="loadingData"
+                       ng-change="updateRequestData();setURL()">
+                <small>
+                  {{key}}
+                </small>
+              </label>
+            </div>
+          </div>
+        </form>
+        
+        <form class="form-group form-inline form-group-sm">
+          <small class="text-uppercase col-sm-12 col-md-12 col-lg-12">PWG filter</small>
+          <div class="col-sm-6 col-md-4 col-lg-4" ng-repeat="(key, p) in pwg">
+            <label class="checkbox-inline">
+              <input type="checkbox" ng-model="pwg[key]" ng-disabled="loadingData"
+                     ng-change="updateRequestData();setURL()">
+              <small>
+                {{key}}
+              </small>
+            </label>
+          </div>
+        </form>
+      </div>
     </div>
+
 
     <div id="advanced" class="collapse col-xs-12 col-sm-12 col-md-12 col-lg-12 spacing">
       Advanced
@@ -80,11 +141,13 @@
 <div class="row" ng-hide="!allRequestData.length">
 
   <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 text-center">
-    <drop-selections difference="difference" selections="selections"></drop-selections>
+    <drop-selections difference="difference" selections="selections" linear-scale="linearScale">
+    </drop-selections>
   </div>
 
   <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 text-center">
-    <performance-histogram chart-data="histogramData"></performance-histogram>
+    <performance-histogram chart-data="histogramData" linear-scale="linearScale">
+    </performance-histogram>
   </div>
 
   <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 text-center">
