@@ -835,4 +835,10 @@ pmpApp.controller('PerformanceController', function($http, $scope) {
     $scope.applyDifference = function(d) {
         $scope.difference = d;
     }
+
+    $scope.linearScale = true;
+    $scope.changeScale = function (a) {
+        console.log(a);
+        $scope.linearScale = a;
+    }
 });

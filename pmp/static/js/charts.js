@@ -153,7 +153,6 @@ angular.module('pmpCharts', [])
                 }
                 
                 var formatXAxis = function(i) {
-                    console.log(i)
                     if (i == 0.1) {
                         return '10% of range';
                     }
@@ -173,11 +172,14 @@ angular.module('pmpCharts', [])
             restrict: 'E',
             scope: {
                 difference: '=?',
+                linearScale: '=?',
                 selections: '=?'
             },
             link: function(scope, element, attrs) {
                 scope.difference =  scope.difference || {};
                 scope.selections = scope.selections || [];
+                scope.linearScale = scope.linearScale || true;
+                scope.logScale = !scope.linearScale;
 
                 scope.applyChange = function(optionName, optionValue) {
                     scope.difference[optionName] = optionValue;
@@ -187,7 +189,6 @@ angular.module('pmpCharts', [])
 
                 var innerHtml = "<style>.nav.dnd {margin-bottom: 0;}</style><div class='row'><div class='col-lg-9 col-md-12 col-sm-12' style='margin-bottom: 3px'><span class='col-lg-2 col-md-2 col-sm-2 nav-header text-muted'>selections</span><ul id='possible-selections' class='nav nav-pills dnd col-lg-10 col-md-10 col-sm-10 inline' style='min-height:22px'><li class='btn btn-default btn-xs text-uppercase' ng-repeat='value in selections'>{{value}}</li></ul></div>";
 
-                // drag and drop options
                 for(var key in scope.difference) {
                     innerHtml += "<div class='col-lg-6 col-md-12 col-sm-12'><span class='col-lg-3 col-md-2 col-sm-2 nav-header' style='margin-bottom: 3px'>" + key + "</span><ul id='" + key + "' class='nav nav-pills dnd single col-lg-9 col-md-10 col-sm-10 inline alert-info' style='min-height:23px; margin-top:1px'>";
                     if(scope.difference[key] !="") {
@@ -196,8 +197,16 @@ angular.module('pmpCharts', [])
                     innerHtml+="</ul></div>";
                 }
 
-                innerHtml +="</div>";
+                console.log(scope.linearScale);
 
+                innerHtml += "<div class='col-lg-6 col-md-6 col-sm-12 spacing-sm' style='margin-top:3px;'><span class='col-lg-3 col-md-4 col-sm-2 nav-header'>scale</span><ul class='nav nav-pills inline col-lg-9 col-md-8 col-sm-10'><li><div class='btn-group'><button type='button' class='btn btn-primary btn-xs text-uppercase' ng-model='linearScale' ng-click='changeScale(true)' btn-radio='linear'>linear</button><button type='button' class='btn btn-primary btn-xs text-uppercase' ng-model='logScale' ng-click='changeScale(false)' btn-radio='log'>log</button></div></li></ul></div></div>";
+
+                scope.changeScale = function(s) {
+                    if (scope.linearScale != s) {
+                        scope.linearScale = s;
+                        scope.logScale = !s;
+                    }
+                }
 
                 var chart = $compile(innerHtml)(scope);
                 element.append(chart);
