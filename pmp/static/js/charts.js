@@ -18,7 +18,7 @@ Parse time in milliseconds to the human readable format
             var days = Math.floor(seconds / 86400);
             var hours = Math.floor((seconds % 86400) / 3600);
             var minutes = Math.floor(((seconds % 86400) % 3600) / 60);
-            return days + "D " + hours + "h" + minutes + " m";
+            return days + "D " + hours + "h " + minutes + "m";
         };
     })
 
@@ -68,7 +68,8 @@ angular.module('pmpCharts', [])
                 
                 var xAxis = d3.svg.axis()
                     .scale(x)
-                    .orient('bottom');
+                    .orient('bottom')
+                    .tickFormat(formatXAxis);
 
                 var y = d3.scale.linear().range([height, 0]).domain([0, 10]);
                 
@@ -83,7 +84,7 @@ angular.module('pmpCharts', [])
                           + margin.top + ')')
                     .attr('style', 'fill: none');
 
-                svg.append("g")
+                var gx = svg.append("g")
                     .attr("class", "x axis")
                     .attr('style', 'fill: black')
                     .attr("transform", "translate(0," + (height) + ")")
@@ -146,7 +147,20 @@ angular.module('pmpCharts', [])
                     .attr('y', 60)
                     .style('fill-opacity', 1e-6)
                     .remove();
-                    //}
+
+                    xAxis.tickFormat(formatXAxis);
+                    gx.transition().duration(200).ease("linear").call(xAxis);
+                }
+                
+                var formatXAxis = function(i) {
+                    console.log(i)
+                    if (i == 0.1) {
+                        return '10% of range';
+                    }
+                    if (i == 1.0) {
+                        return '100%';   
+                    }
+                    return '';
                 }
 
                 scope.$watch('chartData', function(d) {inputChange()});
