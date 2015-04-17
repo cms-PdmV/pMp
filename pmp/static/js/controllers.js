@@ -903,4 +903,12 @@ pmpApp.controller('PerformanceController', function($http, $interval, $scope) {
 
     $interval($scope.updateUpdate, 2*60*1000);
     $scope.updateUpdate();
+
+    $scope.takeScreenshot = function() {
+        var tmp = document.getElementById("ctn");
+        var svg = tmp.getElementsByTagName("svg")[0];
+        var svg_xml = (new XMLSerializer).serializeToString(svg);
+        var blob = new Blob([svg_xml], {type: "text/plain;charset=utf-8"});
+        saveAs(blob, "screenshot.html");
+    }
 });
