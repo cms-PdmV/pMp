@@ -1,6 +1,9 @@
 'use strict';
 
-pmpApp.controller('MainController', function($location, $route, $rootScope, $scope, $timeout) {
+pmpApp.controller('MainController', function($location, $route, $rootScope,
+                                             $interval, $scope, $timeout) {
+
+    $rootScope.showView = false;
 
     $scope.nav = function(where) {
         if (where == '') {
@@ -77,15 +80,16 @@ pmpApp.controller('MainController', function($location, $route, $rootScope, $sco
         }
     }
 
-    $rootScope.showView = false;
-
-    $timeout(function() {
-        $scope.nav('');
-        }, 100);
-
     $scope.isEmpty = function (obj) {
         return angular.equals({},obj); 
     };
+
+    $scope.updateDate = function() {
+        $scope.dt = new Date();
+    }
+
+    $timeout(function() { $scope.nav('');}, 100);
+    $interval($scope.updateDate, 1000);
 });
 
 pmpApp.controller('PresentController', function($http, $location, $interval, $q,
@@ -382,10 +386,6 @@ pmpApp.controller('PresentController', function($http, $location, $interval, $q,
         saveAs(blob, "screenshot.html");
     }
 
-    $scope.updateDate = function() {
-        $scope.dt = new Date();
-    }
-
     $scope.updateUpdate = function() {
         if ($scope.growingMode) {
             var promise = $http.get("api/campaigns,chained_campaigns," +
@@ -438,7 +438,6 @@ pmpApp.controller('PresentController', function($http, $location, $interval, $q,
         }, 0);
     }
 
-    $interval($scope.updateDate, 1000);
     $interval($scope.updateUpdate, 2*60*1000);
     $scope.updateUpdate();
 
@@ -668,10 +667,6 @@ pmpApp.controller('HistoricalController', function($http, $location, $scope, $ro
             });
     }
 
-    $scope.updateDate = function() {
-        $scope.dt = new Date();
-    }
-
     $scope.setURL = function() {
         $location.path($location.path(), false);
         var params = {}
@@ -747,7 +742,6 @@ pmpApp.controller('HistoricalController', function($http, $location, $scope, $ro
         });
     }
 
-    $interval($scope.updateDate, 1000);
     $interval($scope.updateUpdate, 2*60*1000);
     $scope.updateUpdate();
 
@@ -756,7 +750,7 @@ pmpApp.controller('HistoricalController', function($http, $location, $scope, $ro
     });
 });
 
-pmpApp.controller('PerformanceController', function($http, $scope) {
+pmpApp.controller('PerformanceController', function($http, $interval, $scope) {
 
         $scope.cachedRequestData = [];
         $scope.allRequestData = [];
@@ -899,4 +893,14 @@ pmpApp.controller('PerformanceController', function($http, $scope) {
         $scope.allRequestData = data;
         $scope.loadingData = false;
     }
+
+    $scope.updateUpdate = function() {
+        var promise = $http.get("api/requests/lastupdate");
+        promise.then(function(data) {
+            $scope.lastUpdate = data.data.results.last_update
+        });
+    }
+
+    $interval($scope.updateUpdate, 2*60*1000);
+    $scope.updateUpdate();
 });
