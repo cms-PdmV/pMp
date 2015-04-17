@@ -150,6 +150,15 @@
           </small>
         </label>
       </form>
+
+     <div class="input-group input-group-sm spacing">
+       <span class="hidden-sm input-group-addon text-uppercase">
+         Bins
+       </span>
+       <input type="number" class="form-control" ng-model="bins" ng-change="setURL()"
+              placeholder="Default: 10">
+     </div>
+
     </div>
     
     <div id="share" class="collapse col-xs-12 col-sm-12 col-md-12 col-lg-12">
@@ -166,7 +175,8 @@
   </div>
 
   <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 text-center">
-    <performance-histogram chart-data="histogramData" linear-scale="linearScale">
+    <performance-histogram chart-data="histogramData" linear-scale="linearScale"
+                           number-of-bins="bins">
     </performance-histogram>
   </div>
 

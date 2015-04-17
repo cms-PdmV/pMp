@@ -52,7 +52,9 @@ angular.module('pmpCharts', [])
         return {
             restrict: 'E',
             scope: {
-                chartData: '='
+                chartData: '=',
+                linearScale: '=',
+                numberOfBins: '='
             },
             link: function(scope, element, attrs) {
                 var dataStats = [];
@@ -60,7 +62,7 @@ angular.module('pmpCharts', [])
                 var margin = {top: 10, right: 40, bottom: 80, left: 40};
                 var width = 1170 - margin.left - margin.right;
                 var height = 300 - margin.top - margin.bottom;
-                var data, bar;
+                var data, bar, cMax;
                     
                 var x = d3.scale.linear()
                     .domain([0, 1])
@@ -70,8 +72,11 @@ angular.module('pmpCharts', [])
                     .scale(x)
                     .orient('bottom')
                     .tickFormat(formatXAxis);
+               
+                var y = d3.scale.log().clamp(true).range([height, 0]).nice();
 
-                var y = d3.scale.linear().range([height, 0]).domain([0, 10]);
+                var yAxis = d3.svg.axis()
+                    .scale(y);
                 
                 var svg = d3.select(element[0])
                     .append('svg:svg')
@@ -100,19 +105,29 @@ angular.module('pmpCharts', [])
                     for(var a=0; a<scope.chartData.length; a++) {
                         dataStats.push((scope.chartData[a]-mMin)/(mMax-mMin));
                     }
-                    updateHistogram();
+                    if (dataStats.length){
+                        updateHistogram();
+                    }
                 }
 
                 var updateHistogram = function() {
+                    scope.numberOfBins = scope.numberOfBins || 10;
+
                     var data = d3.layout.histogram()
-                    .bins(x.ticks(10))
-                    (dataStats);
-                    
-                    y.domain([0, d3.max(data, function(d) { return d.y; })]);
+                    .bins(x.ticks(scope.numberOfBins))(dataStats);
+
+                    cMax = d3.max(data, function(d) { return d.y; });
+                    if (scope.linearScale) {
+                        y = d3.scale.linear().range([height, 0]).domain([0,cMax]);
+                        yAxis.scale(y);
+                    } else {
+                        y = d3.scale.log().clamp(true).domain([1, cMax]).range([height, 0]).nice();
+                        yAxis.scale(y);
+                    }
 
                     bar = svg.selectAll('.bar')
                     .data(data, function(d) { return d; });
-                    
+
                     bar.attr('class', 'bar')
                     .transition()
                     .duration(500)
@@ -120,10 +135,10 @@ angular.module('pmpCharts', [])
                     
                     bar.enter().append('g')
                     .attr('class', 'bar')
-                    .attr('transform', function(d) { return 'translate(' + x(d.x) + ','
-                                + y(d.y) + ')'; })
                     .transition()
                     .duration(1000)
+                    .attr('transform', function(d) { return 'translate(' + x(d.x) + ','
+                                + y(d.y) + ')'; })
                     .attr('y', 0)
                     .style('fill-opacity', 1);
                     
@@ -131,15 +146,18 @@ angular.module('pmpCharts', [])
                     .attr('x', 1)
                     .attr('class', 'update')
                     .attr('width', x(data[0].dx) - 1)
-                    .attr('height', function(d) { return height - y(d.y); });
-                    
+                    .attr('height', function(d) {
+                            return height-y(d.y);
+                        });
+                       
+
                     bar.append('text')
                     .attr('dy', '.75em')
                     .attr('y', 6)
                     .attr('x', x(data[0].dx) / 2)
                     .attr('text-anchor', 'middle')
                     .text(function(d) { return formatCount(d.y); });
-                    
+
                     bar.exit()
                     .attr('class', 'update')
                     .transition()
@@ -151,7 +169,7 @@ angular.module('pmpCharts', [])
                     xAxis.tickFormat(formatXAxis);
                     gx.transition().duration(200).ease("linear").call(xAxis);
                 }
-                
+
                 var formatXAxis = function(i) {
                     if (i == 0.1) {
                         return '10% of range';
@@ -161,8 +179,16 @@ angular.module('pmpCharts', [])
                     }
                     return '';
                 }
+                
+                var changed = function() {
+                    if (scope.chartData != undefined) {
+                        updateHistogram();
+                    }
+                }
 
                 scope.$watch('chartData', function(d) {inputChange()});
+                //scope.$watch('numberOfBins', function(d) {changed()});
+                scope.$watch('linearScale', function(d) {changed()});
             }
         }
     })
@@ -197,14 +223,13 @@ angular.module('pmpCharts', [])
                     innerHtml+="</ul></div>";
                 }
 
-                console.log(scope.linearScale);
-
-                innerHtml += "<div class='col-lg-6 col-md-6 col-sm-12 spacing-sm' style='margin-top:3px;'><span class='col-lg-3 col-md-4 col-sm-2 nav-header'>scale</span><ul class='nav nav-pills inline col-lg-9 col-md-8 col-sm-10'><li><div class='btn-group'><button type='button' class='btn btn-primary btn-xs text-uppercase' ng-model='linearScale' ng-click='changeScale(true)' btn-radio='linear'>linear</button><button type='button' class='btn btn-primary btn-xs text-uppercase' ng-model='logScale' ng-click='changeScale(false)' btn-radio='log'>log</button></div></li></ul></div></div>";
+                innerHtml += "<div class='col-lg-6 col-md-6 col-sm-12 spacing-sm' style='margin-top:3px;'><span class='col-lg-3 col-md-4 col-sm-2 nav-header'>scale</span><ul class='nav nav-pills inline col-lg-9 col-md-8 col-sm-10'><li><div class='btn-group'><button type='button' class='btn btn-primary btn-xs text-uppercase' ng-model='linearScale' ng-click='changeScale(true)' btn-radio='true'>linear</button><button type='button' class='btn btn-primary btn-xs text-uppercase' ng-model='logScale' ng-click='changeScale(false)' btn-radio='true'>log</button></div></li></ul></div></div>";
 
                 scope.changeScale = function(s) {
                     if (scope.linearScale != s) {
                         scope.linearScale = s;
                         scope.logScale = !s;
+                        scope.$parent.changeScale(s);
                     }
                 }
 
@@ -496,7 +521,7 @@ angular.module('pmpCharts', [])
 
                 scope.$watch('chartData', function(d) {
                     data = [];
-                    if (d != undefined) {
+                    if (d.length) {
                         d.forEach(function (e, i) {
                             var history = e.history;
                             if(Object.keys(history)) {
