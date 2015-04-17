@@ -790,8 +790,13 @@ pmpApp.controller('PerformanceController', function($http, $scope) {
                     } else {
                         $scope.tags.addTag(input);
                     }
-                    $scope.update(data.data.results, true, 'pwg');
-                    $scope.update(data.data.results, true, 'status');
+                    setTimeout(function() {
+                        $scope.update(data.data.results, true, 'pwg');
+                        $scope.update(data.data.results, true, 'status');
+                        $scope.$apply(function() {
+                            $scope.updateRequestData();
+                            });
+                        }, 0);
                 }
                 $scope.loadingData = false;
             }, function() {
@@ -836,7 +841,6 @@ pmpApp.controller('PerformanceController', function($http, $scope) {
             }
         }
         $scope[update] = data;
-        console.log($scope[update]);
     }
 
     $scope.pwg = {};
@@ -869,4 +873,30 @@ pmpApp.controller('PerformanceController', function($http, $scope) {
         5: 70000,
         6: 63000
     };
+
+    $scope.updateRequestData = function() {
+        $scope.loadingData = true;
+
+        var max = $scope.priority.max;
+        var min = $scope.priority.min;
+        if (isNaN(max) || max == '') {
+            max = Number.MAX_VALUE;
+        }
+        if (isNaN(min) || min == '') {
+            min = 0;
+        }
+
+        var tmp = $scope.cachedRequestData;
+        var data = [];
+        for (var i = 0; i < tmp.length; i++) {
+            if (tmp[i].priority >= min &&
+                tmp[i].priority <= max &&
+                $scope.status[tmp[i].status] &&
+                $scope.pwg[tmp[i].pwg]) {
+                data.push(tmp[i]);
+            }
+        }
+        $scope.allRequestData = data;
+        $scope.loadingData = false;
+    }
 });
