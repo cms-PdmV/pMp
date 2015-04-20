@@ -750,7 +750,7 @@ pmpApp.controller('HistoricalController', function($http, $location, $scope, $ro
     });
 });
 
-pmpApp.controller('PerformanceController', function($http, $interval, $scope) {
+pmpApp.controller('PerformanceController', function($http, $interval, $location, $scope) {
 
         $scope.cachedRequestData = [];
         $scope.allRequestData = [];
@@ -789,6 +789,7 @@ pmpApp.controller('PerformanceController', function($http, $interval, $scope) {
                         $scope.update(data.data.results, true, 'status');
                         $scope.$apply(function() {
                             $scope.updateRequestData();
+                            $scope.setURL();
                             });
                         }, 0);
                 }
@@ -852,11 +853,13 @@ pmpApp.controller('PerformanceController', function($http, $interval, $scope) {
 
     $scope.applyDifference = function(d) {
         $scope.difference = d;
+        $scope.setURL();
     }
 
     $scope.linearScale = true;
     $scope.changeScale = function (a) {
         $scope.linearScale = a;
+        $scope.setURL();
     }
 
     $scope.priorityPerBlock = {
@@ -910,5 +913,60 @@ pmpApp.controller('PerformanceController', function($http, $interval, $scope) {
         var svg_xml = (new XMLSerializer).serializeToString(svg);
         var blob = new Blob([svg_xml], {type: "text/plain;charset=utf-8"});
         saveAs(blob, "screenshot.html");
+    }
+
+    $scope.setURL = function() {
+        $location.path($location.path(), false);
+        var params = {}
+
+        // number of bins
+        if ($scope.bins != undefined || $scope.bins != '') {
+            params.b = $scope.bins;
+        }
+        // list of requests separated by comma
+        if ($scope.tags.getTags().length) {
+            params.r = $scope.tags.getTags().join(',')
+        }
+        // if show the time block
+        if ($scope.showDate != undefined) {
+            params.t = $scope.showDate + ''
+        }
+        // set filter priority
+        if ($scope.priority.max != '' || $scope.priority.min != '') {
+            params.x = $scope.priority.min + ',' + $scope.priority.max;
+        }
+        // set filter pwgs
+        var w = [];
+        for (var i in $scope.pwg) {
+            if ($scope.pwg[i]) {
+                w.push(i);
+            }
+        }
+        params.w = w.join(',');
+
+        // set filter status
+        var s = [];
+        for (var i in $scope.status) {
+            if ($scope.status[i]) {
+                s.push(i);
+            }
+        }
+        params.s = s.join(',');
+
+        // setting minuend
+        if ($scope.difference.minuend != '') {
+            params.min = $scope.difference.minuend;
+        }
+        // setting subtrahend
+        if ($scope.difference.subtrahend != '') {
+            params.sub = $scope.difference.subtrahend;
+        }
+        // set scale
+        if ($scope.linearScale != undefined) {
+            params.l = $scope.linearScale + '';
+        }
+
+        $location.search(params);
+        $scope.url = $location.absUrl();
     }
 });
