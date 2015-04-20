@@ -969,4 +969,8 @@ pmpApp.controller('PerformanceController', function($http, $interval, $location,
         $location.search(params);
         $scope.url = $location.absUrl();
     }
+
+    new ZeroClipboard(document.getElementById('copy'), {
+        moviePath: 'lib/zeroclipboard/ZeroClipboard.swf'
+    });
 });
