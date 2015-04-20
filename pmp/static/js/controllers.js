@@ -755,7 +755,7 @@ pmpApp.controller('PerformanceController', function($http, $interval, $location,
         $scope.cachedRequestData = [];
         $scope.allRequestData = [];
 
-    $scope.load = function(input, add) {
+        $scope.load = function(input, add, more) {
         if (!input) {
             $scope.showPopUp('warning', 'Your request parameters are empty');
         } else if (add & $scope.tags.hasTag(input)) {
@@ -774,7 +774,9 @@ pmpApp.controller('PerformanceController', function($http, $interval, $location,
                     } else {
                         $scope.tagsRemoveAll([input]);
                     }
+
                     $scope.cachedRequestData = data.data.results;
+
                     if (input == 'all') {
                         for (var i = 0; i < data.data.results.length; i++) {
                             if (!$scope.tags.hasTag(data.data.results[i].member_of_campaign)) {
@@ -784,16 +786,15 @@ pmpApp.controller('PerformanceController', function($http, $interval, $location,
                     } else {
                         $scope.tags.addTag(input);
                     }
-                    setTimeout(function() {
-                        $scope.update(data.data.results, true, 'pwg');
-                        $scope.update(data.data.results, true, 'status');
-                        $scope.$apply(function() {
-                            $scope.updateRequestData();
-                            $scope.setURL();
-                            });
-                        }, 0);
+                    $scope.update(data.data.results, !more, 'pwg');
+                    $scope.update(data.data.results, !more, 'status');
                 }
-                $scope.loadingData = false;
+
+                if (!more || more == $scope.tags.getTags().length) {
+                    $scope.updateRequestData();
+                    $scope.setURL();
+                    $scope.loadingData == false;
+                }
             }, function() {
                 $scope.showPopUp('error', 'Error getting requests');
                 $scope.loadingData = false;
@@ -840,12 +841,9 @@ pmpApp.controller('PerformanceController', function($http, $interval, $location,
 
     $scope.pwg = {};
     $scope.status = {};
-    $scope.priority = {min: '', max: ''};
+
 
     $scope.title = 'Request Performance';
-
-    $scope.selections = ['validation', 'approved', 'submitted'];
-    $scope.difference = {minuend: 'done', subtrahend: 'created'}
 
     $scope.applyHistogram = function(d) {
         $scope.histogramData = d;
@@ -856,7 +854,6 @@ pmpApp.controller('PerformanceController', function($http, $interval, $location,
         $scope.setURL();
     }
 
-    $scope.linearScale = true;
     $scope.changeScale = function (a) {
         $scope.linearScale = a;
         $scope.setURL();
@@ -973,4 +970,73 @@ pmpApp.controller('PerformanceController', function($http, $interval, $location,
     new ZeroClipboard(document.getElementById('copy'), {
         moviePath: 'lib/zeroclipboard/ZeroClipboard.swf'
     });
+
+    $scope.initPerformance = function() {
+
+        $scope.difference = {minuend: '', subtrahend: ''}        
+        $scope.selections = ['created', 'validation', 'approved', 'submitted', 'done'];
+
+        if ($location.search().min != undefined) {
+            var inx = $scope.selections.indexOf($location.search().min);
+            if (inx != -1) {
+                $scope.difference.minuend = $location.search().min;
+                $scope.selections.splice(inx, 1);
+            }
+        }
+
+        if ($location.search().sub != undefined) {
+            var inx = $scope.selections.indexOf($location.search().sub);
+            if (inx != -1) {
+                $scope.difference.subtrahend = $location.search().sub;
+                $scope.selections.splice(inx, 1);
+            }
+        }
+
+
+
+        $scope.showDate = ($location.search().t === 'true');
+        $scope.linearScale = ($location.search().l === 'true');
+        if ($location.search.b != '' && !isNaN($location.search().b)) {
+            $scope.bins = parseInt($location.search().b, 10);
+        } else {
+            $scope.bins = 10;
+        }
+
+        $scope.priority = {min: '', max: ''};
+        if ($location.search().x != undefined) {
+            var tmp = $location.search().x.split(',');
+            $scope.priority.min = tmp[0];
+            $scope.priority.max = tmp[1];
+        }
+
+        $scope.pwg = {};
+        if ($location.search().w != undefined) {
+            var tmp = $location.search().w.split(',');
+            for (var i = 0; i < tmp.length; i++) {
+                $scope.pwg[tmp[i]] = true;
+            }
+        }
+
+        $scope.status = {};
+        if ($location.search().s != undefined) {
+            var tmp = $location.search().s.split(',');
+            for (var i = 0; i < tmp.length; i++) {
+                $scope.status[tmp[i]] = true;
+            }
+        }
+        
+        if ($location.search().r != undefined) {
+            $scope.loadingData = true;
+            var tmp = $location.search().r.split(',');
+            var arg = false;
+            if (Object.keys($scope.pwg).length) {
+                var arg = tmp.length;
+            }
+            for (var i = 0; i < tmp.length; i++) {
+                $scope.load(tmp[i], true, arg);
+            }
+        } else {
+            $scope.url = $scope.setURL();
+        }
+    }
 });
