@@ -53,6 +53,7 @@ angular.module('pmpCharts', [])
             restrict: 'E',
             scope: {
                 chartData: '=',
+                chartDataExtended: '=',
                 linearScale: '=',
                 numberOfBins: '='
             },
@@ -103,7 +104,8 @@ angular.module('pmpCharts', [])
                     mMin = d3.min(scope.chartData, function(d) { return d;});
                     mMax = d3.max(scope.chartData, function(d) { return d;});
                     for(var a=0; a<scope.chartData.length; a++) {
-                        dataStats.push((scope.chartData[a]-mMin)/(mMax-mMin));
+                        var val = (scope.chartData[a]-mMin)/(mMax-mMin);
+                        dataStats.push(val);
                     }
                     if (dataStats.length){
                         updateHistogram();
@@ -142,14 +144,31 @@ angular.module('pmpCharts', [])
                     .attr('y', 0)
                     .style('fill-opacity', 1);
                     
+                    // append columns
                     bar.append('rect')
-                    .attr('x', 1)
                     .attr('class', 'update')
+                    .attr('cursor', 'pointer')
+                    .attr('data-clipboard-text', function(data) {
+                            var toCopy = [];
+                            var min = d3.min(data, function(d) {return d;})*(mMax-mMin)+mMin;
+                            var max = d3.max(data, function(d) {return d;})*(mMax-mMin)+mMin;
+                            for (var i = 0; i < scope.chartDataExtended.length; i++) {
+                                var val = scope.chartDataExtended[i].value;
+                                if (val >= min && val <= max) {
+                                    toCopy.push(scope.chartDataExtended[i].id);
+                                }
+                            }
+                            new ZeroClipboard(this, {moviePath:'lib/zeroclipboard/ZeroClipboard.swf'});
+                            return toCopy.join(', ');
+                            })
+                    .attr('height', function(d) { return height-y(d.y);})
                     .attr('width', x(data[0].dx) - 1)
-                    .attr('height', function(d) {
-                            return height-y(d.y);
-                        });
-                       
+                    .attr('x', 1)
+                    .style('shape-rendering', 'optimizeSpeed')
+                    .on('mouseover', function(d) { d3.select(this).style('fill', '#b0bec5'); })
+                    .on('mouseout', function(d) { d3.select(this).style('fill', '#263238'); })
+                    .on('click', function(data) {
+                            scope.$parent.showPopUp('success', 'List of requests copied'); });
 
                     bar.append('text')
                     .attr('dy', '.75em')
@@ -309,6 +328,7 @@ angular.module('pmpCharts', [])
                         return null;
                     }
                     dataStats = [];
+                    dataStatsExtended = [];
                     var d = scope.chartData;
                     if (d != undefined) {
                         d.forEach(function (e, i) {
@@ -317,10 +337,11 @@ angular.module('pmpCharts', [])
                                 if (history[m] != undefined && history[s] != undefined) {
                                     var tmp = getDate(history[m]) - getDate(history[s]);
                                     dataStats.push(tmp);
+                                    dataStatsExtended.push({id: e.prepid, value: tmp});
                                 }
                             }
                         });
-                        scope.$parent.applyHistogram(dataStats)
+                        scope.$parent.applyHistogram(dataStats, dataStatsExtended)
                         updateStats();
                         if (!isDrawn) {
                             showTable();

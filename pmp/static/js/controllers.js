@@ -845,8 +845,9 @@ pmpApp.controller('PerformanceController', function($http, $interval, $location,
 
     $scope.title = 'Request Performance';
 
-    $scope.applyHistogram = function(d) {
+    $scope.applyHistogram = function(d, e) {
         $scope.histogramData = d;
+        $scope.histogramDataExtended = e;
     }
 
     $scope.applyDifference = function(d) {

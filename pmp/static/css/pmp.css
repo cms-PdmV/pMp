@@ -210,20 +210,19 @@ ul.nav li.placeholder:before {
 }
 
 .bar rect {
-  fill: #263238;
-  shape-rendering: crispEdges;
+    fill: #263238;
 }
 
 .bar text {
-  fill: #eeeeee;
+    fill: #eeeeee;
 }
 
 .axis path, .axis line {
-  fill: none;
-  stroke: #000;
-  shape-rendering: crispEdges;
+    fill: none;
+    stroke: #000;
+    shape-rendering: crispEdges;
 }
 
 .update {
-  fill: #b0bec5;
+    fill: #b0bec5;
 }
