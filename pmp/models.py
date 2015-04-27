@@ -321,19 +321,24 @@ class GetHistorical():
         for req in req_arr:
             try:
                 dataset_list = req['output_dataset']
-                dataset_list.sort(cmp=self.select_dataset)
+                if len(dataset_list):
+                    dataset_list.sort(cmp=self.select_dataset)
+                    ds = dataset_list[0]
+                else:
+                    ds = None
 
                 for reqmgr in req['reqmgr_name']:
                     i = {}
                     i['expected'] = req['total_events']
                     i['name'] = reqmgr
-                    i['output_dataset'] = dataset_list[0]
+                    i['output_dataset'] = ds
                     i['priority'] = req['priority']
                     i['pwg'] = req['pwg']
                     i['request'] = True
                     i['status'] = req['status']
                     iterable.append(i)
             except:
+                print 'problems', req['output_dataset']
                 pass
 
         # iterate over workflows and yield documents 
@@ -417,7 +422,8 @@ class GetHistorical():
                     # skip requests with not desired output dataset
                     if (document['pdmv_dataset_name'] !=
                         details['output_dataset']):
-                        continue
+                        if details['output_dataset'] is not None:
+                            continue
 
                 # create an array of requests to be processed
                 response = {}
@@ -453,14 +459,23 @@ class GetHistorical():
                         for record in document['pdmv_monitor_history']:
                             if len(record['pdmv_monitor_time']):
                                 data = {}
-                                # a is all events in das
-                                data['a'] = (record['pdmv_evts_in_DAS'] +
-                                             record['pdmv_open_evts_in_DAS'])
-                                # e is events in das
-                                data['e'] = record['pdmv_evts_in_DAS']
-                                # t is time in ms
+                                if details['output_dataset'] is not None:
+                                    # a is all events in das
+                                    data['a'] = (record['pdmv_evts_in_DAS'] +
+                                                 record[
+                                            'pdmv_open_evts_in_DAS'])
+                                    # e is events in das
+                                    data['e'] = record['pdmv_evts_in_DAS']
+                                    # t is time in ms
+                                else:
+                                    # if the output in mcm is not specified yet,
+                                    # treat as this has not produced anything
+                                    # ensures present=historical
+                                    data['a'] = 0
+                                    data['e'] = 0
                                 data['t'] = time.mktime(time.strptime(
                                         record['pdmv_monitor_time']))*1000
+
                                 # x is expected events
                                 if is_request:
                                     data['x'] = details['expected']
