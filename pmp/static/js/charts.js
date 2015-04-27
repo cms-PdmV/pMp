@@ -119,30 +119,26 @@ angular.module('pmpCharts', [])
                     .bins(x.ticks(scope.numberOfBins))(dataStats);
 
                     cMax = d3.max(data, function(d) { return d.y; });
+
                     if (scope.linearScale) {
                         y = d3.scale.linear().range([height, 0]).domain([0,cMax]);
                         yAxis.scale(y);
                     } else {
-                        y = d3.scale.log().clamp(true).domain([1, cMax]).range([height, 0]).nice();
+                        y = d3.scale.log().range([height, 0]).domain([1, cMax]);
                         yAxis.scale(y);
                     }
 
                     bar = svg.selectAll('.bar')
                     .data(data, function(d) { return d; });
 
-                    bar.attr('class', 'bar')
-                    .transition()
-                    .duration(500)
-                    .attr('x', function(d, i) { return i * 32; });
-                    
                     bar.enter().append('g')
                     .attr('class', 'bar')
+                    .attr('transform', function(d) { return 'translate(' + x(d.x) + ','+height+')';})
                     .transition()
                     .duration(1000)
-                    .attr('transform', function(d) { return 'translate(' + x(d.x) + ','
-                                + y(d.y) + ')'; })
-                    .attr('y', 0)
-                    .style('fill-opacity', 1);
+                    .attr('transform', function(d) { if(isNaN(y(d.y))){
+                                return 'translate(' + x(d.x) + ',0)'; }
+                            return 'translate(' + x(d.x) + ',' + y(d.y) + ')'; });
                     
                     // append columns
                     bar.append('rect')
@@ -161,7 +157,7 @@ angular.module('pmpCharts', [])
                             new ZeroClipboard(this, {moviePath:'lib/zeroclipboard/ZeroClipboard.swf'});
                             return toCopy.join(', ');
                             })
-                    .attr('height', function(d) { return height-y(d.y);})
+                    .attr('height', function(d) { if(isNaN(y(d.y))){ return 0} return height-y(d.y)})
                     .attr('width', x(data[0].dx) - 1)
                     .attr('x', 1)
                     .style('shape-rendering', 'optimizeSpeed')
@@ -169,6 +165,12 @@ angular.module('pmpCharts', [])
                     .on('mouseout', function(d) { d3.select(this).style('fill', '#263238'); })
                     .on('click', function(data) {
                             scope.$parent.showPopUp('success', 'List of requests copied'); });
+
+                    bar.selectAll('.bar')
+                    .transition()
+                    .duration(1000)
+                    .attr('transform', function(d) { return 'translate(' + x(d.x) + ','
+                                + y(d.y) + ')'; });
 
                     bar.append('text')
                     .attr('dy', '.75em')
@@ -207,7 +209,7 @@ angular.module('pmpCharts', [])
 
                 scope.$watch('chartData', function(d) {inputChange()});
                 //scope.$watch('numberOfBins', function(d) {changed()});
-                scope.$watch('linearScale', function(d) {changed()});
+                scope.$watch('linearScale', function(d) {dataStats = [];changed();inputChange();});
             }
         }
     })
