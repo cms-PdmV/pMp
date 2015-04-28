@@ -219,10 +219,29 @@ ul.nav li.placeholder:before {
 
 .axis path, .axis line {
     fill: none;
-    stroke: #000;
+    stroke: #000;3
     shape-rendering: crispEdges;
 }
 
 .update {
     fill: #b0bec5;
+}
+
+/*Historical*/
+.label-time {
+    color: #263238;
+    position: absolute;
+    left: 0px;
+}
+
+.label-expected {
+    color: #b71c1c;
+    position: absolute;
+    left: 250px;
+}
+
+.label-events-in-das {
+    color: #689f38;
+    position: absolute;
+    left: 450px;
 }

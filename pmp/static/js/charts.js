@@ -566,42 +566,58 @@ angular.module('pmpCharts', [])
     /*** 
     Life-Time Representation of Requests directive:
     ***/
-    .directive('linearLifetime', function() {
+    .directive('linearLifetime', function($compile) {
         return {
             restrict: 'AE',
             scope: {
                 chartData: '=',
+
+                humanReadableNumbers: '=',
                 taskChain: '=',
                 zoomY: '='
             },
-            link: function(scope, element) {
-                scope.dataCopy = [];
-                var customWidth = 1160;
-                // General attributes
-                var margin = {
-                        top: 10,
+            link: function(scope, element, compile) {
+                // graph configuration
+                config = {
+                    customWidth: 1160,
+                    customHeight: 500,
+                    margin: {
+                        top: 40,
                         right: 0,
                         bottom: 50,
                         left: 50
-                    },
-                    width = customWidth - margin.left - margin.right,
-                        height = 500 - margin.top - margin.bottom,
-                        l1, l2, l3, containerBox, hoverLineGroup, clipPath, rectLifetime, rectTaskChain;
-                
-                    var fiveShadesOfGrey = ['#4fc3f7', '#4dd0e1', '#4db6ac', '#81c784', '#aed581', '#dce775'];
+                    }
+                };
+
+                // initiate scope related variables
+                scope.labelData = [];
+                scope.dataCopy = [];
+
+                // General attributes
+                var width = config.customWidth - config.margin.left - config.margin.right;
+                var height = config.customHeight - config.margin.top - config.margin.bottom;
+                var l1, l2, l3, containerBox, hoverLineGroup, clipPath, rectLifetime, rectTaskChain;
+                var fiveShadesOfGrey = ['#4fc3f7', '#4dd0e1', '#4db6ac', '#81c784', '#aed581', '#dce775'];
+                // add data label
+                var innerHtml = '<span ng-repeat=\'d in labelData\' class=\'{{d.class}}\'>{{d.label}}<span ng-show=\'humanReadableNumbers && d.class != "label-time"\'>{{d.data | humanReadableNumbers}}</span><span ng-hide=\'humanReadableNumbers && d.class != "label-time"\'>{{d.data}}</span></span>';
+                element.append($compile(innerHtml)(scope));
+
+                // add main svg
                 var svg = d3.select(element[0])
                     .append('svg:svg')
-                    .attr("viewBox", "0 -20 " + (width + margin.left + margin.right) + " " + (height + margin.top + margin.bottom))
+                    .attr("viewBox", "0 -20 " + config.customWidth + " " + config.customWidth)
                     .attr("width", "100%")
                     .attr("height", "100%")
                     .append("svg:g")
-                    .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+                    .attr("transform", "translate(" + config.margin.left + ","
+                          + config.margin.top + ")")
                     .attr('style', 'fill: none');
 
+                // define zoom
                 var zoom = d3.behavior.zoom()
                     .on("zoom", onZoom);
 
-                // Axes
+                // axes
                 var x = d3.time.scale();
                 var y = d3.scale.linear();
 
@@ -609,7 +625,7 @@ angular.module('pmpCharts', [])
                 var gx = svg.append("svg:g")
                     .attr("class", "x axis minorx")
                     .attr('fill', '#666')
-                    .attr("transform", "translate(0," + (height + margin.top) + ")")
+                    .attr("transform", "translate(0," + (height + 10) + ")")
                     .call(xAxis);
 
                 var yAxis = d3.svg.axis().scale(y).ticks(4).orient("left");
@@ -625,30 +641,14 @@ angular.module('pmpCharts', [])
                     .attr("font-size", "13")
                     .text('events');
 
-                // Data-label
+                // data-label
                 var dateLabelGroup = svg.append("svg:g")
                     .attr("class", "date-label-group")
                     .attr("font-size", "14");
                 dateLabelGroup.append("svg:text")
                     .attr("class", "date-label")
-                    .attr("style", "fill: #263238")
                     .attr("y", -15)
                     .attr("x", 10);
-                dateLabelGroup.append("svg:text")
-                    .attr("class", "expected-label")
-                    .attr('style', 'fill: #b71c1c')
-                    .attr("y", -15)
-                    .attr("x", 250);
-                dateLabelGroup.append("svg:text")
-                    .attr("class", "indas-label")
-                    .attr("style", "fill: #689f38")
-                    .attr("y", -15)
-                    .attr("x", 420);
-                dateLabelGroup.append("svg:text")
-                    .attr("class", "openindas-label")
-                    .attr("style", "fill:  #607d8b;")
-                    .attr("y", -15)
-                    .attr("x", 620);
 
                 var defs = svg.append("defs");
 
@@ -662,24 +662,8 @@ angular.module('pmpCharts', [])
                     .attr("width", width)
                     .attr("height", height);
 
-                // Area gradient
-                /*
-                var gradient = defs.append("linearGradient")
-                    .attr("id", "gradient")
-                    .attr("x2", "0%")
-                    .attr("y2", "100%");
-                gradient.append("stop")
-                    .attr("offset", "0%")
-                    .attr('stop-color', '#607d8b')
-                    .attr("stop-opacity", 0.4);
-                gradient.append("stop")
-                    .attr("offset", "100%")
-                    .attr('stop-color', '#eceff1')
-                    .attr("stop-opacity", 0.8);
-                */
                 var chartBody = svg.append("g")
                     .attr("clip-path", "url(#clip)");
-                //.call(d3.behavior.zoom().scaleExtent([0.2, 5]).on("zoom", redraw));
                 
                 // Draw lines
                 var areaAllEvents = d3.svg.area()
@@ -778,9 +762,6 @@ angular.module('pmpCharts', [])
                             rectLifetime = undefined
                         }
                         svg.select('text.date-label').text('');
-                        svg.select('text.expected-label').text('');
-                        svg.select('text.indas-label').text('');
-                        svg.select('text.openindas-label').text('');
                         if (hoverLineGroup != undefined) {
                             hoverLineGroup.remove();
                             hoverLineGroup = undefined;
@@ -965,7 +946,7 @@ angular.module('pmpCharts', [])
                     if (containerBox == undefined) {
                         containerBox = document.querySelector('#lifetime');
                         var hoverLineXOffset = $(containerBox).offset().left;
-                        var hoverLineYOffset = margin.top + $(containerBox).offset().top;
+                        var hoverLineYOffset = config.margin.top + $(containerBox).offset().top;
 
                         hoverLineGroup = chartBody.append("svg:g")
                             .attr("class", "hover-line");
@@ -991,14 +972,13 @@ angular.module('pmpCharts', [])
                     }
 
                     var updateDataLabel = function(data) {
+                        var tmp;
                         if (data[0]) {
-                            svg.select('text.date-label').text('Time: ' + data[0].toDateString() + ' ' + data[0].toLocaleTimeString());
+                            tmp = data[0].toDateString() + ' ' + data[0].toLocaleTimeString();
                         } else {
-                            svg.select('text.date-label').text('Time: ');
+                            tmp = ''
                         }
-                        svg.select('text.expected-label').text('Expected: ' + data[1]);
-                        svg.select('text.indas-label').text('Events in DAS: ' + data[2]);
-                        svg.select('text.openindas-label').text('All events in DAS: ' + data[3]);
+                        scope.labelData = [{label: 'Time: ', class:'label-time', data: tmp}, {label: 'Expected events: ', class:'label-expected', data: data[1]}, {label: 'Events in DAS: ', class:'label-events-in-das', data: data[2]}];
                     }
 
                     var displayValueLabelsForPositionX = function(xPosition) {
@@ -1007,7 +987,7 @@ angular.module('pmpCharts', [])
                         var min = s[0].getTime();
                         var max = s[1].getTime();
                         var local = scope.dataCopy;
-                        var w = $('#measure').width() * width / customWidth;
+                        var w = $('#measure').width() * width / config.customWidth;
 
                         tmp = min + (xPosition/ w * (max - min));
 
