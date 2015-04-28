@@ -363,10 +363,10 @@ class GetHistorical():
         are equal to previous measurement
         '''
         r = []
-        prev = {'a': -1, 'e': -1, 'x': -1}
+        prev = {'e': -1, 'x': -1}
         for (x, a) in enumerate(arr):
-            if (a['a'] != prev['a'] or a['e'] != prev['e']
-                or a['x'] != prev['x']) and (a['a'] != 0 or x == 0):
+            if ((a['e'] != prev['e'] or a['x'] != prev['x'])
+                and (a['e'] != 0 or x == 0)):
                 r.append(a)
                 prev = a
         return r
@@ -440,8 +440,7 @@ class GetHistorical():
                         for record in t['monitor']:
                             if len(record['pdmv_monitor_time']):
                                 data = {}
-                                data['a'] = (record['pdmv_evts_in_DAS'] +
-                                             record['pdmv_open_evts_in_DAS'])
+                                data['e'] = record['pdmv_evts_in_DAS']
                                 data['t'] = time.mktime(time.strptime(
                                         record['pdmv_monitor_time']))*1000
                                 data['x'] = document['pdmv_expected_events']
@@ -460,18 +459,12 @@ class GetHistorical():
                             if len(record['pdmv_monitor_time']):
                                 data = {}
                                 if details['output_dataset'] is not None:
-                                    # a is all events in das
-                                    data['a'] = (record['pdmv_evts_in_DAS'] +
-                                                 record[
-                                            'pdmv_open_evts_in_DAS'])
-                                    # e is events in das
+                                    # a is events in das
                                     data['e'] = record['pdmv_evts_in_DAS']
-                                    # t is time in ms
                                 else:
                                     # if the output in mcm is not specified yet,
                                     # treat as this has not produced anything
                                     # ensures present=historical
-                                    data['a'] = 0
                                     data['e'] = 0
                                 data['t'] = time.mktime(time.strptime(
                                         record['pdmv_monitor_time']))*1000
@@ -522,17 +515,15 @@ class GetHistorical():
         # Step 3 & 4: Cycle through requests and add data points
         data = []
         for ft in filter_times:
-            d = {'a': 0, 'e':0, 't': ft, 'x': 0}
+            d = {'e': 0, 't': ft, 'x': 0}
             for t in tmp:
-                prevx = {'a': 0, 'e':0, 'x': 0}
+                prevx = {'e': 0, 'x': 0}
                 for (i, x) in enumerate(tmp[t]['data']):
                     if x['t'] > ft:
-                        d['a'] += prevx['a']
                         d['e'] += prevx['e']
                         d['x'] += prevx['x']
                         break
                     elif x['t'] == ft or i == len(tmp[t]['data'])-1:
-                        d['a'] += x['a']
                         d['e'] += x['e']
                         d['x'] += x['x']
                         break

@@ -229,19 +229,19 @@ ul.nav li.placeholder:before {
 
 /*Historical*/
 .label-time {
-    color: #263238;
+    color: #90a4ae;
     position: absolute;
     left: 0px;
 }
 
 .label-expected {
-    color: #b71c1c;
+    color: #263238;
     position: absolute;
     left: 250px;
 }
 
 .label-events-in-das {
-    color: #689f38;
+    color: #01579b;
     position: absolute;
     left: 450px;
 }
