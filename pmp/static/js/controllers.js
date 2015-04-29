@@ -221,6 +221,7 @@ pmpApp.controller('PresentController', function($http, $location, $interval, $q,
                     $scope.setURL();
                     $scope.loadingData = false;
                 } else {
+                    $scope.allRequestData = [];
                     if (add) {
                         data.data.results.push.apply(data.data.results, $scope.cachedRequestData);
                     } else {
@@ -548,6 +549,7 @@ pmpApp.controller('HistoricalController', function($http, $location, $scope, $ro
         } else if (add & $scope.tags.hasTag(request)) {
             $scope.showPopUp('warning', 'Your request is already loaded');
         } else {
+            $scope.allRequestData = [];
             $scope.loadingData = true;
             if (!add) {
                 $scope.tagsRemoveAll();
@@ -769,8 +771,9 @@ pmpApp.controller('PerformanceController', function($http, $interval, $location,
                     $scope.tags.removeTag(input);
                     $scope.loadingData = false;
                 } else {
+                    $scope.allRequestData = [];
                     if (add) {
-                        data.data.results.push.apply(data.data.results, $scope.allRequestData);
+                        data.data.results.push.apply(data.data.results, $scope.cachedRequestData);
                     } else {
                         $scope.tagsRemoveAll([input]);
                     }
