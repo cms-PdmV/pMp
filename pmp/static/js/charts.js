@@ -1328,6 +1328,13 @@ angular.module('pmpCharts', [])
                     colors_stacks,
                     scales = {};
 
+                var config = {
+                    blockSeparatorColor: '#A80000',
+                    blockSeparatorClass: 'blockseparator',
+                    blockSeparatorOpacity: '0.2',
+                    blockSeparatorWidth: 10
+                }
+
                 // create base SVG (and translate it to the start of plot)
                 main_svg = d3.select(element[0]).append("svg")
                     .attr("preserveAspectRatio", "xMidYMin meet");
@@ -1380,10 +1387,15 @@ angular.module('pmpCharts', [])
                     TAU: '#90a4ae', // blue gray 300
                     TOP: '#e0e0e0', // gray 300
                     TRK: '#f06292', // pink 300
-                    TSG: '#ffb74d', // orange 300
+                    TSG: '#ffb74d' // orange 300
                 };
 
-                // credits: richard maloney 2006
+                /*
+                 * Used for generating shaded color for stacking
+                 * @color - original color
+                 * @v - jump
+                 * Credits: Richard Maloney 2006
+                 */
                 function getTintedColor(color, v) {
                     if (color.length > 6) {color = color.substring(1, color.length)}
                     var rgb = parseInt(color, 16); 
@@ -1741,7 +1753,7 @@ angular.module('pmpCharts', [])
                                     return d3.select(this).select("title").empty()
                                 })
                                 .append("title");
-
+                            drawBlockSeparations();
                             svg.selectAll(".x.axis .tick title").text(function(d){
                                     var string_to_show = '';
                                     if(valueOperation == 'events') {
@@ -1960,7 +1972,7 @@ angular.module('pmpCharts', [])
                         .attr("width", 0)
                         .attr("alignment", "center")
                         .attr("y", height)
-                        .attr("height",0)
+                        .attr("height", 0)
                         .on("mouseover", function() {
                             this.parentNode.appendChild(this);
                             d3.select(this).style("fill", highlight_color);
@@ -1990,7 +2002,7 @@ angular.module('pmpCharts', [])
                                 return scales[columns](d.columnsXDomainAttribute);
                             else
                                 return 0
-                        });
+                         });
 
                     //remove not-important ones
                     rect.exit()
@@ -2088,6 +2100,61 @@ angular.module('pmpCharts', [])
                     } else {
                         svg.select(".legend").remove();
                     }
+                }
+
+                /*
+                 * Draw block separations if necessary
+                 */
+                function drawBlockSeparations() {
+
+                    // remove all block separations
+                    svg.selectAll('.' + config.blockSeparatorClass).remove();
+                    
+                    // terminate if the grouping is not by priority
+                    if (grouping != 'priority') {
+                        return null;
+                    }
+                    
+                    // get coordinates
+                    var blockXCoordinates = [0,0,0,0,0,0];
+                    var xTicks = svg.selectAll(".x.axis .tick");
+                    xTicks.forEach(function(d, i) {
+                            d.forEach(function(e, j) {
+                                    var x = d3.select(e).attr('transform')
+                                        .split('(')[1].split(',')[0];
+                                    var f = e['__data__'];
+                                    for(var i = 6; i > 0; i--) {
+                                        var g = scope.$parent.$parent.priorityPerBlock[i];
+                                        if (f == '' || f <= g) {
+                                            if (f == g) {
+                                                blockXCoordinates[6-i] = x;
+                                            } else {
+                                                blockXCoordinates[6-i] = x-column_width/2;
+                                            }
+                                        }
+                                    }
+                                });
+                        });
+                    console.log(blockXCoordinates)
+                    // draw blocks
+                    var tmp = 0;
+                    blockXCoordinates.forEach(function(d, i) {
+                            console.log(d)
+                                if (parseInt(d,10) > parseInt(tmp,10)) {
+                                console.log(d)
+                                svg.append('rect')
+                                    .attr('class', config.blockSeparatorClass)
+                                    .attr('fill', config.blockSeparatorColor)
+                                    .attr("height", height)
+                                    .attr('opacity', config.blockSeparatorOpacity)
+                                    .attr("width", config.blockSeparatorWidth)
+                                    .attr('x', d-config.blockSeparatorWidth/2)
+                                    .attr('y', 0)
+                                    .append('title')
+                                    .text(function(){return "B"+(6-i)});
+                                tmp = d;
+                            }
+                        });
                 }
 
                 function redraw() {
