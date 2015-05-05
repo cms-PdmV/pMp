@@ -442,6 +442,13 @@ pmpApp.controller('PresentController', function($http, $location, $interval, $q,
     $interval($scope.updateUpdate, 2*60*1000);
     $scope.updateUpdate();
 
+    $scope.shortenURL = function() {
+        var promise = $http.get("shorten/"+ $scope.url);
+        promise.then(function(data) {
+                $scope.url = data.data;
+            });
+    }
+
     new ZeroClipboard(document.getElementById('copy'), {
             moviePath: 'lib/zeroclipboard/ZeroClipboard.swf'
     });
@@ -747,6 +754,13 @@ pmpApp.controller('HistoricalController', function($http, $location, $scope, $ro
     $interval($scope.updateUpdate, 2*60*1000);
     $scope.updateUpdate();
 
+    $scope.shortenURL = function() {
+        var promise = $http.get("shorten/"+ $scope.url);
+        promise.then(function(data) {
+                $scope.url = data.data;
+            });
+    }
+
     new ZeroClipboard(document.getElementById('copy'), {
         moviePath: 'lib/zeroclipboard/ZeroClipboard.swf'
     });
@@ -969,6 +983,13 @@ pmpApp.controller('PerformanceController', function($http, $interval, $location,
 
         $location.search(params);
         $scope.url = $location.absUrl();
+    }
+
+    $scope.shortenURL = function() {
+        var promise = $http.get("shorten/"+ $scope.url);
+        promise.then(function(data) {
+                $scope.url = data.data;
+            });
     }
 
     new ZeroClipboard(document.getElementById('copy'), {

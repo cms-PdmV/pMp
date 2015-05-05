@@ -165,12 +165,11 @@
         <i class="fa fa-camera"></i>
         Take screenshot [BETA]
       </button>
-
     </div>
     
     <div id="share" class="collapse col-xs-12 col-sm-12 col-md-12 col-lg-12">
       <div class="input-group input-group-sm">
-        <span class="hidden-sm input-group-addon text-uppercase" ng-init="setURL()">
+        <span class="hidden-sm input-group-addon text-uppercase" ng-click="setURL()">
           Share
         </span>
         <input id="url" type="text" class="form-control" ng-model="url"

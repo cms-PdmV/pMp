@@ -1,7 +1,9 @@
 from flask import make_response, redirect, render_template
 from pmp import app, models
-
+from flask import request
+from cStringIO import StringIO
 import json
+import pycurl
 
 
 @app.route('/404')
@@ -79,6 +81,21 @@ def suggest(input, typeof):
     '''
     gs = models.GetSuggestions(typeof)
     return make_response(gs.get(input))
+
+
+@app.route('/shorten/<path:url>')
+def shorten(url):
+    '''
+    Shorten URL
+    '''
+    c = ("http://tinyurl.com/api-create.php?url=" + url
+         + "?" + request.query_string)
+    out = StringIO()
+    curl = pycurl.Curl()
+    curl.setopt(pycurl.URL, str(c))
+    curl.setopt(pycurl.WRITEFUNCTION, out.write)
+    curl.perform()
+    return make_response(out.getvalue())
 
 
 def parse_csv(parsable):

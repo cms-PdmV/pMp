@@ -2135,13 +2135,10 @@ angular.module('pmpCharts', [])
                                     }
                                 });
                         });
-                    console.log(blockXCoordinates)
                     // draw blocks
                     var tmp = 0;
                     blockXCoordinates.forEach(function(d, i) {
-                            console.log(d)
                                 if (parseInt(d,10) > parseInt(tmp,10)) {
-                                console.log(d)
                                 svg.append('rect')
                                     .attr('class', config.blockSeparatorClass)
                                     .attr('fill', config.blockSeparatorColor)
