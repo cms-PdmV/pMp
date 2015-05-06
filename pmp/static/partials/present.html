@@ -138,24 +138,32 @@
     <div id="advanced" class="collapse col-xs-12 col-sm-12 col-md-12 col-lg-12 spacing">
       <form class="form-group text-uppercase">
         <label class="checkbox-inline col-lg-12 col-md-12 col-sm-12">
-          <input type="checkbox" ng-model="showDate" ng-change="setURL()">
+          <input type="checkbox" ng-model="growingMode"
+                 ng-change="modeUpdate();setURL()">
           <small>
-            Show time
+            Growing Mode
           </small>
         </label>
         <br/>
         <label class="checkbox-inline col-lg-12 col-md-12 col-sm-12">
-          <input type="checkbox" ng-model="humanReadableNumbers">
+          <input type="checkbox" ng-model="humanReadableNumbers" ng-init="true">
           <small>
             Human Readable Numbers
           </small>
         </label>
         <br/>
-        <label class="checkbox-inline col-lg-12 col-md-12 col-sm-12 spacing">
-          <input type="checkbox" ng-model="growingMode"
-                 ng-change="modeUpdate();setURL()">
+        <label class="checkbox-inline col-lg-12 col-md-12 col-sm-12">
+          <input type="checkbox" ng-model="priorityBlockMarkup" ng-init="priorityBlockMarkup=true"
+                 ng-change="console.log(priorityBlockMarkup)">
           <small>
-            Growing Mode
+            Priority blocks markup
+          </small>
+        </label>
+        <br/>
+        <label class="checkbox-inline col-lg-12 col-md-12 col-sm-12 spacing">
+          <input type="checkbox" ng-model="showDate" ng-change="setURL()">
+          <small>
+            Show time
           </small>
         </label>
       </form>
@@ -190,7 +198,7 @@
     <mcm-customizable-chart chart-type="'mcm-column-chart'" chart-title="Requests chart"
                             radio="requests.radio" settings="requests.settings"
                             selections="requests.selections" options="requests.options"
-                            chart-data="allRequestData">
+                            chart-data="allRequestData" priority-markup="priorityBlockMarkup">
     </mcm-customizable-chart>
     
     <multiple-pie-charts color-domain="piecharts.domain" table-title="Campaigns"

@@ -1307,6 +1307,7 @@ angular.module('pmpCharts', [])
                 stacking: '=?', // how to vertically divide each column
                 yScaleType: '=?scale', // "linear" or "log"
                 valueOperation: '=?mode', // events, requests or seconds
+                priorityMarkup: '=?', // highlight priority blocks
                 responsive: '=?', // should the chart be responsive to the webpage size
                 duration: '=?', // duration of animations
                 legend: '=?', // should the color legend be shown
@@ -1332,7 +1333,7 @@ angular.module('pmpCharts', [])
                     blockSeparatorColor: '#A80000',
                     blockSeparatorClass: 'blockseparator',
                     blockSeparatorOpacity: '0.2',
-                    blockSeparatorWidth: 10
+                    blockSeparatorWidth: 6
                 }
 
                 // create base SVG (and translate it to the start of plot)
@@ -2109,12 +2110,13 @@ angular.module('pmpCharts', [])
 
                     // remove all block separations
                     svg.selectAll('.' + config.blockSeparatorClass).remove();
-                    
+
+                    console.log(scope.priorityMarkup)
                     // terminate if the grouping is not by priority
-                    if (grouping != 'priority') {
+                    if (grouping != 'priority' || !scope.priorityMarkup) {
                         return null;
                     }
-                    
+
                     // get coordinates
                     var blockXCoordinates = [0,0,0,0,0,0];
                     var xTicks = svg.selectAll(".x.axis .tick");
@@ -2139,16 +2141,19 @@ angular.module('pmpCharts', [])
                     var tmp = 0;
                     blockXCoordinates.forEach(function(d, i) {
                                 if (parseInt(d,10) > parseInt(tmp,10)) {
-                                svg.append('rect')
-                                    .attr('class', config.blockSeparatorClass)
-                                    .attr('fill', config.blockSeparatorColor)
-                                    .attr("height", height)
-                                    .attr('opacity', config.blockSeparatorOpacity)
-                                    .attr("width", config.blockSeparatorWidth)
-                                    .attr('x', d-config.blockSeparatorWidth/2)
-                                    .attr('y', 0)
-                                    .append('title')
-                                    .text(function(){return "B"+(6-i)});
+                                    var w = d;
+                                    svg.append('g')
+                                        .attr('class', config.blockSeparatorClass)
+                                        .attr('transform', 'translate(' + w + ',0)')
+                                        .append('line')
+                                        .attr('x2', 0)
+                                        .attr('y2', height)
+                                        .attr('opacity', config.blockSeparatorOpacity)
+                                        .style('stroke', config.blockSeparatorColor)
+                                        .style('stroke-dasharray', ('3, 6'))
+                                        .style('stroke-width', config.blockSeparatorWidth)
+                                        .append('title')
+                                        .text(function(){return "B"+(6-i)});
                                 tmp = d;
                             }
                         });
@@ -2170,7 +2175,8 @@ angular.module('pmpCharts', [])
                 });
 
                 scope.optionsChange = function() {
-                    return 'stacking + columns + grouping + yScaleType + valueOperation';
+                    console.log()
+                    return ('stacking + columns + grouping + yScaleType + valueOperation + priorityMarkup');
                 };
 
                 scope.$watch(scope.optionsChange(), function(dat) {
@@ -2189,6 +2195,7 @@ angular.module('pmpCharts', [])
                 title: '@chartTitle', // title of customizable chart (above everything)
                 selections: '=?', // what can you select from when it comes to single and multi values
                 options: '=?', // dictionary with all the options for selections (value can be a string (single value) or list (multiple values possible))
+                priorityMarkup: '=?', // highlight priority blocks
                 radio: '=?', // dictionary of radio-button based selections for finer tuning (value is a list, first element is the default one)
                 settings: '=?' // dictionary of other settings for the chart (not customizable by UI)
             },
@@ -2271,7 +2278,7 @@ angular.module('pmpCharts', [])
                 innerHtml +="</div>";
 
 
-                innerHtml += "<" + scope.chartType + " data='chartData' ";
+                innerHtml += "<" + scope.chartType + " priority-markup='priorityMarkup' data='chartData' ";
                 // concatenate radio and options
                 for(key in scope.options) {
                     innerHtml += key + "='options[\""+key+"\"]' ";
@@ -2301,6 +2308,7 @@ angular.module('pmpCharts', [])
                     },
                     onDrop: function($item, container, _super) {
                         if(container.el[0].id!='possible-selections') {
+                            console.log(scope.priorityMarkup);
                             scope.addOption(container.el[0].id, $item[0].textContent, $(container.el[0].children).index($item[0]));
                         }
                         _super($item, container);
