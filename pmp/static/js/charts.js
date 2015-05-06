@@ -1317,7 +1317,7 @@ angular.module('pmpCharts', [])
             },
             link: function(scope, element, attrs) {
                 var highlight_color = "#bdbdbd";
-                var margin = {top: 20, right: 50, bottom: 150, left: 50};
+                var margin = {top: 10, right: 0, bottom: 50, left: 50};
                 //input data
                 var data, value, grouping, columns, stacking, yScaleType, valueOperation,
                     duration;
@@ -1330,8 +1330,8 @@ angular.module('pmpCharts', [])
                     scales = {};
 
                 var config = {
-                    blockSeparatorColor: '#A80000',
-                    blockSeparatorClass: 'blockseparator',
+                    blockSeparatorColor: '#a80000',
+                    blockSeparatorClass: 'block-separator',
                     blockSeparatorOpacity: '0.2',
                     blockSeparatorWidth: 6
                 }
@@ -1435,11 +1435,6 @@ angular.module('pmpCharts', [])
                     yScaleType = scope.yScaleType || "linear";
                     valueOperation = scope.valueOperation || 'events';
                     duration = isNaN(scope.duration) ? 1000 : scope.duration;
-                    if(scope.legend){
-                        margin.right=100;
-                    } else {
-                        margin.right=50;
-                    }
                 }
 
                 function formatY(d) {
@@ -1460,7 +1455,7 @@ angular.module('pmpCharts', [])
 
                 function changeWidthHeight() {
                     width = scope.userWidth || 1125;
-                    height = scope.userHeight || 375;
+                    height = 250;
                     width = width  - margin.left - margin.right;
                     height = height - margin.top - margin.bottom;
                     max_column_width = width/4;
@@ -2016,6 +2011,13 @@ angular.module('pmpCharts', [])
 
                     // draw legend
                     if (scope.legend && columns_domain[0] != undefined) {
+                        // TODO: EXPORT TO GLOBAL CONFIG
+                        var legendDotRadius = 8;
+                        var legendFontSize = '10px';
+                        var legendColumnSpacing = 10;
+                        var legendRowHeight = 24;
+                        var legendGraphSpacing = 10;
+
                         var l = svg.select('g.legend');
                         if (l.empty()) {
                             svg.append('g').attr('class', 'legend');
@@ -2023,81 +2025,68 @@ angular.module('pmpCharts', [])
                             l.selectAll('*').remove();
                         }
 
-                        l = svg.select(".legend")
-                            .attr("transform", "translate(" + width + ",0)")
-                            .attr("width", margin.right)
-                            .attr("height", columns_domain.length * 24)
-                            .selectAll("g")
+                        l = svg.select('.legend')
+                            .selectAll('g')
                             .data(columns_domain);
 
-                        var new_leg = l
-                            .enter()
-                            .append("g")
-                            .attr("transform", function(d, i) {
-                                return "translate(0, " + i * 24 + ")";
-                            });
-
-                        new_leg.append("rect")
-                            .attr("width", 20)
-                            .attr("height", 20)
-                            .style("fill", function(d) {
+                        var newLegend = l.enter().append('g').attr('class', 'legend-inst');
+                        newLegend.append('svg:circle')
+                            .attr('r', legendDotRadius)
+                            .style('fill', function(d) {
                                 if (colorMap[d] != undefined) {
                                     return colorMap[d];
                                 } else {
                                     return colors_stacks[d](0);
                                 }
                             });
+                        newLegend.append('text')
+                            .attr('x', legendDotRadius*1.5)
+                            .attr('y', legendDotRadius/2)
+                            .style('cursor', 'default')
+                            .style('font-size', legendFontSize)
+                            .style('text-transform', 'uppercase');
+                        newLegend.append('title');
 
-                        new_leg.append("text")
-                            .attr("x", 24)
-                            .attr("y", 10)
-                            .attr("dy", ".35em")
-                            .style("cursor", "default");
-
-                        new_leg.append("title");
-
-                        l.select("rect")
-                            .transition()
-                            .duration(duration)
-                            .style("fill", function(d) {
-                                if (colorMap[d] != undefined) {
-                                    return colorMap[d];
-                                } else {
-                                    return colors_stacks[d](0);
-                                }
-                            });
-
-                        l.select("text")
+                        l.select('text').text(function(d) { return d;});
+                        l.select('title')
                             .text(function(d) {
-                                return d;
-                            });
-
-                        l.select("title")
-                            .text(function(d) {
-                                var string_to_show = '';
+                                var hoverDescription = '';
                                 if (valueOperation == 'events') {
-                                    string_to_show = 'Number of events';
+                                    hoverDescription = 'Number of events';
                                 } else if (valueOperation == 'requests') {
-                                    string_to_show = 'Number of requests';
+                                    hoverDescription = 'Number of requests';
                                 } else if (valueOperation == 'seconds') {
-                                    string_to_show = 'Seconds per event';
+                                    hoverDescription = 'Seconds per event';
                                 }
-                                var sum_value = d3.sum(svg.selectAll("rect.columning" + d).data(),
-                                    function(d) {
-                                        return d[value];
-                                    });
-                                string_to_show += ": " + sum_value;
-                                return d + "\n" + string_to_show;
+                                var sumValue = d3.sum(svg.selectAll("rect.columning" + d).data(),
+                                    function(d) { return d[value];});
+                                return ('Value: ' + d + "\n" + hoverDescription + ": " + sumValue);
                             });
-
                         l.on("mouseover", function(d) {
                                 svg.selectAll("rect.columning" + d).style("fill", highlight_color);
-                            })
-                            .on("mouseout", function(d) {
-                                svg.selectAll("rect.columning" + d).style("fill", function(d) {
-                                    return colors(d)
-                                });
-                            })
+                            });
+                        l.on("mouseout", function(d) {
+                                svg.selectAll("rect.columning" + d).style("fill", function(d) { return colors(d)});
+                            });
+
+                        var tmpAll = svg.selectAll('g.legend-inst');
+                        var tmpXOffset = 0, tmpYOffset = 0;
+                        tmpAll[0].forEach(function(d, i) {
+                                var c = d3.select(d);
+                                var w = c[0][0].getBBox().width;
+                                if (w + tmpXOffset > (width + margin.right)) {
+                                    tmpXOffset = 0;
+                                    tmpYOffset += 1;
+                                }
+                                c.attr("transform", "translate("+ tmpXOffset + ", " + (tmpYOffset * legendRowHeight) + ")");
+                                tmpXOffset += w
+                                tmpXOffset += legendColumnSpacing
+                            });
+                        var l = svg.select('g.legend');
+                        l.attr('transform', 'translate(0,' + (-legendRowHeight*(tmpYOffset+1)) + ')');
+                        svg.attr('transform', 'translate(50,' + (legendGraphSpacing+legendRowHeight*(tmpYOffset+1)) + ')');
+                        main_svg.attr("viewBox", "0 0 " + (width + margin.left + margin.right) + " " + (height + margin.top + margin.bottom + legendGraphSpacing + legendRowHeight*(tmpYOffset+1)));
+                        main_svg.attr("height", height + margin.top + margin.bottom + legendGraphSpacing + legendRowHeight*(tmpYOffset+1));
                     } else {
                         svg.select(".legend").remove();
                     }
