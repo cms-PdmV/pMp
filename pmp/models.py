@@ -423,7 +423,7 @@ class GetHistorical():
                     # skip requests with not desired output dataset
                     if (document['pdmv_dataset_name'] !=
                         details['output_dataset']):
-                        if details['output_dataset'] is not None:
+                        if details['output_dataset'] is not None and document['pdmv_dataset_name'] != 'None Yet':
                             continue
 
                 # create an array of requests to be processed
