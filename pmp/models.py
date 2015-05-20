@@ -148,6 +148,12 @@ class GetGrowing():
                         mcm_r['total_events'] = 0
                     else:
                         mcm_r['total_events'] = mcm_r['completed_events']
+                if mcm_r['status'] == 'submitted':
+                    try:
+                        if not len(mcm_r['reqmgr_name']):
+                            mcm_r['total_events'] = 0
+                    except KeyError:
+                        pass
 
                 if mcm_r['status'] == 'submitted':
                     mcm_r_fake_done = copy.deepcopy(mcm_r)
@@ -213,6 +219,13 @@ class GetAnnounced():
                 try:
                     # requests without output_dataset should have zero events
                     if not len(r['output_dataset']):
+                        r['total_events'] = 0
+                except KeyError:
+                    r['total_events'] = 0
+                    pass
+            if r['status'] == 'submitted':
+                try:
+                    if not len(r['reqmgr_name']):
                         r['total_events'] = 0
                 except KeyError:
                     r['total_events'] = 0
