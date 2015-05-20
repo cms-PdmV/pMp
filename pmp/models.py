@@ -269,6 +269,7 @@ class GetHistorical():
         '''
         This selection is from statsMonitoring.py
         '''
+        print 'input', ds1, ds2
         t1=ds1.split('/')[1:]
         t2=ds2.split('/')[1:]
         if len(t1[1]) > len(t2[1]):
@@ -293,6 +294,8 @@ class GetHistorical():
             p1 = tierP(t1[2])
             p2 = tierP(t2[2])
             decision = (p1 > p2)
+            if t1[2] == 'AODSIM' and t2[2] == 'MINIAODSIM':
+                decision = True
             return decision * 2 - 1
             
     def db_query(self, input):
