@@ -269,7 +269,6 @@ class GetHistorical():
         '''
         This selection is from statsMonitoring.py
         '''
-        print 'input', ds1, ds2
         t1=ds1.split('/')[1:]
         t2=ds2.split('/')[1:]
         if len(t1[1]) > len(t2[1]):
@@ -341,7 +340,6 @@ class GetHistorical():
                     i['status'] = req['status']
                     iterable.append(i)
             except:
-                print 'problems', req['output_dataset']
                 pass
 
         # iterate over workflows and yield documents 
@@ -461,7 +459,7 @@ class GetHistorical():
                         for record in document['pdmv_monitor_history']:
                             if len(record['pdmv_monitor_time']):
                                 data = {}
-                                if details['output_dataset'] is not None:
+                                if details is None or details['output_dataset'] is not None:
                                     # a is events in das
                                     data['e'] = record['pdmv_evts_in_DAS']
                                 else:
