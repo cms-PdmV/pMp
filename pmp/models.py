@@ -544,7 +544,13 @@ class GetHistorical():
                     else:
                         prevx = x
             data.append(d)
-        
+
+        # add last point which is now()
+        if len(data):
+            d = {'e': data[-1]['e'], 't': int(
+                    round(time.time() * 1000)), 'x': data[-1]['x']}
+            data.append(d)
+
         re = {}
         re['data'] = data
         re['status'] = status
