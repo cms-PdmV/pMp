@@ -119,7 +119,7 @@ if __name__ == "__main__":
             logging.info('%s Updating %s' % (utl.get_time(), request))
 
             # update field in mcm
-            url = str(MCM_URL + 'restapi/requests/update_stats/%s/no_refresh' %(request))
+            url = str(MCM_URL + 'restapi/requests/update_stats/%s/no_refresh/force' %(request))
             res_up, status_up = utl.curl('GET', url, cookie=mcm_cookie)
             print res_up
             if status_up != 200:
