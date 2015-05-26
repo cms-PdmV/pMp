@@ -110,10 +110,12 @@ if __name__ == "__main__":
             if status_s != 200:
                 continue
 
-            if res_s['pdmv_dataset_name'] != request_output_type:
-                continue
-
-            ce = max(ce, res_s['pdmv_evts_in_DAS'])
+            if res_s['pdmv_type'] != 'TaskCahin':
+                if res_s['pdmv_dataset_name'] != request_output_type:
+                    continue
+                ce = max(ce, res_s['pdmv_evts_in_DAS'])
+            else:
+                ce = res_s['pdmv_monitor_history'][0]['pdmv_dataset_statuses'][request_output_type]['pdmv_evts_in_DAS']
 
         if res['completed_events'] != ce:
             logging.info('%s Updating %s' % (utl.get_time(), request))
