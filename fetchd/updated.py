@@ -110,14 +110,23 @@ if __name__ == "__main__":
             if status_s != 200:
                 continue
 
-            if res_s['pdmv_type'] != 'TaskCahin':
+            if res_s['pdmv_type'] != 'TaskChain':
                 if res_s['pdmv_dataset_name'] != request_output_type:
                     continue
                 ce2 = res_s['pdmv_evts_in_DAS'] + det['pdmv_open_evts_in_DAS']
                 ce = max(ce, ce2)
             else:
-                det = res_s['pdmv_dataset_statuses'][request_output_type]
-                ce = det['pdmv_evts_in_DAS'] + det['pdmv_open_evts_in_DAS']
+                try:
+                    det = res_s['pdmv_dataset_statuses'][request_output_type]
+                    ce2 = det['pdmv_evts_in_DAS'] + det['pdmv_open_evts_in_DAS']
+                    ce = max(ce, ce2)
+                except KeyError:
+                    try:
+                        det = res_s['pdvm_dataset_statuses'][request_output_type]
+                        ce2 = det['pdmv_evts_in_DAS'] + det['pdmv_open_evts_in_DAS']
+                        ce = max(ce, ce2)
+                    except:
+                        print "Problem querying", res['prepid']
 
         if res['completed_events'] != ce:
             logging.info('%s Updating %s' % (utl.get_time(), request))
