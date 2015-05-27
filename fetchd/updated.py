@@ -98,7 +98,7 @@ if __name__ == "__main__":
         if not len(dataset_list):
             continue
 
-        dataset_list.sort()
+        #dataset_list.sort()
         dataset_list.sort(cmp=select_dataset)
         request_output_type = dataset_list[0]
         
@@ -113,9 +113,11 @@ if __name__ == "__main__":
             if res_s['pdmv_type'] != 'TaskCahin':
                 if res_s['pdmv_dataset_name'] != request_output_type:
                     continue
-                ce = max(ce, res_s['pdmv_evts_in_DAS'])
+                ce2 = res_s['pdmv_evts_in_DAS'] + det['pdmv_open_evts_in_DAS']
+                ce = max(ce, ce2)
             else:
-                ce = res_s['pdmv_monitor_history'][0]['pdmv_dataset_statuses'][request_output_type]['pdmv_evts_in_DAS']
+                det = res_s['pdmv_dataset_statuses'][request_output_type]
+                ce = det['pdmv_evts_in_DAS'] + det['pdmv_open_evts_in_DAS']
 
         if res['completed_events'] != ce:
             logging.info('%s Updating %s' % (utl.get_time(), request))
