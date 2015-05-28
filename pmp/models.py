@@ -339,6 +339,7 @@ class GetHistorical():
                 if len(dataset_list):
                     dataset_list.sort(cmp=self.select_dataset)
                     ds = dataset_list[0]
+                    print ds
                 else:
                     ds = None
 
@@ -450,7 +451,8 @@ class GetHistorical():
                         for record in t['monitor']:
                             if len(record['pdmv_monitor_time']):
                                 data = {}
-                                data['e'] = record['pdmv_evts_in_DAS']
+                                data['e'] = (record['pdmv_evts_in_DAS'] +
+                                             record['pdmv_open_evts_in_DAS'])
                                 data['t'] = time.mktime(time.strptime(
                                         record['pdmv_monitor_time']))*1000
                                 data['x'] = document['pdmv_expected_events']
@@ -470,7 +472,8 @@ class GetHistorical():
                                 data = {}
                                 if details is None or details['output_dataset'] is not None:
                                     # a is events in das
-                                    data['e'] = record['pdmv_evts_in_DAS']
+                                    data['e'] = (record['pdmv_evts_in_DAS'] +
+                                                 record['pdmv_open_evts_in_DAS'])
                                 else:
                                     # if the output in mcm is not specified yet,
                                     # treat as this has not produced anything
@@ -493,7 +496,8 @@ class GetHistorical():
                                 for m in record['monitor']:
                                     data = {}
                                     if details is None or details['output_dataset'] is not None:
-                                        data['e'] = m['pdmv_evts_in_DAS']
+                                        data['e'] = (m['pdmv_evts_in_DAS'] +
+                                                     m['pdmv_open_evts_in_DAS'])
                                     else:
                                         # if the output in mcm is not specified yet,
                                         # treat as this has not produced anything
