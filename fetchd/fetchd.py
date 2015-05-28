@@ -23,6 +23,8 @@ def parse(data, fields):
 
 def parse_efficiency(data):
     if len(data):
+        if not type(data[0]) is dict:
+            return 1
         i = len(data)-1
         return (float(data[i]['match_efficiency'])*
                 float(data[i]['filter_efficiency']))
