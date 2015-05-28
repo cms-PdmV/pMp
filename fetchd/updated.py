@@ -43,6 +43,8 @@ def select_dataset(ds1, ds2):
         p1 = tierP(t1[2])
         p2 = tierP(t2[2])
         decision = (p1 > p2)
+        if t1[2] == 'AODSIM' and t2[2] == 'MINIAODSIM':
+            decision = True
         return decision * 2 - 1
 
 
@@ -113,7 +115,7 @@ if __name__ == "__main__":
             if res_s['pdmv_type'] != 'TaskChain':
                 if res_s['pdmv_dataset_name'] != request_output_type:
                     continue
-                ce2 = res_s['pdmv_evts_in_DAS'] + det['pdmv_open_evts_in_DAS']
+                ce2 = res_s['pdmv_evts_in_DAS'] + res_s['pdmv_open_evts_in_DAS']
                 ce = max(ce, ce2)
             else:
                 try:
