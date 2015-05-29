@@ -431,10 +431,15 @@ class GetHistorical():
                     if (details['priority'] < p_min or (
                             details['priority'] > p_max and p_max != -1)):
                         continue
+                    no_secondary_datasets = True
                     # skip requests with not desired output dataset
                     if (document['pdmv_dataset_name'] !=
                         details['output_dataset']):
-                        if details['output_dataset'] is not None and document['pdmv_dataset_name'] != 'None Yet' and document['pdmv_type'] != 'TaskChain':
+                        if 'pdmv_monitor_datasets' in document:
+                            for monitor in document['pdmv_monitor_dataset']:
+                                if monitor['dataset'] == details['output_dataset']:
+                                    no_secondary_datasets = False
+                        if details['output_dataset'] is not None and document['pdmv_dataset_name'] != 'None Yet' and document['pdmv_type'] != 'TaskChain' and no_secondary_datasets:
                             continue
                 # create an array of requests to be processed
                 response = {}
@@ -444,7 +449,7 @@ class GetHistorical():
                 # taskchain handiling
                 if not is_request and (document['pdmv_type'] == 'TaskChain'):
                     # load taskchain instead of normal req
-                    for t in document['pdmv_monitor_taskchain']:
+                    for t in document['pdmv_monitor_datasets']:
                         res = {}
                         res['request'] = t['dataset']
                         res['data'] = []
@@ -489,9 +494,9 @@ class GetHistorical():
                                     data['x'] = document[
                                         'pdmv_expected_events']
                                 response['data'].append(data)
-                    elif ('pdmv_monitor_taskchain' in document and document['pdmv_type'] == 'TaskChain'):
+                    elif ('pdmv_monitor_datasets' in document and (document['pdmv_type'] == 'TaskChain' or not no_secondary_datasets)):
                         # handling taskchain requests where output dataset is not the main one
-                        for record in document['pdmv_monitor_taskchain']:
+                        for record in document['pdmv_monitor_datasets']:
                             if record['dataset'] == details['output_dataset']:
                                 for m in record['monitor']:
                                     data = {}
