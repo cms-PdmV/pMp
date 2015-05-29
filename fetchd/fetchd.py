@@ -57,7 +57,7 @@ def parse_history(data):
     return res
 
 
-def parse_taskchain(data):
+def parse_datasets(data):
     ret = []
     try:
         dataset_list = data[0]['pdmv_dataset_statuses'].keys()
@@ -169,10 +169,10 @@ if __name__ == "__main__":
                 # parsing stats documents
                 for misspelled in ['pdmv_monitor_history', 'pdvm_monitor_history']:
                     try:
-                        if data['pdmv_type'] == 'TaskChain':
-                            tc = parse_taskchain(data[misspelled])
+                        if len(data['pdmv_dataset_list']) > 1:
+                            tc = parse_datasets(data[misspelled])
                             if len(tc):
-                                data['pdmv_monitor_taskchain'] = tc
+                                data['pdmv_monitor_datasets'] = tc
                         if len(data[misspelled]):
                             for i, _ in enumerate(data[misspelled]):
                                 data[misspelled][i] = parse(
