@@ -478,7 +478,8 @@ class GetHistorical():
                     stop = True
                         
                 else:
-                    if ('pdmv_monitor_history' in document and
+                    if (document['pdmv_prep_id'] != 'task_B2G-RunIIWinter15wmLHE-00001'
+                        and 'pdmv_monitor_history' in document and
                         (document['pdmv_type'] != 'TaskChain' or
                          document['pdmv_prep_id'] == 'task_HIG-Summer12-02258')):
                         for record in document['pdmv_monitor_history']:
