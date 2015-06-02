@@ -443,6 +443,10 @@ class GetHistorical():
                                     no_secondary_datasets = False
                         if details['output_dataset'] is not None and document['pdmv_dataset_name'] != 'None Yet' and document['pdmv_type'] != 'TaskChain' and no_secondary_datasets:
                             continue
+                # skip legacy request with no prep_id
+                if document['pdmv_prep_id'] == '':
+                    continue
+
                 # create an array of requests to be processed
                 response = {}
                 response['data'] = []
@@ -474,29 +478,32 @@ class GetHistorical():
                     stop = True
                         
                 else:
-                    if ('pdmv_monitor_history' in document and document['pdmv_type'] != 'TaskChain'):
+                    if ('pdmv_monitor_history' in document
+                        and document['pdmv_type'] != 'TaskChain'):
                         for record in document['pdmv_monitor_history']:
+                            data = {}
+                            if (details is None
+                                or details['output_dataset'] is not None):
+                                # a is events in das
+                                data['e'] = (record['pdmv_evts_in_DAS'] +
+                                             record['pdmv_open_evts_in_DAS'])
+                            else:
+                                # if the output in mcm is not specified yet,
+                                # treat as this has not produced anything
+                                # ensures present=historical
+                                data['e'] = 0
                             if len(record['pdmv_monitor_time']):
-                                data = {}
-                                if details is None or details['output_dataset'] is not None:
-                                    # a is events in das
-                                    data['e'] = (record['pdmv_evts_in_DAS'] +
-                                                 record['pdmv_open_evts_in_DAS'])
-                                else:
-                                    # if the output in mcm is not specified yet,
-                                    # treat as this has not produced anything
-                                    # ensures present=historical
-                                    data['e'] = 0
                                 data['t'] = time.mktime(time.strptime(
                                         record['pdmv_monitor_time']))*1000
-
+                            else:
+                                data['t'] = time.mktime(time.strptime(
+                                        "Tue Jan 1 00:00:00 2013"))*1000
                                 # x is expected events
-                                if is_request:
-                                    data['x'] = details['expected']
-                                else:
-                                    data['x'] = document[
-                                        'pdmv_expected_events']
-                                response['data'].append(data)
+                            if is_request:
+                                data['x'] = details['expected']
+                            else:
+                                data['x'] = document['pdmv_expected_events']
+                            response['data'].append(data)
                     elif ('pdmv_monitor_datasets' in document and (document['pdmv_type'] == 'TaskChain' or not no_secondary_datasets)):
                         # handling taskchain requests where output dataset is not the main one
                         for record in document['pdmv_monitor_datasets']:
