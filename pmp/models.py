@@ -395,7 +395,7 @@ class GetHistorical():
             
             # Process the db documents
             for (is_request, document, details) in self.db_query(q):
-
+                
                 # skip empty documents
                 if document is None:
                     continue
@@ -426,6 +426,9 @@ class GetHistorical():
                     # status filtering
                     if not (status_i is None or details['status'] in status_i):
                         continue
+                    # filter out invalidated 'new'
+                    if details['status'] not in ['done', 'submitted']:
+                        continue
                     # priority filtering
                     if (details['priority'] < p_min or (
                             details['priority'] > p_max and p_max != -1)):
@@ -448,7 +451,7 @@ class GetHistorical():
                 # taskchain handiling
                 if not is_request and (document['pdmv_type'] == 'TaskChain'):
                     # load taskchain instead of normal req
-                    print is_request
+
                     for t in document['pdmv_monitor_datasets']:
                         res = {}
                         res['request'] = t['dataset']
