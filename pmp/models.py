@@ -395,7 +395,7 @@ class GetHistorical():
             
             # Process the db documents
             for (is_request, document, details) in self.db_query(q):
-                
+
                 # skip empty documents
                 if document is None:
                     continue
@@ -478,8 +478,9 @@ class GetHistorical():
                     stop = True
                         
                 else:
-                    if ('pdmv_monitor_history' in document
-                        and document['pdmv_type'] != 'TaskChain'):
+                    if ('pdmv_monitor_history' in document and
+                        (document['pdmv_type'] != 'TaskChain' or
+                         document['pdmv_prep_id'] == 'task_HIG-Summer12-02258')):
                         for record in document['pdmv_monitor_history']:
                             data = {}
                             if (details is None
@@ -504,7 +505,8 @@ class GetHistorical():
                             else:
                                 data['x'] = document['pdmv_expected_events']
                             response['data'].append(data)
-                    elif ('pdmv_monitor_datasets' in document and (document['pdmv_type'] == 'TaskChain' or not no_secondary_datasets)):
+                    elif ('pdmv_monitor_datasets' in document and
+                          (document['pdmv_type'] == 'TaskChain' or not no_secondary_datasets)):
                         # handling taskchain requests where output dataset is not the main one
                         for record in document['pdmv_monitor_datasets']:
                             if record['dataset'] == details['output_dataset']:
