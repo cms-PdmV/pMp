@@ -36,7 +36,12 @@ class TestIntegrityEventsInDAS():
         logging.basicConfig(level=logging.INFO)
 
     def get_historical(self, campaign):
-        return 0
+        details, status = self.curl(self.pmp_api + campaign
+                                    + '/historical/3/,/done/all')
+        if len(details['results']['data']):
+            return details['results']['data'][-1]['e']
+        else:
+            return 0
 
     def get_announced(self, campaign):
         details, status = self.curl(self.pmp_api + campaign +'/announced')
@@ -52,11 +57,12 @@ class TestIntegrityEventsInDAS():
                      self.es.search('prepid:*', index='campaigns',
                                     size=self.overflow)['hits']['hits']]
         for c in campaigns:
+            logging.info('%s Checking %s' % (str(datetime.now()), c['prepid']))
             if (self.get_historical(c['prepid']) !=
                 self.get_announced(c['prepid'])):
                 logging.error(str(datetime.now()) + ' Inconsistency "events in'
-                              + ' DAS" (historical) and status "done" (present)'
-                              + ' for ' + c['prepid'])
+                              + ' DAS" (historical) and status "done" (present'
+                              + ') for ' + c['prepid'])
         # get number in historical
 
 
