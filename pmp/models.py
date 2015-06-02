@@ -339,7 +339,6 @@ class GetHistorical():
                 if len(dataset_list):
                     dataset_list.sort(cmp=self.select_dataset)
                     ds = dataset_list[0]
-                    print ds
                 else:
                     ds = None
 
@@ -436,7 +435,7 @@ class GetHistorical():
                     if (document['pdmv_dataset_name'] !=
                         details['output_dataset']):
                         if 'pdmv_monitor_datasets' in document:
-                            for monitor in document['pdmv_monitor_dataset']:
+                            for monitor in document['pdmv_monitor_datasets']:
                                 if monitor['dataset'] == details['output_dataset']:
                                     no_secondary_datasets = False
                         if details['output_dataset'] is not None and document['pdmv_dataset_name'] != 'None Yet' and document['pdmv_type'] != 'TaskChain' and no_secondary_datasets:
@@ -449,6 +448,7 @@ class GetHistorical():
                 # taskchain handiling
                 if not is_request and (document['pdmv_type'] == 'TaskChain'):
                     # load taskchain instead of normal req
+                    print is_request
                     for t in document['pdmv_monitor_datasets']:
                         res = {}
                         res['request'] = t['dataset']
