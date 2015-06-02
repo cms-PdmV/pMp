@@ -1,5 +1,0 @@
-01 * * * * python /home/pmp/fetchd/fetchd.py campaigns
-11 * * * * python /home/pmp/fetchd/fetchd.py chained_campaigns
-21 * * * * python /home/pmp/fetchd/fetchd.py requests
-31 * * * * python /home/pmp/fetchd/fetchd.py chained_requests
-41 * * * * python /home/pmp/fetchd/fetchd.py stats
