@@ -6,6 +6,7 @@ from cStringIO import StringIO
 import logging
 import json
 import pycurl
+import sys
 
 
 class TestIntegrityEventsInDAS():
@@ -51,7 +52,13 @@ class TestIntegrityEventsInDAS():
                 sum_events += request['total_events']
         return sum_events
 
-    def run(self):
+    def get_requests(self, campaign):
+        details, status = self.curl(self.pmp_api + campaign +'/announced')
+        for request in details['results']:
+            if request['status'] == 'done':
+                yield request
+
+    def run(self, deep_check=False):
         # get list of campaigns
         campaigns = [s['_source'] for s in
                      self.es.search('prepid:*', index='campaigns',
@@ -63,10 +70,20 @@ class TestIntegrityEventsInDAS():
                 logging.error(str(datetime.now()) + ' Inconsistency "events in'
                               + ' DAS" (historical) and status "done" (present'
                               + ') for ' + c['prepid'])
-        # get number in historical
+                if not deep_check:
+                    continue
+                logging.info(str(datetime.now()) + ' Checking requests')
+                for request in self.get_requests(c['prepid']):
+                    if (request['total_events'] !=
+                        self.get_historical(request['prepid'])):
+                        logging.error(str(datetime.now()) + ' Inconsistency' +
+                                      'for ' + request['prepid'])
 
 
 if __name__ == "__main__":
+    deep = False
+    if len(sys.argv) > 1 and sys.argv[1] == "deep":
+        deep = True
     tests = TestIntegrityEventsInDAS()
-    tests.run()
+    tests.run(deep)
     
