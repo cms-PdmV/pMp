@@ -11,12 +11,18 @@ import sys
 
 class TestIntegrityEventsInDAS():
 
-    def __init__(self):
+    def __init__(self, only_done):
         self.db_url = 'http://127.0.0.1:9200'
         self.pmp_api = 'http://127.0.0.1/api/'
         self.es = ElasticSearch(self.db_url)
         self.overflow = 1000
         self.setlog()
+        if only_done:
+            self.present_url = '/announced'
+            self.historical_url = '/historical/3/,/done/all'
+        else:
+            self.present_url = '/growing'
+            self.historical_url = '/historical/3/,/all/all'
 
     def curl(self, url, cookie=None):
         out = StringIO()
@@ -38,24 +44,23 @@ class TestIntegrityEventsInDAS():
 
     def get_historical(self, campaign):
         details, status = self.curl(self.pmp_api + campaign
-                                    + '/historical/3/,/done/all')
+                                    + self.historical_url)
         if len(details['results']['data']):
             return details['results']['data'][-1]['e']
         else:
             return 0
 
     def get_announced(self, campaign):
-        details, status = self.curl(self.pmp_api + campaign +'/announced')
         sum_events = 0
-        for request in details['results']:
-            if request['status'] == 'done':
-                sum_events += request['total_events']
+        for request in self.get_requests(campaign):
+            sum_events += request['total_events']
         return sum_events
 
     def get_requests(self, campaign):
-        details, status = self.curl(self.pmp_api + campaign +'/announced')
+        details, status = self.curl(self.pmp_api + campaign + self.present_url)
         for request in details['results']:
-            if request['status'] == 'done':
+            if (request['status'] == 'done'
+                and request['member_of_campaign'] == campaign):
                 yield request
 
     def run(self, deep_check=False):
@@ -77,13 +82,12 @@ class TestIntegrityEventsInDAS():
                     if (request['total_events'] !=
                         self.get_historical(request['prepid'])):
                         logging.error(str(datetime.now()) + ' Inconsistency' +
-                                      'for ' + request['prepid'])
+                                      ' for ' + request['prepid'])
 
 
 if __name__ == "__main__":
     deep = False
     if len(sys.argv) > 1 and sys.argv[1] == "deep":
         deep = True
-    tests = TestIntegrityEventsInDAS()
+    tests = TestIntegrityEventsInDAS(False)
     tests.run(deep)
-    
