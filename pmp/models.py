@@ -277,40 +277,8 @@ class GetHistorical():
         # normally es will crop results to 20
         # and a million rows is more than we have in db
         self.overflow = 1000000
-        self.exception_prep_id = ['task_HIG-Summer12-02258']
+        self.exception_prep_id = []#['task_HIG-Summer12-02258']
 
-    def select_dataset(self, ds1, ds2):
-        '''
-        This selection is from statsMonitoring.py
-        '''
-        t1=ds1.split('/')[1:]
-        t2=ds2.split('/')[1:]
-        if len(t1[1]) > len(t2[1]):
-            return 1
-        else:
-            def tierP(t):
-                tierPriority=[
-                    '/RECO',
-                    'SIM-RECO',
-                    'DIGI-RECO',
-                    'AOD',
-                    'SIM-RAW-RECO',
-                    'DQM' ,
-                    'GEN-SIM',
-                    'RAW-RECO',
-                    'USER',
-                    'ALCARECO']
-                for (p, tier) in enumerate(tierPriority):
-                    if tier in t:
-                        return p
-                return t
-            p1 = tierP(t1[2])
-            p2 = tierP(t2[2])
-            decision = (p1 > p2)
-            if t1[2] == 'AODSIM' and t2[2] == 'MINIAODSIM':
-                decision = True
-            return decision * 2 - 1
-            
     def db_query(self, input):
         '''
         Query DB and return array of raw documents
@@ -338,7 +306,6 @@ class GetHistorical():
             try:
                 dataset_list = req['output_dataset']
                 if len(dataset_list):
-                    dataset_list.sort(cmp=self.select_dataset)
                     ds = dataset_list[0]
                 else:
                     ds = None
@@ -541,6 +508,7 @@ class GetHistorical():
 
         if stop:
             return re
+
         # Step 1: Get accumulated requests
         tmp = {}
         for x in r:
