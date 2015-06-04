@@ -11,16 +11,19 @@ import sys
 
 class TestIntegrityEventsInDAS():
 
-    def __init__(self, only_done):
+    def __init__(self, arg):
         self.db_url = 'http://127.0.0.1:9200'
         self.pmp_api = 'http://127.0.0.1/api/'
         self.es = ElasticSearch(self.db_url)
-        self.overflow = 1000
+        self.overflow = 100000
         self.setlog()
-        if only_done:
+        self.announced = arg
+        if self.announced:
+            logging.info(str(datetime.now()) + ' Lauching check for announced')
             self.present_url = '/announced'
             self.historical_url = '/historical/3/,/done/all'
         else:
+            logging.info(str(datetime.now()) + ' Launching check for growing')
             self.present_url = '/growing'
             self.historical_url = '/historical/3/,/all/all'
 
@@ -63,13 +66,22 @@ class TestIntegrityEventsInDAS():
                 and request['member_of_campaign'] == campaign):
                 yield request
 
+    def get_requests_grow(self, campaign):
+        requests = [s['_source'] for s in
+                     self.es.search(('member_of_campaign:%s' % campaign),
+                                    index='requests',
+                                    size=self.overflow)['hits']['hits']]
+        for r in requests:
+            if r['status'] == 'submitted':
+                yield r
+
     def run(self, deep_check=False):
         # get list of campaigns
         campaigns = [s['_source'] for s in
                      self.es.search('prepid:*', index='campaigns',
                                     size=self.overflow)['hits']['hits']]
         for c in campaigns:
-            logging.info('%s Checking %s' % (str(datetime.now()), c['prepid']))
+            logging.info('%s Checking %s' % (datetime.now(), c['prepid']))
             if (self.get_historical(c['prepid']) !=
                 self.get_announced(c['prepid'])):
                 logging.error(str(datetime.now()) + ' Inconsistency "events in'
@@ -78,16 +90,29 @@ class TestIntegrityEventsInDAS():
                 if not deep_check:
                     continue
                 logging.info(str(datetime.now()) + ' Checking requests')
-                for request in self.get_requests(c['prepid']):
-                    if (request['total_events'] !=
-                        self.get_historical(request['prepid'])):
-                        logging.error(str(datetime.now()) + ' Inconsistency' +
-                                      ' for ' + request['prepid'])
+
+                if self.announced:
+                    for request in self.get_requests(c['prepid']):
+                        if (request['total_events'] !=
+                            self.get_historical(request['prepid'])):
+                            logging.error(str(datetime.now()) +
+                                          ' Inconsistency for ' +
+                                          request['prepid'])
+                else:
+                    for request in self.get_requests_grow(c['prepid']):
+                        if (request['completed_events'] <  
+                            (1*self.get_historical(request['prepid']))):
+                            logging.error(str(datetime.now()) +
+                                          ' Inconsistency for ' +
+                                          request['prepid'])
 
 
 if __name__ == "__main__":
     deep = False
     if len(sys.argv) > 1 and sys.argv[1] == "deep":
         deep = True
+    tests = TestIntegrityEventsInDAS(True)
+    tests.run(deep)
     tests = TestIntegrityEventsInDAS(False)
     tests.run(deep)
+
