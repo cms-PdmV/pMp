@@ -15,39 +15,6 @@ MCM_URL = 'https://cms-pdmv-int.cern.ch/mcm/'
 STATS_URL = 'https://cms-pdmv.cern.ch/stats/'
 
 
-def select_dataset(ds1, ds2):
-    """
-    This is inherit from Stats statsMonitoring.py
-    """
-    t1=ds1.split('/')[1:]
-    t2=ds2.split('/')[1:]
-    if len(t1[1]) > len(t2[1]):
-        return 1
-    else:
-        def tierP(t):
-            tierPriority=[
-                '/RECO',
-                'SIM-RECO',
-                'DIGI-RECO',
-                'AOD',
-                'SIM-RAW-RECO',
-                'DQM' ,
-                'GEN-SIM',
-                'RAW-RECO',
-                'USER',
-                'ALCARECO']
-            for (p, tier) in enumerate(tierPriority):
-                if tier in t:
-                    return p
-            return t
-        p1 = tierP(t1[2])
-        p2 = tierP(t2[2])
-        decision = (p1 > p2)
-        if t1[2] == 'AODSIM' and t2[2] == 'MINIAODSIM':
-            decision = True
-        return decision * 2 - 1
-
-
 def setlog():
     logging.basicConfig(level=logging.INFO)
 
@@ -100,10 +67,8 @@ if __name__ == "__main__":
         if not len(dataset_list):
             continue
 
-        #dataset_list.sort()
-        dataset_list.sort(cmp=select_dataset)
-        request_output_type = dataset_list[0]
-        
+        request_output_type = dataset_list[0]        
+
         ce = 0
         for r in res['reqmgr_name']:
             url_s = str(STATS_URL + 'admin/stats/' + r['name'])
@@ -112,9 +77,7 @@ if __name__ == "__main__":
             if status_s != 200:
                 continue
 
-            if res_s['pdmv_type'] != 'TaskChain':
-                if res_s['pdmv_dataset_name'] != request_output_type:
-                    continue
+            if res_s['pdmv_dataset_name'] == request_output_type:
                 ce2 = res_s['pdmv_evts_in_DAS'] + res_s['pdmv_open_evts_in_DAS']
                 ce = max(ce, ce2)
             else:
@@ -128,14 +91,11 @@ if __name__ == "__main__":
                         ce2 = det['pdmv_evts_in_DAS'] + det['pdmv_open_evts_in_DAS']
                         ce = max(ce, ce2)
                     except:
-                        print "Problem querying", res['prepid']
+                        pass
 
         if res['completed_events'] != ce:
             logging.info('%s Updating %s' % (utl.get_time(), request))
-
             # update field in mcm
             url = str(MCM_URL + 'restapi/requests/update_stats/%s/no_refresh/force' %(request))
             res_up, status_up = utl.curl('GET', url, cookie=mcm_cookie)
-            print res_up
-            if status_up != 200:
-                print "\tIssues while updating %s result:\n%s" %(request, res_up)
+            logging.info('%s Result %s' % (utl.get_time(), res_up))
