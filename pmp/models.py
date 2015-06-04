@@ -277,39 +277,8 @@ class GetHistorical():
         # normally es will crop results to 20
         # and a million rows is more than we have in db
         self.overflow = 1000000
+        self.exception_prep_id = []#['task_HIG-Summer12-02258']
 
-    def select_dataset(self, ds1, ds2):
-        '''
-        This selection is from statsMonitoring.py
-        '''
-        t1=ds1.split('/')[1:]
-        t2=ds2.split('/')[1:]
-        if len(t1[1]) > len(t2[1]):
-            return 1
-        else:
-            def tierP(t):
-                tierPriority=[
-                    '/RECO',
-                    'SIM-RECO',
-                    'DIGI-RECO',
-                    'AOD',
-                    'SIM-RAW-RECO',
-                    'DQM' ,
-                    'GEN-SIM',
-                    'RAW-RECO',
-                    'USER',
-                    'ALCARECO']
-                for (p, tier) in enumerate(tierPriority):
-                    if tier in t:
-                        return p
-                return t
-            p1 = tierP(t1[2])
-            p2 = tierP(t2[2])
-            decision = (p1 > p2)
-            if t1[2] == 'AODSIM' and t2[2] == 'MINIAODSIM':
-                decision = True
-            return decision * 2 - 1
-            
     def db_query(self, input):
         '''
         Query DB and return array of raw documents
@@ -337,9 +306,7 @@ class GetHistorical():
             try:
                 dataset_list = req['output_dataset']
                 if len(dataset_list):
-                    dataset_list.sort(cmp=self.select_dataset)
                     ds = dataset_list[0]
-                    print ds
                 else:
                     ds = None
 
@@ -427,6 +394,9 @@ class GetHistorical():
                     # status filtering
                     if not (status_i is None or details['status'] in status_i):
                         continue
+                    # filter out invalidated 'new'
+                    if details['status'] not in ['done', 'submitted']:
+                        continue
                     # priority filtering
                     if (details['priority'] < p_min or (
                             details['priority'] > p_max and p_max != -1)):
@@ -436,19 +406,22 @@ class GetHistorical():
                     if (document['pdmv_dataset_name'] !=
                         details['output_dataset']):
                         if 'pdmv_monitor_datasets' in document:
-                            for monitor in document['pdmv_monitor_dataset']:
+                            for monitor in document['pdmv_monitor_datasets']:
                                 if monitor['dataset'] == details['output_dataset']:
                                     no_secondary_datasets = False
                         if details['output_dataset'] is not None and document['pdmv_dataset_name'] != 'None Yet' and document['pdmv_type'] != 'TaskChain' and no_secondary_datasets:
                             continue
+                # skip legacy request with no prep_id
+                if document['pdmv_prep_id'] == '':
+                    continue
+
                 # create an array of requests to be processed
                 response = {}
                 response['data'] = []
                 response['request'] = document['pdmv_prep_id']
 
-                # taskchain handiling
                 if not is_request and (document['pdmv_type'] == 'TaskChain'):
-                    # load taskchain instead of normal req
+                    # when input is workflow and a taskchain
                     for t in document['pdmv_monitor_datasets']:
                         res = {}
                         res['request'] = t['dataset']
@@ -469,56 +442,69 @@ class GetHistorical():
                     re['pwg'] = {}
                     re['taskchain'] = True
                     stop = True
-                        
-                else:
-                    if ('pdmv_monitor_history' in document and document['pdmv_type'] != 'TaskChain'):
-                        for record in document['pdmv_monitor_history']:
-                            if len(record['pdmv_monitor_time']):
+                
+                elif (document['pdmv_prep_id'] in self.exception_prep_id
+                      or (document['pdmv_dataset_name'] == details['output_dataset']
+                      and document['pdmv_type'] != 'TaskChain'
+                      and 'pdmv_monitor_history' in document)):
+                    # usually pdmv_monitor_history has more information than
+                    # pdmv_datasets: we try to use this
+                    for record in document['pdmv_monitor_history']:
+                        data = {}
+
+                        # if the output in mcm is not specified yet set 0
+                        if (details['output_dataset'] is not None
+                            or details is None):
+                            data['e'] = (record['pdmv_evts_in_DAS']
+                                         + record['pdmv_open_evts_in_DAS'])
+                        else:
+                            data['e'] = 0
+
+                        # get timestamp, if field is empty set 1/1/2013
+                        if len(record['pdmv_monitor_time']):
+                            data['t'] = time.mktime(time.strptime(
+                                    record['pdmv_monitor_time']))*1000
+                        else:
+                            data['t'] = time.mktime(time.strptime(
+                                    "Tue Jan 1 00:00:00 2013"))*1000
+
+                        # x is expected events
+                        if is_request:
+                            data['x'] = details['expected']
+                        else:
+                            data['x'] = document['pdmv_expected_events']
+
+                        response['data'].append(data)
+
+                elif ('pdmv_monitor_datasets' in document
+                      and (document['pdmv_type'] == 'TaskChain'
+                           or not no_secondary_datasets)):
+                    # handling taskchain requests where output dataset
+                    # is not the main one
+                    for record in document['pdmv_monitor_datasets']:
+                        if record['dataset'] == details['output_dataset']:
+                            for m in record['monitor']:
                                 data = {}
-                                if details is None or details['output_dataset'] is not None:
-                                    # a is events in das
-                                    data['e'] = (record['pdmv_evts_in_DAS'] +
-                                                 record['pdmv_open_evts_in_DAS'])
+                                if (details is None
+                                    or details['output_dataset'] is not None):
+                                    data['e'] = (m['pdmv_evts_in_DAS']
+                                                 + m['pdmv_open_evts_in_DAS'])
                                 else:
                                     # if the output in mcm is not specified yet,
                                     # treat as this has not produced anything
                                     # ensures present=historical
                                     data['e'] = 0
                                 data['t'] = time.mktime(time.strptime(
-                                        record['pdmv_monitor_time']))*1000
+                                        m['pdmv_monitor_time']))*1000
 
                                 # x is expected events
                                 if is_request:
                                     data['x'] = details['expected']
                                 else:
-                                    data['x'] = document[
-                                        'pdmv_expected_events']
+                                    data['x'] = document['pdmv_expected_events']
                                 response['data'].append(data)
-                    elif ('pdmv_monitor_datasets' in document and (document['pdmv_type'] == 'TaskChain' or not no_secondary_datasets)):
-                        # handling taskchain requests where output dataset is not the main one
-                        for record in document['pdmv_monitor_datasets']:
-                            if record['dataset'] == details['output_dataset']:
-                                for m in record['monitor']:
-                                    data = {}
-                                    if details is None or details['output_dataset'] is not None:
-                                        data['e'] = (m['pdmv_evts_in_DAS'] +
-                                                     m['pdmv_open_evts_in_DAS'])
-                                    else:
-                                        # if the output in mcm is not specified yet,
-                                        # treat as this has not produced anything
-                                        # ensures present=historical
-                                        data['e'] = 0
-                                    data['t'] = time.mktime(time.strptime(
-                                            m['pdmv_monitor_time']))*1000
 
-                                    # x is expected events
-                                    if is_request:
-                                        data['x'] = details['expected']
-                                    else:
-                                        data['x'] = document[
-                                            'pdmv_expected_events']
-                                    response['data'].append(data)
-                    r.append(response)
+                r.append(response)
 
         if stop:
             return re
