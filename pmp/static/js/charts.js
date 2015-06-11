@@ -33,10 +33,8 @@ Parse numbers to the human readable format
             var l = ['G', 'M', 'k', ''];
             var s, j = 0;
             for (var i = 1e9; i >= 1; i = i / 1e3) {
-                s = d / i;
+                s = (Math.round(d * 100 / i) / 100).toFixed(2);
                 if (s >= 1) {
-                    console.log(s);
-                    console.log((s+"").substring(0, significantFigures).indexOf('.'));
                     if ((s + '').substring(0, significantFigures).indexOf('.') === -1) {
                         return (s + '').substring(0, significantFigures) + l[j];
                     }
