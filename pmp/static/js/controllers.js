@@ -1065,3 +1065,11 @@ pmpApp.controller('PerformanceController', function($http, $interval, $location,
         }
     }
 });
+
+pmpApp.controller('ChainsController', function($scope) {
+        $scope.initChains = function() {
+            $scope.title = "Chains Landscape";
+            $scope.allRequestData = [];
+            $scope.loadingData = true;
+        }
+    });
