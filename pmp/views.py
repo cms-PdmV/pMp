@@ -24,6 +24,7 @@ def about():
 
 
 @app.route('/')
+@app.route('/chains')
 @app.route('/historical')
 @app.route('/performance')
 @app.route('/present')

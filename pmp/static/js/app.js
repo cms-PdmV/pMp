@@ -9,6 +9,10 @@ var pmpApp = angular.module('pmpApp', ['ngAnimate', 'ngRoute', 'ui.bootstrap',
                     templateUrl: 'partials/index.html',
                     controller: 'IndexController'
                 })
+                .when('/chains', {
+                    templateUrl: 'partials/chains.html',
+                    controller: 'ChainsController'
+                })
 	        .when('/historical', {
 		    templateUrl: 'partials/historical.html',
                     controller: 'HistoricalController'
