@@ -121,7 +121,11 @@ class GetGrowing():
                 if r_i > stop_at:
                     # this is a reserved request, will count as upcoming later
                     continue
-                mcm_r = all_requests[r]
+                try:
+                    mcm_r = all_requests[r]
+                except KeyError:
+                    # broken data
+                    pass
                 try:
                     del req_copy[r]
                 except KeyError:
