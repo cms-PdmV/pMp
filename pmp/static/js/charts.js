@@ -1441,7 +1441,7 @@ angular.module('pmpCharts', [])
                         });
 
                         // Axes
-                        x.domain([currentMin, currentMax]).range([0, width]);
+                        x.domain([currentMin, currentMax+(currentMax-currentMin)*0.02]).range([0, width]);
                         xAxis.scale(x);
                         svg.selectAll("g .x.axis").transition().duration(200).ease("linear").call(xAxis);
 
