@@ -13,6 +13,31 @@ class GetGrowing():
         self.es = ElasticSearch(config.DATABASE_URL)
         self.overflow = 1000000
 
+    def completed_deep(self, request):
+        ce = 0
+        if not len(request['output_dataset']):
+            return 0
+
+        od = request['output_dataset'][0]
+        for rm in request['reqmgr_name']:
+            try:
+                stats = self.es.get('stats', 'stats', rm)['_source']
+            except:
+                continue
+
+            if stats['pdmv_dataset_name'] == od:
+                s = stats['pdmv_monitor_history'][0]
+                
+                ce = max(ce, s['pdmv_evts_in_DAS'] +
+                         s['pdmv_open_evts_in_DAS'])
+            elif 'pdmv_monitor_datasets' in stats:
+                for md in stats['pdmv_monitor_datasets']:
+                    if md['dataset'] == od:
+                        s = md['monitor'][0]
+                        ce = max(ce, s['pdmv_evts_in_DAS'] +
+                                 s['pdmv_open_evts_in_DAS'])
+        return ce
+
     def fake_suffix(self):
         self.count_fake += 1
         return 'X'*(5-min(len(str(self.count_fake)), 4))+str(self.count_fake)
@@ -147,11 +172,10 @@ class GetGrowing():
                     return mcm_r
 
                 if mcm_r['status'] == 'done':
+                    mcm_r['total_events'] = mcm_r['completed_events']
                     if (not len(mcm_r['output_dataset'])
                         or mcm_r['total_events'] == -1):
                         mcm_r['total_events'] = 0
-                    else:
-                        mcm_r['total_events'] = mcm_r['completed_events']
                 if mcm_r['status'] == 'submitted':
                     try:
                         if not len(mcm_r['reqmgr_name']):
@@ -162,10 +186,11 @@ class GetGrowing():
                 if mcm_r['status'] == 'submitted':
                     mcm_r_fake_done = copy.deepcopy(mcm_r)
                     mcm_r_fake_done['status'] = 'done'
-                    mcm_r_fake_done['total_events'] = mcm_r['completed_events']
+                    real_completed_events = self.completed_deep(mcm_r)
+                    mcm_r_fake_done['total_events'] = real_completed_events
                     mcm_r_fake_subm = copy.deepcopy(mcm_r)
                     mcm_r_fake_subm['total_events'] = max(
-                        [0, mcm_r['total_events'] - mcm_r['completed_events']])
+                        [0, mcm_r['total_events'] - real_completed_events])
                     list_of_request_for_ramunas.append(pop(mcm_r_fake_subm))
                     list_of_request_for_ramunas.append(pop(mcm_r_fake_done))
                 else:

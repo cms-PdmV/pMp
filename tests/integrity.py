@@ -66,6 +66,30 @@ class TestIntegrityEventsInDAS():
                 and request['member_of_campaign'] == campaign):
                 yield request
 
+    def completed_deep(self, request):
+        ce = 0
+        if not len(request['output_dataset']):
+            return 0
+
+        od = request['output_dataset'][0]
+        for rm in request['reqmgr_name']:
+            try:
+                stats = self.es.get('stats', 'stats', rm)['_source']
+            except:
+                continue
+
+            if stats['pdmv_dataset_name'] == od:
+                s = stats['pdmv_monitor_history'][0]
+                ce = max(ce, s['pdmv_evts_in_DAS'] +
+                         s['pdmv_open_evts_in_DAS'])
+            elif 'pdmv_monitor_datasets' in stats:
+                for md in stats['pdmv_monitor_datasets']:
+                    if md['dataset'] == od:
+                        s = md['monitor'][0]
+                        ce = max(ce, s['pdmv_evts_in_DAS'] +
+                                 s['pdmv_open_evts_in_DAS'])
+        return ce
+
     def get_requests_grow(self, campaign):
         requests = [s['_source'] for s in
                      self.es.search(('member_of_campaign:%s' % campaign),
@@ -73,6 +97,7 @@ class TestIntegrityEventsInDAS():
                                     size=self.overflow)['hits']['hits']]
         for r in requests:
             if r['status'] == 'submitted':
+                r['completed_events'] = self.completed_deep(r)
                 yield r
 
     def run(self, deep_check=False):
@@ -101,7 +126,7 @@ class TestIntegrityEventsInDAS():
                 else:
                     for request in self.get_requests_grow(c['prepid']):
                         if (request['completed_events'] <  
-                            (1*self.get_historical(request['prepid']))):
+                            self.get_historical(request['prepid'])):
                             logging.error(str(datetime.now()) +
                                           ' Inconsistency for ' +
                                           request['prepid'])
