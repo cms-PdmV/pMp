@@ -43,6 +43,8 @@ def api(i, typeof):
     g = None
     if typeof == 'announced':
         g = models.GetAnnounced()
+    elif typeof == 'chain':
+        g = models.GetChain()
     elif typeof == 'growing':
         g = models.GetGrowing()
     elif typeof == 'historical':
