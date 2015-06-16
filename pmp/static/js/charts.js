@@ -1168,7 +1168,7 @@ angular.module('pmpCharts', [])
                 // General attributes
                 var width = config.customWidth - config.margin.left - config.margin.right;
                 var height = config.customHeight - config.margin.top - config.margin.bottom;
-                var l2, l3, containerBox, hoverLineGroup, clipPath, rectLifetime, rectTaskChain;
+                var l1, l2, l3, containerBox, hoverLineGroup, clipPath, rectLifetime, rectTaskChain;
                 var fiveShadesOfGrey = ['#4fc3f7', '#4dd0e1', '#4db6ac', '#81c784', '#aed581', '#dce775'];
                 // add data label
                 var innerHtml = '<span ng-repeat=\'d in labelData\' class=\'{{d.class}}\'>{{d.label}}<span ng-show=\'humanReadableNumbers && d.class != "label-time"\'>{{d.data | humanReadableNumbers}}</span><span ng-hide=\'humanReadableNumbers && d.class != "label-time"\'>{{d.data}}</span></span>';
@@ -1243,9 +1243,23 @@ angular.module('pmpCharts', [])
                     .x(function(d) {
                         return x(d.t);
                     })
-                    .y0(y(height))
+                    .y0(function(d){
+                        return y(d.d)
+                    })
                     .y1(function(d) {
                         return y(d.e);
+                    })
+                    .interpolate("step-after");
+
+                var pathOnlyDoneEvents = d3.svg.area()
+                    .x(function(d, i) {
+                        return x(d.t);
+                    })
+                    .y0(function(d) {
+                        return y(height);
+                    })
+                    .y1(function(d) {
+                        return y(d.d);
                     })
                     .interpolate("step-after");
 
@@ -1281,6 +1295,7 @@ angular.module('pmpCharts', [])
                             svg.select('path.v' + name).attr("d", taskChainLine(scope.dataCopy[i].data));
                         }
                     } else {
+                        svg.select("path.data1").attr("d", pathOnlyDoneEvents(scope.dataCopy));
                         svg.select("path.data2").attr("d", pathNotOpenEvents(scope.dataCopy));
                         svg.select("path.data3").attr("d", pathTargetEvents(scope.dataCopy));
                     }
@@ -1470,6 +1485,15 @@ angular.module('pmpCharts', [])
                             .attr("d", pathNotOpenEvents(a))
                             .attr("class", "data2")
                             .style('stroke-width', 1)
+                            .style('stroke', '#ff6f00')
+                            .style('opacity', '0.4')
+                            .style("fill", '#ff6f00');
+                        }
+                        if (l1 == undefined) {
+                            l1 = chartBody.append("svg:path")
+                            .attr("d", pathOnlyDoneEvents(a))
+                            .attr("class", "data1")
+                            .style('stroke-width', 1)
                             .style('stroke', '#01579b')
                             .style('opacity', '0.4')
                             .style("fill", '#01579b');
@@ -1486,6 +1510,7 @@ angular.module('pmpCharts', [])
                             .attr("height", height)
                             .call(zoom);
                         }
+                        l1.transition().duration(200).ease('linear').attr('d', pathOnlyDoneEvents(a));
                         l2.transition().duration(400).ease('linear').attr('d', pathNotOpenEvents(a));
                         l3.transition().duration(600).ease('linear').attr('d', pathTargetEvents(a));
 
