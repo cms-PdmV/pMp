@@ -502,6 +502,10 @@ class GetHistorical():
                         else:
                             data['e'] = 0
 
+                        data['d'] = 0
+                        if details['status'] == 'done':
+                            data['d'] = data['e']
+
                         # get timestamp, if field is empty set 1/1/2013
                         if len(record['pdmv_monitor_time']):
                             data['t'] = time.mktime(time.strptime(
@@ -536,6 +540,11 @@ class GetHistorical():
                                     # treat as this has not produced anything
                                     # ensures present=historical
                                     data['e'] = 0
+
+                                data['d'] = 0
+                                if details['status'] == 'done':
+                                    data['d'] = data['e']
+
                                 data['t'] = time.mktime(time.strptime(
                                         m['pdmv_monitor_time']))*1000
 
@@ -585,15 +594,17 @@ class GetHistorical():
         # Step 3 & 4: Cycle through requests and add data points
         data = []
         for ft in filter_times:
-            d = {'e': 0, 't': ft, 'x': 0}
+            d = {'d': 0, 'e': 0, 't': ft, 'x': 0}
             for t in tmp:
-                prevx = {'e': 0, 'x': 0}
+                prevx = {'d': 0, 'e': 0, 'x': 0}
                 for (i, x) in enumerate(tmp[t]['data']):
                     if x['t'] > ft:
+                        d['d'] += prevx['d']
                         d['e'] += prevx['e']
                         d['x'] += prevx['x']
                         break
                     elif x['t'] == ft or i == len(tmp[t]['data'])-1:
+                        d['d'] += x['d']
                         d['e'] += x['e']
                         d['x'] += x['x']
                         break
@@ -603,8 +614,8 @@ class GetHistorical():
 
         # add last point which is now()
         if len(data):
-            d = {'e': data[-1]['e'], 't': int(
-                    round(time.time() * 1000)), 'x': data[-1]['x']}
+            d = {'d': data[-1]['d'], 'e': data[-1]['e'],
+                 't': int(round(time.time() * 1000)), 'x': data[-1]['x']}
             data.append(d)
 
         re = {}
