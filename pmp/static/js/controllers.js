@@ -663,6 +663,7 @@ pmpApp.controller('HistoricalController', function($http, $location, $scope, $ro
                     if (!data.data.results.data.length) {
                         $scope.showPopUp('warning', 'All data is filtered');
                     }
+                    $scope.listSubmitted = data.data.results.submitted;
                     $scope.allRequestData = data.data.results.data;
                     $scope.allStatus = data.data.results.status;
                     $scope.allPWG = data.data.results.pwg;
