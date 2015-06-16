@@ -1556,7 +1556,7 @@ angular.module('pmpCharts', [])
                         } else {
                             tmp = ''
                         }
-                        scope.labelData = [{label: 'Time: ', class:'label-time', data: tmp}, {label: 'Expected events: ', class:'label-expected', data: data[1]}, {label: 'Events in DAS: ', class:'label-events-in-das', data: data[2]}];
+                        scope.labelData = [{label: 'Time: ', class:'label-time', data: tmp}, {label: 'Expected events: ', class:'label-expected', data: data[1]}, {label: 'Events in DAS: ', class:'label-events-in-das', data: data[2]}, {label: 'Done events in DAS: ', class: 'label-done-events-in-das', data: data[3]}];
                     }
 
                     var displayValueLabelsForPositionX = function(xPosition) {
@@ -1574,7 +1574,7 @@ angular.module('pmpCharts', [])
                                 data[0] = local[i].t;
                                 data[1] = local[i].x;
                                 data[2] = local[i].e;
-                                data[3] = local[i].a;
+                                data[3] = local[i].d;
                             }
                         }
                         data[0] = new Date(data[0]);
@@ -1596,11 +1596,7 @@ angular.module('pmpCharts', [])
                 }
 
                 // Watch for data change
-                scope.$watch('chartData', function(d) {
-                    if (d.length) {
-                        prepareData(d);
-                    }
-                });
+                scope.$watch('chartData', function(d) {if (d.length) prepareData(d);});
             }
         }
     })
