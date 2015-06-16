@@ -644,10 +644,12 @@ class GetHistorical():
 
         submitted = {}
         if self.campaign:
-            requests = [s['_source'] for s in
-                        self.es.search(('member_of_campaign:%s' % input),
-                                      index='requests',
-                                      size=self.overflow)['hits']['hits']]
+            requests = []
+            for q in query:
+                requests += [s['_source'] for s in
+                             self.es.search(('member_of_campaign:%s' % q),
+                                            index='requests',
+                                            size=self.overflow)['hits']['hits']]
             for r in requests:
                 if ((r['status'] == 'submitted')
                     and (pwg_i is None or r['pwg'] in pwg_i) 
