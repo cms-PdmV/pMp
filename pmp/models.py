@@ -319,7 +319,31 @@ class GetHistorical():
         # normally es will crop results to 20
         # and a million rows is more than we have in db
         self.overflow = 1000000
-        self.exception_prep_id = []#['task_HIG-Summer12-02258']
+        self.campaign = True
+
+    def completed_deep(self, request):
+        ce = 0
+        if not len(request['output_dataset']):
+            return 0
+        od = request['output_dataset'][0]
+        for rm in request['reqmgr_name']:
+            try:
+                stats = self.es.get('stats', 'stats', rm)['_source']
+            except:
+                continue
+
+            if stats['pdmv_dataset_name'] == od:
+                s = stats['pdmv_monitor_history'][0]
+                
+                ce = max(ce, s['pdmv_evts_in_DAS'] +
+                         s['pdmv_open_evts_in_DAS'])
+            elif 'pdmv_monitor_datasets' in stats:
+                for md in stats['pdmv_monitor_datasets']:
+                    if md['dataset'] == od:
+                        s = md['monitor'][0]
+                        ce = max(ce, s['pdmv_evts_in_DAS'] +
+                                 s['pdmv_open_evts_in_DAS'])
+        return ce
 
     def db_query(self, input):
         '''
@@ -336,11 +360,12 @@ class GetHistorical():
 
         # if empty, assume input is a request
         if not len(req_arr):
+            self.campaign = False
             try:
                 req_arr = [self.es.get('requests',
                                        'request', input)['_source']]
             except:
-                # if exception thrown this may be a workglow
+                # if exception thrown this may be a workflow
                 iterable = [input]
 
         # iterate over array and collect details
@@ -485,10 +510,9 @@ class GetHistorical():
                     re['taskchain'] = True
                     stop = True
                 
-                elif (document['pdmv_prep_id'] in self.exception_prep_id
-                      or (document['pdmv_dataset_name'] == details['output_dataset']
+                elif (document['pdmv_dataset_name'] == details['output_dataset']
                       and document['pdmv_type'] != 'TaskChain'
-                      and 'pdmv_monitor_history' in document)):
+                      and 'pdmv_monitor_history' in document):
                     # usually pdmv_monitor_history has more information than
                     # pdmv_datasets: we try to use this
                     for record in document['pdmv_monitor_history']:
@@ -618,12 +642,24 @@ class GetHistorical():
                  't': int(round(time.time() * 1000)), 'x': data[-1]['x']}
             data.append(d)
 
-        re = {}
-        re['data'] = data
-        re['status'] = status
-        re['pwg'] = pwg
-        re['taskchain'] = False
-        return re
+        submitted = {}
+        if self.campaign:
+            requests = [s['_source'] for s in
+                        self.es.search(('member_of_campaign:%s' % input),
+                                      index='requests',
+                                      size=self.overflow)['hits']['hits']]
+            for r in requests:
+                if ((r['status'] == 'submitted')
+                    and (pwg_i is None or r['pwg'] in pwg_i) 
+                    and (r['priority'] > p_min
+                         and (r['priority'] < p_max or p_max == -1))):
+                    completed = self.completed_deep(r)
+                    if completed:
+                        submitted[r['prepid']] = (100 * completed /
+                                                  r['total_events'])
+
+        return {'data': data, 'pwg': pwg, 'submitted': submitted,
+                'status': status, 'taskchain': False}
 
     def get(self, query, probe=100, priority_min=0, priority_max=-1,
             status=None, pwg=None):
