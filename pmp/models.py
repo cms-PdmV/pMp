@@ -430,7 +430,7 @@ class GetHistorical():
         pwg = {}
 
         for q in query:
-            
+
             # Process the db documents
             for (is_request, document, details) in self.db_query(q):
 
@@ -481,6 +481,7 @@ class GetHistorical():
                                     no_secondary_datasets = False
                         if details['output_dataset'] is not None and document['pdmv_dataset_name'] != 'None Yet' and document['pdmv_type'] != 'TaskChain' and no_secondary_datasets:
                             continue
+
                 # skip legacy request with no prep_id
                 if document['pdmv_prep_id'] == '':
                     continue
@@ -512,8 +513,9 @@ class GetHistorical():
                     re['pwg'] = {}
                     re['taskchain'] = True
                     stop = True
-                
-                elif (document['pdmv_dataset_name'] == details['output_dataset']
+
+                elif ((details is None or
+                      document['pdmv_dataset_name'] == details['output_dataset'])
                       and document['pdmv_type'] != 'TaskChain'
                       and 'pdmv_monitor_history' in document):
                     # usually pdmv_monitor_history has more information than
@@ -522,15 +524,14 @@ class GetHistorical():
                         data = {}
 
                         # if the output in mcm is not specified yet set 0
-                        if (details['output_dataset'] is not None
-                            or details is None):
+                        if (details is None or details['output_dataset'] is not None):
                             data['e'] = (record['pdmv_evts_in_DAS']
                                          + record['pdmv_open_evts_in_DAS'])
                         else:
                             data['e'] = 0
 
                         data['d'] = 0
-                        if details['status'] == 'done':
+                        if (details is None or details['status'] == 'done'):
                             data['d'] = data['e']
 
                         # get timestamp, if field is empty set 1/1/2013
