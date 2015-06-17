@@ -26,10 +26,13 @@ class GetGrowing():
                 continue
 
             if stats['pdmv_dataset_name'] == od:
-                s = stats['pdmv_monitor_history'][0]
-                
-                ce = max(ce, s['pdmv_evts_in_DAS'] +
-                         s['pdmv_open_evts_in_DAS'])
+                try:
+                    s = stats['pdmv_monitor_history'][0]
+                    ce = max(ce, s['pdmv_evts_in_DAS'] +
+                             s['pdmv_open_evts_in_DAS'])
+                except:
+                    # due to delay in stats
+                    continue
             elif 'pdmv_monitor_datasets' in stats:
                 for md in stats['pdmv_monitor_datasets']:
                     if md['dataset'] == od:
