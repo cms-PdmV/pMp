@@ -3,12 +3,12 @@ Animate.css  v3.2.0 # https://github.com/daneden/animate.css
 Bootstrap v3.3.1
 Bootstrap-tags v1.1.6 # https://github.com/maxwells/bootstrap-tags/releases
 D3.js v3.4.13
-Elasticsearch v1.4.0 # https://github.com/elasticsearch/elasticsearch
+Elasticsearch 1.4.4
 FileSaver.min.js # https://github.com/eligrey/FileSaver.js
-Flask v0.10.1
+Flask 0.10.1
 Font Awesome v4.3.0
 jQuery v2.1.1
 jQuerySortable v0.9.12
-pyelasticsearch v0.6.1 # https://github.com/pyelasticsearch/pyelasticsearch/releases
+pyelasticsearch 1.2
 ui.bootstrap v0.12.0
 ZeroClipboard v2.1.6 # https://github.com/zeroclipboard/zeroclipboard
