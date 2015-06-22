@@ -11,7 +11,7 @@ def four_oh_four():
     '''
     Redirect on 404
     '''
-    return render_template('page_not_found.html'), 404
+    return render_template('invalid.html'), 404
 
 
 @app.route('/about')
@@ -32,7 +32,7 @@ def dashboard():
     '''
     Redirect to graph template
     '''
-    return make_response(open('pmp/templates/graph.html').read())
+    return make_response(open('pmp/templates/valid.html').read())
 
 
 @app.route('/api/<i>/<typeof>')
