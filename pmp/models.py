@@ -1,14 +1,17 @@
 class APICall():
+    """
+    List of API function calls
+    """
 
     def chain_landscape(self):
         from api import chain as call
         return call.ChainAPI().get()
 
-    def historical_complex(self, query, probe=100, priority=",",
-                           status=None, pwg=None):
+    def historical_complex(self, query, probe=100, priority=",", status=None,
+                           pwg=None):
         from api import historical as call
-        return call.HistoricalAPI().get(query, probe, priority,
-                                        status, pwg)
+        return call.HistoricalAPI().get(query, int(probe), priority, status,
+                                        pwg)
 
     def historical_simple(self, query):
         from api import historical as call
@@ -34,8 +37,6 @@ class APICall():
         from api import shorten as call
         return call.ShortenAPI().get(url, params)
 
-    def suggestions(self, t, query):
+    def suggestions(self, block, query):
         from api import suggestions as call
-        return call.SuggestionsAPI(t).get(query)
-
-
+        return call.SuggestionsAPI(block).get(query)
