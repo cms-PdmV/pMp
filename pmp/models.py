@@ -30,10 +30,12 @@ class APICall():
         from api import growing as call
         return call.GrowingAPI().get(query)
 
+    def shorten_url(self, url, params):
+        from api import shorten as call
+        return call.ShortenAPI().get(url, params)
+
     def suggestions(self, t, query):
         from api import suggestions as call
         return call.SuggestionsAPI(t).get(query)
-
-
 
 

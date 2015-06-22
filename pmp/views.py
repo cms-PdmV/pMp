@@ -97,14 +97,8 @@ def shorten(url):
     '''
     Shorten URL
     '''
-    c = ("http://tinyurl.com/api-create.php?url=" + url
-         + "?" + request.query_string)
-    out = StringIO()
-    curl = pycurl.Curl()
-    curl.setopt(pycurl.URL, str(c))
-    curl.setopt(pycurl.WRITEFUNCTION, out.write)
-    curl.perform()
-    return make_response(out.getvalue())
+    g = models.APICall()
+    return make_response(g.shorten_url(url, request.query_string))
 
 
 def parse_csv(parsable):
