@@ -4,6 +4,7 @@ import copy
 import json
 import math
 import time
+from utils import utils as apiutils
 
 class HistoricalAPI():
     '''
@@ -360,8 +361,10 @@ class HistoricalAPI():
         return {'data': data, 'pwg': pwg, 'submitted': submitted,
                 'status': status, 'taskchain': False}
 
-    def get(self, query, probe=100, priority_min=0, priority_max=-1,
+    def get(self, query, probe=100, priority=",",
             status=None, pwg=None):
+        priority = apiutils.APIUtils().parse_priority_csv(priority.split(','))
+        print status
         return json.dumps({"results": self.prepare_response(
-                    query.split(','), probe, priority_min, priority_max,
-                    status, pwg)})
+                    query.split(','), probe, priority[0], priority[1],
+                    apiutils.APIUtils().parse_csv(status), apiutils.APIUtils().parse_csv(pwg))})

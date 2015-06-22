@@ -4,10 +4,10 @@ class APICall():
         from api import chain as call
         return call.ChainAPI().get()
 
-    def historical_complex(self, query, probe=100, priority_min=0, priority_max=-1,
+    def historical_complex(self, query, probe=100, priority=",",
                            status=None, pwg=None):
         from api import historical as call
-        return call.HistoricalAPI().get(query, probe, priority_min, priority_max,
+        return call.HistoricalAPI().get(query, probe, priority,
                                         status, pwg)
 
     def historical_simple(self, query):

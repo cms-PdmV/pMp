@@ -1,9 +1,7 @@
 from flask import make_response, redirect, render_template
 from pmp import app, models
 from flask import request
-from cStringIO import StringIO
 import json
-import pycurl
 
 
 @app.route('/404')
@@ -76,9 +74,9 @@ def api_historical_extended(i, p, priority, status, pwg):
     taskchain - boolean to load in taskchain mode
     '''
     g = models.APICall()
-    priority = parse_priority_csv(priority.split(','))
-    return g.historical_complex(i, int(p), int(priority[0]), int(priority[1]),
-                                parse_csv(status), parse_csv(pwg))
+
+    return g.historical_complex(i, int(p), priority,
+                                status, pwg)
 
 
 @app.route('/api/suggest/<input>/<typeof>')
@@ -99,23 +97,3 @@ def shorten(url):
     '''
     g = models.APICall()
     return make_response(g.shorten_url(url, request.query_string))
-
-
-def parse_csv(parsable):
-    '''
-    Generate array from csv
-    '''
-    if parsable == 'all':
-        return None
-    else:
-        return parsable.split(',')
-
-
-def parse_priority_csv(arr):
-    '''
-    Generate array from priority csv
-    '''
-    for p, _ in enumerate(arr):
-        if arr[p] == '':
-            arr[p] = -p
-    return arr
