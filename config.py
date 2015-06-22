@@ -1,3 +1,9 @@
-DEBUG = False
+ADMINS = ['cms-pdmv-serv@cern.ch']
+CERTFILE = '/home/crtkey/localhost.crt'
+KEYFILE = '/home/crtkey/localhost.key'
+DEBUG = True
 DATABASE_URL = 'http://127.0.0.1:9200/'
+HOST = '127.0.0.1'
+HOSTMAIL = 'vocms089@noreply.com'
+PORT = 80
 SECRET_KEY = ''
