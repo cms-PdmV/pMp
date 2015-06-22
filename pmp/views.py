@@ -42,17 +42,23 @@ def api(i, typeof):
     '''
     g = None
     if typeof == 'announced':
-        g = models.GetAnnounced()
+        g = models.APICall()
+        return make_response(g.present_announced_mode(i))
     elif typeof == 'chain':
-        g = models.GetChain()
+        g = models.APICall()
+        return make_response(g.chain_landscape())
     elif typeof == 'growing':
-        g = models.GetGrowing()
+        g = models.APICall()
+        return make_response(g.present_growing_mode(i))
     elif typeof == 'historical':
-        g = models.GetHistorical()
+        g = models.APICall()
+        return make_response(g.historical_simple(i))
     elif typeof == 'performance':
-        g = models.GetPerformance()
+        g = models.APICall()
+        return make_response(g.performance(i))
     elif typeof == 'lastupdate':
-        g = models.GetLastUpdate()
+        g = models.APICall()
+        return make_response(g.last_update(i))
     if g is None:
         return make_response('{}')
     return make_response(g.get(i))
@@ -69,10 +75,10 @@ def api_historical_extended(i, p, priority, status, pwg):
     pwg - list of pwg to include (csv)
     taskchain - boolean to load in taskchain mode
     '''
-    gl = models.GetHistorical()
+    g = models.APICall()
     priority = parse_priority_csv(priority.split(','))
-    return make_response(gl.get(i, int(p), int(priority[0]), int(priority[1]),
-                                parse_csv(status), parse_csv(pwg)))
+    return g.historical_complex(i, int(p), int(priority[0]), int(priority[1]),
+                                parse_csv(status), parse_csv(pwg))
 
 
 @app.route('/api/suggest/<input>/<typeof>')
@@ -82,8 +88,8 @@ def suggest(input, typeof):
     input - input string to search in db
     typeof - lifetime/growing/announced/performance
     '''
-    gs = models.GetSuggestions(typeof)
-    return make_response(gs.get(input))
+    g = models.APICall()
+    return make_response(g.suggestions(typeof, input))
 
 
 @app.route('/shorten/<path:url>')
