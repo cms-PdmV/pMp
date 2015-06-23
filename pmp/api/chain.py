@@ -1,15 +1,13 @@
-from models import dbadapter
-from pyelasticsearch import ElasticSearch
-import copy
+from models import esadapter
 import json
-import math
-import time
 
-class ChainAPI(adapter.ESAdapter):
 
+class ChainAPI(esadapter.InitConnection):
+    """
+    Get full collection of chain campaigns
+    """
     def get(self):
         ccs = [s['_source'] for s in
                self.es.search('prepid:*', index='chained_campaigns',
                               size=self.overflow)['hits']['hits']]
         return json.dumps({"results": ccs})
-    

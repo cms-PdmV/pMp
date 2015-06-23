@@ -1,15 +1,11 @@
 from models import esadapter
-from pyelasticsearch import ElasticSearch
-import config
-import copy
 import json
-import math
-import time
+
 
 class AnnouncedAPI(esadapter.InitConnection):
-    '''
-    Used to return list of requests with some properties in a given campaign
-    '''
+    """
+    Used to return list of requests in a given campaign
+    """
     def get(self, campaign):
 
         # change all to wildcard
@@ -27,20 +23,19 @@ class AnnouncedAPI(esadapter.InitConnection):
             # requests that are done should have completed events value
             if r['status'] == 'done':
                 r['total_events'] = r['completed_events']
-                try:
-                    # requests without output_dataset should have zero events
+                # requests without output_dataset should have zero events
+                if 'output_dataset' in r:
                     if not len(r['output_dataset']):
                         r['total_events'] = 0
-                except KeyError:
+                else:
                     r['total_events'] = 0
-                    pass
+            # requests that have just been submitted and no req_mgr data
             if r['status'] == 'submitted':
-                try:
+                if 'reqmgr_name' in r:
                     if not len(r['reqmgr_name']):
                         r['total_events'] = 0
-                except KeyError:
+                else:
                     r['total_events'] = 0
-                    pass
 
             # requests that are new (-1) should have zero events
             if r['total_events'] == -1:
@@ -50,12 +45,8 @@ class AnnouncedAPI(esadapter.InitConnection):
                 r['time_event'] = 0
 
             # remove unnecessary fields to speed up api
-            try:
-                del r['completed_events']
-                del r['reqmgr_name']
-                del r['history']
-                del r['output_dataset']
-            except KeyError:
-                print r['prepid']
-
+            for f in ['completed_events', 'reqmgr_name', 'history',
+                      'output_dataset']:
+                if f in r:
+                    del r[f]
         return json.dumps({"results": res})

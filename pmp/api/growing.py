@@ -1,5 +1,4 @@
-from pyelasticsearch import ElasticSearch
-import config
+from models import esadapter
 import copy
 import json
 import math
@@ -7,11 +6,17 @@ import time
 
 
 class GrowingAPI(esadapter.InitConnection):
-
+    """
+    Return list of requests chained to given camapign with fake upcoming field
+    """
     def __init__(self):
+        esadapter.InitConnection.__init__(self)
         self.count_fake = 0
 
     def completed_deep(self, request):
+        """
+        Check the real number of completed events based on stats
+        """
         ce = 0
         if not len(request['output_dataset']):
             return 0
@@ -40,6 +45,9 @@ class GrowingAPI(esadapter.InitConnection):
         return ce
 
     def fake_suffix(self):
+        """
+        Create suffix for the fake requests
+        """
         self.count_fake += 1
         return 'X'*(5-min(len(str(self.count_fake)), 4))+str(self.count_fake)
 
@@ -56,7 +64,6 @@ class GrowingAPI(esadapter.InitConnection):
             fake_request['total_events'] = total
         else:
             fake_request['total_events'] = 0
-            
         fake_request['prepid'] = '-'.join([original_request['pwg'],
                                            member_of_campaign,
                                            self.fake_suffix()])
@@ -64,8 +71,8 @@ class GrowingAPI(esadapter.InitConnection):
 
     def get(self, campaign):
         arg_list = campaign.split(',')
-        # get all chained campaigns which contain selected CAMPAIGN
-        # reduction to only cc
+        # get all chained campaigns which contain selected campaign
+        # reduction to only chained campaigns
         while True:
             again = False
             for arg in arg_list:
@@ -135,7 +142,7 @@ class GrowingAPI(esadapter.InitConnection):
         # avoid double counting
         already_counted = set()
         # the list of requests to be emitted to d3js
-        list_of_request_for_ramunas = []
+        dump_requests = []
         for cr in all_cr:
             upcoming = 0
             if len(cr['chain']) == 0:
@@ -147,15 +154,10 @@ class GrowingAPI(esadapter.InitConnection):
                 if r_i > stop_at:
                     # this is a reserved request, will count as upcoming later
                     continue
-                try:
+                if r in all_requests:
                     mcm_r = all_requests[r]
-                except KeyError:
-                    # broken data
-                    pass
-                try:
+                if r in req_copy:
                     del req_copy[r]
-                except KeyError:
-                    pass
                 upcoming = int(mcm_r['total_events']*abs(mcm_r['efficiency']))
 
                 if r in already_counted:
@@ -174,15 +176,13 @@ class GrowingAPI(esadapter.InitConnection):
 
                 if mcm_r['status'] == 'done':
                     mcm_r['total_events'] = mcm_r['completed_events']
-                    if (not len(mcm_r['output_dataset'])
-                        or mcm_r['total_events'] == -1):
+                    if mcm_r['total_events'] == -1 or \
+                            not len(mcm_r['output_dataset']):
                         mcm_r['total_events'] = 0
                 if mcm_r['status'] == 'submitted':
-                    try:
+                    if 'reqmgr_name' in mcm_r:
                         if not len(mcm_r['reqmgr_name']):
                             mcm_r['total_events'] = 0
-                    except KeyError:
-                        pass
 
                 if mcm_r['status'] == 'submitted':
                     mcm_r_fake_done = copy.deepcopy(mcm_r)
@@ -192,30 +192,30 @@ class GrowingAPI(esadapter.InitConnection):
                     mcm_r_fake_subm = copy.deepcopy(mcm_r)
                     mcm_r_fake_subm['total_events'] = max(
                         [0, mcm_r['total_events'] - real_completed_events])
-                    list_of_request_for_ramunas.append(pop(mcm_r_fake_subm))
-                    list_of_request_for_ramunas.append(pop(mcm_r_fake_done))
+                    dump_requests.append(pop(mcm_r_fake_subm))
+                    dump_requests.append(pop(mcm_r_fake_done))
                 else:
                     if mcm_r['total_events'] == -1:
                         mcm_r['total_events'] = 0
-                    list_of_request_for_ramunas.append(pop(mcm_r))
+                    dump_requests.append(pop(mcm_r))
             for noyet in all_cc[cr[
                     'member_of_campaign']]['campaigns'][stop_at+1:]:
                 # create a fake request with the proper member of campaign
                 processing_r = all_requests[cr['chain'][stop_at]]
                 fake_one = self.create_fake_request(processing_r, noyet[0],
                                                     total=upcoming)
-                list_of_request_for_ramunas.append(fake_one)
+                dump_requests.append(fake_one)
         # add req that does not belong to chain (from org campaign)
         for r in req_copy:
             r = req_copy[r]
             if r['member_of_campaign'] == campaign:
                 if r['status'] == 'done':
-                    if (not len(r['output_dataset'])
-                        or r['total_events'] == -1):
+                    if not len(r['output_dataset']) or r['total_events'] == -1:
                         r['total_events'] = 0
                     else:
                         r['total_events'] = r['completed_events']
                 if r['total_events'] == -1:
                     r['total_events'] = 0
-                list_of_request_for_ramunas.append(r)
-        return json.dumps({"results": list_of_request_for_ramunas})
+                dump_requests.append(r)
+
+        return json.dumps({"results": dump_requests})

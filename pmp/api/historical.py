@@ -1,22 +1,17 @@
-from pyelasticsearch import ElasticSearch
-import config
+from utils import utils as apiutils
+from models import esadapter
 import copy
 import json
 import math
 import time
-from utils import utils as apiutils
-from models import esadapter
+
 
 class HistoricalAPI(esadapter.InitConnection):
-    '''
-    Used to return list of point for historical plots
-    '''
-
+    """
+    Used to return list of points for historical plots
+    """
     def __init__(self):
-        self.es = ElasticSearch(config.DATABASE_URL)
-        # normally es will crop results to 20
-        # and a million rows is more than we have in db
-        self.overflow = 1000000
+        esadapter.InitConnection.__init__(self)
         self.campaign = True
 
     def completed_deep(self, request):
@@ -32,7 +27,7 @@ class HistoricalAPI(esadapter.InitConnection):
 
             if stats['pdmv_dataset_name'] == od:
                 s = stats['pdmv_monitor_history'][0]
-                
+
                 ce = max(ce, s['pdmv_evts_in_DAS'] +
                          s['pdmv_open_evts_in_DAS'])
             elif 'pdmv_monitor_datasets' in stats:
@@ -42,6 +37,9 @@ class HistoricalAPI(esadapter.InitConnection):
                         ce = max(ce, s['pdmv_evts_in_DAS'] +
                                  s['pdmv_open_evts_in_DAS'])
         return ce
+
+    def parse_time(self, t):
+        return time.mktime(time.strptime(t))*1000
 
     def db_query(self, input):
         '''
@@ -88,21 +86,22 @@ class HistoricalAPI(esadapter.InitConnection):
             except:
                 pass
 
-        # iterate over workflows and yield documents 
+        # iterate over workflows and yield documents
         for i in iterable:
             if 'request' in i:
                 try:
-                    yield [i['request'], self.es.get(
-                            'stats', 'stats', i['name'])['_source'], i]
+                    yield [i['request'],
+                           self.es.get('stats', 'stats', i['name'])
+                           ['_source'], i]
                 except:
                     yield [True, None, i]
             else:
                 try:
-                    yield [False, self.es.get(
-                            'stats', 'stats', i)['_source'], None]
+                    yield [False,
+                           self.es.get('stats', 'stats', i)
+                           ['_source'], None]
                 except:
                     yield [False, None, None]
-
 
     def rm_useless(self, arr):
         '''
@@ -112,8 +111,8 @@ class HistoricalAPI(esadapter.InitConnection):
         r = []
         prev = {'e': -1, 'x': -1}
         for (x, a) in enumerate(arr):
-            if ((a['e'] != prev['e'] or a['x'] != prev['x'])
-                and (a['e'] != 0 or x == 0)):
+            if (a['e'] != prev['e'] or a['x'] != prev['x']) \
+                    and (a['e'] != 0 or x == 0):
                 r.append(a)
                 prev = a
         return r
@@ -153,7 +152,7 @@ class HistoricalAPI(esadapter.InitConnection):
                                              status_i)
                     # generate pwg dict
                     pwg = get_filter_dict(details['pwg'], pwg, pwg_i)
-                    # pwg filtering 
+                    # pwg filtering
                     if not (pwg_i is None or details['pwg'] in pwg_i):
                         continue
                     # status filtering
@@ -168,13 +167,17 @@ class HistoricalAPI(esadapter.InitConnection):
                         continue
                     no_secondary_datasets = True
                     # skip requests with not desired output dataset
-                    if (document['pdmv_dataset_name'] !=
-                        details['output_dataset']):
+                    if document['pdmv_dataset_name'] != \
+                            details['output_dataset']:
                         if 'pdmv_monitor_datasets' in document:
                             for monitor in document['pdmv_monitor_datasets']:
-                                if monitor['dataset'] == details['output_dataset']:
+                                if monitor['dataset'] == \
+                                        details['output_dataset']:
                                     no_secondary_datasets = False
-                        if details['output_dataset'] is not None and document['pdmv_dataset_name'] != 'None Yet' and document['pdmv_type'] != 'TaskChain' and no_secondary_datasets:
+                        if details['output_dataset'] is not None and \
+                                document['pdmv_dataset_name'] != 'None Yet' \
+                                and document['pdmv_type'] != 'TaskChain' \
+                                and no_secondary_datasets:
                             continue
 
                 # skip legacy request with no prep_id
@@ -197,29 +200,30 @@ class HistoricalAPI(esadapter.InitConnection):
                                 data = {}
                                 data['e'] = (record['pdmv_evts_in_DAS'] +
                                              record['pdmv_open_evts_in_DAS'])
-                                data['t'] = time.mktime(time.strptime(
-                                        record['pdmv_monitor_time']))*1000
+                                data['t'] = self.parse_time(
+                                    record['pdmv_monitor_time'])
                                 data['x'] = document['pdmv_expected_events']
                             res['data'].append(data)
                         r.append(res)
                     re = {}
-                    re['data'] = r  
+                    re['data'] = r
                     re['status'] = {}
                     re['pwg'] = {}
                     re['taskchain'] = True
                     stop = True
 
-                elif ((details is None or
-                      document['pdmv_dataset_name'] == details['output_dataset'])
-                      and document['pdmv_type'] != 'TaskChain'
-                      and 'pdmv_monitor_history' in document):
+                elif (details is None or
+                      document['pdmv_dataset_name'] == details['output_dataset']) \
+                        and document['pdmv_type'] != 'TaskChain' \
+                        and 'pdmv_monitor_history' in document:
                     # usually pdmv_monitor_history has more information than
                     # pdmv_datasets: we try to use this
                     for record in document['pdmv_monitor_history']:
                         data = {}
 
                         # if the output in mcm is not specified yet set 0
-                        if (details is None or details['output_dataset'] is not None):
+                        if details is None or \
+                                details['output_dataset'] is not None:
                             data['e'] = (record['pdmv_evts_in_DAS']
                                          + record['pdmv_open_evts_in_DAS'])
                         else:
@@ -231,11 +235,11 @@ class HistoricalAPI(esadapter.InitConnection):
 
                         # get timestamp, if field is empty set 1/1/2013
                         if len(record['pdmv_monitor_time']):
-                            data['t'] = time.mktime(time.strptime(
-                                    record['pdmv_monitor_time']))*1000
+                            data['t'] = self.parse_time(
+                                record['pdmv_monitor_time'])
                         else:
-                            data['t'] = time.mktime(time.strptime(
-                                    "Tue Jan 1 00:00:00 2013"))*1000
+                            data['t'] = self.parse_time(
+                                "Tue Jan 1 00:00:00 2013")
 
                         # x is expected events
                         if is_request:
@@ -254,32 +258,33 @@ class HistoricalAPI(esadapter.InitConnection):
                         if record['dataset'] == details['output_dataset']:
                             for m in record['monitor']:
                                 data = {}
-                                if (details is None
-                                    or details['output_dataset'] is not None):
+                                if details is None or \
+                                        details['output_dataset'] is not None:
                                     data['e'] = (m['pdmv_evts_in_DAS']
                                                  + m['pdmv_open_evts_in_DAS'])
                                 else:
-                                    # if the output in mcm is not specified yet,
-                                    # treat as this has not produced anything
-                                    # ensures present=historical
+                                    """
+                                    if the output in mcm is not specified yet,
+                                    treat as this has not produced anything
+                                    ensures present = historical
+                                    """
                                     data['e'] = 0
 
                                 data['d'] = 0
                                 if details['status'] == 'done':
                                     data['d'] = data['e']
 
-                                data['t'] = time.mktime(time.strptime(
-                                        m['pdmv_monitor_time']))*1000
+                                data['t'] = self.parse_time(
+                                    m['pdmv_monitor_time'])
 
                                 # x is expected events
                                 if is_request:
                                     data['x'] = details['expected']
                                 else:
-                                    data['x'] = document['pdmv_expected_events']
+                                    data['x'] = \
+                                        document['pdmv_expected_events']
                                 response['data'].append(data)
-
                 r.append(response)
-
         if stop:
             return re
 
@@ -293,7 +298,7 @@ class HistoricalAPI(esadapter.InitConnection):
             tmp[s]['data'] += x['data']
             tmp[s]['data'] = sorted(tmp[s]['data'], key=lambda e: e['t'])
             tmp[s]['data'] = self.rm_useless(tmp[s]['data'])
-        
+
         # Step 2: Get and sort timestamps
         times = []
         for t in tmp:
@@ -305,7 +310,7 @@ class HistoricalAPI(esadapter.InitConnection):
         else:
             skiper = -1
 
-        filter_times  = []
+        filter_times = []
         i = 0
         for (x, t) in enumerate(times):
             if i < skiper and x < len(times) - 1 and x != 0:
@@ -313,7 +318,7 @@ class HistoricalAPI(esadapter.InitConnection):
             else:
                 filter_times.append(t)
                 i = 0
-        
+
         # Step 3 & 4: Cycle through requests and add data points
         data = []
         for ft in filter_times:
@@ -348,10 +353,11 @@ class HistoricalAPI(esadapter.InitConnection):
                 requests += [s['_source'] for s in
                              self.es.search(('member_of_campaign:%s' % q),
                                             index='requests',
-                                            size=self.overflow)['hits']['hits']]
+                                            size=self.overflow)
+                             ['hits']['hits']]
             for r in requests:
                 if ((r['status'] == 'submitted')
-                    and (pwg_i is None or r['pwg'] in pwg_i) 
+                    and (pwg_i is None or r['pwg'] in pwg_i)
                     and (r['priority'] > p_min
                          and (r['priority'] < p_max or p_max == -1))):
                     completed = self.completed_deep(r)
@@ -365,7 +371,8 @@ class HistoricalAPI(esadapter.InitConnection):
     def get(self, query, probe=100, priority=",",
             status=None, pwg=None):
         priority = apiutils.APIUtils().parse_priority_csv(priority.split(','))
-        print status
-        return json.dumps({"results": self.prepare_response(
-                    query.split(','), probe, priority[0], priority[1],
-                    apiutils.APIUtils().parse_csv(status), apiutils.APIUtils().parse_csv(pwg))})
+        res = self.prepare_response(query.split(','), probe, priority[0],
+                                    priority[1],
+                                    apiutils.APIUtils().parse_csv(status),
+                                    apiutils.APIUtils().parse_csv(pwg))
+        return json.dumps({"results": res})
