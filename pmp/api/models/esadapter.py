@@ -1,13 +1,24 @@
+"""Module crating ElasticSearch object"""
 from pyelasticsearch import ElasticSearch
 import config
 
 
-class InitConnection():
+class InitConnection(object):
     """
-    This class initiates connection to the elasticsearch and results overflow
+    This class initiates connection to the ElasticSearch and results overflow
     """
     def __init__(self):
-        # initiate connection
-        self.es = ElasticSearch(config.DATABASE_URL)
-        # default cropping to 20, set overflow that will not crop results
+        """Initiate connection
+        Default cropping is 20, set overflow that will not crop results
+        """
+        self.es = self.elastic_connect()
         self.overflow = 1000000
+
+    @staticmethod
+    def elastic_connect():
+        """Initiate ElasticSearch"""
+        return ElasticSearch(config.DATABASE_URL)
+
+    def set_overflow(self, overflow):
+        """Set number of returned results"""
+        self.overflow = overflow
