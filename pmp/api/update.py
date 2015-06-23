@@ -1,3 +1,4 @@
+from models import esadapter
 from pyelasticsearch import ElasticSearch
 import config
 import copy
@@ -5,10 +6,7 @@ import json
 import math
 import time
 
-class LastUpdateAPI():
-
-    def __init__(self):
-        self.es = ElasticSearch(config.DATABASE_URL)
+class LastUpdateAPI(esadapter.InitConnection):
 
     def get(self, query):
         query = query.split(',')

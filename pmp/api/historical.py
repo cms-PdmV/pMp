@@ -5,8 +5,9 @@ import json
 import math
 import time
 from utils import utils as apiutils
+from models import esadapter
 
-class HistoricalAPI():
+class HistoricalAPI(esadapter.InitConnection):
     '''
     Used to return list of point for historical plots
     '''

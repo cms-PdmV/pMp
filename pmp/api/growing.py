@@ -6,12 +6,10 @@ import math
 import time
 
 
-class GrowingAPI():
+class GrowingAPI(esadapter.InitConnection):
 
     def __init__(self):
         self.count_fake = 0
-        self.es = ElasticSearch(config.DATABASE_URL)
-        self.overflow = 1000000
 
     def completed_deep(self, request):
         ce = 0

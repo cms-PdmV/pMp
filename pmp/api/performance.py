@@ -1,3 +1,4 @@
+from models import esadapter
 from pyelasticsearch import ElasticSearch
 import config
 import copy
@@ -6,14 +7,10 @@ import math
 import time
 
 
-class PerformanceAPI():
+class PerformanceAPI(esadapter.InitConnection):
     '''
     Used to return list of requests with some history points
     '''
-    def __init__(self):
-        self.es = ElasticSearch(config.DATABASE_URL)
-        self.overflow = 1000000
-
     def get(self, campaign):
 
         # change all to wildcard

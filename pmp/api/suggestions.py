@@ -4,14 +4,14 @@ import copy
 import json
 import math
 import time
+from models import esadapter
 
-class SuggestionsAPI():
+class SuggestionsAPI(esadapter.InitConnection):
     '''
     Used to search in elastic for simmilar prepid as given
     '''
 
     def __init__(self, typeof):
-        self.es = ElasticSearch(config.DATABASE_URL)
         self.overflow = 20
         self.announced = (typeof == 'announced')
         self.growing = (typeof == 'growing')
