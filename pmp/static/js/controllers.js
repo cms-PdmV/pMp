@@ -207,7 +207,7 @@ pmpApp.controller('PresentController', function($http, $location, $interval, $q,
     $scope.load = function(campaign, add, more) {
         if (!campaign) {
             $scope.showPopUp('warning', 'Your request parameters are empty');
-        } else if (add & $scope.tags.hasTag(campaign)) {
+        } else if (add & $scope.inputTags.indexOf(campaign) !== -1) {
             $scope.showPopUp('warning', 'Your request is already loaded');
         } else {
             $scope.loadingData = true;
@@ -219,34 +219,32 @@ pmpApp.controller('PresentController', function($http, $location, $interval, $q,
             promise.then(function(data) {
                 if (!data.data.results.length) {
                     $scope.showPopUp('error', 'No results for this request parameters');
-                    $scope.tags.removeTag(campaign);
                     $scope.setURL();
                     $scope.loadingData = false;
                 } else {
                     $scope.allRequestData = [];
                     if (add) {
-                        $scope.inputTags.push(campaign);
+                        // append
                         data.data.results.push.apply(data.data.results, $scope.cachedRequestData);
                     } else {
-                        $scope.inputTags = [campaign];
+                        // see
                         $scope.cachedRequestData = [];
-                        $scope.tagsRemoveAll([campaign]);
+                        $scope.inputTags = [];
                     }
                     if (campaign == 'all') {
                         for (var i = 0; i < data.data.results.length; i++) {
-                            if (!$scope.tags.hasTag(data.data.results[i].member_of_campaign)) {
-                                $scope.tags.addTag(data.data.results[i].member_of_campaign);
+                            if ($scope.inputTags.indexOf(data.data.results[i].member_of_campaign) === -1) {
                                 $scope.inputTags.push(data.data.results[i].member_of_campaign);
                             }
                         }
                     } else {
-                        $scope.tags.addTag(campaign);
+                        $scope.inputTags.push(campaign);
                     }
                     $scope.updatePwg(data.data.results, !more);
                     $scope.cachedRequestData = data.data.results;
                     $scope.setURL();
                 }
-                if (!more || more == $scope.tags.getTags().length) {
+                if (!more || more == $scope.inputTags.length) {
                     $scope.updateRequestData();
                     $scope.loadingData == false;
                 }
@@ -313,8 +311,8 @@ pmpApp.controller('PresentController', function($http, $location, $interval, $q,
             $scope.aOptionsValues[$scope.graphTabs.indexOf(value)] = $scope.graphParam.indexOf(name);
         }
         var params = {}
-        if ($scope.tags.getTags().length) {
-            params.r = $scope.tags.getTags().join(',')
+        if ($scope.inputTags.length) {
+            params.r = $scope.inputTags.join(',')
         }
         params.p = $scope.aOptionsValues.join(',') + ',' + $scope.aRadioValues.join(',');
         params.t = $scope.showDate + "";
@@ -345,16 +343,15 @@ pmpApp.controller('PresentController', function($http, $location, $interval, $q,
         }
     }
 
-    $scope.tags = angular.element('#campaignList').tags({
-        tagClass: 'btn btn-sm btn-primary',
-        afterDeletingTag: function(tag) {
-            $scope.loadingData = true;
-            setTimeout(function() {
-                var tmp = $scope.cachedRequestData;
-                var data1 = [];
-                var data2 = {};
+    $scope.tagRemove = function(tagToRemove) {
+        $scope.loadingData = true;
+        setTimeout(function() {
+            var tmp = $scope.cachedRequestData;
+            var data1 = [];
+            var data2 = {};
+            if (tagToRemove !== '*') {
                 for (var i = 0; i < tmp.length; i++) {
-                    if (tmp[i].member_of_campaign !== tag) {
+                    if (tmp[i].member_of_campaign !== tagToRemove) {
                         data1.push(tmp[i]);
                     }
                     if (data2[tmp[i].pwg] == undefined) {
@@ -364,48 +361,15 @@ pmpApp.controller('PresentController', function($http, $location, $interval, $q,
                         };
                     }
                 }
-                $scope.cachedRequestData = data1;
-                $scope.pwg = data2;
-                $scope.setURL();
-                $scope.updateRequestData();
-            }, 500);
-        }
-    });
-
-    $scope.tagRemove = function(tagToRemove) {
-
-        $scope.loadingData = true;
-
-        setTimeout(function() {
-            var tmp = $scope.cachedRequestData;
-            var data1 = [];
-            var data2 = {};
-            for (var i = 0; i < tmp.length; i++) {
-                if (tmp[i].member_of_campaign !== tagToRemove) {
-                    data1.push(tmp[i]);
-                }
-                if (data2[tmp[i].pwg] == undefined) {
-                    data2[tmp[i].pwg] = {
-                        name: tmp[i].pwg,
-                        selected: $scope.pwg[tmp[i].pwg].selected
-                    };
-                }
+                $scope.inputTags.splice($scope.inputTags.indexOf(tagToRemove), 1);
+            } else {
+                $scope.inputTags = [];
             }
             $scope.cachedRequestData = data1;
             $scope.pwg = data2;
             $scope.setURL();
             $scope.updateRequestData();
-            $scope.inputTags.splice($scope.inputTags.indexOf(tagToRemove), 1);
-        }, 1);
-    }
-
-    $scope.tagsRemoveAll = function(arr) {
-        var tmp = angular.copy($scope.tags.getTags());
-        for (var i = 0; i < tmp.length; i++) {
-            if (arr.indexOf(tmp[i]) == -1) {
-                $scope.tags.removeTag(tmp[i]);
-            }
-        }
+        }, 1000);
     }
 
     $scope.takeScreenshot = function() {
