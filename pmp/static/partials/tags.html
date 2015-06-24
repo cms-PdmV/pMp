@@ -1,8 +1,6 @@
-<button ng-repeat="tag in inputTags" type="button" class="btn btn-default btn-sm spacing-r">
+<button ng-repeat="tag in inputTags" type="button" class="btn btn-default btn-sm spacing-r" ng-click="tagRemove(tag)">
   <span>
     {{tag}}
   </span>
-  <a class="tag-delete">
-    <i class="glyphicon glyphicon-remove-sign glyphicon-white"></i>
-  </a>
+  <i class="glyphicon glyphicon-remove-sign"></i>
 </button>

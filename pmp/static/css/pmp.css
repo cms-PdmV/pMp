@@ -151,15 +151,6 @@ rect.pane {
     margin-right: 10px;
 }
 
-.tags.label{
-    font-weight: normal;
-}
-
-.tag-delete{
-    color: #000000;
-    padding-left: 2px;
-}
-
 ul.nav li {
     position: static;
 }

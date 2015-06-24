@@ -236,7 +236,7 @@ pmpApp.controller('PresentController', function($http, $location, $interval, $q,
                         for (var i = 0; i < data.data.results.length; i++) {
                             if (!$scope.tags.hasTag(data.data.results[i].member_of_campaign)) {
                                 $scope.tags.addTag(data.data.results[i].member_of_campaign);
-                                $scope.inputTags.append(data.data.results[i].member_of_campaign);
+                                $scope.inputTags.push(data.data.results[i].member_of_campaign);
                             }
                         }
                     } else {
@@ -371,6 +371,33 @@ pmpApp.controller('PresentController', function($http, $location, $interval, $q,
             }, 500);
         }
     });
+
+    $scope.tagRemove = function(tagToRemove) {
+
+        $scope.loadingData = true;
+
+        setTimeout(function() {
+            var tmp = $scope.cachedRequestData;
+            var data1 = [];
+            var data2 = {};
+            for (var i = 0; i < tmp.length; i++) {
+                if (tmp[i].member_of_campaign !== tagToRemove) {
+                    data1.push(tmp[i]);
+                }
+                if (data2[tmp[i].pwg] == undefined) {
+                    data2[tmp[i].pwg] = {
+                        name: tmp[i].pwg,
+                        selected: $scope.pwg[tmp[i].pwg].selected
+                    };
+                }
+            }
+            $scope.cachedRequestData = data1;
+            $scope.pwg = data2;
+            $scope.setURL();
+            $scope.updateRequestData();
+            $scope.inputTags.splice($scope.inputTags.indexOf(tagToRemove), 1);
+        }, 1);
+    }
 
     $scope.tagsRemoveAll = function(arr) {
         var tmp = angular.copy($scope.tags.getTags());
