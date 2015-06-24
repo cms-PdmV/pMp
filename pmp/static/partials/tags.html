@@ -1,7 +1,6 @@
-<button type="button" class="btn btn-default btn-sm">
+<button ng-repeat="tag in inputTags" type="button" class="btn btn-default btn-sm spacing-r">
   <span>
-    Some dummy campaign
-    {{inputTags}}
+    {{tag}}
   </span>
   <a class="tag-delete">
     <i class="glyphicon glyphicon-remove-sign glyphicon-white"></i>
