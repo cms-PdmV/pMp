@@ -1,14 +1,13 @@
-AngularJS v1.2.27 # https://github.com/angular/angular.js
-Animate.css  v3.2.0 # https://github.com/daneden/animate.css
+AngularJS v1.2.27
+Animate.css  v3.2.0
 Bootstrap v3.3.1
-Bootstrap-tags v1.1.6 # https://github.com/maxwells/bootstrap-tags/releases
 D3.js v3.4.13
 Elasticsearch 1.4.4
-FileSaver.min.js # https://github.com/eligrey/FileSaver.js
+FileSaver.min.js #https://github.com/eligrey/FileSaver.js
 Flask 0.10.1
 Font Awesome v4.3.0
 jQuery v2.1.1
 jQuerySortable v0.9.12
 pyelasticsearch 1.2
 ui.bootstrap v0.12.0
-ZeroClipboard v2.1.6 # https://github.com/zeroclipboard/zeroclipboard
+ZeroClipboard v2.1.6
