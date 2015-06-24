@@ -268,13 +268,14 @@ pmpApp.controller('PresentController', function($http, $location, $interval, $q,
             return null;
         }
 
-        var tmp = angular.copy($scope.tags.getTags());
+        var tmp = angular.copy($scope.inputTags);
         if (tmp.length < 2) {
             for (var i = 0; i < tmp.length; i++) {
                 $scope.load(tmp[i], false, false);
             }
         } else {
-            $scope.tagsRemoveAll([]);
+            $scope.inputTags = [];
+            $scope.updateOnRemoval([], {});
         }
     };
 
@@ -368,7 +369,6 @@ pmpApp.controller('PresentController', function($http, $location, $interval, $q,
     }
 
     $scope.updateOnRemoval = function(requestData, oPWG) {
-        console.log(oPWG)
         $scope.cachedRequestData = requestData;
         $scope.pwg = oPWG;
         $scope.setURL();
