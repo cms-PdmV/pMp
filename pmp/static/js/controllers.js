@@ -107,6 +107,8 @@ pmpApp.controller('PresentController', function($http, $location, $interval, $q,
         'status', 'prepid', 'priority', 'pwg'
     ];
 
+    $scope.inputTags = [];
+
     $scope.initPresent = function() {
         $scope.aOptionsValues = [1, 0, 3, 0, 0, 0];
         $scope.aRadioValues = [0, 0];
@@ -223,8 +225,10 @@ pmpApp.controller('PresentController', function($http, $location, $interval, $q,
                 } else {
                     $scope.allRequestData = [];
                     if (add) {
+                        $scope.inputTags.push(campaign);
                         data.data.results.push.apply(data.data.results, $scope.cachedRequestData);
                     } else {
+                        $scope.inputTags = [campaign];
                         $scope.cachedRequestData = [];
                         $scope.tagsRemoveAll([campaign]);
                     }
@@ -232,6 +236,7 @@ pmpApp.controller('PresentController', function($http, $location, $interval, $q,
                         for (var i = 0; i < data.data.results.length; i++) {
                             if (!$scope.tags.hasTag(data.data.results[i].member_of_campaign)) {
                                 $scope.tags.addTag(data.data.results[i].member_of_campaign);
+                                $scope.inputTags.append(data.data.results[i].member_of_campaign);
                             }
                         }
                     } else {
