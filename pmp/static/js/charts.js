@@ -6,6 +6,14 @@ function endall(transition, callback) {
                             .each("end", function() { if (!--n) callback.apply(this, arguments); });
       }
 
+angular.module('customTags', [])
+    .directive('inputTags', function() {
+        return {
+            restrict: 'E',
+            template: 'This is dummy module'
+        };
+    });
+
 angular.module('customFilters', [])
 
 /*
