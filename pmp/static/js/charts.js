@@ -10,7 +10,7 @@ angular.module('customTags', [])
     .directive('inputTags', function() {
         return {
             restrict: 'E',
-            template: 'This is dummy module'
+            templateUrl: 'partials/tags.html'
         };
     });
 

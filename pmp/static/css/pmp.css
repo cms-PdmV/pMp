@@ -155,6 +155,11 @@ rect.pane {
     font-weight: normal;
 }
 
+.tag-delete{
+    color: #000000;
+    padding-left: 10px;
+}
+
 ul.nav li {
     position: static;
 }
