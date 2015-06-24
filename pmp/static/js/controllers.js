@@ -228,8 +228,8 @@ pmpApp.controller('PresentController', function($http, $location, $interval, $q,
                         data.data.results.push.apply(data.data.results, $scope.cachedRequestData);
                     } else {
                         // see
-                        $scope.cachedRequestData = [];
                         $scope.inputTags = [];
+                        $scope.updateOnRemoval([], {});
                     }
                     if (campaign == 'all') {
                         for (var i = 0; i < data.data.results.length; i++) {
@@ -353,23 +353,26 @@ pmpApp.controller('PresentController', function($http, $location, $interval, $q,
                 for (var i = 0; i < tmp.length; i++) {
                     if (tmp[i].member_of_campaign !== tagToRemove) {
                         data1.push(tmp[i]);
-                    }
-                    if (data2[tmp[i].pwg] == undefined) {
-                        data2[tmp[i].pwg] = {
-                            name: tmp[i].pwg,
-                            selected: $scope.pwg[tmp[i].pwg].selected
-                        };
+                        if (data2[tmp[i].pwg] == undefined) {
+                            data2[tmp[i].pwg] = {
+                                name: tmp[i].pwg,
+                                selected: $scope.pwg[tmp[i].pwg].selected
+                            };
+                        }
                     }
                 }
                 $scope.inputTags.splice($scope.inputTags.indexOf(tagToRemove), 1);
-            } else {
-                $scope.inputTags = [];
             }
-            $scope.cachedRequestData = data1;
-            $scope.pwg = data2;
-            $scope.setURL();
-            $scope.updateRequestData();
+            $scope.updateOnRemoval(data1, data2);
         }, 1000);
+    }
+
+    $scope.updateOnRemoval = function(requestData, oPWG) {
+        console.log(oPWG)
+        $scope.cachedRequestData = requestData;
+        $scope.pwg = oPWG;
+        $scope.setURL();
+        $scope.updateRequestData();
     }
 
     $scope.takeScreenshot = function() {
