@@ -21,8 +21,7 @@ class PerformanceAPI(esadapter.InitConnection):
         # loop over and remove documents' fields
         for r in res:
             for field in ['time_event', 'total_events', 'completed_events',
-                          'reqmgr_name', 'efficiency', 'output_dataset',
-                          'member_of_campaign']:
+                          'reqmgr_name', 'efficiency', 'output_dataset']:
                 if field in r:
                     del r[field]
 

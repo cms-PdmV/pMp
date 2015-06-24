@@ -768,11 +768,12 @@ pmpApp.controller('PerformanceController', function($http, $interval, $location,
 
         $scope.cachedRequestData = [];
         $scope.allRequestData = [];
+        $scope.inputTags = [];
 
         $scope.load = function(input, add, more) {
         if (!input) {
             $scope.showPopUp('warning', 'Your request parameters are empty');
-        } else if (add & $scope.tags.hasTag(input)) {
+        } else if (add & $scope.inputTags.indexOf(input) !== -1) {
             $scope.showPopUp('warning', 'Your request is already loaded');
         } else {
             $scope.loadingData = true;
@@ -780,32 +781,32 @@ pmpApp.controller('PerformanceController', function($http, $interval, $location,
             promise.then(function(data) {
                 if (!data.data.results.length) {
                     $scope.showPopUp('error', 'No results for this request parameters');
-                    $scope.tags.removeTag(input);
                     $scope.loadingData = false;
                 } else {
                     $scope.allRequestData = [];
                     if (add) {
                         data.data.results.push.apply(data.data.results, $scope.cachedRequestData);
                     } else {
-                        $scope.tagsRemoveAll([input]);
+                        $scope.inputTags = [];
+                        $scope.updateOnRemoval([]);
                     }
 
                     $scope.cachedRequestData = data.data.results;
 
                     if (input == 'all') {
                         for (var i = 0; i < data.data.results.length; i++) {
-                            if (!$scope.tags.hasTag(data.data.results[i].member_of_campaign)) {
-                                $scope.tags.addTag(data.data.results[i].member_of_campaign);
+                            if ($scope.inputTags.indexOf(data.data.results[i].member_of_campaign) === -1) {
+                                $scope.inputTags.push(data.data.results[i].member_of_campaign);
                             }
                         }
                     } else {
-                        $scope.tags.addTag(input);
+                        $scope.inputTags.push(input);
                     }
                     $scope.update(data.data.results, !more, 'pwg');
                     $scope.update(data.data.results, !more, 'status');
                 }
 
-                if (!more || more == $scope.tags.getTags().length) {
+                if (!more || more == $scope.inputTags.length) {
                     $scope.updateRequestData();
                     $scope.setURL();
                     $scope.loadingData == false;
@@ -817,31 +818,27 @@ pmpApp.controller('PerformanceController', function($http, $interval, $location,
         }
     }
 
-    $scope.tags = angular.element('#campaignList').tags({
-        tagClass: 'btn btn-sm btn-primary',
-        afterDeletingTag: function(tag) {
-            $scope.loadingData = true;
-            setTimeout(function() {
-                var tmp = $scope.allRequestData;
-                var data = [];
+    $scope.tagRemove = function(tagToRemove) {
+        $scope.loadingData = true;
+        setTimeout(function() {
+            var tmp = $scope.cachedRequestData;
+            var data = [];
+            if (tagToRemove !== '*') {
                 for (var i = 0; i < tmp.length; i++) {
-                    if (tmp[i].member_of_campaign !== tag) {
+                    if (tmp[i].member_of_campaign !== tagToRemove) {
                         data.push(tmp[i]);
                     }
                 }
-                $scope.allRequestData = data;
-                $scope.loadingData = false;
-            }, 500);
-        }
-    });
-
-    $scope.tagsRemoveAll = function(arr) {
-        var tmp = angular.copy($scope.tags.getTags());
-        for (var i = 0; i < tmp.length; i++) {
-            if (arr.indexOf(tmp[i]) == -1) {
-                $scope.tags.removeTag(tmp[i]);
+                $scope.inputTags.splice($scope.inputTags.indexOf(tagToRemove), 1);
             }
-        }
+            $scope.updateOnRemoval(data);
+        }, 1000);
+    }
+
+    $scope.updateOnRemoval = function(data) {
+        $scope.cachedRequestData = data;
+        $scope.allRequestData = data;
+        $scope.loadingData = false;
     }
 
     $scope.update = function(x, def, update) {
@@ -856,8 +853,6 @@ pmpApp.controller('PerformanceController', function($http, $interval, $location,
 
     $scope.pwg = {};
     $scope.status = {};
-
-
     $scope.title = 'Request Performance';
 
     $scope.applyHistogram = function(d, e) {
@@ -937,8 +932,8 @@ pmpApp.controller('PerformanceController', function($http, $interval, $location,
             params.b = $scope.bins;
         }
         // list of requests separated by comma
-        if ($scope.tags.getTags().length) {
-            params.r = $scope.tags.getTags().join(',')
+        if ($scope.inputTags.length) {
+            params.r = $scope.inputTags.join(',')
         }
         // if show the time block
         if ($scope.showDate != undefined) {
