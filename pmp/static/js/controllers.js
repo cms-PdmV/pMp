@@ -496,6 +496,8 @@ pmpApp.controller('HistoricalController', function($http, $location, $scope, $ro
 
     $scope.allStatus = {};
 
+    $scope.inputTags = [];
+
     $scope.initHistorical = function() {
 
         if ($location.search().y != undefined && $location.search().y != '') {
@@ -541,7 +543,7 @@ pmpApp.controller('HistoricalController', function($http, $location, $scope, $ro
         if ($location.search().r != undefined && $location.search().r != '') {
             var tmp = $location.search().r.split(',');
             for (var i = 0; i < tmp.length; i++) {
-                $scope.tags.addTag(tmp[i]);
+                $scope.inputTags.push(tmp[i]);
             }
             $scope.query(true);
         }
@@ -552,7 +554,7 @@ pmpApp.controller('HistoricalController', function($http, $location, $scope, $ro
     $scope.load = function(request, add) {
         if (!request) {
             $scope.showPopUp('warning', 'Your request parameters are empty');
-        } else if (add & $scope.tags.hasTag(request)) {
+        } else if (add & $scope.inputTags.indexOf(request) !== -1) {
             $scope.showPopUp('warning', 'Your request is already loaded');
         } else {
             $scope.allRequestData = [];
@@ -560,7 +562,7 @@ pmpApp.controller('HistoricalController', function($http, $location, $scope, $ro
             if (!add) {
                 $scope.tagsRemoveAll();
             }
-            $scope.tags.addTag(request);
+            $scope.inputTags.push(request);
             var filter = add
             if (filter) {
                 filter = false;
@@ -594,7 +596,7 @@ pmpApp.controller('HistoricalController', function($http, $location, $scope, $ro
     };
 
     $scope.query = function(filter, see) {
-        if (!$scope.tags.getTags().length) {
+        if (!$scope.inputTags.length) {
             return null;
         }
 
@@ -653,7 +655,7 @@ pmpApp.controller('HistoricalController', function($http, $location, $scope, $ro
             p = $scope.probing;
         }
 
-        var promise = $http.get("api/" + $scope.tags.getTags().join(',')
+        var promise = $http.get("api/" + $scope.inputTags.join(',')
                                 + '/historical/' + p + '/' + x + '/' + s + '/' + w);
         promise.then(function(data) {
                 if (!data.data.results.status) {
@@ -680,8 +682,8 @@ pmpApp.controller('HistoricalController', function($http, $location, $scope, $ro
         $location.path($location.path(), false);
         var params = {}
         params.p = $scope.probing;
-        if ($scope.tags.getTags().length) {
-            params.r = $scope.tags.getTags().join(',')
+        if ($scope.inputTags.length) {
+            params.r = $scope.inputTags.join(',');
         }
         params.t = $scope.showDate + "";
         if ($scope.filterPriority['0'] != '' || $scope.filterPriority['1'] != '') {
@@ -709,25 +711,21 @@ pmpApp.controller('HistoricalController', function($http, $location, $scope, $ro
         $scope.url = $location.absUrl();
     }
 
-    $scope.tags = angular.element('#campaignList').tags({
-        tagClass: 'btn btn-sm btn-primary',
-        afterDeletingTag: function(tag) {
-            if ($scope.tags.getTags().length) {
-                $scope.query(true);
-            } else {
-                $scope.allRequestData = [];
-                $scope.allStatus = {};
-                $scope.allPWG = {};
-                $scope.setURL();
-            }
+    $scope.tagRemove = function(tagToRemove) {
+        $scope.inputTags.splice($scope.inputTags.indexOf(tagToRemove), 1);
+        if ($scope.inputTags.length) {
+            $scope.query(true);
+        } else {
+            $scope.tagsRemoveAll();
         }
-    });
+    }
 
     $scope.tagsRemoveAll = function() {
-        var tmp = angular.copy($scope.tags.getTags());
-        for (var i = 0; i < tmp.length; i++) {
-            $scope.tags.removeTag(tmp[i]);
-        }
+        $scope.inputTags = [];
+        $scope.allRequestData = [];
+        $scope.allStatus = {};
+        $scope.allPWG = {};
+        $scope.setURL();
     }
 
     $scope.takeScreenshot = function() {
@@ -738,7 +736,7 @@ pmpApp.controller('HistoricalController', function($http, $location, $scope, $ro
         saveAs(blob, "screenshot.html");
     }
 
-    $scope.title = 'Historical Representation of Requests';
+    $scope.title = 'Historical Statistics of Requests';
 
     $scope.updateRequestData = function() {
         $scope.query(true);
