@@ -1940,7 +1940,8 @@ angular.module('pmpCharts', [])
 
                 // create base SVG (and translate it to the start of plot)
                 main_svg = d3.select(element[0]).append("svg")
-                    .attr("preserveAspectRatio", "xMidYMin meet");
+                    .attr("preserveAspectRatio", "xMidYMin meet")
+                    .attr("font-size", "12px");
                 svg = main_svg.append("g");
 
                 // attach xAxis
@@ -1959,7 +1960,10 @@ angular.module('pmpCharts', [])
                         });
 
                 svg.append("g")
-                    .attr("class", "grid horizontal");
+                    .attr("class", "grid horizontal")
+                    .attr("fill", "none")
+                    .attr("stroke", "#ffffff")
+                    .attr("stroke-width", 1);
 
                 var colorMap = {
                     approved: '#4caf50', // green 500
@@ -2701,8 +2705,6 @@ angular.module('pmpCharts', [])
 
                     // remove all block separations
                     svg.selectAll('.' + config.blockSeparatorClass).remove();
-
-                    console.log(scope.priorityMarkup)
                     // terminate if the grouping is not by priority
                     if (grouping != 'priority' || !scope.priorityMarkup) {
                         return null;
@@ -2766,7 +2768,6 @@ angular.module('pmpCharts', [])
                 });
 
                 scope.optionsChange = function() {
-                    console.log()
                     return ('stacking + columns + grouping + yScaleType + valueOperation + priorityMarkup');
                 };
 
@@ -2899,7 +2900,6 @@ angular.module('pmpCharts', [])
                     },
                     onDrop: function($item, container, _super) {
                         if(container.el[0].id!='possible-selections') {
-                            console.log(scope.priorityMarkup);
                             scope.addOption(container.el[0].id, $item[0].textContent, $(container.el[0].children).index($item[0]));
                         }
                         _super($item, container);
