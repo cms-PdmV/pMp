@@ -13,7 +13,7 @@ class TakeScreenshotAPI():
     def generate_name(self):
         return '/tmp/pmp_' + self.get_time()
 
-    def get(self, svg_content):
+    def get(self, svg_content, output_format='png'):
         while True:
             gen_name = self.generate_name()
             svg_file = gen_name + '.svg'
@@ -24,8 +24,6 @@ class TakeScreenshotAPI():
         tmp_file.write(svg_content.replace('U+0023', '#'))
         tmp_file.close()
         output_file = gen_name + '.png'
-        output_format = 'png'
-
         call(['rsvg-convert', '-o', output_file ,'-f', output_format,
               '--background-color', 'white', svg_file])
         return ""

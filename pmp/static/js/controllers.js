@@ -390,7 +390,7 @@ pmpApp.controller('PresentController', function($http, $location, $interval, $q,
         svg_xml = svg_xml.replace('#','U+0023');
         console.log(svg_xml)
         $scope.loading = true;
-        var promise = $http.get("ts/"+ svg_xml);
+        var promise = $http.get("ts/png/"+ svg_xml);
         promise.then(function(data) {
                 $scope.loading = false;
             });
