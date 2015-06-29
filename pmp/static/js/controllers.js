@@ -376,11 +376,28 @@ pmpApp.controller('PresentController', function($http, $location, $interval, $q,
     }
 
     $scope.takeScreenshot = function() {
+        /* 
+         * Saving as .png will only work in Chrome. drawImage throws exception
+         * Bug reported since 2007/2008 still not fixed
+         * example: https://bugzilla.mozilla.org/show_bug.cgi?id=879717
+         */
         var tmp = document.getElementById("ctn");
         var svg = tmp.getElementsByTagName("svg")[0];
         var svg_xml = (new XMLSerializer).serializeToString(svg);
-        console.log(svg_xml);
-        saveAs(new Blob([svg_xml], {type: "text/plain;charset=utf-8"}), "screenshot.html");
+        var imgsrc = 'data:image/svg+xml;base64,'+ btoa(svg_xml);
+        var canvas = document.querySelector("canvas");
+        var context = canvas.getContext("2d");
+        var image = new Image();
+        image.src = imgsrc;
+        image.onload = function() {
+            context.drawImage(image, 0, 0);
+            var canvasdata = canvas.toDataURL("image/png");
+            var a = document.createElement("a");
+            a.download = "sample.png";
+            a.href = canvasdata;
+            a.click();
+        }
+        //saveAs(new Blob([image], {type: "text/plain;charset=utf-8"}), "screenshot.html");
     }
 
     $scope.updateUpdate = function() {
