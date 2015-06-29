@@ -386,10 +386,11 @@ pmpApp.controller('PresentController', function($http, $location, $interval, $q,
         var tmp = document.getElementById("ctn");
         var svg = tmp.getElementsByTagName("svg")[0];
         var svg_xml = (new XMLSerializer).serializeToString(svg);
-        var imgsrc = 'data:image/svg+xml;base64,'+ btoa(svg_xml);
-
+        //var imgsrc = 'data:image/svg+xml;base64,'+ btoa(svg_xml);
+        svg_xml = svg_xml.replace('#','U+0023');
+        console.log(svg_xml)
         $scope.loading = true;
-        var promise = $http.get("ts/"+ imgsrc);
+        var promise = $http.get("ts/"+ svg_xml);
         promise.then(function(data) {
                 $scope.loading = false;
             });
