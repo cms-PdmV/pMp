@@ -86,3 +86,10 @@ def shorten(url):
     """
     return make_response(models.APICall().shorten_url(url,
                                                       request.query_string))
+
+@app.route('/ts/<path:svg>')
+def take_screenshot(svg):
+    """
+    Take screenshot
+    """
+    return make_response(models.APICall().take_screenshot(svg))

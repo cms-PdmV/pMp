@@ -40,3 +40,7 @@ class APICall():
     def suggestions(self, block, query):
         from api import suggestions as call
         return call.SuggestionsAPI(block).get(query)
+
+    def take_screenshot(self, svg):
+        from api import screenshot as call
+        return call.TakeScreenshotAPI().get(svg)
