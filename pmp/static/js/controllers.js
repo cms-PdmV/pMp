@@ -375,21 +375,14 @@ pmpApp.controller('PresentController', function($http, $location, $interval, $q,
         $scope.updateRequestData();
     }
 
-    $scope.takeScreenshot = function() {
-        /* 
-         * Saving as .png will only work in Chrome. drawImage throws exception
-         * Bug reported since 2007/2008 still not fixed
-         * example: https://bugzilla.mozilla.org/show_bug.cgi?id=879717
-         */
-        var svg = document.getElementById("ctn").getElementsByTagName("svg")[0];
-        var svg_xml = (new XMLSerializer).serializeToString(svg);
-        svg_xml = svg_xml.replace('#','U+0023');
+    $scope.takeScreenshot = function(format) {
         $scope.loading = true;
-        var promise = $http.get('ts/svg/' + svg_xml);
-        promise.then(function(data) {
-                window.open(data.data);
-                console.log(data.data);
-            });
+        if (format === undefined) format = 'svg';
+        var xml = (new XMLSerializer).serializeToString(document.getElementById("ctn").getElementsByTagName("svg")[0]).replace('#','U+0023');
+        $http.get('ts/'+ format +'/' + xml).then(function(data) {
+            window.open(data.data);
+            $scope.loading = false;
+        });
     }
 
     $scope.updateUpdate = function() {
