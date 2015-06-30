@@ -1,7 +1,9 @@
 from flask import make_response, redirect, render_template
+from flask import url_for
 from pmp import app, models
 from flask import request
 import json
+import io
 
 
 @app.route('/404')
@@ -92,4 +94,5 @@ def take_screenshot(format, svg):
     """
     Take screenshot
     """
-    return make_response(models.APICall().take_screenshot(svg, format))
+    return models.APICall().take_screenshot(svg, format)
+

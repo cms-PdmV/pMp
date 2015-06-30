@@ -6,3 +6,4 @@
 .#*
 venv*
 *.log
+pmp/static/tmp/*
