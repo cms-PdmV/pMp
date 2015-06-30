@@ -378,7 +378,7 @@ pmpApp.controller('PresentController', function($http, $location, $interval, $q,
     $scope.takeScreenshot = function(format) {
         $scope.loading = true;
         if (format === undefined) format = 'svg';
-        var xml = (new XMLSerializer).serializeToString(document.getElementById("ctn").getElementsByTagName("svg")[0]).replace('#','U+0023');
+        var xml = (new XMLSerializer).serializeToString(document.getElementById("ctn").getElementsByTagName("svg")[0]).replace(/#/g,'U+0023');
         $http.get('ts/'+ format +'/' + xml).then(function(data) {
             window.open(data.data);
             $scope.loading = false;
@@ -727,12 +727,15 @@ pmpApp.controller('HistoricalController', function($http, $location, $scope, $ro
         $scope.setURL();
     }
 
-    $scope.takeScreenshot = function() {
-        var tmp = document.getElementById("ctn");
-        var svg = tmp.getElementsByTagName("svg")[0];
-        var svg_xml = (new XMLSerializer).serializeToString(svg);
-        var blob = new Blob([svg_xml], {type: "text/plain;charset=utf-8"});
-        saveAs(blob, "screenshot.html");
+    $scope.takeScreenshot = function(format) {
+        $scope.loading = true;
+        if (format === undefined) format = 'svg';
+        var xml = (new XMLSerializer).serializeToString(document.getElementById("ctn").getElementsByTagName("svg")[0]).replace(/#/g,'U+0023');
+        console.log(xml);
+        $http.get('ts/'+ format +'/' + xml).then(function(data) {
+            window.open(data.data);
+            $scope.loading = false;
+        });
     }
 
     $scope.title = 'Historical Statistics of Requests';
