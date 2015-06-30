@@ -167,13 +167,37 @@
           </small>
         </label>
       </form>
-      
-      <button type="button" ng-show="allRequestData.length"
-              class="btn btn-sm btn-default text-center col-lg-12 col-md-12 col-sm-12 spacing"
-              ng-click="takeScreenshot()" ng-disabled="false">
-        <i class="fa fa-camera"></i>
-        Take screenshot [BETA]
-      </button>
+      <div class="btn-group btn-group-sm col-lg-12 col-md-12 col-sm-12 spacing text-uppercase"
+           ng-show="allRequestData.length">
+        <button type="button" class="btn btn-primary text-center text-uppercase hidden-sm"
+                ng-disabled="true">
+          <small class="hidden-md hidden-sm">
+            Download
+          </small>
+          <i class="hidden-lg fa fa-download"></i>
+        </button>
+        <button type="button" class="btn btn-default text-center"
+                ng-click="takeScreenshot('pdf')" ng-disabled="false">
+          <small class="hidden-md hidden-sm">
+            PDF
+          </small>
+          <i class="hidden-lg fa fa-file-pdf-o"></i>
+        </button>
+        <button type="button" class="btn btn-default text-center"
+                ng-click="takeScreenshot('png')" ng-disabled="false">
+          <small class="hidden-md hidden-sm">
+            PNG
+          </small>
+          <i class="hidden-lg fa fa-file-image-o"></i>
+        </button>
+        <button type="button" class="btn btn-default text-center"
+                ng-click="takeScreenshot()" ng-disabled="false">
+          <small class="hidden-md hidden-sm">
+            SVG
+          </small>
+          <i class="hidden-lg fa fa-file"></i>
+        </button>
+      </div>
     </div>
     
     <div id="share" class="collapse col-xs-12 col-sm-12 col-md-12 col-lg-12">
