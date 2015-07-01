@@ -1,5 +1,5 @@
 """Module crating ElasticSearch object"""
-from pyelasticsearch import ElasticSearch
+import pyelasticsearch
 import config
 
 
@@ -17,7 +17,7 @@ class InitConnection(object):
     @staticmethod
     def elastic_connect():
         """Initiate ElasticSearch"""
-        return ElasticSearch(config.DATABASE_URL)
+        return pyelasticsearch.ElasticSearch(config.DATABASE_URL)
 
     def set_overflow(self, overflow):
         """Set number of returned results"""

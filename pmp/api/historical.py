@@ -1,8 +1,6 @@
-from utils import utils as apiutils
-from models import esadapter
-import copy
+from pmp.api.utils import utils as apiutils
+from pmp.api.models import esadapter
 import json
-import math
 import time
 
 
@@ -22,16 +20,16 @@ class HistoricalAPI(esadapter.InitConnection):
         for rm in request['reqmgr_name']:
             try:
                 stats = self.es.get('stats', 'stats', rm)['_source']
-            except:
+            except esadapter.pyelasticsearch.exceptions\
+                    .ElasticHttpNotFoundError:
                 continue
 
             if stats['pdmv_dataset_name'] == od:
                 try:
                     s = stats['pdmv_monitor_history'][0]
-                    
                     ce = max(ce, s['pdmv_evts_in_DAS'] +
                              s['pdmv_open_evts_in_DAS'])
-                except:
+                except KeyError:
                     continue
             elif 'pdmv_monitor_datasets' in stats:
                 for md in stats['pdmv_monitor_datasets']:
@@ -44,7 +42,7 @@ class HistoricalAPI(esadapter.InitConnection):
     def parse_time(self, t):
         return time.mktime(time.strptime(t))*1000
 
-    def db_query(self, input):
+    def db_query(self, query):
         '''
         Query DB and return array of raw documents
         '''
@@ -53,19 +51,20 @@ class HistoricalAPI(esadapter.InitConnection):
 
         # try to query for campaign and get list of requests
         req_arr = [s['_source'] for s in
-                   self.es.search(('member_of_campaign:%s' % input),
+                   self.es.search(('member_of_campaign:%s' % query),
                                   index='requests',
                                   size=self.overflow)['hits']['hits']]
 
-        # if empty, assume input is a request
+        # if empty, assume query is a request
         if not len(req_arr):
             self.campaign = False
             try:
                 req_arr = [self.es.get('requests',
-                                       'request', input)['_source']]
-            except:
+                                       'request', query)['_source']]
+            except esadapter.pyelasticsearch.exceptions\
+                    .ElasticHttpNotFoundError:
                 # if exception thrown this may be a workflow
-                iterable = [input]
+                iterable = [query]
 
         # iterate over array and collect details
         for req in req_arr:
@@ -86,7 +85,7 @@ class HistoricalAPI(esadapter.InitConnection):
                     i['request'] = True
                     i['status'] = req['status']
                     iterable.append(i)
-            except:
+            except KeyError:
                 pass
 
         # iterate over workflows and yield documents
@@ -96,14 +95,16 @@ class HistoricalAPI(esadapter.InitConnection):
                     yield [i['request'],
                            self.es.get('stats', 'stats', i['name'])
                            ['_source'], i]
-                except:
+                except esadapter.pyelasticsearch.exceptions\
+                        .ElasticHttpNotFoundError:
                     yield [True, None, i]
             else:
                 try:
                     yield [False,
                            self.es.get('stats', 'stats', i)
                            ['_source'], None]
-                except:
+                except esadapter.pyelasticsearch.exceptions\
+                        .ElasticHttpNotFoundError:
                     yield [False, None, None]
 
     def rm_useless(self, arr):
@@ -261,16 +262,14 @@ class HistoricalAPI(esadapter.InitConnection):
                         if record['dataset'] == details['output_dataset']:
                             for m in record['monitor']:
                                 data = {}
+                                # if the output in mcm is not specified yet,
+                                # treat as this has not produced anything
+                                # ensures present = historical
                                 if details is None or \
                                         details['output_dataset'] is not None:
                                     data['e'] = (m['pdmv_evts_in_DAS']
                                                  + m['pdmv_open_evts_in_DAS'])
                                 else:
-                                    """
-                                    if the output in mcm is not specified yet,
-                                    treat as this has not produced anything
-                                    ensures present = historical
-                                    """
                                     data['e'] = 0
 
                                 data['d'] = 0
