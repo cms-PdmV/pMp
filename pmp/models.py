@@ -4,7 +4,7 @@ class APICall():
     """
 
     def chain_landscape(self):
-        from api import chain as call
+        from api import landscape as call
         return call.ChainAPI().get()
 
     def historical_complex(self, query, probe=100, priority=",", status=None,

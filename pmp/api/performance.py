@@ -1,4 +1,4 @@
-"""A list of classes supporting performance statistics"""
+"""A list of classes supporting performance statistics API"""
 from pmp.api.models import esadapter
 import json
 
