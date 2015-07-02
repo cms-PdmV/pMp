@@ -663,7 +663,6 @@ pmpApp.controller('HistoricalController', function($http, $location, $scope, $ro
                     if (!data.data.results.data.length) {
                         $scope.showPopUp('warning', 'All data is filtered');
                     }
-                    $scope.listSubmitted = data.data.results.submitted;
                     $scope.allRequestData = data.data.results.data;
                     $scope.allStatus = data.data.results.status;
                     $scope.allPWG = data.data.results.pwg;
@@ -674,6 +673,16 @@ pmpApp.controller('HistoricalController', function($http, $location, $scope, $ro
             }, function() {
                 $scope.showPopUp('error', 'Error getting requests');
                 $scope.loadingData = false;
+            });
+
+        $http.get("api/" + $scope.inputTags.join(',') + '/submitted/' + x + '/' + w).then(function(data) {
+                if (data.data.results) {
+                    $scope.listSubmitted = data.data.results;
+                } else {
+                    $scope.listSubmitted = {};
+                }
+            }, function() {
+                $scope.showPopUp('error', 'Error getting requests');
             });
     }
 

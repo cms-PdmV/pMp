@@ -71,6 +71,17 @@ def api_historical_extended(i, p, priority, status, pwg):
     return models.APICall().historical_complex(i, p, priority, status, pwg)
 
 
+@app.route('/api/<i>/submitted/<priority>/<pwg>')
+def api_submitted(i, priority, pwg):
+    """
+    API call for complex historical queries
+    i - list of inputs (csv)
+    priority - in a form of string <min_pririty,max_priority>
+    pwg - list of pwg to include (csv)
+    """
+    return models.APICall().submitted_stats(i, priority, pwg)
+
+
 @app.route('/api/suggest/<input>/<typeof>')
 def suggest(input, typeof):
     """

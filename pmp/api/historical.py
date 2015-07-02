@@ -13,38 +13,6 @@ class HistoricalAPI(esadapter.InitConnection):
         self.campaign = True
 
     @staticmethod
-    def stats_maximum(data, previous):
-        """Return maximum number of completed events"""
-        return max(previous,
-                   data['pdmv_evts_in_DAS'] + data['pdmv_open_evts_in_DAS'])
-
-    def completed_deep(self, request):
-        """Return number of completed events from based on stats not McM"""
-        completed_events = 0
-        if not len(request['output_dataset']):
-            return 0
-        output_dataset = request['output_dataset'][0]
-        for workflow in request['reqmgr_name']:
-            try:
-                stats = self.es.get('stats', 'stats', workflow)['_source']
-            except esadapter.pyelasticsearch.exceptions\
-                    .ElasticHttpNotFoundError:
-                continue
-
-            if stats['pdmv_dataset_name'] == output_dataset:
-                try:
-                    completed_events = self.stats_maximum(
-                        stats['pdmv_monitor_history'][0], completed_events)
-                except KeyError:
-                    continue
-            elif 'pdmv_monitor_datasets' in stats:
-                for monitor in stats['pdmv_monitor_datasets']:
-                    if monitor['dataset'] == output_dataset:
-                        completed_events = self.stats_maximum(
-                            monitor['monitor'][0], completed_events)
-        return completed_events
-
-    @staticmethod
     def parse_time(string_time):
         """Parse time in a "Tue Jan 1 00:00:00 2013" format to integer"""
         return time.mktime(time.strptime(string_time))*1000
@@ -118,14 +86,14 @@ class HistoricalAPI(esadapter.InitConnection):
         """
         compressed = []
         prev = {'e': -1, 'x': -1}
-        for (expected, a) in enumerate(arr):
-            if (a['e'] != prev['e'] or a['x'] != prev['x']) \
-                    and (a['e'] != 0 or expected == 0):
-                compressed.append(a)
-                prev = a
+        for (expected, probe) in enumerate(arr):
+            if (probe['e'] != prev['e'] or probe['x'] != prev['x']) \
+                    and (probe['e'] != 0 or expected == 0):
+                compressed.append(probe)
+                prev = probe
         return compressed
 
-    def prepare_response(self, query, probe, p_min, p_max, status_i, pwg_i):
+    def prepare_response(self, query, probe, priority, status_i, pwg_i):
         """Loop through all the workflow data, generate response"""
         stop = False
         r = []
@@ -172,8 +140,9 @@ class HistoricalAPI(esadapter.InitConnection):
                     if details['status'] not in ['done', 'submitted']:
                         continue
                     # priority filtering
-                    if (details['priority'] < p_min or (
-                            details['priority'] > p_max and p_max != -1)):
+                    if details['priority'] < priority[0] or \
+                            (details['priority'] > priority[1] and
+                             priority[1] != -1):
                         continue
                     no_secondary_datasets = True
                     # skip requests with not desired output dataset
@@ -355,34 +324,72 @@ class HistoricalAPI(esadapter.InitConnection):
                  't': int(round(time.time() * 1000)), 'x': data[-1]['x']}
             data.append(d)
 
-        submitted = {}
-        if self.campaign:
-            requests = []
-            for q in query:
-                requests += [s['_source'] for s in
-                             self.es.search(('member_of_campaign:%s' % q),
-                                            index='requests',
-                                            size=self.overflow)
-                             ['hits']['hits']]
-            for r in requests:
-                if (r['status'] == 'submitted') \
-                        and (pwg_i is None or r['pwg'] in pwg_i) \
-                        and (r['priority'] > p_min \
-                                 and (r['priority'] < p_max or p_max == -1)):
-                    completed = self.completed_deep(r)
-                    if completed:
-                        submitted[r['prepid']] = (100 * completed /
-                                                  r['total_events'])
-
-        return {'data': data, 'pwg': pwg, 'submitted': submitted,
+        return {'data': data, 'pwg': pwg, 'submitted': [],
                 'status': status, 'taskchain': False}
 
-    def get(self, query, probe=100, priority=",",
-            status=None, pwg=None):
+    def get(self, query, probe=100, priority=",", status=None, pwg=None):
         """Get the historical data based on input, probe and filter"""
         priority = apiutils.APIUtils().parse_priority_csv(priority.split(','))
-        res = self.prepare_response(query.split(','), probe, priority[0],
-                                    priority[1],
+        res = self.prepare_response(query.split(','), probe, priority,
                                     apiutils.APIUtils().parse_csv(status),
                                     apiutils.APIUtils().parse_csv(pwg))
         return json.dumps({"results": res})
+
+class SubmittedStatusAPI(esadapter.InitConnection):
+    """Used to return list of submitted requests with current progress"""
+
+    def completed_deep(self, request):
+        """Return number of completed events from based on stats not McM"""
+        completed_events = 0
+        if not len(request['output_dataset']):
+            return 0
+        output_dataset = request['output_dataset'][0]
+        for workflow in request['reqmgr_name']:
+            try:
+                stats = self.es.get('stats', 'stats', workflow)['_source']
+            except esadapter.pyelasticsearch.exceptions\
+                    .ElasticHttpNotFoundError:
+                continue
+
+            if stats['pdmv_dataset_name'] == output_dataset:
+                try:
+                    completed_events = self.stats_maximum(
+                        stats['pdmv_monitor_history'][0], completed_events)
+                except KeyError:
+                    continue
+            elif 'pdmv_monitor_datasets' in stats:
+                for monitor in stats['pdmv_monitor_datasets']:
+                    if monitor['dataset'] == output_dataset:
+                        completed_events = self.stats_maximum(
+                            monitor['monitor'][0], completed_events)
+        return completed_events
+
+    def get(self, query, priority=",", pwg=None):
+        """Get submitted requests with current progress"""
+        priority = apiutils.APIUtils().parse_priority_csv(priority.split(','))
+        pwg = apiutils.APIUtils().parse_csv(pwg)
+        submitted = {}
+        response = []
+        for campaign in query.split(','):
+            response += [s['_source'] for s in
+                         self.es.search(('member_of_campaign:%s' % campaign),
+                                        index='requests', size=self.overflow)
+                         ['hits']['hits']]
+        for request in response:
+            if (request['status'] == 'submitted') \
+                    and (pwg is None or request['pwg'] in pwg) \
+                    and (request['priority'] > priority[0] \
+                             and (request['priority'] < priority[1] or \
+                                      priority[1] == -1)):
+                completed = self.completed_deep(request)
+                if completed:
+                    submitted[request['prepid']] = (100 * completed /
+                                                    request['total_events'])
+        return json.dumps({"results": submitted})
+
+    @staticmethod
+    def stats_maximum(data, previous):
+        """Return maximum number of completed events"""
+        return max(previous,
+                   data['pdmv_evts_in_DAS'] + data['pdmv_open_evts_in_DAS'])
+

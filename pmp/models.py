@@ -33,6 +33,10 @@ class APICall():
         from api import growing as call
         return call.GrowingAPI().get(query)
 
+    def submitted_stats(self, query, priority, pwg):
+        from api import historical as call
+        return call.SubmittedStatusAPI().get(query, priority, pwg)
+
     def shorten_url(self, url, params):
         from api import shorten as call
         return call.ShortenAPI().get(url, params)
