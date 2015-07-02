@@ -10,8 +10,10 @@ class APICall():
     def historical_complex(self, query, probe=100, priority=",", status=None,
                            pwg=None):
         from api import historical as call
-        return call.HistoricalAPI().get(query, int(probe), priority, status,
-                                        pwg)
+        filters = dict()
+        filters['status'] = status
+        filters['pwg'] = pwg
+        return call.HistoricalAPI().get(query, int(probe), priority, filters)
 
     def historical_simple(self, query):
         from api import historical as call

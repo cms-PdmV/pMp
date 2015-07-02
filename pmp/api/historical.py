@@ -12,10 +12,55 @@ class HistoricalAPI(esadapter.InitConnection):
         esadapter.InitConnection.__init__(self)
         self.campaign = True
 
+    def accumulate_requests(self, data):
+        """Make sure same request workflows add only probes"""
+        accumulate = {}
+        for request_details in data:
+            request = request_details['request']
+            if request not in accumulate:
+                accumulate[request] = dict()
+                accumulate[request]['data'] = []
+            accumulate[request]['data'] += request_details['data']
+            accumulate[request]['data'] = sorted(accumulate[request]['data'],
+                                                 key=lambda i: i['t'])
+            accumulate[request]['data'] = self.rm_useless(
+                accumulate[request]['data'])
+        return accumulate
+
     @staticmethod
-    def parse_time(string_time):
-        """Parse time in a "Tue Jan 1 00:00:00 2013" format to integer"""
-        return time.mktime(time.strptime(string_time))*1000
+    def add_data_points(data, times):
+        """Add points to response"""
+        points = []
+        for ftime in times:
+            point = {'d': 0, 'e': 0, 't': ftime, 'x': 0}
+            for key in data:
+                prevx = {'d': 0, 'e': 0, 'x': 0}
+                for (i, details) in enumerate(data[key]['data']):
+                    if details['t'] > ftime:
+                        point['d'] += prevx['d']
+                        point['e'] += prevx['e']
+                        point['x'] += prevx['x']
+                        break
+                    elif details['t'] == ftime or \
+                            i == len(data[key]['data'])-1:
+                        point['d'] += details['d']
+                        point['e'] += details['e']
+                        point['x'] += details['x']
+                        break
+                    else:
+                        prevx = details
+            points.append(point)
+        return points
+
+    @staticmethod
+    def append_data_point(data):
+        """Duplicate last probe with current timestamp"""
+        if len(data):
+            duplicated = {'d': data[-1]['d'], 'e': data[-1]['e'],
+                          'x': data[-1]['x'],
+                          't': int(round(time.time() * 1000))}
+            data.append(duplicated)
+        return data
 
     def db_query(self, query):
         """Query DB and return array of raw documents"""
@@ -79,69 +124,46 @@ class HistoricalAPI(esadapter.InitConnection):
                         .ElasticHttpNotFoundError:
                     yield [False, None, None]
 
-    @staticmethod
-    def rm_useless(arr):
-        """Compressing data: remove first probe of resubmissions and points
-        that are equal to previous measurement
-        """
-        compressed = []
-        prev = {'e': -1, 'x': -1}
-        for (expected, probe) in enumerate(arr):
-            if (probe['e'] != prev['e'] or probe['x'] != prev['x']) \
-                    and (probe['e'] != 0 or expected == 0):
-                compressed.append(probe)
-                prev = probe
-        return compressed
+    def get_data_points(self, request, monitor, details, expected):
+        """Parse input and return fixed data points"""
+        data = dict()
 
-    def accumulate_requests(self, data):
-        """Make sure same request workflows add only probes"""
-        accumulate = {}
-        for request_details in data:
-            request = request_details['request']
-            if request not in accumulate:
-                accumulate[request] = dict()
-                accumulate[request]['data'] = []
-            accumulate[request]['data'] += request_details['data']
-            accumulate[request]['data'] = sorted(accumulate[request]['data'],
-                                                 key=lambda i: i['t'])
-            accumulate[request]['data'] = self.rm_useless(
-                accumulate[request]['data'])
-        return accumulate
-
-    @staticmethod
-    def sort_timestamps(data, probe):
-        """Get valid timestamps. Remove duplicates and apply probing limit"""
-        times = []
-        for details in data:
-            times += (i['t'] for i in data[details]['data'])
-        times = sorted(set(times))
-
-        if len(times) > (probe-1):
-            skiper = len(times) / (probe-1)
+        if details is None or details['output_dataset'] is not None:
+            data['e'] = (monitor['pdmv_evts_in_DAS'] +
+                         monitor['pdmv_open_evts_in_DAS'])
         else:
-            skiper = -1
+            data['e'] = 0
+        if details is None or details['status'] == 'done':
+            data['d'] = data['e']
+        else:
+            data['d'] = 0
+        # get timestamp, if field is empty set 1/1/2013
+        if len(monitor['pdmv_monitor_time']):
+            data['t'] = self.parse_time(monitor['pdmv_monitor_time'])
+        else:
+            data['t'] = self.parse_time("Tue Jan 1 00:00:00 2013")
+        if request:
+            data['x'] = details['expected']
+        else:
+            data['x'] = expected
+        return data
 
-        probes = []
-        counter = 0
-        for (index, probe) in enumerate(times):
-            if counter < skiper and index < len(times) - 1 and index != 0:
-                counter += 1
-            else:
-                probes.append(probe)
-                counter = 0
-        return probes
+    @staticmethod
+    def parse_time(string_time):
+        """Parse time in a "Tue Jan 1 00:00:00 2013" format to integer"""
+        return time.mktime(time.strptime(string_time))*1000
 
-    def prepare_response(self, query, probe, priority, status_i, pwg_i):
+    def prepare_response(self, query, priority, status_i, pwg_i):
         """Loop through all the workflow data, generate response"""
-        stop = False
-        r = []
+        taskchain = False
+        response_list = []
         status = {}
         pwg = {}
 
-        for q in query:
+        for one in query:
 
             # Process the db documents
-            for (is_request, document, details) in self.db_query(q):
+            for (is_request, document, details) in self.db_query(one):
 
                 # skip empty documents
                 if document is None:
@@ -207,27 +229,8 @@ class HistoricalAPI(esadapter.InitConnection):
                 response['request'] = document['pdmv_prep_id']
 
                 if not is_request and (document['pdmv_type'] == 'TaskChain'):
-                    # when input is workflow and a taskchain
-                    for t in document['pdmv_monitor_datasets']:
-                        res = {}
-                        res['request'] = t['dataset']
-                        res['data'] = []
-                        for record in t['monitor']:
-                            if len(record['pdmv_monitor_time']):
-                                data = {}
-                                data['e'] = (record['pdmv_evts_in_DAS'] +
-                                             record['pdmv_open_evts_in_DAS'])
-                                data['t'] = self.parse_time(
-                                    record['pdmv_monitor_time'])
-                                data['x'] = document['pdmv_expected_events']
-                            res['data'].append(data)
-                        r.append(res)
-                    re = {}
-                    re['data'] = r
-                    re['status'] = {}
-                    re['pwg'] = {}
-                    re['taskchain'] = True
-                    stop = True
+                    response_list.append(self.process_taskchain(document))
+                    taskchain = True
 
                 elif (details is None or
                       document['pdmv_dataset_name'] == \
@@ -235,37 +238,11 @@ class HistoricalAPI(esadapter.InitConnection):
                           and document['pdmv_type'] != 'TaskChain' \
                           and 'pdmv_monitor_history' in document:
                     # usually pdmv_monitor_history has more information than
-                    # pdmv_datasets: we try to use this
+                    # pdmv_datasets
                     for record in document['pdmv_monitor_history']:
-                        data = {}
-
-                        # if the output in mcm is not specified yet set 0
-                        if details is None or \
-                                details['output_dataset'] is not None:
-                            data['e'] = (record['pdmv_evts_in_DAS']
-                                         + record['pdmv_open_evts_in_DAS'])
-                        else:
-                            data['e'] = 0
-
-                        data['d'] = 0
-                        if details is None or details['status'] == 'done':
-                            data['d'] = data['e']
-
-                        # get timestamp, if field is empty set 1/1/2013
-                        if len(record['pdmv_monitor_time']):
-                            data['t'] = self.parse_time(
-                                record['pdmv_monitor_time'])
-                        else:
-                            data['t'] = self.parse_time(
-                                "Tue Jan 1 00:00:00 2013")
-
-                        # x is expected events
-                        if is_request:
-                            data['x'] = details['expected']
-                        else:
-                            data['x'] = document['pdmv_expected_events']
-
-                        response['data'].append(data)
+                        response['data'].append(self.get_data_points( \
+                                is_request, record, details,
+                                document['pdmv_expected_events']))
 
                 elif ('pdmv_monitor_datasets' in document
                       and (document['pdmv_type'] == 'TaskChain'
@@ -274,77 +251,92 @@ class HistoricalAPI(esadapter.InitConnection):
                     # is not the main one
                     for record in document['pdmv_monitor_datasets']:
                         if record['dataset'] == details['output_dataset']:
-                            for m in record['monitor']:
-                                data = {}
-                                # if the output in mcm is not specified yet,
-                                # treat as this has not produced anything
-                                # ensures present = historical
-                                if details is None or \
-                                        details['output_dataset'] is not None:
-                                    data['e'] = (m['pdmv_evts_in_DAS']
-                                                 + m['pdmv_open_evts_in_DAS'])
-                                else:
-                                    data['e'] = 0
+                            for monitor in record['monitor']:
+                                response['data'].append(self.get_data_points( \
+                                        is_request, monitor, details,
+                                        document['pdmv_expected_events']))
+                response_list.append(response)
+        return response_list, pwg, status, taskchain
 
-                                data['d'] = 0
-                                if details['status'] == 'done':
-                                    data['d'] = data['e']
+    def process_taskchain(self, document):
+        """Use when input is workflow and a taskchain"""
+        probes = []
+        for taskchain in document['pdmv_monitor_datasets']:
+            res = {}
+            res['request'] = taskchain['dataset']
+            res['data'] = []
+            for record in taskchain['monitor']:
+                if len(record['pdmv_monitor_time']):
+                    data = dict()
+                    data['e'] = (record['pdmv_evts_in_DAS'] +
+                                 record['pdmv_open_evts_in_DAS'])
+                    data['d'] = data['e']
+                    data['t'] = self.parse_time(record['pdmv_monitor_time'])
+                    data['x'] = document['pdmv_expected_events']
+                res['data'].append(data)
+            probes.append(res)
+        return probes
 
-                                data['t'] = self.parse_time(
-                                    m['pdmv_monitor_time'])
+    @staticmethod
+    def rm_useless(arr):
+        """Compressing data: remove first probe of resubmissions and points
+        that are equal to previous measurement
+        """
+        compressed = []
+        prev = {'e': -1, 'x': -1}
+        for (expected, probe) in enumerate(arr):
+            if (probe['e'] != prev['e'] or probe['x'] != prev['x']) \
+                    and (probe['e'] != 0 or expected == 0):
+                compressed.append(probe)
+                prev = probe
+        return compressed
 
-                                # x is expected events
-                                if is_request:
-                                    data['x'] = details['expected']
-                                else:
-                                    data['x'] = \
-                                        document['pdmv_expected_events']
-                                response['data'].append(data)
-                r.append(response)
-        if stop:
-            return re
+    @staticmethod
+    def sort_timestamps(data, probe):
+        """Get valid timestamps. Remove duplicates and apply probing limit"""
+        times = []
+        for details in data:
+            times += (i['t'] for i in data[details]['data'])
+        times = sorted(set(times))
 
-        # get accumulated requests
-        tmp = self.accumulate_requests(r)
+        if len(times) > (probe-1):
+            skiper = len(times) / (probe-1)
+        else:
+            skiper = -1
 
-        # get and sort timestamps
-        filter_times = self.sort_timestamps(tmp, probe)
+        probes = []
+        counter = 0
+        for (index, probe) in enumerate(times):
+            if counter < skiper and index < len(times) - 1 and index != 0:
+                counter += 1
+            else:
+                probes.append(probe)
+                counter = 0
+        return probes
 
-        # Step 3 & 4: Cycle through requests and add data points
-        data = []
-        for ft in filter_times:
-            d = {'d': 0, 'e': 0, 't': ft, 'x': 0}
-            for t in tmp:
-                prevx = {'d': 0, 'e': 0, 'x': 0}
-                for (i, x) in enumerate(tmp[t]['data']):
-                    if x['t'] > ft:
-                        d['d'] += prevx['d']
-                        d['e'] += prevx['e']
-                        d['x'] += prevx['x']
-                        break
-                    elif x['t'] == ft or i == len(tmp[t]['data'])-1:
-                        d['d'] += x['d']
-                        d['e'] += x['e']
-                        d['x'] += x['x']
-                        break
-                    else:
-                        prevx = x
-            data.append(d)
-
-        # add last point which is now()
-        if len(data):
-            d = {'d': data[-1]['d'], 'e': data[-1]['e'],
-                 't': int(round(time.time() * 1000)), 'x': data[-1]['x']}
-            data.append(d)
-
-        return {'data': data, 'pwg': pwg, 'status': status, 'taskchain': False}
-
-    def get(self, query, probe=100, priority=",", status=None, pwg=None):
+    def get(self, query, probe=100, priority=",", filters=None):
         """Get the historical data based on input, probe and filter"""
+        if filters is None:
+            filters = dict()
+            filters['status'] = None
+            filters['pwg'] = None
         priority = apiutils.APIUtils().parse_priority_csv(priority.split(','))
-        res = self.prepare_response(query.split(','), probe, priority,
-                                    apiutils.APIUtils().parse_csv(status),
-                                    apiutils.APIUtils().parse_csv(pwg))
+        response, pwg, status, taskchain = \
+            self.prepare_response(query.split(','), priority,
+                                  apiutils.APIUtils().parse_csv( \
+                    filters['status']), apiutils.APIUtils().parse_csv( \
+                                          filters['pwg']))
+        if taskchain:
+            res = {'data': response, 'pwg': dict(), 'status': dict(),
+                   'taskchain': True}
+        # get accumulated requests
+        accumulated = self.accumulate_requests(response)
+        # add data points
+        data = self.add_data_points(accumulated,
+                                    self.sort_timestamps(accumulated, probe))
+        # add last point which is now()
+        data = self.append_data_point(data)
+        res = {'data': data, 'pwg': pwg, 'status': status, 'taskchain': False}
         return json.dumps({"results": res})
 
 class SubmittedStatusAPI(esadapter.InitConnection):
