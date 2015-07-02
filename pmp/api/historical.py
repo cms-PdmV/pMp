@@ -1,3 +1,4 @@
+"""A list of classes supporting historical statistics API"""
 from pmp.api.utils import utils as apiutils
 from pmp.api.models import esadapter
 import json
@@ -5,48 +6,51 @@ import time
 
 
 class HistoricalAPI(esadapter.InitConnection):
-    """
-    Used to return list of points for historical plots
-    """
+    """Used to return list of points for historical plots"""
+
     def __init__(self):
         esadapter.InitConnection.__init__(self)
         self.campaign = True
 
+    @staticmethod
+    def stats_maximum(data, previous):
+        """Return maximum number of completed events"""
+        return max(previous,
+                   data['pdmv_evts_in_DAS'] + data['pdmv_open_evts_in_DAS'])
+
     def completed_deep(self, request):
-        ce = 0
+        """Return number of completed events from based on stats not McM"""
+        completed_events = 0
         if not len(request['output_dataset']):
             return 0
-        od = request['output_dataset'][0]
-        for rm in request['reqmgr_name']:
+        output_dataset = request['output_dataset'][0]
+        for workflow in request['reqmgr_name']:
             try:
-                stats = self.es.get('stats', 'stats', rm)['_source']
+                stats = self.es.get('stats', 'stats', workflow)['_source']
             except esadapter.pyelasticsearch.exceptions\
                     .ElasticHttpNotFoundError:
                 continue
 
-            if stats['pdmv_dataset_name'] == od:
+            if stats['pdmv_dataset_name'] == output_dataset:
                 try:
-                    s = stats['pdmv_monitor_history'][0]
-                    ce = max(ce, s['pdmv_evts_in_DAS'] +
-                             s['pdmv_open_evts_in_DAS'])
+                    completed_events = self.stats_maximum(
+                        stats['pdmv_monitor_history'][0], completed_events)
                 except KeyError:
                     continue
             elif 'pdmv_monitor_datasets' in stats:
-                for md in stats['pdmv_monitor_datasets']:
-                    if md['dataset'] == od:
-                        s = md['monitor'][0]
-                        ce = max(ce, s['pdmv_evts_in_DAS'] +
-                                 s['pdmv_open_evts_in_DAS'])
-        return ce
+                for monitor in stats['pdmv_monitor_datasets']:
+                    if monitor['dataset'] == output_dataset:
+                        completed_events = self.stats_maximum(
+                            monitor['monitor'][0], completed_events)
+        return completed_events
 
-    def parse_time(self, t):
-        return time.mktime(time.strptime(t))*1000
+    @staticmethod
+    def parse_time(string_time):
+        """Parse time in a "Tue Jan 1 00:00:00 2013" format to integer"""
+        return time.mktime(time.strptime(string_time))*1000
 
     def db_query(self, query):
-        '''
-        Query DB and return array of raw documents
-        '''
-
+        """Query DB and return array of raw documents"""
         iterable = []
 
         # try to query for campaign and get list of requests
@@ -71,15 +75,15 @@ class HistoricalAPI(esadapter.InitConnection):
             try:
                 dataset_list = req['output_dataset']
                 if len(dataset_list):
-                    ds = dataset_list[0]
+                    dataset = dataset_list[0]
                 else:
-                    ds = None
+                    dataset = None
 
                 for reqmgr in req['reqmgr_name']:
                     i = {}
                     i['expected'] = req['total_events']
                     i['name'] = reqmgr
-                    i['output_dataset'] = ds
+                    i['output_dataset'] = dataset
                     i['priority'] = req['priority']
                     i['pwg'] = req['pwg']
                     i['request'] = True
@@ -107,21 +111,22 @@ class HistoricalAPI(esadapter.InitConnection):
                         .ElasticHttpNotFoundError:
                     yield [False, None, None]
 
-    def rm_useless(self, arr):
-        '''
-        Compressing data: remove first probe of resubmissions and points that
-        are equal to previous measurement
-        '''
-        r = []
+    @staticmethod
+    def rm_useless(arr):
+        """Compressing data: remove first probe of resubmissions and points
+        that are equal to previous measurement
+        """
+        compressed = []
         prev = {'e': -1, 'x': -1}
-        for (x, a) in enumerate(arr):
+        for (expected, a) in enumerate(arr):
             if (a['e'] != prev['e'] or a['x'] != prev['x']) \
-                    and (a['e'] != 0 or x == 0):
-                r.append(a)
+                    and (a['e'] != 0 or expected == 0):
+                compressed.append(a)
                 prev = a
-        return r
+        return compressed
 
     def prepare_response(self, query, probe, p_min, p_max, status_i, pwg_i):
+        """Loop through all the workflow data, generate response"""
         stop = False
         r = []
         status = {}
@@ -140,6 +145,7 @@ class HistoricalAPI(esadapter.InitConnection):
                 if is_request:
 
                     def get_filter_dict(doc, arr, inp):
+                        """Generate filter dictionary"""
                         if doc not in arr:
                             arr[doc] = False
                             if inp is None:
@@ -217,9 +223,10 @@ class HistoricalAPI(esadapter.InitConnection):
                     stop = True
 
                 elif (details is None or
-                      document['pdmv_dataset_name'] == details['output_dataset']) \
-                        and document['pdmv_type'] != 'TaskChain' \
-                        and 'pdmv_monitor_history' in document:
+                      document['pdmv_dataset_name'] == \
+                          details['output_dataset']) \
+                          and document['pdmv_type'] != 'TaskChain' \
+                          and 'pdmv_monitor_history' in document:
                     # usually pdmv_monitor_history has more information than
                     # pdmv_datasets: we try to use this
                     for record in document['pdmv_monitor_history']:
@@ -234,7 +241,7 @@ class HistoricalAPI(esadapter.InitConnection):
                             data['e'] = 0
 
                         data['d'] = 0
-                        if (details is None or details['status'] == 'done'):
+                        if details is None or details['status'] == 'done':
                             data['d'] = data['e']
 
                         # get timestamp, if field is empty set 1/1/2013
@@ -358,10 +365,10 @@ class HistoricalAPI(esadapter.InitConnection):
                                             size=self.overflow)
                              ['hits']['hits']]
             for r in requests:
-                if ((r['status'] == 'submitted')
-                    and (pwg_i is None or r['pwg'] in pwg_i)
-                    and (r['priority'] > p_min
-                         and (r['priority'] < p_max or p_max == -1))):
+                if (r['status'] == 'submitted') \
+                        and (pwg_i is None or r['pwg'] in pwg_i) \
+                        and (r['priority'] > p_min \
+                                 and (r['priority'] < p_max or p_max == -1)):
                     completed = self.completed_deep(r)
                     if completed:
                         submitted[r['prepid']] = (100 * completed /
@@ -372,6 +379,7 @@ class HistoricalAPI(esadapter.InitConnection):
 
     def get(self, query, probe=100, priority=",",
             status=None, pwg=None):
+        """Get the historical data based on input, probe and filter"""
         priority = apiutils.APIUtils().parse_priority_csv(priority.split(','))
         res = self.prepare_response(query.split(','), probe, priority[0],
                                     priority[1],
