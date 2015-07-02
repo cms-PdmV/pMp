@@ -93,6 +93,44 @@ class HistoricalAPI(esadapter.InitConnection):
                 prev = probe
         return compressed
 
+    def accumulate_requests(self, data):
+        """Make sure same request workflows add only probes"""
+        accumulate = {}
+        for request_details in data:
+            request = request_details['request']
+            if request not in accumulate:
+                accumulate[request] = dict()
+                accumulate[request]['data'] = []
+            accumulate[request]['data'] += request_details['data']
+            accumulate[request]['data'] = sorted(accumulate[request]['data'],
+                                                 key=lambda i: i['t'])
+            accumulate[request]['data'] = self.rm_useless(
+                accumulate[request]['data'])
+        return accumulate
+
+    @staticmethod
+    def sort_timestamps(data, probe):
+        """Get valid timestamps. Remove duplicates and apply probing limit"""
+        times = []
+        for details in data:
+            times += (i['t'] for i in data[details]['data'])
+        times = sorted(set(times))
+
+        if len(times) > (probe-1):
+            skiper = len(times) / (probe-1)
+        else:
+            skiper = -1
+
+        probes = []
+        counter = 0
+        for (index, probe) in enumerate(times):
+            if counter < skiper and index < len(times) - 1 and index != 0:
+                counter += 1
+            else:
+                probes.append(probe)
+                counter = 0
+        return probes
+
     def prepare_response(self, query, probe, priority, status_i, pwg_i):
         """Loop through all the workflow data, generate response"""
         stop = False
@@ -266,36 +304,11 @@ class HistoricalAPI(esadapter.InitConnection):
         if stop:
             return re
 
-        # Step 1: Get accumulated requests
-        tmp = {}
-        for x in r:
-            s = x['request']
-            if s not in tmp:
-                tmp[s] = {}
-                tmp[s]['data'] = []
-            tmp[s]['data'] += x['data']
-            tmp[s]['data'] = sorted(tmp[s]['data'], key=lambda e: e['t'])
-            tmp[s]['data'] = self.rm_useless(tmp[s]['data'])
+        # get accumulated requests
+        tmp = self.accumulate_requests(r)
 
-        # Step 2: Get and sort timestamps
-        times = []
-        for t in tmp:
-            times += (x['t'] for x in tmp[t]['data'])
-        times = sorted(set(times))
-
-        if len(times) > (probe-1):
-            skiper = len(times) / (probe-1)
-        else:
-            skiper = -1
-
-        filter_times = []
-        i = 0
-        for (x, t) in enumerate(times):
-            if i < skiper and x < len(times) - 1 and x != 0:
-                i += 1
-            else:
-                filter_times.append(t)
-                i = 0
+        # get and sort timestamps
+        filter_times = self.sort_timestamps(tmp, probe)
 
         # Step 3 & 4: Cycle through requests and add data points
         data = []
@@ -324,8 +337,7 @@ class HistoricalAPI(esadapter.InitConnection):
                  't': int(round(time.time() * 1000)), 'x': data[-1]['x']}
             data.append(d)
 
-        return {'data': data, 'pwg': pwg, 'submitted': [],
-                'status': status, 'taskchain': False}
+        return {'data': data, 'pwg': pwg, 'status': status, 'taskchain': False}
 
     def get(self, query, probe=100, priority=",", status=None, pwg=None):
         """Get the historical data based on input, probe and filter"""
