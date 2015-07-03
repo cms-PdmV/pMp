@@ -28,11 +28,11 @@ class APICall():
         return call.PerformanceAPI().get(campaign)
 
     def present_announced_mode(self, campaign):
-        from api import announced as call
+        from api import present as call
         return call.AnnouncedAPI().get(campaign)
 
     def present_growing_mode(self, query):
-        from api import growing as call
+        from api import present as call
         return call.GrowingAPI().get(query)
 
     def submitted_stats(self, query, priority, pwg):
