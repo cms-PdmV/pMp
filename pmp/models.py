@@ -20,7 +20,7 @@ class APICall():
         return call.HistoricalAPI().get(query)
 
     def last_update(self, collections):
-        from api import update as call
+        from api import common as call
         return call.LastUpdateAPI().get(collections)
 
     def performance(self, campaign):
@@ -40,13 +40,13 @@ class APICall():
         return call.SubmittedStatusAPI().get(query, priority, pwg)
 
     def shorten_url(self, url, params):
-        from api import shorten as call
+        from api import common as call
         return call.ShortenAPI().get(url, params)
 
     def suggestions(self, block, query):
-        from api import suggestions as call
+        from api import common as call
         return call.SuggestionsAPI(block).get(query)
 
     def take_screenshot(self, svg, format):
-        from api import screenshot as call
+        from api import common as call
         return call.TakeScreenshotAPI().get(svg, format)
