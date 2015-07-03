@@ -62,6 +62,16 @@ class HistoricalAPI(esadapter.InitConnection):
             data.append(duplicated)
         return data
 
+    @staticmethod
+    def check_dataset(output_dataset, doc):
+        """Check for secondary datasets"""
+        if doc['pdmv_dataset_name'] != output_dataset and \
+                'pdmv_monitor_datasets' in doc:
+            if output_dataset in [i['dataset'] for i \
+                                      in doc['pdmv_monitor_datasets']]:
+                return False
+        return True
+
     def db_query(self, query):
         """Query DB and return array of raw documents"""
         iterable = []
@@ -149,79 +159,75 @@ class HistoricalAPI(esadapter.InitConnection):
         return data
 
     @staticmethod
+    def get_filter_dict(doc, arr, inp):
+        """Generate filter dictionary"""
+        if doc not in arr:
+            arr[doc] = False
+            if inp is None:
+                arr[doc] = True
+            else:
+                for i in inp:
+                    if i == doc:
+                        arr[doc] = True
+                        break
+        return arr
+
+    @staticmethod
+    def filtering(details, pwg_i, status_i, priority):
+        """Returns boolean if request should be filtered"""
+        # pwg filtering
+        if not (pwg_i is None or details['pwg'] in pwg_i):
+            return True
+        # status filtering
+        if not (status_i is None or details['status'] in status_i):
+            return True
+        # filter out invalidated 'new'
+        if details['status'] not in ['done', 'submitted']:
+            return True
+        # priority filtering
+        if details['priority'] < priority[0] or \
+                (details['priority'] > priority[1] and priority[1] != -1):
+            return True
+        return False
+
+    @staticmethod
     def parse_time(string_time):
         """Parse time in a "Tue Jan 1 00:00:00 2013" format to integer"""
         return time.mktime(time.strptime(string_time))*1000
 
     def prepare_response(self, query, priority, status_i, pwg_i):
         """Loop through all the workflow data, generate response"""
-        taskchain = False
         response_list = []
-        status = {}
-        pwg = {}
+        filters = dict()
+        filters['status'] = dict()
+        filters['pwg'] = dict()
 
         for one in query:
 
             # Process the db documents
             for (is_request, document, details) in self.db_query(one):
 
-                # skip empty documents
-                if document is None:
+                # skip empty documents and legacy request with no prep_id
+                if document is None or document['pdmv_prep_id'] == '':
                     continue
 
                 # filter out requests
                 if is_request:
 
-                    def get_filter_dict(doc, arr, inp):
-                        """Generate filter dictionary"""
-                        if doc not in arr:
-                            arr[doc] = False
-                            if inp is None:
-                                arr[doc] = True
-                            else:
-                                for i in inp:
-                                    if i == doc:
-                                        arr[doc] = True
-                                        break
-                        return arr
+                    filters['status'].update(self.get_filter_dict( \
+                            details['status'], filters['status'], status_i))
+                    filters['pwg'].update(self.get_filter_dict( \
+                            details['pwg'], filters['pwg'], pwg_i))
 
-                    # generate stauts dict
-                    status = get_filter_dict(details['status'], status,
-                                             status_i)
-                    # generate pwg dict
-                    pwg = get_filter_dict(details['pwg'], pwg, pwg_i)
-                    # pwg filtering
-                    if not (pwg_i is None or details['pwg'] in pwg_i):
-                        continue
-                    # status filtering
-                    if not (status_i is None or details['status'] in status_i):
-                        continue
-                    # filter out invalidated 'new'
-                    if details['status'] not in ['done', 'submitted']:
-                        continue
-                    # priority filtering
-                    if details['priority'] < priority[0] or \
-                            (details['priority'] > priority[1] and
-                             priority[1] != -1):
-                        continue
-                    no_secondary_datasets = True
-                    # skip requests with not desired output dataset
-                    if document['pdmv_dataset_name'] != \
-                            details['output_dataset']:
-                        if 'pdmv_monitor_datasets' in document:
-                            for monitor in document['pdmv_monitor_datasets']:
-                                if monitor['dataset'] == \
-                                        details['output_dataset']:
-                                    no_secondary_datasets = False
-                        if details['output_dataset'] is not None and \
-                                document['pdmv_dataset_name'] != 'None Yet' \
-                                and document['pdmv_type'] != 'TaskChain' \
-                                and no_secondary_datasets:
-                            continue
+                    no_secondary_datasets = self.check_dataset(
+                        details['output_dataset'], document)
 
-                # skip legacy request with no prep_id
-                if document['pdmv_prep_id'] == '':
-                    continue
+                    if self.filtering(details, pwg_i, status_i, priority) or \
+                            self.skip_request( \
+                        details['output_dataset'],
+                        document['pdmv_dataset_name'],
+                        document['pdmv_type'], no_secondary_datasets):
+                        continue
 
                 # create an array of requests to be processed
                 response = {}
@@ -229,8 +235,8 @@ class HistoricalAPI(esadapter.InitConnection):
                 response['request'] = document['pdmv_prep_id']
 
                 if not is_request and (document['pdmv_type'] == 'TaskChain'):
-                    response_list.append(self.process_taskchain(document))
-                    taskchain = True
+                    response_list = self.process_taskchain(document)
+                    return response_list, dict(), dict(), True
 
                 elif (details is None or
                       document['pdmv_dataset_name'] == \
@@ -256,7 +262,7 @@ class HistoricalAPI(esadapter.InitConnection):
                                         is_request, monitor, details,
                                         document['pdmv_expected_events']))
                 response_list.append(response)
-        return response_list, pwg, status, taskchain
+        return response_list, filters['pwg'], filters['status'], False
 
     def process_taskchain(self, document):
         """Use when input is workflow and a taskchain"""
@@ -290,6 +296,12 @@ class HistoricalAPI(esadapter.InitConnection):
                 compressed.append(probe)
                 prev = probe
         return compressed
+
+    @staticmethod
+    def skip_request(output_dataset, dataset, ttype, nsd):
+        """Check if skip request"""
+        return dataset != output_dataset and output_dataset is not None \
+            and dataset != 'None Yet' and ttype != 'TaskChain' and nsd
 
     @staticmethod
     def sort_timestamps(data, probe):
