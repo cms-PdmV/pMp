@@ -1,3 +1,7 @@
+"""pMp development run script
+Configuration file in config.py
+> sudo python run_dev.py
+"""
 import config
 from pmp import app
 

@@ -1,3 +1,7 @@
+"""pMp production run script
+Configuration file in config.py
+> sudo python run.py
+"""
 from tornado.wsgi import WSGIContainer
 from tornado.httpserver import HTTPServer
 from tornado.ioloop import IOLoop
@@ -9,10 +13,10 @@ if __name__ == '__main__':
         import logging
         from logging import Formatter
         from logging.handlers import SMTPHandler
-        mail_handler = SMTPHandler(config.HOST, config.HOSTMAIL, config.ADMINS,
+        MAIL_HANDLER = SMTPHandler(config.HOST, config.HOSTMAIL, config.ADMINS,
                                    'Production Monitoring Platform: FAILURE')
-        mail_handler.setLevel(logging.ERROR)
-        mail_handler.setFormatter(Formatter('''
+        MAIL_HANDLER.setLevel(logging.ERROR)
+        MAIL_HANDLER.setFormatter(Formatter('''
         Message type: %(levelname)s
         Location: %(pathname)s:%(lineno)d
         Module: %(module)s
@@ -20,12 +24,12 @@ if __name__ == '__main__':
         Time: %(asctime)s
         Message: %(message)s
         '''))
-        app.logger.addHandler(mail_handler)
+        app.logger.addHandler(MAIL_HANDLER)
 
-    settings = dict(
+    SETTINGS = dict(
         ssl_options={'certfile': config.CERTFILE, 'keyfile': config.KEYFILE}
         )
 
-    http_server = HTTPServer(WSGIContainer(app), **settings)
-    http_server.listen(config.PORT)
+    HTTP_SERVER = HTTPServer(WSGIContainer(app), **SETTINGS)
+    HTTP_SERVER.listen(config.PORT)
     IOLoop.instance().start()

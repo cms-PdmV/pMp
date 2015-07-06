@@ -1,3 +1,4 @@
+"""Init pMp Flask app"""
 import os
 import sys
 
@@ -9,6 +10,7 @@ app.config.from_object('config')
 
 @app.errorhandler(404)
 def page_not_found(error):
-    return render_template('invalid.html'), 404
+    """Return invalid template"""
+    return (str(error) + render_template('invalid.html')), 404
 
 import pmp.views

@@ -1,52 +1,70 @@
-class APICall():
-    """
-    List of API function calls
-    """
+"""pMp models"""
 
-    def chain_landscape(self):
-        from api import landscape as call
+class APICall(object):
+    """List of API function calls"""
+
+    @staticmethod
+    def chain_landscape():
+        """Chain landscape call"""
+        from pmp.api import landscape as call
         return call.ChainAPI().get()
 
-    def historical_complex(self, query, probe=100, priority=",", status=None,
-                           pwg=None):
-        from api import historical as call
-        filters = dict()
-        filters['status'] = status
-        filters['pwg'] = pwg
+    @staticmethod
+    def historical_complex(query, probe=100, priority=",", filters=None):
+        """Complex historical call"""
+        from pmp.api import historical as call
         return call.HistoricalAPI().get(query, int(probe), priority, filters)
 
-    def historical_simple(self, query):
-        from api import historical as call
+    @staticmethod
+    def historical_simple(query):
+        """Simple historical call"""
+        from pmp.api import historical as call
         return call.HistoricalAPI().get(query)
 
-    def last_update(self, collections):
-        from api import common as call
+    @staticmethod
+    def last_update(collections):
+        """Last successful DB update call"""
+        from pmp.api import common as call
         return call.LastUpdateAPI().get(collections)
 
-    def performance(self, campaign):
-        from api import performance as call
+    @staticmethod
+    def performance(campaign):
+        """Performance of campaign call"""
+        from pmp.api import performance as call
         return call.PerformanceAPI().get(campaign)
 
-    def present_announced_mode(self, campaign):
-        from api import present as call
+    @staticmethod
+    def present_announced_mode(campaign):
+        """Announced mode call"""
+        from pmp.api import present as call
         return call.AnnouncedAPI().get(campaign)
 
-    def present_growing_mode(self, query):
-        from api import present as call
+    @staticmethod
+    def present_growing_mode(query):
+        """Growing mode call"""
+        from pmp.api import present as call
         return call.GrowingAPI().get(query)
 
-    def submitted_stats(self, query, priority, pwg):
-        from api import historical as call
+    @staticmethod
+    def submitted_stats(query, priority, pwg):
+        """List submitted call"""
+        from pmp.api import historical as call
         return call.SubmittedStatusAPI().get(query, priority, pwg)
 
-    def shorten_url(self, url, params):
-        from api import common as call
+    @staticmethod
+    def shorten_url(url, params):
+        """Shorten url call"""
+        from pmp.api import common as call
         return call.ShortenAPI().get(url, params)
 
-    def suggestions(self, block, query):
-        from api import common as call
+    @staticmethod
+    def suggestions(block, query):
+        """Get suggestions call"""
+        from pmp.api import common as call
         return call.SuggestionsAPI(block).get(query)
 
-    def take_screenshot(self, svg, format):
-        from api import common as call
-        return call.TakeScreenshotAPI().get(svg, format)
+    @staticmethod
+    def take_screenshot(svg, extension):
+        """Take screenshot call"""
+        from pmp.api import common as call
+        return call.TakeScreenshotAPI().get(svg, extension)
