@@ -1,5 +1,4 @@
-#! /usr/bin/python
-
+"""Utils classes for pMp scripts"""
 import json
 import os
 import pycurl
@@ -10,51 +9,61 @@ from datetime import datetime
 from subprocess import call
 
 
-class Config():
+class Config(object):
+    """Load cofiguration from file"""
 
     def __init__(self, typeof):
-        self.dn = os.path.dirname(os.path.realpath(__file__))
+        self.dir = os.path.dirname(os.path.realpath(__file__))
         parser = SafeConfigParser()
-        parser.read(self.dn + '/dev.conf')
+        parser.read(self.dir + '/dev.conf')
+
+        database = parser.get(typeof, 'db')
+        url_pmp = parser.get('general', 'pmp')
 
         self.cookie = os.environ['HOME'] + parser.get('cookie', 'path')
         self.exclude_list = re.split(", ", parser.get('exclude', 'list'))
         self.fetch_fields = re.split(", ", parser.get(typeof, 'fetch_fields'))
-
         self.url_mcm = parser.get(typeof, 'db_source')
-        self.db = parser.get(typeof, 'db')
-        self.url_db = self.url_mcm + self.db
-        self.url_db_changes = (self.url_db +
-                               parser.get('general', 'db_query_changes'))
-        self.url_db_first = (self.url_db +
-                               parser.get('general', 'db_query_first'))
-        self.url_db_all = (self.url_db +
-                               parser.get('general', 'db_query_all_doc'))
-        self.url_pmp = parser.get('general', 'pmp')
-        self.pmp_db_index = self.url_pmp + parser.get(typeof, 'pmp_db_index')
+        self.url_db = self.url_mcm + database
+        self.url_db_changes = self.url_db + \
+            parser.get('general', 'db_query_changes')
+        self.url_db_first = self.url_db + \
+            parser.get('general', 'db_query_first')
+        self.url_db_all = self.url_db + \
+            parser.get('general', 'db_query_all_doc')
+        self.pmp_db_index = url_pmp + parser.get(typeof, 'pmp_db_index')
         self.pmp_db = self.pmp_db_index + parser.get(typeof, 'pmp_db')
         self.last_seq = self.pmp_db_index + parser.get(typeof, 'last_seq')
         self.mapping = parser.get(typeof, 'mapping')
 
 
-class Utils():
+class Utils(object):
+    """Utils for pMp scripts"""
 
-    def is_file(self, file):
-        return os.path.isfile(file) and os.access(file, os.R_OK)
+    @staticmethod
+    def is_file(m_file):
+        """Retrun true if file exists and accessible"""
+        return os.path.isfile(m_file) and os.access(m_file, os.R_OK)
 
     def get_cookie(self, url, path):
-        self.rm(path)
+        """Execute CERN's get SSO cookie"""
+        self.rm_file(path)
         call(["cern-get-sso-cookie", "--krb", "--nocertverify", "-u", url,
               "-o", path])
 
-    def get_time(self):
-        return datetime.now()
+    @staticmethod
+    def get_time():
+        """Return current time string"""
+        return str(datetime.now())
 
-    def rm(self, file):
-        if self.is_file(file):
-            os.remove(file)
+    def rm_file(self, m_file):
+        """Remove file"""
+        if self.is_file(m_file):
+            os.remove(m_file)
 
-    def curl(self, request, url, data=None, cookie=None):
+    @staticmethod
+    def curl(request, url, data=None, cookie=None):
+        """Perform CURL"""
         out = StringIO()
         curl = pycurl.Curl()
         curl.setopt(pycurl.URL, str(url))
@@ -74,6 +83,6 @@ class Utils():
         try:
             return (json.loads(out.getvalue()),
                     curl.getinfo(curl.RESPONSE_CODE))
-        except Exception:
+        except ValueError:
             print "Status: %s/n%s" % (curl.getinfo(curl.RESPONSE_CODE),
                                       out.getvalue())
