@@ -5,6 +5,7 @@ pmpApp.controller('MainController', function($location, $route, $rootScope,
                       
     $rootScope.showView = false;
     $rootScope.searchPanelTemplate = 'partials/search.html';
+    $rootScope.sharePanelTemplate = 'partials/share.html';
 
     $scope.nav = function(where) {
         if (where == '') {
@@ -448,9 +449,11 @@ pmpApp.controller('PresentController', function($http, $location, $interval, $q,
             });
     }
 
-    new ZeroClipboard(document.getElementById('copy'), {
-            moviePath: 'lib/zeroclipboard/ZeroClipboard.swf'
-    });
+    $scope.initZeroClipboard = function() {
+        new ZeroClipboard(document.getElementById('copy'), {
+                moviePath: 'lib/zeroclipboard/ZeroClipboard.swf'
+            });
+    }
 });
 
 pmpApp.controller('IndexController', function($location) {
@@ -764,9 +767,11 @@ pmpApp.controller('HistoricalController', function($http, $location, $scope, $ro
             });
     }
 
-    new ZeroClipboard(document.getElementById('copy'), {
-        moviePath: 'lib/zeroclipboard/ZeroClipboard.swf'
-    });
+    $scope.initZeroClipboard = function() {
+        new ZeroClipboard(document.getElementById('copy'), {
+                moviePath: 'lib/zeroclipboard/ZeroClipboard.swf'
+            });
+    }
 });
 
 pmpApp.controller('PerformanceController', function($http, $interval, $location, $scope) {
@@ -990,9 +995,11 @@ pmpApp.controller('PerformanceController', function($http, $interval, $location,
             });
     }
 
-    new ZeroClipboard(document.getElementById('copy'), {
-        moviePath: 'lib/zeroclipboard/ZeroClipboard.swf'
-    });
+    $scope.initZeroClipboard = function() {
+        new ZeroClipboard(document.getElementById('copy'), {
+                moviePath: 'lib/zeroclipboard/ZeroClipboard.swf'
+            });
+    }
 
     $scope.initPerformance = function() {
 

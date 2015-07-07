@@ -145,20 +145,7 @@
         </button>
       </div>
     </div>
-    
-    <div id="share" class="collapse col-xs-12 col-sm-12 col-md-12 col-lg-12">
-      <div class="input-group input-group-sm">
-        <span class="hidden-sm input-group-addon text-uppercase"
-              ng-click="setURL(); shortenURL()">
-          Shorten
-        </span>
-        <input id="url" type="text" class="form-control" ng-model="url"
-               placeholder="Refresh to get URL">
-        <span id="copy" data-clipboard-text="{{url}}" class="input-group-addon pointer">
-          <i class="fa fa-copy"></i>
-        </span>
-      </div>
-    </div>
+    <div ng-include="sharePanelTemplate"></div>
   </div>
 </div>
 
