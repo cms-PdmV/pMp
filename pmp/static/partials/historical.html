@@ -85,66 +85,7 @@
         </form>
       </div>
     </div>
-
-    <div id="advanced" class="collapse col-xs-12 col-sm-12 col-md-12 col-lg-12 spacing">
-      <form class="form-group text-uppercase">
-        <label class="checkbox-inline col-lg-12 col-md-12 col-sm-12">
-          <input type="checkbox" ng-model="showDate" ng-change="setURL()">
-          <small>Show time</small>
-        </label>
-        <br/>
-        <label class="checkbox-inline col-lg-12 col-md-12 col-sm-12">
-          <input type="checkbox" ng-model="zoomOnY" ng-change="setURL()">
-          <small>y axis zoom</small>
-        </label>
-        <br/>
-        <label class="checkbox-inline col-lg-12 col-md-12 col-sm-12 spacing">
-          <input type="checkbox" ng-model="humanReadableNumbers"
-                 ng-init="humanReadableNumbers=true">
-          <small>Human Readable Numbers</small>
-        </label>
-      </form>
-      
-      <div class="input-group input-group-sm spacing">
-        <span class="hidden-sm input-group-addon text-uppercase">
-          Probing
-        </span>
-        <input type="text" class="form-control" ng-model="probing" ng-change="setURL()"
-               placeholder="Default: 40">
-      </div>
-
-      <div class="btn-group btn-group-sm pull-left spacing text-uppercase"
-           ng-show="allRequestData.length">
-        <button type="button" class="btn btn-primary text-center text-uppercase hidden-sm"
-                ng-disabled="true">
-          <small class="hidden-md hidden-sm">
-            Download
-          </small>
-          <i class="hidden-lg fa fa-download"></i>
-        </button>
-        <button type="button" class="btn btn-default text-center"
-                ng-click="takeScreenshot('pdf')" ng-disabled="false">
-          <small class="hidden-md hidden-sm">
-            PDF
-          </small>
-          <i class="hidden-lg fa fa-file-pdf-o"></i>
-        </button>
-        <button type="button" class="btn btn-default text-center"
-                ng-click="takeScreenshot('png')" ng-disabled="false">
-          <small class="hidden-md hidden-sm">
-            PNG
-          </small>
-          <i class="hidden-lg fa fa-file-image-o"></i>
-        </button>
-        <button type="button" class="btn btn-default text-center"
-                ng-click="takeScreenshot()" ng-disabled="false">
-          <small class="hidden-md hidden-sm">
-            SVG
-          </small>
-          <i class="hidden-lg fa fa-file"></i>
-        </button>
-      </div>
-    </div>
+    <div ng-include="advancedPanelTemplate"></div>
     <div ng-include="sharePanelTemplate"></div>
   </div>
 </div>

@@ -6,6 +6,7 @@ pmpApp.controller('MainController', function($location, $route, $rootScope,
     $rootScope.showView = false;
     $rootScope.searchPanelTemplate = 'partials/search.html';
     $rootScope.sharePanelTemplate = 'partials/share.html';
+    $rootScope.advancedPanelTemplate = 'partials/advanced.html';
 
     $scope.nav = function(where) {
         if (where == '') {
@@ -96,6 +97,8 @@ pmpApp.controller('MainController', function($location, $route, $rootScope,
 
 pmpApp.controller('PresentController', function($http, $location, $interval, $q,
     $rootScope, $scope, $timeout) {
+
+    $scope.graphType = 1;
 
     // currently displayed data (after filtering)
     $scope.allRequestData = [];
@@ -486,6 +489,8 @@ pmpApp.controller('TypeaheadCtrl', function($scope, $http) {
 
 pmpApp.controller('HistoricalController', function($http, $location, $scope, $rootScope, $interval) {
 
+    $scope.graphType = 2;
+
     $scope.allPWG = {};
 
     $scope.allRequestData = [];
@@ -776,6 +781,7 @@ pmpApp.controller('HistoricalController', function($http, $location, $scope, $ro
 
 pmpApp.controller('PerformanceController', function($http, $interval, $location, $scope) {
 
+        $scope.graphType = 3;
         $scope.cachedRequestData = [];
         $scope.allRequestData = [];
         $scope.inputTags = [];
