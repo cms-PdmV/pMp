@@ -2,8 +2,9 @@
 
 pmpApp.controller('MainController', function($location, $route, $rootScope,
                                              $interval, $scope, $timeout) {
-
+                      
     $rootScope.showView = false;
+    $rootScope.searchPanelTemplate = 'partials/search.html';
 
     $scope.nav = function(where) {
         if (where == '') {
@@ -458,29 +459,22 @@ pmpApp.controller('IndexController', function($location) {
 
 pmpApp.controller('TypeaheadCtrl', function($scope, $http) {
     $scope.suggestions = [];
-    $scope.getSuggestions = function() {
-        if ($scope.campaign) {
-            if ($scope.growingMode) {
-                $http.get('api/suggest/' + $scope.campaign +
-                          '/growing').then(function(response) {
-                    $scope.suggestions = response.data.results;
-                });
-            } else {
-                $http.get('api/suggest/' + $scope.campaign +
-                          '/announced').then(function(response) {
-                    $scope.suggestions = response.data.results;
-                });
-            }
-        }
-        if ($scope.lifetime) {
-            $http.get('api/suggest/' + $scope.lifetime +
-                      '/historical').then(function(response) {
+    $scope.getSuggestions = function(query) {
+        if (query === '') return null;
+        if ($scope.title === 'Present: Announced Mode') {
+            $http.get('api/suggest/' + query + '/growing').then(function(response) {
+                $scope.suggestions = response.data.results;
+           });
+        } else if($scope.title === 'Present: Growing Mode') {
+            $http.get('api/suggest/' + query + '/announced').then(function(response) {
                 $scope.suggestions = response.data.results;
             });
-        }
-        if ($scope.performance) {
-            $http.get('api/suggest/' + $scope.performance +
-                      '/performance').then(function(response) {
+        } else if ($scope.title === 'Historical Statistics') {
+            $http.get('api/suggest/' + query + '/historical').then(function(response) {
+                $scope.suggestions = response.data.results;
+            });
+        } else if ($scope.title === 'Request Performance') {
+            $http.get('api/suggest/' + query + '/performance').then(function(response) {
                 $scope.suggestions = response.data.results;
             });
         }
@@ -747,7 +741,7 @@ pmpApp.controller('HistoricalController', function($http, $location, $scope, $ro
         });
     }
 
-    $scope.title = 'Historical Statistics of Requests';
+    $scope.title = 'Historical Statistics';
 
     $scope.updateRequestData = function() {
         $scope.query(true);
