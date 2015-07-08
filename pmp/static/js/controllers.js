@@ -7,6 +7,7 @@ pmpApp.controller('MainController', function($location, $route, $rootScope,
     $rootScope.searchPanelTemplate = 'partials/search.html';
     $rootScope.sharePanelTemplate = 'partials/share.html';
     $rootScope.advancedPanelTemplate = 'partials/advanced.html';
+    $rootScope.filterPanelTemplate = 'partials/filter.html';
 
     $scope.nav = function(where) {
         if (where == '') {
@@ -98,6 +99,7 @@ pmpApp.controller('MainController', function($location, $route, $rootScope,
 pmpApp.controller('PresentController', function($http, $location, $interval, $q,
     $rootScope, $scope, $timeout) {
 
+    $scope.allStatus = {};
     $scope.graphType = 1;
 
     // currently displayed data (after filtering)
@@ -160,12 +162,17 @@ pmpApp.controller('PresentController', function($http, $location, $interval, $q,
         $scope.showDate = $location.search().t === 'true';
         $scope.growingMode = ($location.search().m === 'true');
         
-        $scope.filterPriority = ['', ''];
+        $scope.filterPriority = ['', '']
         if ($location.search().x != undefined) {
             var tmp = $location.search().x.split(',');
             $scope.filterPriority = tmp;
         }
-        $scope.initStatus();
+
+        var tmp = "";
+        if ($location.search().s != undefined) {
+            tmp = $location.search().s;
+        }
+        $scope.updateStatus([], true, true, tmp);
         $scope.modeUpdate(true);
         $scope.pwg = {};
         if ($location.search().w != undefined) {
@@ -187,29 +194,31 @@ pmpApp.controller('PresentController', function($http, $location, $interval, $q,
                 var arg = false;
             }
             for (var i = 0; i < tmp.length; i++) {
-                $scope.load(tmp[i], true, arg);
+                $scope.load(tmp[i], true, arg, true);
             }
         } else {
             $scope.url = $location.absUrl();
         }
     }
 
-    $scope.initStatus = function() {
-        $scope.status = {}
-        for (var i = 0; i < $scope.piecharts.fullTerms.length; i++) {
-            var name = $scope.piecharts.fullTerms[i].slice(0, 2),
-                tmp = true;
-            if ($location.search()[name] != undefined) {
-                tmp = ($location.search()[name] === 'true');
+    $scope.updateStatus = function(dataDetails, resetObject, defaultValue, initCSV) {
+        if (resetObject) $scope.allStatus = {};
+        if (initCSV !== undefined) {
+            var tmp = initCSV.split(',');
+            for (var i = 0; i < tmp.length; i++) {
+                if (tmp[i] != "") $scope.allStatus[tmp[i]] = defaultValue;
             }
-            $scope.status[$scope.piecharts.fullTerms[i]] = {
-                name: name,
-                selected: tmp
-            };
         }
+        for (var i = 0; i < dataDetails.length; i++) {
+            var statusId = dataDetails[i].status; 
+            if ($scope.allStatus[statusId] === undefined) {
+                $scope.allStatus[statusId] = defaultValue;
+            }
+        }
+        console.log($scope.allStatus);
     }
 
-    $scope.load = function(campaign, add, more) {
+    $scope.load = function(campaign, add, more, defaultValue) {
         if (!campaign) {
             $scope.showPopUp('warning', 'Your request parameters are empty');
         } else if (add & $scope.inputTags.indexOf(campaign) !== -1) {
@@ -231,10 +240,12 @@ pmpApp.controller('PresentController', function($http, $location, $interval, $q,
                     if (add) {
                         // append
                         data.data.results.push.apply(data.data.results, $scope.cachedRequestData);
+                        $scope.updateStatus(data.data.results, false, true);
                     } else {
                         // see
                         $scope.inputTags = [];
-                        $scope.updateOnRemoval([], {});
+                        $scope.updateOnRemoval([], {}, {});
+                        $scope.updateStatus(data.data.results, true, true);
                     }
                     if (campaign == 'all') {
                         for (var i = 0; i < data.data.results.length; i++) {
@@ -245,6 +256,7 @@ pmpApp.controller('PresentController', function($http, $location, $interval, $q,
                     } else {
                         $scope.inputTags.push(campaign);
                     }
+
                     $scope.updatePwg(data.data.results, !more);
                     $scope.cachedRequestData = data.data.results;
                     $scope.setURL();
@@ -280,7 +292,7 @@ pmpApp.controller('PresentController', function($http, $location, $interval, $q,
             }
         } else {
             $scope.inputTags = [];
-            $scope.updateOnRemoval([], {});
+            $scope.updateOnRemoval([], {}, {});
         }
     };
 
@@ -334,8 +346,12 @@ pmpApp.controller('PresentController', function($http, $location, $interval, $q,
         }
         params.w = w.join(',');
 
-        for (var i in $scope.status) {
-            params[$scope.status[i].name] = ($scope.status[i].selected === true) + "";
+        if (!$scope.isEmpty($scope.allStatus)) {
+            var s = [];
+            for (var i in $scope.allStatus) {
+                if ($scope.allStatus[i]) s.push(i);
+            }
+            params.s = s.join(',');
         }
 
         $location.search(params);
@@ -355,10 +371,16 @@ pmpApp.controller('PresentController', function($http, $location, $interval, $q,
             var tmp = $scope.cachedRequestData;
             var data1 = [];
             var data2 = {};
+            var newStatusObjectTmp = {}
             if (tagToRemove !== '*') {
                 for (var i = 0; i < tmp.length; i++) {
                     if (tmp[i].member_of_campaign !== tagToRemove) {
                         data1.push(tmp[i]);
+
+                        if (newStatusObjectTmp[tmp[i].status] == undefined) {
+                            newStatusObjectTmp[tmp[i].status] = $scope.allStatus[tmp[i].status]
+                        }
+
                         if (data2[tmp[i].pwg] == undefined) {
                             data2[tmp[i].pwg] = {
                                 name: tmp[i].pwg,
@@ -369,13 +391,14 @@ pmpApp.controller('PresentController', function($http, $location, $interval, $q,
                 }
                 $scope.inputTags.splice($scope.inputTags.indexOf(tagToRemove), 1);
             }
-            $scope.updateOnRemoval(data1, data2);
+            $scope.updateOnRemoval(data1, data2, newStatusObjectTmp);
         }, 1000);
     }
 
-    $scope.updateOnRemoval = function(requestData, oPWG) {
+    $scope.updateOnRemoval = function(requestData, oPWG, newStatusObject) {
         $scope.cachedRequestData = requestData;
         $scope.pwg = oPWG;
+        $scope.allStatus = newStatusObject;
         $scope.setURL();
         $scope.updateRequestData();
     }
@@ -430,7 +453,7 @@ pmpApp.controller('PresentController', function($http, $location, $interval, $q,
             for (var i = 0; i < tmp.length; i++) {
                 if (tmp[i].priority >= min &&
                     tmp[i].priority <= max &&
-                    $scope.status[tmp[i].status].selected &&
+                    $scope.allStatus[tmp[i].status] &&
                     $scope.pwg[tmp[i].pwg].selected) {
                     data.push(tmp[i]);
                 }
@@ -868,7 +891,7 @@ pmpApp.controller('PerformanceController', function($http, $interval, $location,
     }
 
     $scope.pwg = {};
-    $scope.status = {};
+    $scope.allStatus = {};
     $scope.title = 'Request Performance';
 
     $scope.applyHistogram = function(d, e) {
@@ -912,7 +935,7 @@ pmpApp.controller('PerformanceController', function($http, $interval, $location,
         for (var i = 0; i < tmp.length; i++) {
             if (tmp[i].priority >= min &&
                 tmp[i].priority <= max &&
-                $scope.status[tmp[i].status] &&
+                $scope.allStatus[tmp[i].status] &&
                 $scope.pwg[tmp[i].pwg]) {
                 data.push(tmp[i]);
             }
@@ -970,8 +993,8 @@ pmpApp.controller('PerformanceController', function($http, $interval, $location,
 
         // set filter status
         var s = [];
-        for (var i in $scope.status) {
-            if ($scope.status[i]) {
+        for (var i in $scope.allStatus) {
+            if ($scope.allStatus[i]) {
                 s.push(i);
             }
         }
@@ -1053,11 +1076,11 @@ pmpApp.controller('PerformanceController', function($http, $interval, $location,
             }
         }
 
-        $scope.status = {};
+        $scope.allStatus = {};
         if ($location.search().s != undefined) {
             var tmp = $location.search().s.split(',');
             for (var i = 0; i < tmp.length; i++) {
-                $scope.status[tmp[i]] = true;
+                $scope.allStatus[tmp[i]] = true;
             }
         }
         

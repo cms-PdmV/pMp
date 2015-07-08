@@ -23,67 +23,7 @@
       <i class="fa fa-share"></i>
       <small class="hidden-sm"> Share</small>
     </a>
-    
-    <div id="filter" class="collapse col-xs-12 col-sm-12 col-md-12 col-lg-12 spacing">
-      <div ng-show="!cachedRequestData.length">
-        <small>No data to filter</small>
-      </div>
-      <div ng-show="cachedRequestData.length">
-        <form class="form-group form-inline form-group-sm">
-          <small class="text-uppercase col-sm-12 col-md-12 col-lg-12">Priority filter</small>
-          <div class="input-group col-sm-12">
-            <select class="form-control text-center" ng-model="filterPriority[0]"
-                    ng-change="updateRequestData();setURL()">
-              <option ng-repeat="(key, value) in priorityPerBlock"
-                      value="{{value}}">
-                {{key}}
-              </option>
-            </select>
-            <input type="text" class="form-control" placeholder="min"
-                   ng-model="filterPriority[0]" ng-change="updateRequestData();setURL()">
-            <div class="input-group-addon">
-              &le; x &le;
-            </div>
-            <select class="form-control text-center" ng-model="filterPriority[1]"
-                    ng-change="updateRequestData();setURL()">
-              <option ng-repeat="(key, value) in priorityPerBlock"
-                      value="{{value}}">
-                {{key}}
-              </option>
-            </select>
-            <input type="text" class="form-control" placeholder="max"
-                   ng-model="filterPriority[1]" ng-change="updateRequestData();setURL()">
-          </div>
-        </form>
-        
-        <form class="form-group form-inline form-group-sm spacing">
-          <small class="text-uppercase col-sm-12 col-md-12 col-lg-12">Status filter</small>
-          <div class="input-group">
-            <div class="col-lg-6 col-md-6 col-sm-12" ng-repeat="(key, status) in status">
-              <label class="checkbox-inline">
-                <input type="checkbox" ng-model="status.selected" 
-                       ng-change="updateRequestData();setURL()">
-                <small>{{key}}</small>
-              </label>
-            </div>
-          </div>
-        </form>
-        
-        <form class="form-group form-inline form-group-sm">
-          <small class="text-uppercase col-sm-12 col-md-12 col-lg-12">PWG filter</small>
-          <div class="col-sm-6 col-md-4 col-lg-4" ng-repeat="(key, status) in pwg">
-            <label class="checkbox-inline">
-              <input type="checkbox" ng-model="status.selected"
-                     ng-change="updateRequestData();setURL()">
-              <small>
-                {{key}}
-              </small>
-            </label>
-          </div>
-        </form>
-      </div>
-    </div>
-
+    <div ng-include="filterPanelTemplate"></div>
     <div ng-include="advancedPanelTemplate"></div>
     <div ng-include="sharePanelTemplate"></div>
   </div>
