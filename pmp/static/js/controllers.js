@@ -215,6 +215,7 @@ pmpApp.controller('PresentController', function($http, $location, $interval, $q,
             $scope.showPopUp('warning', 'Your request is already loaded');
         } else {
             $scope.loadingData = true;
+            console.log($scope.growingMode)
             if ($scope.growingMode) {
                 var promise = $http.get("api/" + campaign + "/growing");
             } else {
@@ -264,6 +265,7 @@ pmpApp.controller('PresentController', function($http, $location, $interval, $q,
     };
 
     $scope.modeUpdate = function(onlyTitle) {
+        console.log($scope)
         if ($scope.growingMode) {
             $scope.title = 'Present: Growing Mode';
         } else {
@@ -426,7 +428,6 @@ pmpApp.controller('PresentController', function($http, $location, $interval, $q,
                 $scope.allPWG[pwgId] = defaultValue;
             }
         }
-        console.log($scope.allPWG)
     }
 
     $scope.updateRequestData = function() {
@@ -482,11 +483,11 @@ pmpApp.controller('TypeaheadCtrl', function($scope, $http) {
     $scope.getSuggestions = function(query) {
         if (query === '') return null;
         if ($scope.title === 'Present: Announced Mode') {
-            $http.get('api/suggest/' + query + '/growing').then(function(response) {
+            $http.get('api/suggest/' + query + '/announced').then(function(response) {
                 $scope.suggestions = response.data.results;
            });
         } else if($scope.title === 'Present: Growing Mode') {
-            $http.get('api/suggest/' + query + '/announced').then(function(response) {
+            $http.get('api/suggest/' + query + '/growing').then(function(response) {
                 $scope.suggestions = response.data.results;
             });
         } else if ($scope.title === 'Historical Statistics') {
