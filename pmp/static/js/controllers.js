@@ -99,7 +99,6 @@ pmpApp.controller('MainController', function($location, $route, $rootScope,
 pmpApp.controller('PresentController', function($http, $location, $interval, $q,
     $rootScope, $scope, $timeout) {
 
-    $scope.allStatus = {};
     $scope.graphType = 1;
 
     // currently displayed data (after filtering)
@@ -161,40 +160,31 @@ pmpApp.controller('PresentController', function($http, $location, $interval, $q,
 
         $scope.showDate = $location.search().t === 'true';
         $scope.growingMode = ($location.search().m === 'true');
+        $scope.modeUpdate(true);
         
         $scope.filterPriority = ['', '']
         if ($location.search().x != undefined) {
             var tmp = $location.search().x.split(',');
             $scope.filterPriority = tmp;
         }
-
         var tmp = "";
         if ($location.search().s != undefined) {
             tmp = $location.search().s;
         }
         $scope.updateStatus([], true, true, tmp);
-        $scope.modeUpdate(true);
-        $scope.pwg = {};
+
+        var tmp = "";
         if ($location.search().w != undefined) {
-            var tmp = $location.search().w.split(',');
-            for (var i = 0; i < tmp.length; i++) {
-                $scope.pwg[tmp[i]] = {
-                    name: tmp[i],
-                    selected: true
-                };
-            }
+            tmp = $location.search().w;
         }
+        $scope.updatePWG([], true, true, tmp);
+
         //initiate allRequestData from URL
         if ($location.search().r != undefined) {
             $scope.loadingData = true;
             var tmp = $location.search().r.split(',');
-            if (Object.keys($scope.pwg).length) {
-                var arg = tmp.length;
-            } else {
-                var arg = false;
-            }
             for (var i = 0; i < tmp.length; i++) {
-                $scope.load(tmp[i], true, arg, true);
+                $scope.load(tmp[i], true, tmp.length);
             }
         } else {
             $scope.url = $location.absUrl();
@@ -215,10 +205,10 @@ pmpApp.controller('PresentController', function($http, $location, $interval, $q,
                 $scope.allStatus[statusId] = defaultValue;
             }
         }
-        console.log($scope.allStatus);
+        console.log($scope.allStatus)
     }
 
-    $scope.load = function(campaign, add, more, defaultValue) {
+    $scope.load = function(campaign, add, more) {
         if (!campaign) {
             $scope.showPopUp('warning', 'Your request parameters are empty');
         } else if (add & $scope.inputTags.indexOf(campaign) !== -1) {
@@ -238,14 +228,17 @@ pmpApp.controller('PresentController', function($http, $location, $interval, $q,
                 } else {
                     $scope.allRequestData = [];
                     if (add) {
+                        console.log(!more);
                         // append
                         data.data.results.push.apply(data.data.results, $scope.cachedRequestData);
-                        $scope.updateStatus(data.data.results, false, true);
+                        $scope.updateStatus(data.data.results, false, !more);
+                        $scope.updatePWG(data.data.results, false, !more);
                     } else {
                         // see
                         $scope.inputTags = [];
                         $scope.updateOnRemoval([], {}, {});
                         $scope.updateStatus(data.data.results, true, true);
+                        $scope.updatePWG(data.data.results, true, true);
                     }
                     if (campaign == 'all') {
                         for (var i = 0; i < data.data.results.length; i++) {
@@ -256,8 +249,6 @@ pmpApp.controller('PresentController', function($http, $location, $interval, $q,
                     } else {
                         $scope.inputTags.push(campaign);
                     }
-
-                    $scope.updatePwg(data.data.results, !more);
                     $scope.cachedRequestData = data.data.results;
                     $scope.setURL();
                 }
@@ -337,14 +328,13 @@ pmpApp.controller('PresentController', function($http, $location, $interval, $q,
         params.m = $scope.growingMode + "";
         params.x = $scope.filterPriority.join(',');
 
-        var tmp = $scope.pwg;
-        var w = [];
-        for (var i = 0; i < Object.keys(tmp).length; i++) {
-            if (tmp[Object.keys(tmp)[i]].selected) {
-                w.push(tmp[Object.keys(tmp)[i]].name);
+        if (!$scope.isEmpty($scope.allPWG)) {
+            var w = [];
+            for (var i in $scope.allPWG) {
+                if ($scope.allPWG[i]) w.push(i);
             }
+            params.w = w.join(',');
         }
-        params.w = w.join(',');
 
         if (!$scope.isEmpty($scope.allStatus)) {
             var s = [];
@@ -370,7 +360,7 @@ pmpApp.controller('PresentController', function($http, $location, $interval, $q,
         setTimeout(function() {
             var tmp = $scope.cachedRequestData;
             var data1 = [];
-            var data2 = {};
+            var newPWGObjectTmp = {};
             var newStatusObjectTmp = {}
             if (tagToRemove !== '*') {
                 for (var i = 0; i < tmp.length; i++) {
@@ -381,23 +371,20 @@ pmpApp.controller('PresentController', function($http, $location, $interval, $q,
                             newStatusObjectTmp[tmp[i].status] = $scope.allStatus[tmp[i].status]
                         }
 
-                        if (data2[tmp[i].pwg] == undefined) {
-                            data2[tmp[i].pwg] = {
-                                name: tmp[i].pwg,
-                                selected: $scope.pwg[tmp[i].pwg].selected
-                            };
+                        if (newPWGObjectTmp[tmp[i].pwg] == undefined) {
+                            newPWGObjectTmp[tmp[i].pwg] = $scope.allPWG[tmp[i].pwg]
                         }
                     }
                 }
                 $scope.inputTags.splice($scope.inputTags.indexOf(tagToRemove), 1);
             }
-            $scope.updateOnRemoval(data1, data2, newStatusObjectTmp);
+            $scope.updateOnRemoval(data1, newPWGObjectTmp, newStatusObjectTmp);
         }, 1000);
     }
 
-    $scope.updateOnRemoval = function(requestData, oPWG, newStatusObject) {
+    $scope.updateOnRemoval = function(requestData, newPWGObject, newStatusObject) {
         $scope.cachedRequestData = requestData;
-        $scope.pwg = oPWG;
+        $scope.pwg = newPWGObject;
         $scope.allStatus = newStatusObject;
         $scope.setURL();
         $scope.updateRequestData();
@@ -425,17 +412,21 @@ pmpApp.controller('PresentController', function($http, $location, $interval, $q,
         });
     }
 
-    $scope.updatePwg = function(x, vDefault) {
-        var data = $scope.pwg;
-        for (var i = 0; i < x.length; i++) {
-            if (data[x[i].pwg] == undefined) {
-                data[x[i].pwg] = {
-                    name: x[i].pwg,
-                    selected: vDefault
-                };
+    $scope.updatePWG = function(dataDetails, resetObject, defaultValue, initCSV) {
+        if (resetObject) $scope.allPWG = {};
+        if (initCSV !== undefined) {
+            var tmp = initCSV.split(',');
+            for (var i = 0; i < tmp.length; i++) {
+                if (tmp[i] != "") $scope.allPWG[tmp[i]] = defaultValue;
             }
         }
-        $scope.pwg = data;
+        for (var i = 0; i < dataDetails.length; i++) {
+            var pwgId = dataDetails[i].pwg; 
+            if ($scope.allPWG[pwgId] === undefined) {
+                $scope.allPWG[pwgId] = defaultValue;
+            }
+        }
+        console.log($scope.allPWG)
     }
 
     $scope.updateRequestData = function() {
@@ -454,7 +445,7 @@ pmpApp.controller('PresentController', function($http, $location, $interval, $q,
                 if (tmp[i].priority >= min &&
                     tmp[i].priority <= max &&
                     $scope.allStatus[tmp[i].status] &&
-                    $scope.pwg[tmp[i].pwg].selected) {
+                    $scope.allPWG[tmp[i].pwg]) {
                     data.push(tmp[i]);
                 }
             }
