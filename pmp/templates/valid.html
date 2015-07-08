@@ -3,24 +3,24 @@
 
   <head>
     <title>Production Monitoring Platform</title>
-    <base href="/pmp/"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <base href="/"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
     <link href="lib/bootstrap/css/bootstrap.min.css" rel="stylesheet"/>
     <link href="lib/font-awesome/css/font-awesome.min.css" rel="stylesheet"/>
     <link href="lib/animate/animate.min.css" rel="stylesheet"/>
     <link href="css/pmp.css" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css?family=Roboto:900,400"
-          rel="stylesheet" type="text/css">
+          rel="stylesheet" type="text/css"/>
 
     <script type="text/javascript" src="lib/jquery/jquery-2.1.4.min.js"></script>
-    <script type="text/javascript" src="lib/jquery-sortable/jquery-sortable.js"></script>
+    <script type="text/javascript" src="lib/jquery-sortable/jquery-sortable-min.js"></script>
     <script type="text/javascript" src="lib/bootstrap/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="lib/angular/angular.min.js"></script>
     <script type="text/javascript" src="lib/angular/angular-animate.min.js"></script>
-    <script type="text/javascript" src="lib/angular/angular-route.js"></script>
+    <script type="text/javascript" src="lib/angular/angular-route.min.js"></script>
     <script type="text/javascript" src="lib/d3/d3.min.js"></script>
     <script type="text/javascript" src="lib/zeroclipboard/ZeroClipboard.min.js"></script>
-    <script type="text/javascript" src="lib/ui-bootstrap/ui-bootstrap-tpls-0.12.0.min.js"></script>
+    <script type="text/javascript" src="lib/ui-bootstrap/ui-bootstrap-tpls-0.13.0.min.js"></script>
 
     <script src="js/charts.js"></script>
     <script src="js/app.js"></script>
@@ -45,7 +45,7 @@
           <li><a href="performance" ng-click="nav('/performance/')">
               <i class="fa fa-heartbeat spacing-r"></i>  
               Performance Statistics</a></li>
-          <li><a href="performance" ng-click="nav('/chains/')">
+          <li><a href="performance" ng-click="nav('/chains/')" ng-hide="true">
               <i class="fa fa-share-alt spacing-r"></i>  
               Chains Landscape</a></li>
           <li><a href="https://github.com/cms-PdmV/pmp/issues" target="_blank">
