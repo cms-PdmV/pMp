@@ -205,7 +205,6 @@ pmpApp.controller('PresentController', function($http, $location, $interval, $q,
                 $scope.allStatus[statusId] = defaultValue;
             }
         }
-        console.log($scope.allStatus)
     }
 
     $scope.load = function(campaign, add, more) {
@@ -215,7 +214,6 @@ pmpApp.controller('PresentController', function($http, $location, $interval, $q,
             $scope.showPopUp('warning', 'Your request is already loaded');
         } else {
             $scope.loadingData = true;
-            console.log($scope.growingMode)
             if ($scope.growingMode) {
                 var promise = $http.get("api/" + campaign + "/growing");
             } else {
@@ -229,7 +227,6 @@ pmpApp.controller('PresentController', function($http, $location, $interval, $q,
                 } else {
                     $scope.allRequestData = [];
                     if (add) {
-                        console.log(!more);
                         // append
                         data.data.results.push.apply(data.data.results, $scope.cachedRequestData);
                         $scope.updateStatus(data.data.results, false, !more);
@@ -265,7 +262,6 @@ pmpApp.controller('PresentController', function($http, $location, $interval, $q,
     };
 
     $scope.modeUpdate = function(onlyTitle) {
-        console.log($scope)
         if ($scope.growingMode) {
             $scope.title = 'Present: Growing Mode';
         } else {
@@ -757,7 +753,6 @@ pmpApp.controller('HistoricalController', function($http, $location, $scope, $ro
         $scope.loading = true;
         if (format === undefined) format = 'svg';
         var xml = (new XMLSerializer).serializeToString(document.getElementById("ctn").getElementsByTagName("svg")[0]).replace(/#/g,'U+0023');
-        console.log(xml);
         $http.get('ts/'+ format +'/' + xml).then(function(data) {
             window.open(data.data);
             $scope.loading = false;

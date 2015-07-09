@@ -1853,8 +1853,8 @@ angular.module('pmpCharts', [])
 
                             nameLabels.enter()
                                 .append("text")
-                                .attr("class", "units")
-                                .attr('font-size', fontSize-12)
+                                .attr("class", "units text-uppercase")
+                                .attr('font-size', fontSize-15)
                                 .attr('stroke', 'none')
                                 .attr("transform", function(d) {
                                     return "translate(" +
@@ -2674,12 +2674,15 @@ angular.module('pmpCharts', [])
                         l.on("mouseout", function(d) {
                                 svg.selectAll("rect.columning" + d).style("fill", function(d) { return colors(d)});
                             });
-
                         var tmpAll = svg.selectAll('g.legend-inst');
                         var tmpXOffset = 0, tmpYOffset = 0;
                         tmpAll[0].forEach(function(d, i) {
                                 var c = d3.select(d);
-                                var w = c[0][0].getBBox().width;
+                                try {
+                                    var w = c[0][0].getBBox().width;
+                                } catch (e) {
+                                    var w = 200;
+                                }
                                 if (w + tmpXOffset > (width + margin.right)) {
                                     tmpXOffset = 0;
                                     tmpYOffset += 1;
