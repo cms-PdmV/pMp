@@ -34,7 +34,7 @@
   <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 text-center" id="measure">
     <linear-lifetime chart-data="allRequestData" task-chain="loadTaskChain" zoom-y="zoomOnY"
                      human-readable-numbers="humanReadableNumbers" class="spacing"></linear-lifetime>
-    <p>List of requests on status submitted:</p>
+    <p ng-hide="isEmpty(listSubmitted)">List of requests on status submitted:</p>
     <div ng-repeat="(prepid, value) in listSubmitted" class="spacing">
       <div class="col-lg-3 col-md-3 col-sm-3">
         <small>
