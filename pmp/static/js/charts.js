@@ -2341,12 +2341,10 @@ angular.module('pmpCharts', [])
 
                     var maxHeight = 0;
 
-                    var xaxisio = svg.select(".x.axis")
-                       .transition()
-                       .duration(duration)
-                       .call(xAxis)
-                        .selectAll(".x.axis .tick")
-                        .call(endall, function(){
+                    setTimeout(function() {
+                            svg.select(".x.axis").transition().duration(duration)
+                                .call(xAxis).selectAll(".x.axis .tick")
+                                .call(endall, function(){
                             svg.selectAll(".x.axis .tick")
                                 .filter(function(){
                                     return d3.select(this).select("title").empty()
@@ -2354,32 +2352,24 @@ angular.module('pmpCharts', [])
                                 .append("title");
                             drawBlockSeparations();
                             svg.selectAll(".x.axis .tick title").text(function(d){
-                                    var string_to_show = '';
+                                    var descriptionString = '';
                                     if(valueOperation == 'events') {
-                                        string_to_show = 'Number of events';
+                                        descriptionString = 'Number of events';
                                     } else if(valueOperation == 'requests') {
-                                        string_to_show = 'Number of requests';
+                                        descriptionString = 'Number of requests';
                                     } else if(valueOperation == 'seconds') {
-                                        string_to_show = 'Seconds per event';
+                                        descriptionString = 'Seconds per event';
                                     }
-                                    var sum_value = d3.sum(svg.selectAll("rect.grouping" + d).data(),
-                                        function(d){
-                                            return d[value];
-                                        });
-                                    string_to_show += ": " + sum_value;
-                                    return d+"\n"+string_to_show;
+                                    descriptionString += ": " + d3.sum(svg.selectAll("rect.grouping" + d).data(), function(d){ return d[value];});
+                                    return d + "\n" + descriptionString;
                                 });
-                        })
-                        .selectAll("text").attr("class", "text-uppercase").style("text-anchor", "end").style("font-size", "10px").style("font-weight", "lighter").style("cursor", "default").attr("dx", "-0.5em").attr("dy", "0.5em").attr("transform", "rotate(-30)")
-                        .each(function(){
+                                    })
+                                .selectAll("text").attr("class", "text-uppercase").style("text-anchor", "end").style("font-size", "10px").style("font-weight", "lighter").style("cursor", "default").attr("dx", "-0.5em").attr("dy", "0.5em").attr("transform", "rotate(-30)")
+                                .each(function(){
                                 maxHeight = d3.max(this.getBBox().width, maxHeight)
-                                console.log(this.getBBox());
-                                console.log(maxHeight);
-                            });
-                    //DONT GET LOST
-                    //xaxisio.node().getBBox();
-                    console.log(xaxisio.node().getBBox())
-
+                                    });
+                        }, 1000);
+                    
                     svg.selectAll(".x.axis text")
                         .on("mouseover", function(d) {
                            svg.selectAll("rect.grouping" + d).style("fill", highlight_color);
