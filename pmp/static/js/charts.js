@@ -1531,18 +1531,13 @@ angular.module('pmpCharts', [])
                 var constructDataLabel = function() {
                     if (containerBox == undefined) {
                         containerBox = document.querySelector('#lifetime');
-                        var hoverLineXOffset = $(containerBox).offset().left;
-                        var hoverLineYOffset = config.margin.top + $(containerBox).offset().top;
-
-                        hoverLineGroup = chartBody.append("svg:g")
-                            .attr("class", "hover-line");
-
-                        var hoverLine = hoverLineGroup
-                        .append("svg:line")
-                        .attr("y1", 0).attr("y2", height + 10);
+                        hoverLineGroup = chartBody.append("svg:g").attr("class", "hover-line");
+                        var hoverLine = hoverLineGroup.append("svg:line").attr("y1", 0).attr("y2", height + 10);
                     }
 
                     var handleMouseOverGraph = function(event) {
+                        var hoverLineXOffset = $(containerBox).offset().left;
+                        var hoverLineYOffset = config.margin.top + $(containerBox).offset().top;
                         var mouseX = event.pageX - hoverLineXOffset;
                         var mouseY = event.pageY - hoverLineYOffset;
 
