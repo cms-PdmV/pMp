@@ -629,7 +629,7 @@ angular.module('pmpCharts', [])
         }
     })
 
-    .directive('performanceHistogram', function($compile) {
+    .directive('performanceHistogram', ['$compile', function($compile) {
         return {
             restrict: 'E',
             scope: {
@@ -793,9 +793,9 @@ angular.module('pmpCharts', [])
                 scope.$watch('linearScale', function(d) {dataStats = [];changed();inputChange();});
             }
         }
-    })
+    }])
 
-    .directive('dropSelections', function($compile) {
+    .directive('dropSelections', ['$compile', function($compile) {
         return {
             restrict: 'E',
             scope: {
@@ -863,9 +863,9 @@ angular.module('pmpCharts', [])
                 });
             }
         }
-    })
+    }])
 
-    .directive('statsTable', function($compile) {
+    .directive('statsTable', ['$compile', function($compile) {
         return {
             restrict: 'AE',
             scope: {
@@ -936,7 +936,7 @@ angular.module('pmpCharts', [])
                 scope.$watch('subtrahend', function(d) {inputChange()});
             }
         }
-    })
+    }])
 
     .directive('eventDrop', function() {
         return {
@@ -1147,7 +1147,7 @@ angular.module('pmpCharts', [])
     /*** 
     Life-Time Representation of Requests directive:
     ***/
-    .directive('linearLifetime', function($compile) {
+    .directive('linearLifetime', ['$compile', function($compile) {
         return {
             restrict: 'AE',
             scope: {
@@ -1602,7 +1602,7 @@ angular.module('pmpCharts', [])
                 scope.$watch('chartData', function(d) {if (d.length) prepareData(d);});
             }
         }
-    })
+    }])
 
     .directive('mcmDonutChart', function() {
         return {
@@ -2755,7 +2755,7 @@ angular.module('pmpCharts', [])
         }
 
     })
-    .directive('mcmCustomizableChart', function($compile) {
+    .directive('mcmCustomizableChart', ['$compile', function($compile) {
         return {
             restrict: 'E',
             scope: {
@@ -2891,8 +2891,8 @@ angular.module('pmpCharts', [])
 
             }
         }
-    })
-.directive("multiplePieCharts", function($compile) {
+    }])
+    .directive("multiplePieCharts", ['$compile', function($compile) {
     return {
         restrict: 'EA',
         scope: {
@@ -3037,4 +3037,4 @@ angular.module('pmpCharts', [])
             element.append($compile(innerHtml)(scope));
         }
     }
-});
+}]);

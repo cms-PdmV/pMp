@@ -1,7 +1,7 @@
 'use strict';
 
-pmpApp.controller('MainController', function($location, $route, $rootScope,
-                                             $interval, $scope, $timeout) {
+pmpApp.controller('MainController', ['$location', '$route', '$rootScope', '$interval', '$scope', '$timeout',
+                                     function($location, $route, $rootScope, $interval, $scope, $timeout) {
                       
     $rootScope.showView = false;
     $rootScope.searchPanelTemplate = 'partials/search.html';
@@ -94,11 +94,10 @@ pmpApp.controller('MainController', function($location, $route, $rootScope,
 
     $timeout(function() { $scope.nav('');}, 100);
     $interval($scope.updateDate, 1000);
-});
+}]);
 
-pmpApp.controller('PresentController', function($http, $location, $interval, $q,
-    $rootScope, $scope, $timeout) {
-
+pmpApp.controller('PresentController', ['$http', '$location', '$interval', '$q', '$rootScope', '$scope', '$timeout',
+                                        function($http, $location, $interval, $q, $rootScope, $scope, $timeout) {
     $scope.graphType = 1;
 
     // currently displayed data (after filtering)
@@ -468,13 +467,13 @@ pmpApp.controller('PresentController', function($http, $location, $interval, $q,
                 moviePath: 'lib/zeroclipboard/ZeroClipboard.swf'
             });
     }
-});
+}]);
 
-pmpApp.controller('IndexController', function($location) {
+pmpApp.controller('IndexController', ['$location', function($location) {
     $location.search({});
-});
+}]);
 
-pmpApp.controller('TypeaheadCtrl', function($scope, $http) {
+pmpApp.controller('TypeaheadCtrl', ['$scope', '$http', function($scope, $http) {
     $scope.suggestions = [];
     $scope.getSuggestions = function(query) {
         if (query === '') return null;
@@ -496,9 +495,10 @@ pmpApp.controller('TypeaheadCtrl', function($scope, $http) {
             });
         }
     };
-});
+}]);
 
-pmpApp.controller('HistoricalController', function($http, $location, $scope, $rootScope, $interval) {
+pmpApp.controller('HistoricalController', ['$http', '$location', '$scope', '$rootScope', '$interval',
+                                           function($http, $location, $scope, $rootScope, $interval) {
 
     $scope.graphType = 2;
 
@@ -787,10 +787,10 @@ pmpApp.controller('HistoricalController', function($http, $location, $scope, $ro
                 moviePath: 'lib/zeroclipboard/ZeroClipboard.swf'
             });
     }
-});
+}]);
 
-pmpApp.controller('PerformanceController', function($http, $interval, $location, $scope) {
-
+pmpApp.controller('PerformanceController', ['$http', '$interval', '$location', '$scope',
+                                            function($http, $interval, $location, $scope) {
         $scope.graphType = 3;
         $scope.cachedRequestData = [];
         $scope.allRequestData = [];
@@ -1095,9 +1095,10 @@ pmpApp.controller('PerformanceController', function($http, $interval, $location,
             //$scope.url = $scope.setURL();
         }
     }
-});
+}]);
 
-pmpApp.controller('ChainsController', function($http, $scope) {
+pmpApp.controller('ChainsController', ['$http', '$scope',
+                                       function($http, $scope) {
 
         $scope.parseResponse = function(data) {
             var tempNodeArray = [], nodes = [], links = [];
@@ -1155,4 +1156,4 @@ pmpApp.controller('ChainsController', function($http, $scope) {
                 $scope.loadingData = false;
             });
         }
-    });
+    }]);
