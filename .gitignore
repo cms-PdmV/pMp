@@ -7,3 +7,4 @@
 venv*
 *.log
 pmp/static/tmp/*
+pmp/node_modules/*
