@@ -10,19 +10,19 @@ var pmpApp = angular.module('pmpApp', ['ngAnimate', 'ngRoute', 'ui.bootstrap',
                     controller: 'IndexController'
                 })
                 .when('/chains', {
-                    templateUrl: 'partials/chains.html',
+                    templateUrl: 'partials/plot.html',
                     controller: 'ChainsController'
                 })
 	        .when('/historical', {
-		    templateUrl: 'partials/historical.html',
+		    templateUrl: 'partials/plot.html',
                     controller: 'HistoricalController'
 		})
 	        .when('/performance', {
-		    templateUrl: 'partials/performance.html',
+		    templateUrl: 'partials/plot.html',
                     controller: 'PerformanceController'
 		})
                 .when('/present', {
-                    templateUrl: 'partials/present.html',
+                    templateUrl: 'partials/plot.html',
                     controller: 'PresentController'
 		});
             $locationProvider.html5Mode(true);
@@ -127,6 +127,7 @@ pmpApp.controller('MainController', ['$location', '$route', '$rootScope', '$inte
 pmpApp.controller('PresentController', ['$http', '$location', '$interval', '$q', '$rootScope', '$scope', '$timeout',
                                         function($http, $location, $interval, $q, $rootScope, $scope, $timeout) {
     $scope.graphType = 1;
+    $rootScope.plotTemplate = 'partials/present.html';
 
     // currently displayed data (after filtering)
     $scope.allRequestData = [];
@@ -142,7 +143,7 @@ pmpApp.controller('PresentController', ['$http', '$location', '$interval', '$q',
 
     $scope.inputTags = [];
 
-    $scope.initPresent = function() {
+    $scope.init = function() {
         $scope.aOptionsValues = [1, 0, 3, 0, 0, 0];
         $scope.aRadioValues = [0, 0];
 
@@ -529,6 +530,7 @@ pmpApp.controller('HistoricalController', ['$http', '$location', '$scope', '$roo
                                            function($http, $location, $scope, $rootScope, $interval) {
 
     $scope.graphType = 2;
+    $rootScope.plotTemplate = 'partials/historical.html';
 
     $scope.allPWG = {};
 
@@ -538,7 +540,7 @@ pmpApp.controller('HistoricalController', ['$http', '$location', '$scope', '$roo
 
     $scope.inputTags = [];
 
-    $scope.initHistorical = function() {
+    $scope.init = function() {
 
         if ($location.search().y != undefined && $location.search().y != '') {
             $scope.zoomOnY = ($location.search().y == 'true');
@@ -817,9 +819,10 @@ pmpApp.controller('HistoricalController', ['$http', '$location', '$scope', '$roo
     }
 }]);
 
-pmpApp.controller('PerformanceController', ['$http', '$interval', '$location', '$scope',
-                                            function($http, $interval, $location, $scope) {
+pmpApp.controller('PerformanceController', ['$http', '$interval', '$location', '$rootScope', '$scope',
+                                            function($http, $interval, $location, $rootScope, $scope) {
         $scope.graphType = 3;
+        $rootScope.plotTemplate = 'partials/performance.html';
         $scope.cachedRequestData = [];
         $scope.allRequestData = [];
         $scope.inputTags = [];
@@ -1057,7 +1060,7 @@ pmpApp.controller('PerformanceController', ['$http', '$interval', '$location', '
             });
     }
 
-    $scope.initPerformance = function() {
+    $scope.init = function() {
 
         $scope.difference = {minuend: '', subtrahend: ''}        
         $scope.selections = ['created', 'validation', 'approved', 'submitted', 'done'];

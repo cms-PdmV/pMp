@@ -10,19 +10,19 @@ var pmpApp = angular.module('pmpApp', ['ngAnimate', 'ngRoute', 'ui.bootstrap',
                     controller: 'IndexController'
                 })
                 .when('/chains', {
-                    templateUrl: 'partials/chains.html',
+                    templateUrl: 'partials/plot.html',
                     controller: 'ChainsController'
                 })
 	        .when('/historical', {
-		    templateUrl: 'partials/historical.html',
+		    templateUrl: 'partials/plot.html',
                     controller: 'HistoricalController'
 		})
 	        .when('/performance', {
-		    templateUrl: 'partials/performance.html',
+		    templateUrl: 'partials/plot.html',
                     controller: 'PerformanceController'
 		})
                 .when('/present', {
-                    templateUrl: 'partials/present.html',
+                    templateUrl: 'partials/plot.html',
                     controller: 'PresentController'
 		});
             $locationProvider.html5Mode(true);

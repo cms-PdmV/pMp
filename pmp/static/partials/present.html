@@ -1,34 +1,3 @@
-<div class="row spacing" ng-show="showView" ng-init="initPresent()">
-  <div class="col-lg-9 col-md-9 col-sm-9">
-   <div class="row">
-     <div class="row">
-       <h1 class="pull-right white">
-         <strong>{{title}}</strong>
-       </h1>
-     </div>
-     <div ng-include="searchPanelTemplate"></div>
-   </div>
-  </div>
-
-  <div class="col-lg-3 col-md-3 col-sm-3">
-    <a class="btn btn-sm text-uppercase padding-r" data-toggle="collapse" data-target="#filter">
-      <i class="fa fa-eyedropper"></i>
-      <small class="hidden-sm"> Filter</small>
-    </a>
-    <a class="btn btn-sm text-uppercase padding-r" data-toggle="collapse" data-target="#advanced">
-      <i class="fa fa-cog"></i>
-      <small class="hidden-sm"> Advanced</small>
-    </a>
-    <a class="btn btn-sm text-uppercase" data-toggle="collapse" data-target="#share">
-      <i class="fa fa-share"></i>
-      <small class="hidden-sm"> Share</small>
-    </a>
-    <div ng-include="filterPanelTemplate"></div>
-    <div ng-include="advancedPanelTemplate"></div>
-    <div ng-include="sharePanelTemplate"></div>
-  </div>
-</div>
-
 <div class="row" ng-show="allRequestData.length">
   <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 text-center">
     
@@ -47,4 +16,3 @@
     
   </div>
 </div>
-<canvas style="display:none" height="500" width="960"></canvas>
