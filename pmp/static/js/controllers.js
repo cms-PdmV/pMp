@@ -2,10 +2,9 @@ pmpApp.controller('MainController', ['$location', '$route', '$rootScope', '$inte
                                      function($location, $route, $rootScope, $interval, $scope, $timeout) {
                       
     $rootScope.showView = false;
-    $rootScope.searchPanelTemplate = 'partials/search.html';
-    $rootScope.sharePanelTemplate = 'partials/share.html';
-    $rootScope.advancedPanelTemplate = 'partials/advanced.html';
-    $rootScope.filterPanelTemplate = 'partials/filter.html';
+    $rootScope.sharePanelTemplate = 'build/share.min.html';
+    $rootScope.advancedPanelTemplate = 'build/advanced.min.html';
+    $rootScope.filterPanelTemplate = 'build/filter.min.html';
 
     $scope.nav = function(where) {
         if (where == '') {
@@ -97,7 +96,7 @@ pmpApp.controller('MainController', ['$location', '$route', '$rootScope', '$inte
 pmpApp.controller('PresentController', ['$http', '$location', '$interval', '$q', '$rootScope', '$scope', '$timeout',
                                         function($http, $location, $interval, $q, $rootScope, $scope, $timeout) {
     $scope.graphType = 1;
-    $rootScope.plotTemplate = 'partials/present.html';
+    $rootScope.plotTemplate = 'build/present.min.html';
 
     // currently displayed data (after filtering)
     $scope.allRequestData = [];
@@ -500,7 +499,7 @@ pmpApp.controller('HistoricalController', ['$http', '$location', '$scope', '$roo
                                            function($http, $location, $scope, $rootScope, $interval) {
 
     $scope.graphType = 2;
-    $rootScope.plotTemplate = 'partials/historical.html';
+    $rootScope.plotTemplate = 'build/historical.min.html';
 
     $scope.allPWG = {};
 
@@ -792,7 +791,7 @@ pmpApp.controller('HistoricalController', ['$http', '$location', '$scope', '$roo
 pmpApp.controller('PerformanceController', ['$http', '$interval', '$location', '$rootScope', '$scope',
                                             function($http, $interval, $location, $rootScope, $scope) {
         $scope.graphType = 3;
-        $rootScope.plotTemplate = 'partials/performance.html';
+        $rootScope.plotTemplate = 'build/performance.min.html';
         $scope.cachedRequestData = [];
         $scope.allRequestData = [];
         $scope.inputTags = [];

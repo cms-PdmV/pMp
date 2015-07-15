@@ -7,7 +7,7 @@ from flask import request
 @app.route('/404')
 def four_oh_four():
     """Redirect on 404"""
-    return render_template('invalid.html'), 404
+    return make_response(open('pmp/static/build/invalid.min.html').read())
 
 
 @app.route('/about')
@@ -24,7 +24,7 @@ def about():
 @app.route('/present')
 def dashboard():
     """Redirect to graph template"""
-    return make_response(open('pmp/templates/valid.html').read())
+    return make_response(open('pmp/static/build/valid.min.html').read())
 
 
 @app.route('/api/<i>/<typeof>')
