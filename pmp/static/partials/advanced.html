@@ -28,18 +28,17 @@
         </label>
       </form>
       
-      <div class="input-group input-group-sm pull-left spacing text-uppercase"
-           ng-show="graphType == 2">
+      <div class="input-group input-group-sm spacing text-uppercase" ng-show="graphType == 2">
         <span class="hidden-sm input-group-addon">Probing</span>
-        <input type="text" class="form-control" ng-model="$parent.probing" ng-change="setURL()"
+        <input type="number" class="form-control" ng-model="$parent.probing" ng-change="setURL()"
                placeholder="Default: 40">
         <span class="btn btn-primary hidden-sm input-group-addon" ng-click="query(true)">
           <i class="fa fa-refresh"></i>
         </span>
       </div>
 
-     <div class="input-group input-group-sm spacing" ng-show="graphType == 3">
-       <span class="hidden-sm input-group-addon text-uppercase">Bins</span>
+     <div class="input-group input-group-sm spacing text-uppercase" ng-show="graphType == 3">
+       <span class="hidden-sm input-group-addon">Bins</span>
        <input type="number" class="form-control" ng-model="$parent.bins" ng-change="setURL()"
               placeholder="Default: 10">
      </div>
