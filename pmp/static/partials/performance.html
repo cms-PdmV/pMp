@@ -15,8 +15,14 @@
     <stats-table chart-data="allRequestData" minuend="difference.minuend"
                  subtrahend="difference.subtrahend"></stats-table>
   </div>
-
   <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 text-center">
+    <a class="btn btn-sm text-uppercase padding-r" data-target="#event-drop" data-toggle="collapse">
+      <small>
+        Requests' lifetime phases
+      </small>
+    </a>  
+  </div>
+  <div id="event-drop" class="collapse col-xs-12 col-sm-12 col-md-12 col-lg-12 text-center">
     <event-drop chart-data="allRequestData"></event-drop>
   </div>
 
