@@ -341,15 +341,19 @@ class HistoricalAPI(esadapter.InitConnection):
         if taskchain:
             res = {'data': response, 'pwg': dict(), 'status': dict(),
                    'taskchain': True}
-        # get accumulated requests
-        accumulated = self.accumulate_requests(response)
-        # add data points
-        data = self.add_data_points(accumulated,
-                                    self.sort_timestamps(accumulated, probe))
-        # add last point which is now()
-        data = self.append_data_point(data)
-        res = {'data': data, 'pwg': pwg, 'status': status, 'taskchain': False}
+        else:
+            # get accumulated requests
+            accumulated = self.accumulate_requests(response)
+            # add data points
+            data = self.add_data_points(accumulated,
+                                        self.sort_timestamps(accumulated,
+                                                             probe))
+            # add last point which is now()
+            data = self.append_data_point(data)
+            res = {'data': data, 'pwg': pwg, 'status': status,
+                   'taskchain': False}
         return json.dumps({"results": res})
+
 
 class SubmittedStatusAPI(esadapter.InitConnection):
     """Used to return list of submitted requests with current progress"""
@@ -408,4 +412,3 @@ class SubmittedStatusAPI(esadapter.InitConnection):
         """Return maximum number of completed events"""
         return max(previous,
                    data['pdmv_evts_in_DAS'] + data['pdmv_open_evts_in_DAS'])
-

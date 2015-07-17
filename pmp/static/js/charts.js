@@ -1330,6 +1330,10 @@ angular.module('pmpCharts', [])
                 var onLoad = function(a) {
                     if (scope.taskChain) {
                         // remove
+                        if (l1 != undefined) {
+                            l1.remove();
+                            l1 = undefined;
+                        }
                         if (l2 != undefined) {
                             l2.remove();
                             l2 = undefined;
@@ -1444,6 +1448,9 @@ angular.module('pmpCharts', [])
 
                         onZoom();
                     } else {
+                        if (l1 == undefined) {
+                            svg.selectAll('path').remove();
+                        }
                         if (l2 == undefined) {
                             svg.selectAll('path').remove();
                         }
@@ -1598,7 +1605,12 @@ angular.module('pmpCharts', [])
                     onLoad(scope.dataCopy);
                 }
 
+                var onYZoomChange = function(d) {
+                    d ? zoom.y(y) : zoom.y(d3.scale.linear());
+                }
+
                 // Watch for data change
+                scope.$watch('zoomY', function(d) {onYZoomChange(d)});
                 scope.$watch('chartData', function(d) {if (d.length) prepareData(d);});
             }
         }
