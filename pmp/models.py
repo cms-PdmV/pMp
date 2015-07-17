@@ -46,6 +46,12 @@ class APICall(object):
         return call.GrowingAPI().get(query)
 
     @staticmethod
+    def priority(campaign):
+        """Average time/event in different priority blocks"""
+        from pmp.api import performance as call
+        return call.PriorityAPI().get(campaign)
+
+    @staticmethod
     def submitted_stats(query, priority, pwg):
         """List submitted call"""
         from pmp.api import historical as call

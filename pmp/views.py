@@ -42,6 +42,8 @@ def api(i, typeof):
         res = make_response(call.historical_simple(i))
     elif typeof == 'performance':
         res = make_response(call.performance(i))
+    elif typeof == 'priority':
+        res = make_response(call.priority(i))
     elif typeof == 'lastupdate':
         res = make_response(call.last_update(i))
     return res

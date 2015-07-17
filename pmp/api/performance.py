@@ -32,3 +32,11 @@ class PerformanceAPI(esadapter.InitConnection):
             request['history'] = patch_history
 
         return json.dumps({"results": response})
+
+
+class PriorityAPI(esadapter.InitConnection):
+    """Return list of time/event statistics for different priority blocks"""
+
+    def get(self, campaign):
+        """Execute"""
+        return json.dumps({"results": "dummy"})
