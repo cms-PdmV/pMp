@@ -789,7 +789,7 @@ angular.module('pmpCharts', [])
                 }
 
                 scope.$watch('chartData', function(d) {inputChange()});
-                //scope.$watch('numberOfBins', function(d) {changed()});
+                scope.$watch('numberOfBins', function(d) {changed()});
                 scope.$watch('linearScale', function(d) {dataStats = [];changed();inputChange();});
             }
         }
