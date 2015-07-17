@@ -518,7 +518,7 @@ pmpApp.controller('HistoricalController', ['$http', '$location', '$scope', '$roo
         }
         
         if ($location.search().p != undefined && $location.search().p != '') {
-            $scope.probing = $location.search().p;
+            $scope.probing = parseInt($location.search().p, 10);
         } else {
             $scope.probing = 40;
         }
