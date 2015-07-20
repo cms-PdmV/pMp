@@ -1926,7 +1926,7 @@ angular.module('pmpCharts', [])
             },
             link: function(scope, element, attrs) {
                 var highlight_color = "#bdbdbd";
-                var margin = {top: 10, right: 0, bottom: 100, left: 50};
+                var margin = {top: 10, right: 0, bottom: 160, left: 50};
                 //input data
                 var data, value, grouping, columns, stacking, yScaleType, valueOperation,
                     duration;
@@ -2068,7 +2068,7 @@ angular.module('pmpCharts', [])
 
                 function changeWidthHeight() {
                     width = scope.userWidth || 1125;
-                    height = 300;
+                    height = 400;
                     width = width  - margin.left - margin.right;
                     height = height - margin.top - margin.bottom;
                     max_column_width = width/4;
@@ -2354,6 +2354,14 @@ angular.module('pmpCharts', [])
                     var maxHeight = 0;
 
                     setTimeout(function() {
+                            var fontSizeAdjustable = "10px";
+                            var classedAdjustable = "text-uppercase";
+                            console.log(grouping);
+                            if((grouping.length && grouping[0] === "prepid") || (!grouping.length && columns === "prepid")) {
+                                fontSizeAdjustable = "8px";
+                                classedAdjustable = "";
+                            }
+
                             svg.select(".x.axis").transition().duration(duration)
                                 .call(xAxis).selectAll(".x.axis .tick")
                                 .call(endall, function(){
@@ -2376,7 +2384,7 @@ angular.module('pmpCharts', [])
                                     return d + "\n" + descriptionString;
                                 });
                                     })
-                                .selectAll("text").attr("class", "text-uppercase").style("text-anchor", "end").style("font-size", "10px").style("font-weight", "lighter").style("cursor", "default").attr("dx", "-0.5em").attr("dy", "0.5em").attr("transform", "rotate(-30)")
+                                .selectAll("text").attr("class", classedAdjustable).style("text-anchor", "end").style("font-size", fontSizeAdjustable).style("font-weight", "lighter").style("cursor", "default").attr("dx", "-0.5em").attr("dy", "0.5em").attr("transform", "rotate(-55)")
                                 .each(function(){
                                 maxHeight = d3.max(this.getBBox().width, maxHeight)
                                     });
