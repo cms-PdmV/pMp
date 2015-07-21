@@ -1,10 +1,11 @@
-pmpApp.controller('MainController', ['$location', '$route', '$rootScope', '$interval', '$scope', '$timeout',
-                                     function($location, $route, $rootScope, $interval, $scope, $timeout) {
-                      
+pmpApp.controller('MainController', ['$location', '$route', '$rootScope', '$interval', '$scope', '$timeout', 'browser', function($location, $route, $rootScope, $interval, $scope, $timeout, isSupportedBrowser) {
+            
     $rootScope.showView = false;
     $rootScope.sharePanelTemplate = 'build/share.min.html';
     $rootScope.advancedPanelTemplate = 'build/advanced.min.html';
     $rootScope.filterPanelTemplate = 'build/filter.min.html';
+    
+    if (!isSupportedBrowser) $('#unsupportedModal').modal('show');
 
     $scope.nav = function(where) {
         if (where == '') {

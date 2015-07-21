@@ -28,13 +28,14 @@ var pmpApp = angular.module('pmpApp', ['ngAnimate', 'ngRoute', 'ui.bootstrap',
             $locationProvider.html5Mode(true);
         }
     ]);
-pmpApp.controller('MainController', ['$location', '$route', '$rootScope', '$interval', '$scope', '$timeout',
-                                     function($location, $route, $rootScope, $interval, $scope, $timeout) {
-                      
+pmpApp.controller('MainController', ['$location', '$route', '$rootScope', '$interval', '$scope', '$timeout', 'browser', function($location, $route, $rootScope, $interval, $scope, $timeout, isSupportedBrowser) {
+            
     $rootScope.showView = false;
     $rootScope.sharePanelTemplate = 'build/share.min.html';
     $rootScope.advancedPanelTemplate = 'build/advanced.min.html';
     $rootScope.filterPanelTemplate = 'build/filter.min.html';
+    
+    if (!isSupportedBrowser) $('#unsupportedModal').modal('show');
 
     $scope.nav = function(where) {
         if (where == '') {
@@ -1187,3 +1188,11 @@ pmpApp.controller('ChainsController', ['$http', '$scope',
             });
         }
     }]);
+pmpApp.factory('browser', ['$window', function($window) {
+    var userAgent = $window.navigator.userAgent;
+    var supportedBrowsers = {Chrome: /chrome/i, Safari: /safari/i, Firefox: /firefox/i, Opera: /Opera/i};
+    for(var s in supportedBrowsers) {
+        if (supportedBrowsers[s].test(userAgent)) return true;
+    }
+    return false;
+}]);

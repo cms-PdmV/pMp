@@ -2,7 +2,7 @@ module.exports = function(grunt) {
  grunt.initConfig({
   concat: {
    js: {
-    src: ['static/js/app.js', 'static/js/controllers.js'],
+    src: ['static/js/app.js', 'static/js/controllers.js', 'static/js/services.js'],
     dest: 'static/build/pmp.build.js',
    },
    css: {
