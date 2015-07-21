@@ -388,8 +388,8 @@ pmpApp.controller('PresentController', ['$http', '$location', '$interval', '$q',
     $scope.takeScreenshot = function(format) {
         $scope.loading = true;
         if (format === undefined) format = 'svg';
-        var xml = (new XMLSerializer).serializeToString(document.getElementById("ctn").getElementsByTagName("svg")[0]).replace(/#/g,'U+0023');
-        $http.get('ts/'+ format +'/' + xml).then(function(data) {
+        var xml = (new XMLSerializer).serializeToString(document.getElementById("ctn").getElementsByTagName("svg")[0]).replace(/#/g,'U+0023').replace(/\n/g, ' ').replace(/\//g, '\\\\');
+        $http.get('ts/'+ format +'/' + encodeURIComponent(xml)).then(function(data) {
             window.open(data.data);
             $scope.loading = false;
         });

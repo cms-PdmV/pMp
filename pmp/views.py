@@ -96,5 +96,5 @@ def shorten(url):
 @app.route('/ts/<ext>/<path:svg>')
 def take_screenshot(ext, svg):
     """Take screenshot"""
-    return models.APICall().take_screenshot(svg, ext)
+    return models.APICall().take_screenshot(svg.replace('\\\\', '/'), ext)
 
