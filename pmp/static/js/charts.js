@@ -26,7 +26,7 @@ Parse time in milliseconds to the human readable format
             var days = Math.floor(seconds / 86400);
             var hours = Math.floor((seconds % 86400) / 3600);
             var minutes = Math.floor(((seconds % 86400) % 3600) / 60);
-            return days + "D " + hours + "h " + minutes + "m";
+            return days + "D " + hours + "h ";
         };
     })
 
@@ -891,7 +891,6 @@ angular.module('pmpCharts', [])
                     min: 0,
                     population: 0,
                     range: 0,
-                    sum: 0
                 }
                 
                 var updateStats = function() {
@@ -901,7 +900,6 @@ angular.module('pmpCharts', [])
                     scope.statistics.min = d3.min(dataStats, function(d) {return d;});
                     scope.statistics.population = dataStats.length;
                     scope.statistics.range = scope.statistics.max - scope.statistics.min;
-                    scope.statistics.sum = d3.sum(dataStats, function(d) {return d;});
                 }
 
                 var inputChange = function() {
@@ -2356,7 +2354,6 @@ angular.module('pmpCharts', [])
                     setTimeout(function() {
                             var fontSizeAdjustable = "10px";
                             var classedAdjustable = "text-uppercase";
-                            console.log(grouping);
                             if((grouping.length && grouping[0] === "prepid") || (!grouping.length && columns === "prepid")) {
                                 fontSizeAdjustable = "8px";
                                 classedAdjustable = "";
