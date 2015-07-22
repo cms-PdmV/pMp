@@ -177,12 +177,14 @@ pmpApp.controller('PresentController', ['$http', '$location', '$interval', '$q',
         }
         $scope.updatePWG([], true, true, tmp);
 
+        //console.log("Anything?");
+
         //initiate allRequestData from URL
         if ($location.search().r != undefined) {
             $scope.loadingData = true;
             var tmp = $location.search().r.split(',');
             for (var i = 0; i < tmp.length; i++) {
-                $scope.load(tmp[i], true, tmp.length);
+                $scope.load(tmp[i], true, tmp.length, $scope.isEmpty($scope.allPWG), $scope.isEmpty($scope.allStatus));
             }
         } else {
             $scope.url = $location.absUrl();
@@ -205,7 +207,7 @@ pmpApp.controller('PresentController', ['$http', '$location', '$interval', '$q',
         }
     }
 
-    $scope.load = function(campaign, add, more) {
+    $scope.load = function(campaign, add, more, defaultPWG, defaultStatus) {
         if (!campaign) {
             $scope.showPopUp('warning', 'Your request parameters are empty');
         } else if (add & $scope.inputTags.indexOf(campaign) !== -1) {
@@ -218,6 +220,7 @@ pmpApp.controller('PresentController', ['$http', '$location', '$interval', '$q',
                 var promise = $http.get("api/" + campaign + "/announced");
             }
             promise.then(function(data) {
+                    console.log(defaultStatus)
                 if (!data.data.results.length) {
                     $scope.showPopUp('error', 'No results for this request parameters');
                     $scope.setURL();
@@ -227,8 +230,9 @@ pmpApp.controller('PresentController', ['$http', '$location', '$interval', '$q',
                     if (add) {
                         // append
                         data.data.results.push.apply(data.data.results, $scope.cachedRequestData);
-                        $scope.updateStatus(data.data.results, false, !more);
-                        $scope.updatePWG(data.data.results, false, !more);
+                        console.log(defaultStatus);
+                        $scope.updateStatus(data.data.results, false, defaultStatus);
+                        $scope.updatePWG(data.data.results, false, defaultPWG);
                     } else {
                         // see
                         $scope.inputTags = [];
