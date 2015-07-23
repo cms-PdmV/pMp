@@ -2362,8 +2362,10 @@ angular.module('pmpCharts', [])
                             svg.select(".x.axis").transition().duration(duration)
                                 .call(xAxis).selectAll(".x.axis .tick")
                                 .call(endall, function(){
-                            svg.selectAll(".x.axis .tick")
-                                .filter(function(){
+                                        svg.selectAll('.x.axis path').style('display', 'none'); 
+                                svg.selectAll('.x.axis line').style('stroke', '#aaaaaa');
+                                svg.selectAll(".x.axis .tick")
+                                    .filter(function(){
                                     return d3.select(this).select("title").empty()
                                 })
                                 .append("title");
@@ -2745,6 +2747,16 @@ angular.module('pmpCharts', [])
                             }
                         });
                 }
+                
+                function updateStylesheet() {
+                    console.log('DOIT!');
+                    svg.selectAll('.domain').style('stroke', '#777777').style('fill', 'none');
+                    svg.selectAll('.y line').style('stroke', '#777777').style('fill', 'none');
+                    svg.selectAll('.x path').style('stroke', '#777777').style('fill', 'none');
+                    svg.selectAll('.grid g').style('stroke', '#aaaaaa').style('stroke-width', '0.4');
+                    svg.selectAll('.grid path').style('display', 'none');
+                    svg.selectAll('.x g').style('stroke-width', '0');
+                }
 
                 function redraw() {
                     prepareArguments();
@@ -2755,6 +2767,7 @@ angular.module('pmpCharts', [])
                     updateScales();
                     draw();
                     updateAxes();
+                    updateStylesheet();
                 }
 
                 scope.$watch('data', function(dat) {

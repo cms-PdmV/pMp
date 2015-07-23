@@ -1,79 +1,16 @@
-.axis .minor line {
-    stroke-dasharray: 1px, 4px;
-}
-
-.axis path, .axis line {
-    fill: none;
-    stroke: black;
-    stroke-width: 1;
-    shape-rendering: crispEdges;
-}
+/*
+ *Global
+ */
 
 body {
     background: #eeeeee;
     font-family: 'Roboto', sans-serif;
 }
 
-body.dragging, body.dragging * {
-    cursor: move !important;
-}
-
 .brand-adjust {
     height: 30px;
     margin: 10px;
     float: left;
-}
-
-.data1 {
-    stroke-width: 2;
-    stroke:  #607d8b;
-}
-      
-.data2 {
-    stroke-width: 2;
-    stroke: #689f38;
-}
-
-.data3 {
-    stroke-width: 2;
-    stroke: #b71c1c;
-}
-
-.grid .tick, .grid path {
-    fill: none;
-}
-
-.grid .tick {
-    stroke: grey;
-    opacity: 0.2;
-    stroke-width: 0.5;
-    stroke-dasharray: 3, 1;
-}
-
-.minorx .tick, .minory .tick {
-    opacity: 0.2;
-    stroke-width: 0.6;
-    stroke-dasharray: 3, 1;
-}
-
-.grid path {
-    stroke-width: 0;
-}
-
-.hover-line line {
-    stroke-width: 1.5;
-    stroke: #6E7B8B;
-}
-
-.line {
-    border-color: #888;
-}
-
-.nav-header {
-    font-size: 16px;
-    font-weight: bold;
-    text-align: right;
-    text-transform: uppercase;
 }
 
 .ng-hide-remove {
@@ -87,46 +24,8 @@ body.dragging, body.dragging * {
     display: block !important;
 }
 
-.node {
-    cursor: pointer;
-}
-
-.node circle {
-    cursor: pointer;
-    stroke-width: 2px;
-}
-
-.node-text {
-    cursor: pointer;
-    fill: #000;
-    stroke: transparent;
-    font: bold 11px sans-serif;
-    text-shadow: 1px 1px #fff;
-    textLength: 20px;
-    display: none;
-}
-
-.node.expanded circle {
-    fill: #fff;
-}
-
-.node.expanded .node-text {
-    display: none;
-}
-
 .padding-r {
     padding-right: 0px;
-}
-
-path {
-    stroke-width: 1;
-    fill: none;
-}
-
-rect.pane {
-    cursor: move;
-    fill: none;
-    pointer-events: all;
 }
 
 .pointer {
@@ -139,16 +38,35 @@ rect.pane {
     z-index: 2001;
 }
 
+.white {
+    color: white;
+}
+
 .spacing {
     margin-bottom: 10px;
 }
 
-.spacing-sm {
-    margin-bottom: 4px;
-}
-
 .spacing-r {
     margin-right: 10px;
+}
+
+/*
+ *Index
+ */
+
+.line {
+    border-color: #888888;
+}
+
+/*
+ *Drag&Drop
+ */
+
+.nav-header {
+    font-size: 16px;
+    font-weight: bold;
+    text-align: right;
+    text-transform: uppercase;
 }
 
 ul.nav li {
@@ -157,8 +75,8 @@ ul.nav li {
 
 ul.nav li.dragged {
     position: absolute;
-    opacity: 0.9;
-    z-index: 2000;
+    opacity: 0.7;
+    z-index: 100;
 }
 
 ul.nav li.placeholder {
@@ -175,26 +93,6 @@ ul.nav li.placeholder:before {
     top: -3px;
 }
 
-.x.axis line {
-    stroke: #AAAAAA;
-}
-
-.x.axis .minor {
-    stroke-opacity: 0.5;
-}
-
-.x.axis path {
-    display: none;
-}
-
-.y.axis line, .y.axis path {
-    fill: none;
-    stroke: #777777;
-}
-
-.white {
-    color: white;
-}
 /*Performance*/
 .y-axis g line {
     stroke: grey;
@@ -224,6 +122,11 @@ ul.nav li.placeholder:before {
 }
 
 /*Historical*/
+path {
+    stroke-width: 1;
+    fill: none;
+}
+
 .label-time {
     color: #90a4ae;
     position: absolute;
@@ -247,3 +150,91 @@ ul.nav li.placeholder:before {
     position: absolute;
     left: 650px;
 }
+
+.data1 {
+    stroke-width: 2;
+    stroke:  #607d8b;
+}
+      
+.data2 {
+    stroke-width: 2;
+    stroke: #689f38;
+}
+
+.data3 {
+    stroke-width: 2;
+    stroke: #b71c1c;
+}
+
+
+.minorx .tick, .minory .tick {
+    opacity: 0.2;
+    stroke-width: 0.6;
+    stroke-dasharray: 3, 1;
+}
+
+
+.hover-line line {
+    stroke-width: 1.5;
+    stroke: #6E7B8B;
+}
+
+rect.pane {
+    cursor: move;
+    fill: none;
+    pointer-events: all;
+}
+
+/*
+ *Chains
+ *Currently not available from frontend
+ */
+
+/*.node {
+    cursor: pointer;
+}
+
+.node circle {
+    cursor: pointer;
+    stroke-width: 2px;
+}
+
+.node-text {
+    cursor: pointer;
+    fill: #000;
+    stroke: transparent;
+    font: bold 11px sans-serif;
+    text-shadow: 1px 1px #fff;
+    textLength: 20px;
+    display: none;
+}
+
+.node.expanded circle {
+    fill: #fff;
+}
+
+.node.expanded .node-text {
+    display: none;
+}*/
+
+
+
+
+/*RASH?*/
+/*.axis .minor line {
+    stroke-dasharray: 1px, 4px;
+}
+
+.axis path, .axis line {
+    fill: none;
+    stroke: black;
+    stroke-width: 1;
+    shape-rendering: crispEdges;
+}*/
+
+/*body.dragging, body.dragging * {
+    cursor: move !important;
+}*/
+
+
+
