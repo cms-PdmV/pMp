@@ -177,8 +177,6 @@ pmpApp.controller('PresentController', ['$http', '$location', '$interval', '$q',
         }
         $scope.updatePWG([], true, true, tmp);
 
-        //console.log("Anything?");
-
         //initiate allRequestData from URL
         if ($location.search().r != undefined) {
             $scope.loadingData = true;
@@ -220,7 +218,6 @@ pmpApp.controller('PresentController', ['$http', '$location', '$interval', '$q',
                 var promise = $http.get("api/" + campaign + "/announced");
             }
             promise.then(function(data) {
-                    console.log(defaultStatus)
                 if (!data.data.results.length) {
                     $scope.showPopUp('error', 'No results for this request parameters');
                     $scope.setURL();
@@ -230,7 +227,6 @@ pmpApp.controller('PresentController', ['$http', '$location', '$interval', '$q',
                     if (add) {
                         // append
                         data.data.results.push.apply(data.data.results, $scope.cachedRequestData);
-                        console.log(defaultStatus);
                         $scope.updateStatus(data.data.results, false, defaultStatus);
                         $scope.updatePWG(data.data.results, false, defaultPWG);
                     } else {

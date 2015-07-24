@@ -654,7 +654,9 @@ angular.module('pmpCharts', [])
                     .scale(x)
                     .orient('bottom')
                     .tickFormat(formatXAxis);
-               
+
+
+
                 var y = d3.scale.log().clamp(true).range([height, 0]).nice();
 
                 var yAxis = d3.svg.axis()
@@ -709,6 +711,9 @@ angular.module('pmpCharts', [])
                         yAxis.scale(y);
                     }
 
+                    svg.selectAll('.x path').style('stroke', '#777777').style('fill', 'none');
+                    svg.selectAll('.x line').style('stroke', '#777777').style('fill', 'none');
+
                     bar = svg.selectAll('.bar')
                     .data(data, function(d) { return d; });
 
@@ -742,6 +747,7 @@ angular.module('pmpCharts', [])
                     .attr('width', x(data[0].dx) - 1)
                     .attr('x', 1)
                     .style('shape-rendering', 'optimizeSpeed')
+                    .style('fill', '#263238')
                     .on('mouseover', function(d) { d3.select(this).style('fill', '#b0bec5'); })
                     .on('mouseout', function(d) { d3.select(this).style('fill', '#263238'); })
                     .on('click', function(data) {
@@ -758,6 +764,7 @@ angular.module('pmpCharts', [])
                     .attr('y', 6)
                     .attr('x', x(data[0].dx) / 2)
                     .attr('text-anchor', 'middle')
+                    .style('fill', '#eeeeee')
                     .text(function(d) { return formatCount(d.y); });
 
                     bar.exit()
@@ -787,7 +794,7 @@ angular.module('pmpCharts', [])
                         updateHistogram();
                     }
                 }
-
+                svg.selectAll('.axis path').style('fill', 'none');
                 scope.$watch('chartData', function(d) {inputChange()});
                 scope.$watch('numberOfBins', function(d) {changed()});
                 scope.$watch('linearScale', function(d) {dataStats = [];changed();inputChange();});
@@ -1063,16 +1070,6 @@ angular.module('pmpCharts', [])
                         .attr('transform', 'translate(' + config.margin.left + ', '
                               + (config.margin.top - 15) + ')');
 
-                    var lines = graphBody.selectAll('g').data(data);
-                    lines.enter()
-                        .append('g')
-                        .classed('line', true)
-                        .attr('transform', function(d, i) {
-                                return 'translate(0,' + i*40 + ')';
-                            })
-                        .style('fill', config.axisLineColor);
-                    lines.exit().remove();
-                    
                     currentMin = d3.min(data, function(d) {
                             return d.date;
                         });
@@ -1093,7 +1090,7 @@ angular.module('pmpCharts', [])
                     yAxis.scale(y);
                     yAxisG.call(yAxis);
                     yAxisG.append('line')
-                        .attr('fill', config.axisLineColor)
+                        .attr('fill', 'none')
                         .classed('y-tick', true)
                         .attr('x1', 0)
                         .attr('x2', 0 + graphWidth-100)
@@ -1109,6 +1106,9 @@ angular.module('pmpCharts', [])
                         .style('fill', function(d) { return getColor(d) })
                         .append('title')
                         .text(function(d) { return d.prepid});
+
+                    svg.selectAll('.axis path').style('stroke', '#777777').style('fill', 'none');
+                    svg.selectAll('.x line').style('stroke', '#777777').style('fill', 'none');
                 }
 
                 // Zoom
@@ -1177,7 +1177,7 @@ angular.module('pmpCharts', [])
                 var l1, l2, l3, containerBox, hoverLineGroup, clipPath, rectLifetime, rectTaskChain;
                 var fiveShadesOfGrey = ['#4fc3f7', '#4dd0e1', '#4db6ac', '#81c784', '#aed581', '#dce775'];
                 // add data label
-                var innerHtml = '<span ng-repeat=\'d in labelData\' class=\'{{d.class}}\'>{{d.label}}<span ng-show=\'humanReadableNumbers && d.class != "label-time"\'>{{d.data | humanReadableNumbers}}</span><span ng-hide=\'humanReadableNumbers && d.class != "label-time"\'>{{d.data}}</span></span>';
+                var innerHtml = '<span ng-repeat=\'d in labelData\' style=\'{{d.style}}\'>{{d.label}}<span ng-show=\'humanReadableNumbers && d.label != "Time: "\'>{{d.data | humanReadableNumbers}}</span><span ng-hide=\'humanReadableNumbers && d.label != "Time: "\'>{{d.data}}</span></span>';
                 element.append($compile(innerHtml)(scope));
 
                 // add main svg
@@ -1530,6 +1530,8 @@ angular.module('pmpCharts', [])
                         constructDataLabel();
                         onZoom();
                     }
+                    svg.selectAll('.tick line').style('opacity', '0.2').style('stroke', '#000000').style('stroke-width', '0.6').style('fill', 'none').style('stroke-dasharray', '3px, 1px');
+                    svg.selectAll('.axis path').style('fill', 'none');
                 }
 
                 // Create a data label
@@ -1537,7 +1539,7 @@ angular.module('pmpCharts', [])
                     if (containerBox == undefined) {
                         containerBox = document.querySelector('#lifetime');
                         hoverLineGroup = chartBody.append("svg:g").attr("class", "hover-line");
-                        var hoverLine = hoverLineGroup.append("svg:line").attr("y1", 0).attr("y2", height + 10);
+                        var hoverLine = hoverLineGroup.append("svg:line").attr("y1", 0).attr("y2", height + 10).style('stroke-width', '1px').style('stroke', '#777777');
                     }
 
                     var handleMouseOverGraph = function(event) {
@@ -1564,7 +1566,7 @@ angular.module('pmpCharts', [])
                         } else {
                             tmp = ''
                         }
-                        scope.labelData = [{label: 'Time: ', class:'label-time', data: tmp}, {label: 'Expected events: ', class:'label-expected', data: data[1]}, {label: 'Events in DAS: ', class:'label-events-in-das', data: data[2]}, {label: 'Done events in DAS: ', class: 'label-done-events-in-das', data: data[3]}];
+                        scope.labelData = [{label: 'Time: ', style: 'color: #90a4ae; position: absolute; left: 0px', data: tmp}, {label: 'Expected events: ', style: 'color: #263238; position: absolute; left: 250px', data: data[1]}, {label: 'Events in DAS: ', style: 'color: #ff6f00; position: absolute; left: 450px', data: data[2]}, {label: 'Done events in DAS: ', style: 'color: #01579b; position: absolute; left: 650px', data: data[3]}];
                     }
 
                     var displayValueLabelsForPositionX = function(xPosition) {
@@ -2749,7 +2751,6 @@ angular.module('pmpCharts', [])
                 }
                 
                 function updateStylesheet() {
-                    console.log('DOIT!');
                     svg.selectAll('.domain').style('stroke', '#777777').style('fill', 'none');
                     svg.selectAll('.y line').style('stroke', '#777777').style('fill', 'none');
                     svg.selectAll('.x path').style('stroke', '#777777').style('fill', 'none');

@@ -3,7 +3,7 @@
  */
 
 body {
-    background: #eeeeee;
+    background: #eceff1;
     font-family: 'Roboto', sans-serif;
 }
 
@@ -94,91 +94,11 @@ ul.nav li.placeholder:before {
 }
 
 /*Performance*/
-.y-axis g line {
-    stroke: grey;
-    fill: red;
-    stroke-width: 1px;
-}
-.graph-body .line circle {
-    opacity: 0.1;
-}
-
-.bar rect {
-    fill: #263238;
-}
-
-.bar text {
-    fill: #eeeeee;
-}
-
-.axis path, .axis line {
-    fill: none;
-    stroke: #000;3
-    shape-rendering: crispEdges;
-}
-
 .update {
     fill: #b0bec5;
 }
 
 /*Historical*/
-path {
-    stroke-width: 1;
-    fill: none;
-}
-
-.label-time {
-    color: #90a4ae;
-    position: absolute;
-    left: 0px;
-}
-
-.label-expected {
-    color: #263238;
-    position: absolute;
-    left: 250px;
-}
-
-.label-events-in-das {
-    color: #ff6f00;
-    position: absolute;
-    left: 450px;
-}
-
-.label-done-events-in-das {
-    color: #01579b;
-    position: absolute;
-    left: 650px;
-}
-
-.data1 {
-    stroke-width: 2;
-    stroke:  #607d8b;
-}
-      
-.data2 {
-    stroke-width: 2;
-    stroke: #689f38;
-}
-
-.data3 {
-    stroke-width: 2;
-    stroke: #b71c1c;
-}
-
-
-.minorx .tick, .minory .tick {
-    opacity: 0.2;
-    stroke-width: 0.6;
-    stroke-dasharray: 3, 1;
-}
-
-
-.hover-line line {
-    stroke-width: 1.5;
-    stroke: #6E7B8B;
-}
-
 rect.pane {
     cursor: move;
     fill: none;
@@ -216,25 +136,3 @@ rect.pane {
 .node.expanded .node-text {
     display: none;
 }*/
-
-
-
-
-/*RASH?*/
-/*.axis .minor line {
-    stroke-dasharray: 1px, 4px;
-}
-
-.axis path, .axis line {
-    fill: none;
-    stroke: black;
-    stroke-width: 1;
-    shape-rendering: crispEdges;
-}*/
-
-/*body.dragging, body.dragging * {
-    cursor: move !important;
-}*/
-
-
-
