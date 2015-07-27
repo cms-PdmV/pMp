@@ -5,6 +5,13 @@ pmpApp.controller('MainController', ['$location', '$route', '$rootScope', '$inte
     $rootScope.advancedPanelTemplate = 'build/advanced.min.html';
     $rootScope.filterPanelTemplate = 'build/filter.min.html';
     
+    /*
+     * Checks if the given value is the first occurring
+     */
+    $rootScope.onlyUnique = function(value, index, self) { 
+        return self.indexOf(value) === index;
+    }
+    
     if (!isSupportedBrowser) $('#unsupportedModal').modal('show');
 
     $scope.nav = function(where) {
@@ -94,8 +101,7 @@ pmpApp.controller('MainController', ['$location', '$route', '$rootScope', '$inte
     $interval($scope.updateDate, 1000);
 }]);
 
-pmpApp.controller('PresentController', ['$http', '$location', '$interval', '$q', '$rootScope', '$scope', '$timeout',
-                                        function($http, $location, $interval, $q, $rootScope, $scope, $timeout) {
+pmpApp.controller('PresentController', ['$http', '$location', '$interval', '$q', '$rootScope', '$scope', '$timeout', function($http, $location, $interval, $q, $rootScope, $scope, $timeout) {
     $scope.graphType = 1;
     $rootScope.plotTemplate = 'build/present.min.html';
 
@@ -218,6 +224,7 @@ pmpApp.controller('PresentController', ['$http', '$location', '$interval', '$q',
                 var promise = $http.get("api/" + campaign + "/announced");
             }
             promise.then(function(data) {
+                var duplicatedCampaign = false;
                 if (!data.data.results.length) {
                     $scope.showPopUp('error', 'No results for this request parameters');
                     $scope.setURL();
@@ -226,7 +233,20 @@ pmpApp.controller('PresentController', ['$http', '$location', '$interval', '$q',
                     $scope.allRequestData = [];
                     if (add) {
                         // append
-                        data.data.results.push.apply(data.data.results, $scope.cachedRequestData);
+                        for (var i = 0; i < $scope.inputTags.length; i++) {
+                            if (data.data.campaigns.indexOf($scope.inputTags[i]) !== -1) duplicatedCampaign = true;
+                        }
+                        if (duplicatedCampaign) {
+                            $scope.showPopUp('warning', 'Prevented duplication');
+                            for (var i = 0; i < data.data.results.length; i++) {
+                                if ($scope.inputTags.indexOf(data.data.results[i].member_of_campaign) === -1) {
+                                    $scope.cachedRequestData.push(data.data.results[i]);
+                                }
+                            }
+                            data.data.results = $scope.cachedRequestData;
+                        } else {
+                            data.data.results.push.apply(data.data.results, $scope.cachedRequestData);
+                        }
                         $scope.updateStatus(data.data.results, false, defaultStatus);
                         $scope.updatePWG(data.data.results, false, defaultPWG);
                     } else {
@@ -243,7 +263,8 @@ pmpApp.controller('PresentController', ['$http', '$location', '$interval', '$q',
                             }
                         }
                     } else {
-                        $scope.inputTags.push(campaign);
+                        $scope.inputTags.push.apply(data.data.campaigns, $scope.inputTags);
+                        $scope.inputTags = data.data.campaigns.filter($rootScope.onlyUnique);
                     }
                     $scope.cachedRequestData = data.data.results;
                     $scope.setURL();
@@ -563,7 +584,7 @@ pmpApp.controller('HistoricalController', ['$http', '$location', '$scope', '$roo
         $scope.url = $location.absUrl();
     }
 
-    $scope.load = function(request, add) {
+    $scope.load = function(request, add, more, defaultPWG, defaultStatus) {
         if (!request) {
             $scope.showPopUp('warning', 'Your request parameters are empty');
         } else if (add & $scope.inputTags.indexOf(request) !== -1) {
@@ -674,7 +695,7 @@ pmpApp.controller('HistoricalController', ['$http', '$location', '$scope', '$roo
                     $scope.showPopUp('error', 'No results for this request parameters');
                 } else {
                     if (!data.data.results.data.length) {
-                        $scope.showPopUp('warning', 'All data is filtered');
+                        data.data.results.error != '' ? $scope.showPopUp('error', data.data.results.error) : $scope.showPopUp('warning', 'All data is filtered');
                     }
                     $scope.allRequestData = data.data.results.data;
                     $scope.allStatus = data.data.results.status;
@@ -797,7 +818,7 @@ pmpApp.controller('PerformanceController', ['$http', '$interval', '$location', '
         $scope.allRequestData = [];
         $scope.inputTags = [];
         $scope.filterPriority = ['', '']
-        $scope.load = function(input, add, more) {
+        $scope.load = function(input, add, more, defaultPWG, defaultStatus) {
         if (!input) {
             $scope.showPopUp('warning', 'Your request parameters are empty');
         } else if (add & $scope.inputTags.indexOf(input) !== -1) {

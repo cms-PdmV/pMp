@@ -7,6 +7,13 @@ import json
 class AnnouncedAPI(esadapter.InitConnection):
     """Used to return list of requests in a given campaign"""
 
+    def query_database(self, campaign):
+        """Get list of requests - field has to be not analyzed by es"""
+        return [s['_source'] for s in
+                self.es.search(('member_of_campaign:%s' % campaign),
+                               index='requests', size=self.overflow)
+                ['hits']['hits']]
+
     @staticmethod
     def number_of_events_for_done(request):
         """Requests that are done should return completed events value;
@@ -27,19 +34,36 @@ class AnnouncedAPI(esadapter.InitConnection):
 
     def get(self, campaign):
         """Execute announced API"""
+        campaigns = []
+        chained_campaigns = []
+        response = []
 
-        # change all to wildcard
+        # change all to wildcard or check if chain
         if campaign == 'all':
             campaign = '*'
+        else:
+            try:
+                chains = self.es.get('chained_campaigns', 'chained_campaign',
+                                     campaign)['_source']['campaigns']
+                for chain in chains:
+                    chained_campaigns += chain
+            except esadapter.pyelasticsearch.exceptions\
+                    .ElasticHttpNotFoundError:
+                pass
 
-        # get list of requests - field has to be not analyzed by es
-        respose = [s['_source'] for s in
-                   self.es.search(('member_of_campaign:%s' % campaign),
-                                  index='requests', size=self.overflow)
-                   ['hits']['hits']]
+        for index, chained_campaign in enumerate(chained_campaigns):
+            if chained_campaign is not None and \
+                    not chained_campaign.startswith('flow'):
+                campaigns += [chained_campaign]
+                response += self.query_database(chained_campaign)
+            if index == len(chained_campaigns)-1:
+                break
+        else:
+            campaigns += [campaign]
+            response += self.query_database(campaign)
 
         # loop over and parse the db data
-        for res in respose:
+        for res in response:
             if res['status'] == 'done':
                 res['total_events'] = self.number_of_events_for_done(res)
             elif res['status'] == 'submitted':
@@ -57,7 +81,7 @@ class AnnouncedAPI(esadapter.InitConnection):
                           'output_dataset']:
                 if field in res:
                     del res[field]
-        return json.dumps({"results": respose})
+        return json.dumps({"results": response, "campaigns": campaigns})
 
 
 class GrowingAPI(esadapter.InitConnection):

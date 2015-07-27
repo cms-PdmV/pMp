@@ -2389,7 +2389,7 @@ angular.module('pmpCharts', [])
                                 .each(function(){
                                 maxHeight = d3.max(this.getBBox().width, maxHeight)
                                     });
-                        }, 1000);
+                        }, 0);
                     
                     svg.selectAll(".x.axis text")
                         .on("mouseover", function(d) {
@@ -2397,7 +2397,7 @@ angular.module('pmpCharts', [])
                         })
                         .on("mouseout", function(d) {
                                 svg.selectAll("rect.grouping" + d).style("fill", function(d) {return colors(d);});
-                        })
+                            });
 
                 }
 

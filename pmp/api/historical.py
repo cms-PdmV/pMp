@@ -201,9 +201,10 @@ class HistoricalAPI(esadapter.InitConnection):
         filters = dict()
         filters['status'] = dict()
         filters['pwg'] = dict()
+        incorrect = True
 
         for one in query:
-
+            incorrect = False
             # Process the db documents
             for (is_request, document, details) in self.db_query(one):
 
@@ -236,7 +237,7 @@ class HistoricalAPI(esadapter.InitConnection):
 
                 if not is_request and (document['pdmv_type'] == 'TaskChain'):
                     response_list = self.process_taskchain(document)
-                    return response_list, dict(), dict(), True
+                    return response_list, dict(), dict(), True, ''
 
                 elif (details is None or
                       document['pdmv_dataset_name'] == \
@@ -262,7 +263,10 @@ class HistoricalAPI(esadapter.InitConnection):
                                         is_request, monitor, details,
                                         document['pdmv_expected_events']))
                 response_list.append(response)
-        return response_list, filters['pwg'], filters['status'], False
+            error = ''
+            if incorrect:
+                error = 'Please load valid campaign, request or workflow name'
+        return response_list, filters['pwg'], filters['status'], False, error
 
     def process_taskchain(self, document):
         """Use when input is workflow and a taskchain"""
@@ -333,14 +337,14 @@ class HistoricalAPI(esadapter.InitConnection):
             filters['status'] = None
             filters['pwg'] = None
         priority = apiutils.APIUtils().parse_priority_csv(priority.split(','))
-        response, pwg, status, taskchain = \
+        response, pwg, status, taskchain, error = \
             self.prepare_response(query.split(','), priority,
                                   apiutils.APIUtils().parse_csv( \
                     filters['status']), apiutils.APIUtils().parse_csv( \
                                           filters['pwg']))
         if taskchain:
             res = {'data': response, 'pwg': dict(), 'status': dict(),
-                   'taskchain': True}
+                   'taskchain': True, 'error': ''}
         else:
             # get accumulated requests
             accumulated = self.accumulate_requests(response)
@@ -351,7 +355,7 @@ class HistoricalAPI(esadapter.InitConnection):
             # add last point which is now()
             data = self.append_data_point(data)
             res = {'data': data, 'pwg': pwg, 'status': status,
-                   'taskchain': False}
+                   'taskchain': False, 'error': error}
         return json.dumps({"results": res})
 
 

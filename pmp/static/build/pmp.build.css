@@ -93,12 +93,25 @@ ul.nav li.placeholder:before {
     top: -3px;
 }
 
-/*Performance*/
+/*
+ *Present
+ */
+
+.x path {
+    fill: none;
+    stroke: '#777777';
+}
+
+/*
+ *Performance
+ */
 .update {
     fill: #b0bec5;
 }
 
-/*Historical*/
+/*
+ *Historical
+ */
 rect.pane {
     cursor: move;
     fill: none;
