@@ -7,10 +7,10 @@ import json
 class AnnouncedAPI(esadapter.InitConnection):
     """Used to return list of requests in a given campaign"""
 
-    def query_database(self, campaign):
+    def query_database(self, field, query):
         """Get list of requests - field has to be not analyzed by es"""
         return [s['_source'] for s in
-                self.es.search(('member_of_campaign:%s' % campaign),
+                self.es.search(('%s:%s' % (field, query)),
                                index='requests', size=self.overflow)
                 ['hits']['hits']]
 
@@ -32,35 +32,41 @@ class AnnouncedAPI(esadapter.InitConnection):
         else:
             return 0
 
-    def get(self, campaign):
-        """Execute announced API"""
-        campaigns = []
-        chained_campaigns = []
-        response = []
+    def is_instance(self, prepid, typeof, index):
+        """Checks if prepid matches any typeof in the index"""
+        try:
+            self.es.get(index, typeof, prepid)['_source']
+        except esadapter.pyelasticsearch.exceptions.ElasticHttpNotFoundError:
+            return False
+        return True
 
-        # change all to wildcard or check if chain
-        if campaign == 'all':
-            campaign = '*'
+    def parse_query(self, query):
+        """Returns parsed query and correct field"""
+        if query == 'all':
+            # change all to wildcard or check if chain
+            return 'member_of_campaign', '*'
+        elif self.is_instance(query, 'flow', 'flows'):
+            return 'flown_with', query
+        elif self.is_instance(query, 'campaign', 'campaigns'):
+            return 'member_of_campaign', query
+        return None, query
+
+    def get(self, query):
+        """Execute announced API"""
+        response = []
+        field, query = self.parse_query(query)
+
+        if field is not None:
+            # campaign or flow
+            response = self.query_database(field, query)
         else:
+            # possibly request
             try:
-                chains = self.es.get('chained_campaigns', 'chained_campaign',
-                                     campaign)['_source']['campaigns']
-                for chain in chains:
-                    chained_campaigns += chain
+                response = [self.es.get('requests', 'request',
+                                        query)['_source']]
             except esadapter.pyelasticsearch.exceptions\
                     .ElasticHttpNotFoundError:
                 pass
-
-        for index, chained_campaign in enumerate(chained_campaigns):
-            if chained_campaign is not None and \
-                    not chained_campaign.startswith('flow'):
-                campaigns += [chained_campaign]
-                response += self.query_database(chained_campaign)
-            if index == len(chained_campaigns)-1:
-                break
-        else:
-            campaigns += [campaign]
-            response += self.query_database(campaign)
 
         # loop over and parse the db data
         for res in response:
@@ -81,7 +87,7 @@ class AnnouncedAPI(esadapter.InitConnection):
                           'output_dataset']:
                 if field in res:
                     del res[field]
-        return json.dumps({"results": response, "campaigns": campaigns})
+        return json.dumps({"results": response})
 
 
 class GrowingAPI(esadapter.InitConnection):
