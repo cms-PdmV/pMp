@@ -241,6 +241,29 @@ pmpApp.controller('PresentController', ['$http', '$location', '$interval', '$q',
         }
     }
 
+    $scope.parseLoadedRequestsForTags = function(doReset, newRequests) {
+        if (doReset) $scope.inputTags = [];
+        var newTags = [];
+        var tmpMOC, broken = false;
+        for (var i = 0; i < newRequests.length; i++) {
+            tmpMOC = newRequests[i].member_of_campaign;
+            if ($scope.inputTags.indexOf(tmpMOC) === -1) {
+                if (newTags.indexOf(tmpMOC) === -1) {
+                    newTags.push(newRequests[i].member_of_campaign);
+                }
+            } else {
+                broken++;
+                break;
+            }
+        }
+        if (broken) {
+            return false;
+        } else {
+            $scope.inputTags.push.apply($scope.inputTags, newTags);
+            return true;
+        }
+    }
+
     $scope.load = function(campaign, add, more, defaultPWG, defaultStatus) {
         if (!campaign) {
             $scope.showPopUp('warning', 'Your request parameters are empty');
@@ -254,47 +277,31 @@ pmpApp.controller('PresentController', ['$http', '$location', '$interval', '$q',
                 var promise = $http.get("api/" + campaign + "/announced");
             }
             promise.then(function(data) {
-                var duplicatedCampaign = false;
                 if (!data.data.results.length) {
+                    // if API response is empty 
                     $scope.showPopUp('error', 'No results for this request parameters');
                     $scope.setURL();
                     $scope.loadingData = false;
                 } else {
                     $scope.allRequestData = [];
                     if (add) {
-                        // append
-                        for (var i = 0; i < $scope.inputTags.length; i++) {
-                            if (data.data.campaigns.indexOf($scope.inputTags[i]) !== -1) duplicatedCampaign = true;
-                        }
-                        if (duplicatedCampaign) {
-                            $scope.showPopUp('warning', 'Prevented duplication');
-                            for (var i = 0; i < data.data.results.length; i++) {
-                                if ($scope.inputTags.indexOf(data.data.results[i].member_of_campaign) === -1) {
-                                    $scope.cachedRequestData.push(data.data.results[i]);
-                                }
-                            }
-                            data.data.results = $scope.cachedRequestData;
-                        } else {
+                        // apply appending campaign
+                        if ($scope.parseLoadedRequestsForTags(false, data.data.results)) {
                             data.data.results.push.apply(data.data.results, $scope.cachedRequestData);
+                            $scope.updateStatus(data.data.results, false, defaultStatus);
+                            $scope.updatePWG(data.data.results, false, defaultPWG);
+                            $scope.showPopUp('success', 'Succesfully appended requests');
+                        } else {
+                            data.data.results = $scope.cachedRequestData;
+                            $scope.showPopUp('error', 'Unable to process, some requests to be duplicated');
                         }
-                        $scope.updateStatus(data.data.results, false, defaultStatus);
-                        $scope.updatePWG(data.data.results, false, defaultPWG);
                     } else {
-                        // see
-                        $scope.inputTags = [];
+                        // apply loading all or single campaign
                         $scope.updateOnRemoval([], {}, {});
                         $scope.updateStatus(data.data.results, true, true);
                         $scope.updatePWG(data.data.results, true, true);
-                    }
-                    if (campaign == 'all') {
-                        for (var i = 0; i < data.data.results.length; i++) {
-                            if ($scope.inputTags.indexOf(data.data.results[i].member_of_campaign) === -1) {
-                                $scope.inputTags.push(data.data.results[i].member_of_campaign);
-                            }
-                        }
-                    } else {
-                        $scope.inputTags.push.apply(data.data.campaigns, $scope.inputTags);
-                        $scope.inputTags = data.data.campaigns.filter($rootScope.onlyUnique);
+                        $scope.parseLoadedRequestsForTags(true, data.data.results);
+                        $scope.showPopUp('success', 'Succesfully loaded requests');
                     }
                     $scope.cachedRequestData = data.data.results;
                     $scope.setURL();
@@ -367,6 +374,7 @@ pmpApp.controller('PresentController', ['$http', '$location', '$interval', '$q',
             $scope.aOptionsValues[$scope.graphTabs.indexOf(value)] = $scope.graphParam.indexOf(name);
         }
         var params = {}
+        console.log($scope.inputTags)
         if ($scope.inputTags.length) {
             params.r = $scope.inputTags.join(',')
         }
