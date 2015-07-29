@@ -47,8 +47,16 @@ class SuggestionsAPI(esadapter.InitConnection):
                             self.es.search(search_stats, index='stats',
                                            size=self.overflow)['hits']['hits']]
 
+            if self.announced:
+                results += [s['_id'] for s in
+                            self.es.search(search, index='requests',
+                                           size=self.overflow)['hits']['hits']]
+                results += [s['_id'] for s in
+                            self.es.search(search, index='flows',
+                                           size=self.overflow)['hits']['hits']]
+
             # extended search fo growing
-            if self.growing or self.announced:
+            if self.growing:
                 results += [s['_id'] for s in
                             self.es.search(search, index="chained_campaigns",
                                            size=self.overflow)['hits']['hits']]
