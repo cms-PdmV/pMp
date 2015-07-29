@@ -22,7 +22,7 @@
           <small>Show time</small>
         </label>
         <br/>
-        <label class="checkbox-inline col-lg-12 col-md-12 col-sm-12 spacing" ng-show="graphType == 2">
+        <label class="checkbox-inline col-lg-12 col-md-12 col-sm-12" ng-show="graphType == 2">
           <input type="checkbox" ng-model="$parent.zoomOnY" ng-change="setURL()">
           <small>y axis zoom</small>
         </label>
@@ -47,7 +47,7 @@
            ng-show="allRequestData.length">
         <button type="button" class="btn text-center text-uppercase hidden-sm"
                 ng-disabled="true">
-          <small class="hidden-md hidden-sm">
+          <small class="hidden-xs">
             Download
           </small>
           <i class="hidden-lg fa fa-download"></i>

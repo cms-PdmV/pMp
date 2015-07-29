@@ -1177,7 +1177,7 @@ angular.module('pmpCharts', [])
                 var l1, l2, l3, containerBox, hoverLineGroup, clipPath, rectLifetime, rectTaskChain;
                 var fiveShadesOfGrey = ['#4fc3f7', '#4dd0e1', '#4db6ac', '#81c784', '#aed581', '#dce775'];
                 // add data label
-                var innerHtml = '<span ng-repeat=\'d in labelData\' style=\'{{d.style}}\'>{{d.label}}<span ng-show=\'humanReadableNumbers && d.label != "Time: "\'>{{d.data | humanReadableNumbers}}</span><span ng-hide=\'humanReadableNumbers && d.label != "Time: "\'>{{d.data}}</span></span>';
+                var innerHtml = '<div class="hidden-sm hidden-xs"><span ng-repeat=\'d in labelData\' style=\'{{d.style}}\'>{{d.label}}<span ng-show=\'humanReadableNumbers && d.label != "Time: "\'>{{d.data | humanReadableNumbers}}</span><span ng-hide=\'humanReadableNumbers && d.label != "Time: "\'>{{d.data}}</span></span></div>';
                 element.append($compile(innerHtml)(scope));
 
                 // add main svg

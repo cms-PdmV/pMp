@@ -1,5 +1,5 @@
-<div class="row spacing" ng-show="showView" ng-init="init()"></div>
-  <div class="col-lg-9 col-md-9 col-sm-9">
+<div class="row" ng-show="showView" ng-init="init()"></div>
+  <div class="col-lg-9 col-md-8 col-sm-7 col-xs-12">
    <div class="row">
      <div class="row">
        <h1 class="pull-right white">
@@ -9,7 +9,7 @@
      <div class="row">
        <div class="well spacing">
          <div class="row">
-           <div class="col-lg-11 col-md-11 col-sm-10 col-xs-11" ng-controller="TypeaheadCtrl">
+           <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12" ng-controller="TypeaheadCtrl">
              <div class="input-group spacing">
                <input type="text" ng-model="campaign" ng-change="getSuggestions(campaign)"
                       typeahead="s for s in suggestions | filter:$viewValue | limitTo:8"
@@ -18,21 +18,25 @@
                <span class="input-group-btn">
                  <button type="button" class="btn btn-danger"
                          ng-click="load(campaign, false)" ng-disabled="loadingData">
-                   See
+                   <i class="hidden-lg hidden-md fa fa-eye"></i>
+                   <span class="hidden-sm hidden-xs"> See</span>
                  </button>
                  <button type="button" class="btn btn-danger"
                          ng-click="load(campaign, true, false, true, true)" ng-disabled="loadingData || growingMode">
-                   Append
+                   <i class="hidden-lg hidden-md fa fa-plus"></i>
+                   <span class="hidden-sm hidden-xs"> Append</span>
                  </button>
                  <button type="button" class="btn btn-danger" ng-click="load('all')"
                          ng-disabled="loadingData || growingMode || title == 'Historical Statistics'">
-                   Load <strong>all</strong>
+                   <i class="hidden-lg hidden-md fa fa-globe"></i>
+                   <span class="hidden-sm hidden-xs"> Load <strong>all</strong></span>
                  </button>
                </span>
              </div>
            </div>
-           <div class="col-lg-1 col-md-1 col-sm-2" ng-show="loadingData">
-             <i class="fa fa-spinner fa-spin fa-3x"></i>
+           <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12" ng-show="loadingData">
+             <i class="fa fa-spinner fa-spin fa-1x"></i>
+             <small> Loading...</small>
            </div>
          </div>
        </div>
@@ -60,18 +64,18 @@
    </div>
   </div>
 
-  <div class="col-lg-3 col-md-3 col-sm-3">
+  <div class="col-lg-3 col-md-4 col-sm-5 col-xs-12">
     <a class="btn btn-sm text-uppercase padding-r" data-toggle="collapse" data-target="#filter">
       <i class="fa fa-eyedropper"></i>
-      <small class="hidden-sm"> Filter</small>
+      <small> Filter</small>
     </a>
     <a class="btn btn-sm text-uppercase padding-r" data-toggle="collapse" data-target="#advanced">
       <i class="fa fa-cog"></i>
-      <small class="hidden-sm"> Advanced</small>
+      <small> Advanced</small>
     </a>
     <a class="btn btn-sm text-uppercase" data-toggle="collapse" data-target="#share">
       <i class="fa fa-share"></i>
-      <small class="hidden-sm"> Share</small>
+      <small> Share</small>
     </a>
     <div ng-include="filterPanelTemplate"></div>
     <div ng-include="advancedPanelTemplate"></div>
