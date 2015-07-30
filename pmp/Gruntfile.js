@@ -37,6 +37,7 @@ module.exports = function(grunt) {
         'static/build/plot.min.html': 'static/partials/plot.html',
         'static/build/present.min.html': 'static/partials/present.html',
         'static/build/share.min.html': 'static/partials/share.html',
+        'static/build/table.min.html': 'static/partials/statustable.html',
         'static/build/tags.min.html': 'static/partials/tags.html',
         'static/build/valid.min.html': 'templates/valid.html',
         'static/build/invalid.min.html': 'templates/invalid.html'

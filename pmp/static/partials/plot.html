@@ -2,12 +2,15 @@
   <div class="col-lg-9 col-md-8 col-sm-7 col-xs-12">
    <div class="row">
      <div class="row">
-       <h1 class="pull-right white">
+       <h1 class="pull-right white hidden-xs hidden-sm">
          <strong>{{title}}</strong>
        </h1>
+       <h2 class="pull-right white hidden-md hidden-lg">
+         <strong>{{title}}</strong>
+       </h2>
      </div>
      <div class="row">
-       <div class="well spacing">
+       <div class="well">
          <div class="row">
            <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12" ng-controller="TypeaheadCtrl">
              <div class="input-group spacing">
@@ -73,7 +76,7 @@
       <i class="fa fa-cog"></i>
       <small> Advanced</small>
     </a>
-    <a class="btn btn-sm text-uppercase" data-toggle="collapse" data-target="#share">
+    <a class="btn btn-sm text-uppercase hidden-xs" data-toggle="collapse" data-target="#share">
       <i class="fa fa-share"></i>
       <small> Share</small>
     </a>

@@ -13,6 +13,10 @@ body {
     float: left;
 }
 
+.navbar {
+    margin-bottom: 10px;
+}
+
 .ng-hide-remove {
     -webkit-animation: fadeIn 0.5s;
     animation: fadeIn 0.5s;
@@ -28,6 +32,10 @@ body {
     padding-right: 0px;
 }
 
+.panel-body {
+    padding: 10px;
+}
+
 .pointer {
     cursor: pointer;
 }
@@ -36,6 +44,10 @@ body {
     position: absolute;
     width: 83%;
     z-index: 2001;
+}
+
+.well {
+    margin-bottom: 5px;
 }
 
 .white {

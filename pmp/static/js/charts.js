@@ -2830,24 +2830,24 @@ angular.module('pmpCharts', [])
 
                 var innerHtml = "<style>.nav.dnd {margin-bottom: 0;}</style>";
                 //innerHtml += "<div class='row' align='middle'><h4>{{title}}</h4></div>";
-                innerHtml += "<div class='row'><div class='col-lg-9 col-md-12 col-sm-12' style='margin-bottom: 3px'><span class='col-lg-2 col-md-2 col-sm-2 nav-header text-muted'>selections</span>";
+                innerHtml += "<div class='row'><div class='col-lg-12 col-md-12 col-sm-12 col-xs-12' style='margin-bottom: 3px'><span class='col-lg-2 col-md-2 col-sm-2 col-xs-4 nav-header text-muted'>selections</span>";
 
-                innerHtml += "<ul id='possible-selections' class='nav nav-pills dnd col-lg-10 col-md-10 col-sm-10 inline' style='min-height:22px'>";
+                innerHtml += "<ul id='possible-selections' class='nav nav-pills dnd col-lg-10 col-md-10 col-sm-10 col-xs-8 inline' style='min-height:22px'>";
                 innerHtml += "<li class='btn btn-default btn-xs text-uppercase' ng-repeat='value in selections'>{{value}}</li>";
                 innerHtml += "</ul></div>";
                 // options for drag and drop
                 for(var key in scope.options) {
                     var value = scope.options[key];
                     if(value instanceof Array) {
-                        innerHtml += "<div class='col-lg-6 col-md-12 col-sm-12'><span class='col-lg-3 col-md-2 col-sm-2 nav-header' style='margin-bottom: 3px'>"+key+"</span>";
-                        innerHtml += "<ul id='"+key+"' class='nav nav-pills dnd col-lg-9 col-md-10 col-sm-10 inline alert-info' style='min-height:23px; margin-top:1px'>";
+                        innerHtml += "<div class='col-lg-6 col-md-6 col-sm-6 col-xs-12'><span class='col-lg-4 col-md-4 col-sm-4 col-xs-4 nav-header' style='margin-bottom: 3px'>"+key+"</span>";
+                        innerHtml += "<ul id='"+key+"' class='nav nav-pills dnd col-lg-8 col-md-8 col-sm-8 col-xs-8 inline alert-info' style='min-height:23px; margin-top:1px'>";
                         for(var i=0;i<value.length;i++) {
                             innerHtml+="<li class='btn btn-default btn-xs text-uppercase'>"+value[i]+"</li>";
                         }
                         innerHtml+="</ul></div>";
                     } else {
-                        innerHtml += "<div class='col-lg-6 col-md-12 col-sm-12'><span class='col-lg-3 col-md-2 col-sm-2 nav-header' style='margin-bottom: 3px'>"+key+"</span>";
-                        innerHtml+="<ul id='"+key+"' class='nav nav-pills dnd single col-lg-9 col-md-10 col-sm-10 inline alert-info' style='min-height:23px; margin-top:1px'>";
+                        innerHtml += "<div class='col-lg-6 col-md-6 col-sm-6'><span class='col-lg-4 col-md-4 col-sm-4 col-xs-4 nav-header' style='margin-bottom: 3px'>"+key+"</span>";
+                        innerHtml+="<ul id='"+key+"' class='nav nav-pills dnd single col-lg-8 col-md-8 col-sm-8 col-xs-8 inline alert-info' style='min-height:23px; margin-top:1px'>";
                         if(value!="") {
                             innerHtml+="<li class='btn btn-default btn-xs text-uppercase'>" + value + "</li>";
                         }
@@ -2860,10 +2860,10 @@ angular.module('pmpCharts', [])
                 scope.radiovalue = {};
                 for(key in scope.radio) {
 
-                    innerHtml += "<div class='col-lg-6 col-md-6 col-sm-12 spacing-sm' style='margin-top:3px;'>";
-                    innerHtml += "<span class='col-lg-3 col-md-4 col-sm-2 nav-header'>" + key + "</span>";
+                    innerHtml += "<div class='col-lg-6 col-md-6 col-sm-6 col-xs-12 spacing-sm' style='margin-top:3px;'>";
+                    innerHtml += "<span class='col-lg-4 col-md-4 col-sm-4 col-xs-4 nav-header'>" + key + "</span>";
 
-                    innerHtml += "<ul class='nav nav-pills inline col-lg-9 col-md-8 col-sm-10'>";
+                    innerHtml += "<ul class='nav nav-pills inline col-lg-8 col-md-8 col-sm-8 col-xs-8'>";
                     scope.radiovalue[key] = scope.radio[key][0];
                     innerHtml += "<li>";
 
@@ -2923,7 +2923,7 @@ angular.module('pmpCharts', [])
             }
         }
     }])
-    .directive("multiplePieCharts", ['$compile', function($compile) {
+    .directive("multiplePieCharts", ['$compile', '$http', function($compile, $http) {
     return {
         restrict: 'EA',
         scope: {
@@ -3063,9 +3063,11 @@ angular.module('pmpCharts', [])
 
             var innerHtml = '<mcm-donut-chart ng-repeat="(key, terms) in current_data" data="terms.data" outer-radius="100" inner-radius="40" inner-title="{{key}}" on-click-title="changeChart" domain="domain"></mcm-donut-chart>';
             if (showTable) {
-                innerHtml += '<table class="table table-bordered table-striped table-condensed col-lg-12 col-md-12 col-sm-12"><thead><tr><th class="text-center">{{tableTitle}}</th><th class="text-center" ng-repeat="term in fullTerms">{{term}}</th></tr></thead><tbody><tr ng-repeat="(key, terms) in piechart_data_full"><td class="text-left">{{key}}</td><td class="text-right" ng-show="element.term !== \'upcoming\' || showUpcoming" ng-repeat="element in terms.terms"><span ng-show=\'humanReadableNumbers\'>{{element.count | humanReadableNumbers}}</span><span ng-hide=\'humanReadableNumbers\'>{{element.count}}</span></td></tr></tbody></table>';
+                $http.get('build/table.min.html').success(function(html) {
+                        innerHtml += html;
+                        element.append($compile(innerHtml)(scope));
+                    });
             }
-            element.append($compile(innerHtml)(scope));
         }
     }
 }]);
