@@ -374,7 +374,6 @@ pmpApp.controller('PresentController', ['$http', '$location', '$interval', '$q',
             $scope.aOptionsValues[$scope.graphTabs.indexOf(value)] = $scope.graphParam.indexOf(name);
         }
         var params = {}
-        console.log($scope.inputTags)
         if ($scope.inputTags.length) {
             params.r = $scope.inputTags.join(',')
         }
@@ -522,7 +521,7 @@ pmpApp.controller('PresentController', ['$http', '$location', '$interval', '$q',
 
     $scope.initZeroClipboard = function() {
         new ZeroClipboard(document.getElementById('copy'), {
-                moviePath: 'lib/zeroclipboard/ZeroClipboard.swf'
+                moviePath: 'bower_components/zeroclipboard/dist/ZeroClipboard.swf'
             });
     }
 }]);
@@ -843,7 +842,7 @@ pmpApp.controller('HistoricalController', ['$http', '$location', '$scope', '$roo
 
     $scope.initZeroClipboard = function() {
         new ZeroClipboard(document.getElementById('copy'), {
-                moviePath: 'lib/zeroclipboard/ZeroClipboard.swf'
+                moviePath: 'bower_components/zeroclipboard/dist/ZeroClipboard.swf'
             });
     }
 }]);
@@ -1085,7 +1084,7 @@ pmpApp.controller('PerformanceController', ['$http', '$interval', '$location', '
 
     $scope.initZeroClipboard = function() {
         new ZeroClipboard(document.getElementById('copy'), {
-                moviePath: 'lib/zeroclipboard/ZeroClipboard.swf'
+                moviePath: 'bower_components/zeroclipboard/dist/ZeroClipboard.swf'
             });
     }
 

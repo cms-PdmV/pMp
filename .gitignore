@@ -7,4 +7,5 @@
 venv*
 *.log
 pmp/static/tmp/*
+pmp/static/bower_components/*
 pmp/node_modules/*

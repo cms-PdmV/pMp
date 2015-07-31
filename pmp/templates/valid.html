@@ -5,22 +5,28 @@
     <title>Production Monitoring Platform</title>
     <base href="/pmp/"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
-    <link href="lib/bootstrap/css/bootstrap.min.css" rel="stylesheet"/>
-    <link href="lib/font-awesome/css/font-awesome.min.css" rel="stylesheet"/>
-    <link href="lib/animate/animate.min.css" rel="stylesheet"/>
-    <link href="build/pmp.build.css" rel="stylesheet"/>
-    <link href="https://fonts.googleapis.com/css?family=Roboto:900,400"
-          rel="stylesheet" type="text/css"/>
 
-    <script type="text/javascript" src="lib/jquery/jquery-2.1.4.min.js"></script>
-    <script type="text/javascript" src="lib/jquery-sortable/jquery-sortable-min.js"></script>
-    <script type="text/javascript" src="lib/bootstrap/js/bootstrap.min.js"></script>
-    <script type="text/javascript" src="lib/angular/angular.min.js"></script>
-    <script type="text/javascript" src="lib/angular/angular-animate.min.js"></script>
-    <script type="text/javascript" src="lib/angular/angular-route.min.js"></script>
-    <script type="text/javascript" src="lib/d3/d3.min.js"></script>
-    <script type="text/javascript" src="lib/zeroclipboard/ZeroClipboard.min.js"></script>
-    <script type="text/javascript" src="lib/ui-bootstrap/ui-bootstrap-tpls-0.13.0.min.js"></script>
+    <!--external CSS-->
+    <link href="bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="bower_components/font-awesome/css/font-awesome.min.css" rel="stylesheet"/>
+    <link href="bower_components/animate.css/animate.min.css" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css?family=Roboto:900,400" rel="stylesheet" type="text/css"/>
+
+    <!--pMp CSS-->
+    <link href="build/pmp.build.css" rel="stylesheet"/>
+
+    <!--external JS-->
+    <script type="text/javascript" src="bower_components/jquery/dist/jquery.min.js"></script>
+    <script type="text/javascript" src="bower_components/jquery-sortable/source/js/jquery-sortable-min.js"></script>
+    <script type="text/javascript" src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="bower_components/angular/angular.min.js"></script>
+    <script type="text/javascript" src="bower_components/angular-animate/angular-animate.min.js"></script>
+    <script type="text/javascript" src="bower_components/angular-route/angular-route.min.js"></script>
+    <script type="text/javascript" src="bower_components/d3/d3.min.js"></script>
+    <script type="text/javascript" src="bower_components/angular-bootstrap/ui-bootstrap-tpls.min.js"></script>
+    <script type="text/javascript" src="bower_components/zeroclipboard/dist/ZeroClipboard.min.js"></script>
+
+    <!--pMp JS-->    
     <script type="text/javascript" src="js/charts.js"></script>
     <script type="text/javascript" src="build/pmp.build.min.js"></script>
 
@@ -30,19 +36,39 @@
 
     <nav class="navbar navbar-inverse" role="navigation">
       <div class="container-fluid">
-        <a href="" ng-click="nav('/')">
+        <a href="/">
           <img src="img/ic_fav.png" class="brand-adjust" alt="PMP"/>
         </a>
-        <ul class="nav navbar-header navbar-nav col-xs-12 col-sm-11 col-md-11 col-lg-11">
-          <li><a href="present" ng-click="nav('/present/')">
+        <div class="navbar-header">
+            <button type="button" data-target="#navbarCollapse" data-toggle="collapse" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+        </div>
+        <ul id="navbarCollapse" class="collapse navbar-collapse nav navbar-header navbar-nav col-xs-12 col-sm-12 col-md-12 col-lg-12">
+          <li>
+            <a href="present" ng-click="nav('/present/')">
               <i class="fa fa-bar-chart spacing-r"></i>
-              Present Statistics</a></li>
-          <li><a href="historical" ng-click="nav('/historical/')">
+              Present
+              <span class="hidden-sm"> Statistics</span>
+            </a>
+          </li>
+          <li>
+            <a href="historical" ng-click="nav('/historical/')">
               <i class="fa fa-line-chart spacing-r"></i>
-              Historical Statistics</a></li>
-          <li><a href="performance" ng-click="nav('/performance/')">
-              <i class="fa fa-heartbeat spacing-r"></i>  
-              Performance Statistics</a></li>
+              Historical
+              <span class="hidden-sm"> Statistics</span>
+            </a>
+          </li>
+          <li>
+            <a href="performance" ng-click="nav('/performance/')">
+              <i class="fa fa-heartbeat spacing-r"></i>
+              Performance
+              <span class="hidden-sm"> Statistics</span>
+            </a>
+          </li>
           <li><a href="performance" ng-click="nav('/chains/')" ng-hide="true">
               <i class="fa fa-share-alt spacing-r"></i>  
               Chains Landscape</a></li>
@@ -59,7 +85,6 @@
 
     <div class="container" id="ctn">
       <div class="row">
-        <div class="row">
           <div class="col-lg-offset-9 col-lg-3 col-md-offset-9 col-md-3 col-sm-offset-9 col-sm-3">
 
             <div class="panel {{popUp.style}} popup" ng-show="popUp.show">
@@ -83,7 +108,6 @@
             </div>
             
           </div>
-        </div>
       </div>
       
       <div ng-view ng-show="showView"></div>
