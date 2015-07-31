@@ -1061,8 +1061,8 @@ pmpApp.controller('PerformanceController', ['$http', '$interval', '$location', '
 
     $scope.init = function() {
 
-        $scope.difference = {minuend: '', subtrahend: ''}        
-        $scope.selections = ['created', 'validation', 'approved', 'submitted', 'done'];
+        $scope.difference = {minuend: 'done', subtrahend: 'created'}        
+        $scope.selections = ['validation', 'approved', 'submitted'];
 
         if ($location.search().min != undefined) {
             var inx = $scope.selections.indexOf($location.search().min);
