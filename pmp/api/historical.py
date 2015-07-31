@@ -72,14 +72,26 @@ class HistoricalAPI(esadapter.InitConnection):
                 return False
         return True
 
+    def is_instance(self, prepid, typeof, index):
+        """Checks if prepid matches any typeof in the index"""
+        try:
+            self.es.get(index, typeof, prepid)['_source']
+        except esadapter.pyelasticsearch.exceptions.ElasticHttpNotFoundError:
+            return False
+        return True
+
     def db_query(self, query):
         """Query DB and return array of raw documents"""
         iterable = []
 
+        if self.is_instance(query, 'flow', 'flows'):
+            field = 'flown_with'
+        else:
+            field = 'member_of_campaign'
+
         # try to query for campaign and get list of requests
         req_arr = [s['_source'] for s in
-                   self.es.search(('member_of_campaign:%s' % query),
-                                  index='requests',
+                   self.es.search(('%s:%s' % (field, query)), index='requests',
                                   size=self.overflow)['hits']['hits']]
 
         # if empty, assume query is a request
@@ -395,10 +407,12 @@ class SubmittedStatusAPI(esadapter.InitConnection):
         submitted = {}
         response = []
         for campaign in query.split(','):
-            response += [s['_source'] for s in
-                         self.es.search(('member_of_campaign:%s' % campaign),
-                                        index='requests', size=self.overflow)
-                         ['hits']['hits']]
+            for field in ['member_of_campaign', 'flown_with']:
+                response += [s['_source'] for s in
+                             self.es.search(('%s:%s' % (field, campaign)),
+                                            index='requests',
+                                            size=self.overflow)
+                             ['hits']['hits']]
         for request in response:
             if (request['status'] == 'submitted') \
                     and (pwg is None or request['pwg'] in pwg) \

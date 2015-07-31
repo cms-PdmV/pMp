@@ -40,6 +40,9 @@ class SuggestionsAPI(esadapter.InitConnection):
             # extended search for historical
             if self.historical:
                 results += [s['_id'] for s in
+                            self.es.search(search, index='flows',
+                                           size=self.overflow)['hits']['hits']]
+                results += [s['_id'] for s in
                             self.es.search(search, index='requests',
                                            size=self.overflow)['hits']['hits']]
 
