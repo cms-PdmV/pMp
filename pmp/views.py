@@ -27,17 +27,17 @@ def dashboard():
     return make_response(open('pmp/static/build/valid.min.html').read())
 
 
-@app.route('/api/<i>/<typeof>')
-def api(i, typeof):
+@app.route('/api/<i>/<typeof>/<extra>')
+def api(i, typeof, extra):
     """Simple API call"""
     call = models.APICall()
     res = make_response('{}')
     if typeof == 'announced':
-        res = make_response(call.present_announced_mode(i))
+        res = make_response(call.present_announced_mode(i, extra))
     elif typeof == 'chain':
         res = make_response(call.chain_landscape())
     elif typeof == 'growing':
-        res = make_response(call.present_growing_mode(i))
+        res = make_response(call.present_growing_mode(i, extra))
     elif typeof == 'historical':
         res = make_response(call.historical_simple(i))
     elif typeof == 'performance':

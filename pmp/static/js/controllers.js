@@ -164,6 +164,7 @@ pmpApp.controller('PresentController', ['$http', '$location', '$interval', '$q',
 
         $scope.showDate = $location.search().t === 'true';
         $scope.growingMode = ($location.search().m === 'true');
+        $scope.displayChains = ($location.search().c === 'true');
         $scope.modeUpdate(true);
         
         $scope.filterPriority = ['', '']
@@ -242,9 +243,9 @@ pmpApp.controller('PresentController', ['$http', '$location', '$interval', '$q',
         } else {
             $scope.loadingData = true;
             if ($scope.growingMode) {
-                var promise = $http.get("api/" + campaign + "/growing");
+                var promise = $http.get("api/" + campaign + "/growing/" + $scope.displayChains);
             } else {
-                var promise = $http.get("api/" + campaign + "/announced");
+                var promise = $http.get("api/" + campaign + "/announced/" + $scope.displayChains);
             }
             promise.then(function(data) {
                 if (!data.data.results.length) {
@@ -350,6 +351,7 @@ pmpApp.controller('PresentController', ['$http', '$location', '$interval', '$q',
         params.p = $scope.aOptionsValues.join(',') + ',' + $scope.aRadioValues.join(',');
         params.t = $scope.showDate + "";
         params.m = $scope.growingMode + "";
+        params.c = $scope.displayChains + "";
         params.x = $scope.filterPriority.join(',');
 
         if (!$scope.isEmpty($scope.allPWG)) {
@@ -427,9 +429,9 @@ pmpApp.controller('PresentController', ['$http', '$location', '$interval', '$q',
     $scope.updateUpdate = function() {
         if ($scope.growingMode) {
             var promise = $http.get("api/campaigns,chained_campaigns," +
-                                    "requests,chained_requests/lastupdate");
+                                    "requests,chained_requests/lastupdate/_");
         } else {
-            var promise = $http.get("api/campaigns/lastupdate");
+            var promise = $http.get("api/campaigns/lastupdate/_");
         }
         promise.then(function(data) {
             $scope.lastUpdate = data.data.results.last_update
@@ -794,7 +796,7 @@ pmpApp.controller('HistoricalController', ['$http', '$location', '$scope', '$roo
     }
 
     $scope.updateUpdate = function() {
-        var promise = $http.get("api/stats/lastupdate");
+        var promise = $http.get("api/stats/lastupdate/_");
         promise.then(function(data) {
             $scope.lastUpdate = data.data.results.last_update
         });
@@ -832,7 +834,7 @@ pmpApp.controller('PerformanceController', ['$http', '$interval', '$location', '
             $scope.showPopUp('warning', 'Your request is already loaded');
         } else {
             $scope.loadingData = true;
-            var promise = $http.get("api/" + input + "/performance");
+            var promise = $http.get("api/" + input + "/performance/_");
             promise.then(function(data) {
                 if (!data.data.results.length) {
                     $scope.showPopUp('error', 'No results for this request parameters');
@@ -973,7 +975,7 @@ pmpApp.controller('PerformanceController', ['$http', '$interval', '$location', '
     }
 
     $scope.updateUpdate = function() {
-        var promise = $http.get("api/requests/lastupdate");
+        var promise = $http.get("api/requests/lastupdate/_");
         promise.then(function(data) {
             $scope.lastUpdate = data.data.results.last_update
         });
@@ -1178,7 +1180,7 @@ pmpApp.controller('ChainsController', ['$http', '$scope',
             $scope.allRequestData = [];
             $scope.loadingData = true;
 
-            var promise = $http.get("api/_/chain");
+            var promise = $http.get("api/_/chain/_");
             promise.then(function(data) {
                 $scope.allRequestData = $scope.parseResponse(data.data.results);
                 $scope.setListeners();
