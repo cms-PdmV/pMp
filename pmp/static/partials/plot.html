@@ -25,12 +25,12 @@
                    <span class="hidden-sm hidden-xs"> See</span>
                  </button>
                  <button type="button" class="btn btn-danger"
-                         ng-click="load(campaign, true, false, true, true)" ng-disabled="loadingData || growingMode">
+                         ng-click="load(campaign, true, false, true, true)" ng-disabled="loadingData || displayChains">
                    <i class="hidden-lg hidden-md fa fa-plus"></i>
                    <span class="hidden-sm hidden-xs"> Append</span>
                  </button>
                  <button type="button" class="btn btn-danger" ng-click="load('all')"
-                         ng-disabled="loadingData || growingMode || title == 'Historical Statistics'">
+                         ng-disabled="loadingData || displayChains || title == 'Historical Statistics'">
                    <i class="hidden-lg hidden-md fa fa-globe"></i>
                    <span class="hidden-sm hidden-xs"> Load <strong>all</strong></span>
                  </button>
@@ -45,7 +45,7 @@
        </div>
      </div>
 
-     <div class="row" ng-hide="growingMode">
+     <div class="row" ng-hide="displayChains">
        <div class="panel-default">
          <div class="panel-body">
            <input-tags style="padding-bottom: 0px;"></input-tags>

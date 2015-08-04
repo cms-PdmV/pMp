@@ -1,12 +1,12 @@
     <div id="advanced" class="collapse col-xs-12 col-sm-12 col-md-12 col-lg-12 spacing">
       <form class="form-group text-uppercase">
         <label class="checkbox-inline col-lg-12 col-md-12 col-sm-12" ng-show="graphType == 1">
-          <input type="checkbox" ng-model="$parent.displayChains" ng-change="setURL()">
+          <input type="checkbox" ng-model="$parent.displayChains" ng-change="modeUpdate(false);setURL()">
           <small>Display Chains</small>
         </label>
         <br ng-show="graphType == 1"/>
         <label class="checkbox-inline col-lg-12 col-md-12 col-sm-12" ng-show="graphType == 1">
-          <input type="checkbox" ng-model="$parent.growingMode" ng-change="modeUpdate();setURL()">
+          <input type="checkbox" ng-model="$parent.growingMode" ng-change="modeUpdate(false);setURL()">
           <small>Growing Mode</small>
         </label>
         <br ng-show="graphType == 1"/>

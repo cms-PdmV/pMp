@@ -242,8 +242,12 @@ pmpApp.controller('PresentController', ['$http', '$location', '$interval', '$q',
         }
     }
 
-    $scope.parseLoadedRequestsForTags = function(doReset, newRequests) {
+    $scope.parseLoadedRequestsForTags = function(doReset, newRequests, campaign) {
         if (doReset) $scope.inputTags = [];
+        if ($scope.displayChains) {
+            $scope.inputTags.push(campaign);
+            return true;
+        }
         var newTags = [];
         var tmpMOC, broken = false;
         for (var i = 0; i < newRequests.length; i++) {
@@ -287,7 +291,7 @@ pmpApp.controller('PresentController', ['$http', '$location', '$interval', '$q',
                     $scope.allRequestData = [];
                     if (add) {
                         // apply appending campaign
-                        if ($scope.parseLoadedRequestsForTags(false, data.data.results)) {
+                        if ($scope.parseLoadedRequestsForTags(false, data.data.results, campaign)) {
                             data.data.results.push.apply(data.data.results, $scope.cachedRequestData);
                             $scope.updateStatus(data.data.results, false, defaultStatus);
                             $scope.updatePWG(data.data.results, false, defaultPWG);
@@ -301,7 +305,7 @@ pmpApp.controller('PresentController', ['$http', '$location', '$interval', '$q',
                         $scope.updateOnRemoval([], {}, {});
                         $scope.updateStatus(data.data.results, true, true);
                         $scope.updatePWG(data.data.results, true, true);
-                        $scope.parseLoadedRequestsForTags(true, data.data.results);
+                        $scope.parseLoadedRequestsForTags(true, data.data.results, campaign);
                         $scope.showPopUp('success', 'Succesfully loaded requests');
                     }
                     $scope.cachedRequestData = data.data.results;
@@ -330,14 +334,14 @@ pmpApp.controller('PresentController', ['$http', '$location', '$interval', '$q',
         if (onlyTitle) {
             return null;
         }
-
         var tmp = angular.copy($scope.inputTags);
-        if (tmp.length < 2) {
+        $scope.inputTags = [];
+
+        if (tmp.length < 2 || !$scope.displayChains) {
             for (var i = 0; i < tmp.length; i++) {
-                $scope.load(tmp[i], false, false);
+                $scope.load(tmp[i], true, tmp.length);
             }
         } else {
-            $scope.inputTags = [];
             $scope.updateOnRemoval([], {}, {});
         }
     };
