@@ -8,6 +8,14 @@ module.exports = function(grunt) {
    css: {
     src: ['static/css/pmp.css'],
     dest: 'static/build/pmp.build.css',
+   },
+   html: {
+    src:['templates/valid-head.html', 'templates/valid.html'],
+    dest: 'static/build/valid.prod.html'
+   },
+   htmldev: {
+    src:['templates/valid-head-dev.html', 'templates/valid.html'],
+    dest: 'static/build/valid.dev.html'
    }
   },
   cssmin: {
@@ -39,7 +47,7 @@ module.exports = function(grunt) {
         'static/build/share.min.html': 'static/partials/share.html',
         'static/build/table.min.html': 'static/partials/statustable.html',
         'static/build/tags.min.html': 'static/partials/tags.html',
-        'static/build/valid.min.html': 'templates/valid.html',
+        'static/build/valid.min.html': 'static/build/valid.prod.html',
         'static/build/invalid.min.html': 'templates/invalid.html'
       }
     }
@@ -65,7 +73,7 @@ module.exports = function(grunt) {
    },
    htmltemplates: {
     files: ['templates/*.html'],
-    tasks: ['htmlmin']
+    tasks: ['concat:html', 'concat:htmldev', 'htmlmin']
    }
   }
  });

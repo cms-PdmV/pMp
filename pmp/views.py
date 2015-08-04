@@ -2,6 +2,7 @@
 from flask import make_response, redirect, render_template
 from pmp import app, models
 from flask import request
+import config
 
 
 @app.route('/404')
@@ -24,7 +25,10 @@ def about():
 @app.route('/present')
 def dashboard():
     """Redirect to graph template"""
-    return make_response(open('pmp/static/build/valid.min.html').read())
+    if config.DEBUG:
+        return make_response(open('pmp/static/build/valid.dev.html').read())
+    else:
+        return make_response(open('pmp/static/build/valid.min.html').read())
 
 
 @app.route('/api/<i>/<typeof>/<extra>')
