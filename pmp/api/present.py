@@ -116,6 +116,7 @@ class AnnouncedAPI(esadapter.InitConnection):
                 pass
 
         dump_requests = []
+        remove_requests = []
         # loop over and parse the db data
         for res in response:
             if res['status'] == 'done':
@@ -133,13 +134,15 @@ class AnnouncedAPI(esadapter.InitConnection):
             # remove unnecessary fields to speed up api
             if flip_to_done and res['status'] == 'submitted':
                 dump_requests += self.get_fakes_from_submitted(res)
-                response.remove(res)
+                remove_requests.append(res)
                 continue
 
             for field in ['completed_events', 'reqmgr_name', 'history',
                           'output_dataset']:
                 if field in res:
                     del res[field]
+        for rr in remove_requests:
+            response.remove(rr)
         response += dump_requests
         return json.dumps({"results": response})
 
