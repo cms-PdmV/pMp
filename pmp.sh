@@ -17,9 +17,9 @@ fi
 if [[ $1 == "stop" ]]
 then
     echo "Stopping pMp..."
-    kill -9 `ps au | grep 'run_dev.py' | grep python | awk '{print $2}'`
-    kill -9 `ps au | grep 'run.py' | grep python | awk '{print $2}'`
-    kill -9 `ps au | grep 'grunt' | awk '{print $2}'`
+    kill -9 `ps aux | grep 'run_dev.py' | grep python | awk '{print $2}'`
+    kill -9 `ps aux | grep 'run.py' | grep python | awk '{print $2}'`
+    kill -9 `ps aux | grep 'grunt' | awk '{print $2}'`
 fi
 
 if [[ $1 == "update" ]]
@@ -30,5 +30,4 @@ then
     (cd $DIR/pmp/ && grunt &)
     echo "Running bower..."
     (cd $DIR/pmp/static && bower -f install)
-    fi
 fi

@@ -13,18 +13,18 @@ class TestIntegrityEventsInDAS(object):
 
     def __init__(self, arg):
         self.db_url = 'http://127.0.0.1:9200'
-        self.pmp_api = 'http://127.0.0.1/api/'
+        self.pmp_api = 'http://cms-pdmv-pmpdev.cern.ch/api/'
         self.elastic_search = pyelasticsearch.ElasticSearch(self.db_url)
         self.overflow = 100000
         self.setlog()
         self.announced = arg
         if self.announced:
             logging.info(str(datetime.now()) + ' Lauching check for announced')
-            self.present_url = '/announced'
+            self.present_url = '/announced/false'
             self.historical_url = '/historical/3/,/done/all'
         else:
             logging.info(str(datetime.now()) + ' Launching check for growing')
-            self.present_url = '/growing'
+            self.present_url = '/growing/false'
             self.historical_url = '/historical/3/,/all/all'
 
     @staticmethod
@@ -121,6 +121,7 @@ class TestIntegrityEventsInDAS(object):
         for campaign in campaigns:
             logging.info(str(datetime.now()) + " Checking " +
                          campaign['prepid'])
+
             if self.get_historical(campaign['prepid']) != \
                     self.get_announced(campaign['prepid']):
                 logging.error(str(datetime.now()) + ' Inconsistency "events in'

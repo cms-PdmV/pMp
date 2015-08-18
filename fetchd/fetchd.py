@@ -184,7 +184,7 @@ if __name__ == "__main__":
                 for misspelled in ['pdmv_monitor_history',
                                    'pdvm_monitor_history']:
                     try:
-                        if len(data['pdmv_dataset_list']) > 1:
+                        if len(data['pdmv_dataset_list']) > 0:
                             tc = parse_datasets(data[misspelled])
                             if len(tc):
                                 data['pdmv_monitor_datasets'] = tc
