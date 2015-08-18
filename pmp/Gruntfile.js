@@ -2,7 +2,14 @@ module.exports = function(grunt) {
  grunt.initConfig({
   concat: {
    js: {
-    src: ['static/js/app.js', 'static/js/controllers.js', 'static/js/services.js'],
+    src: ['static/js/app.js',
+          'static/js/controllers/main.js',
+          'static/js/controllers/index.js',
+          'static/js/controllers/present.js',
+          'static/js/controllers/historical.js',
+          'static/js/controllers/performance.js',
+          'static/js/controllers/typeahead.js',
+          'static/js/services.js'],
     dest: 'static/build/pmp.build.js',
    },
    css: {
@@ -10,11 +17,13 @@ module.exports = function(grunt) {
     dest: 'static/build/pmp.build.css',
    },
    html: {
-    src:['templates/valid-head.html', 'templates/valid.html'],
+    src:['templates/valid-head.html',
+         'templates/valid.html'],
     dest: 'static/build/valid.prod.html'
    },
    htmldev: {
-    src:['templates/valid-head-dev.html', 'templates/valid.html'],
+    src:['templates/valid-head-dev.html',
+         'templates/valid.html'],
     dest: 'static/build/valid.dev.html'
    }
   },
