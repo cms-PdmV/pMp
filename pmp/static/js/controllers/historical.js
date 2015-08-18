@@ -1,8 +1,4 @@
-angular.module('pmpApp').controller('HistoricalController', ['$http', '$location', '$scope', '$rootScope', '$interval',
-                                           function($http, $location, $scope, $rootScope, $interval) {
-
-    $scope.graphType = 2;
-    $rootScope.plotTemplate = 'build/historical.min.html';
+angular.module('pmpApp').controller('HistoricalController', ['$http', '$location', '$scope', '$rootScope', '$interval', 'PageDetailsProvider', function($http, $location, $scope, $rootScope, $interval, PageDetailsProvider) {
 
     $scope.allPWG = {};
 
@@ -13,7 +9,7 @@ angular.module('pmpApp').controller('HistoricalController', ['$http', '$location
     $scope.inputTags = [];
 
     $scope.init = function() {
-
+        $scope.page = PageDetailsProvider.historical;
         if ($location.search().y != undefined && $location.search().y != '') {
             $scope.zoomOnY = ($location.search().y == 'true');
         } else {
@@ -260,8 +256,6 @@ angular.module('pmpApp').controller('HistoricalController', ['$http', '$location
             $scope.loading = false;
         });
     }
-
-    $scope.title = 'Historical Statistics';
 
     $scope.updateRequestData = function() {
         $scope.query(true);

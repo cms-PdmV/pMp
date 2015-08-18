@@ -1,6 +1,4 @@
-angular.module('pmpApp').controller('PresentController', ['$http', '$location', '$interval', '$q', '$rootScope', '$scope', '$timeout', function($http, $location, $interval, $q, $rootScope, $scope, $timeout) {
-    $scope.graphType = 1;
-    $rootScope.plotTemplate = 'build/present.min.html';
+angular.module('pmpApp').controller('PresentController', ['$http', '$location', '$interval', '$q', '$rootScope', '$scope', '$timeout', 'PageDetailsProvider', function($http, $location, $interval, $q, $rootScope, $scope, $timeout, PageDetailsProvider) {
 
     // currently displayed data (after filtering)
     $scope.allRequestData = [];
@@ -17,6 +15,7 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location', 
     $scope.inputTags = [];
 
     $scope.init = function() {
+        $scope.page = PageDetailsProvider.present;
         $scope.aOptionsValues = [1, 0, 3, 0, 0, 0];
         $scope.aRadioValues = [0, 0];
 
@@ -191,9 +190,9 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location', 
 
     $scope.modeUpdate = function(onlyTitle) {
         if ($scope.growingMode) {
-            $scope.title = 'Present: Growing Mode';
+            $scope.mode = ': Growing Mode';
         } else {
-            $scope.title = 'Present: Announced Mode';
+            $scope.mode = ': Announced Mode';
         }
         $scope.cachedRequestData = [];
         $scope.allRequestData = [];

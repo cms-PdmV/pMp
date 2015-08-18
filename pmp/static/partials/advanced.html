@@ -1,39 +1,39 @@
     <div id="advanced" class="collapse col-xs-12 col-sm-12 col-md-12 col-lg-12 spacing">
       <form class="form-group text-uppercase">
-        <label class="checkbox-inline col-lg-12 col-md-12 col-sm-12" ng-show="graphType == 1">
+        <label class="checkbox-inline col-lg-12 col-md-12 col-sm-12" ng-show="page.id == 1">
           <input type="checkbox" ng-model="$parent.displayChains" ng-change="modeUpdate(false);setURL()">
           <small>Display Chains</small>
         </label>
-        <br ng-show="graphType == 1"/>
-        <label class="checkbox-inline col-lg-12 col-md-12 col-sm-12" ng-show="graphType == 1">
+        <br ng-show="page.id == 1"/>
+        <label class="checkbox-inline col-lg-12 col-md-12 col-sm-12" ng-show="page.id == 1">
           <input type="checkbox" ng-model="$parent.growingMode" ng-change="modeUpdate(false);setURL()">
           <small>Growing Mode</small>
         </label>
-        <br ng-show="graphType == 1"/>
-        <label class="checkbox-inline col-lg-12 col-md-12 col-sm-12" ng-hide="graphType == 3">
+        <br ng-show="page.id == 1"/>
+        <label class="checkbox-inline col-lg-12 col-md-12 col-sm-12" ng-hide="page.id == 3">
           <input type="checkbox" ng-model="$parent.humanReadableNumbers"
                  ng-init="$parent.humanReadableNumbers=true">
           <small>Human Readable Numbers</small>
         </label>
-        <br ng-hide="graphType == 3"/>
-        <label class="checkbox-inline col-lg-12 col-md-12 col-sm-12" ng-show="graphType == 1">
+        <br ng-hide="page.id == 3"/>
+        <label class="checkbox-inline col-lg-12 col-md-12 col-sm-12" ng-show="page.id == 1">
           <input type="checkbox" ng-model="$parent.priorityBlockMarkup"
                  ng-init="$parent.priorityBlockMarkup=true">
           <small>Priority blocks markup</small>
         </label>
-        <br ng-show="graphType == 1"/>
+        <br ng-show="page.id == 1"/>
         <label class="checkbox-inline col-lg-12 col-md-12 col-sm-12">
           <input type="checkbox" ng-model="$parent.showDate" ng-change="setURL()">
           <small>Show time</small>
         </label>
         <br/>
-        <label class="checkbox-inline col-lg-12 col-md-12 col-sm-12" ng-show="graphType == 2">
+        <label class="checkbox-inline col-lg-12 col-md-12 col-sm-12" ng-show="page.id == 2">
           <input type="checkbox" ng-model="$parent.zoomOnY" ng-change="setURL()">
           <small>y axis zoom</small>
         </label>
       </form>
       
-      <div class="input-group input-group-sm spacing text-uppercase" ng-show="graphType == 2">
+      <div class="input-group input-group-sm spacing text-uppercase" ng-show="page.id == 2">
         <div class="hidden-sm input-group-addon">Probing</div>
         <input type="number" class="form-control" ng-model="$parent.probing" ng-change="setURL()"
                placeholder="Default: 40">
@@ -42,7 +42,7 @@
         </div>
       </div>
 
-     <div class="input-group input-group-sm spacing text-uppercase" ng-show="graphType == 3">
+     <div class="input-group input-group-sm spacing text-uppercase" ng-show="page.id == 3">
        <span class="hidden-sm input-group-addon">Bins</span>
        <input type="number" class="form-control" ng-model="$parent.bins" ng-change="setURL()"
               placeholder="Default: 10">

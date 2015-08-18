@@ -1,7 +1,4 @@
-angular.module('pmpApp').controller('PerformanceController', ['$http', '$interval', '$location', '$rootScope', '$scope',
-                                            function($http, $interval, $location, $rootScope, $scope) {
-        $scope.graphType = 3;
-        $rootScope.plotTemplate = 'build/performance.min.html';
+angular.module('pmpApp').controller('PerformanceController', ['$http', '$interval', '$location', '$rootScope', '$scope', 'PageDetailsProvider', function($http, $interval, $location, $rootScope, $scope, PageDetailsProvider) {
         $scope.cachedRequestData = [];
         $scope.allRequestData = [];
         $scope.inputTags = [];
@@ -82,10 +79,10 @@ angular.module('pmpApp').controller('PerformanceController', ['$http', '$interva
     }
 
     $scope.updateOnRemoval = function(requestData, newPWGObject, newStatusObject) {
-        $scope.cachedRequestData = data;
+        $scope.cachedRequestData = requestData;
         $scope.allPWG = newPWGObject;
         $scope.allStatus = newStatusObject;
-        $scope.allRequestData = data;
+        $scope.allRequestData = requestData;
         $scope.loadingData = false;
     }
 
@@ -101,14 +98,13 @@ angular.module('pmpApp').controller('PerformanceController', ['$http', '$interva
 
     $scope.allPWG = {};
     $scope.allStatus = {};
-    $scope.title = 'Request Performance';
 
     $scope.applyHistogram = function(d, e) {
         $scope.histogramData = d;
         $scope.histogramDataExtended = e;
     }
 
-    $scope.applyDifference = function(d) {
+    $scope.applyDifference = function(d) {x
         $scope.difference = d;
         $scope.setURL();
     }
@@ -240,7 +236,7 @@ angular.module('pmpApp').controller('PerformanceController', ['$http', '$interva
     }
 
     $scope.init = function() {
-
+        $scope.page = PageDetailsProvider.performance;
         $scope.difference = {minuend: 'done', subtrahend: 'created'}        
         $scope.selections = ['validation', 'approved', 'submitted'];
 

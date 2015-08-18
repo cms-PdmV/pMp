@@ -3,6 +3,7 @@ module.exports = function(grunt) {
   concat: {
    js: {
     src: ['static/js/app.js',
+          'static/js/services/info.js'
           'static/js/controllers/main.js',
           'static/js/controllers/index.js',
           'static/js/controllers/present.js',
