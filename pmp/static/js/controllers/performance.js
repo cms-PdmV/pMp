@@ -219,20 +219,7 @@ angular.module('pmpApp').controller('PerformanceController', ['$http', '$interva
         }
 
         $location.search(params);
-        $scope.url = $location.absUrl();
-    }
-
-    $scope.shortenURL = function() {
-        var promise = $http.get("shorten/"+ $scope.url);
-        promise.then(function(data) {
-                $scope.url = data.data;
-            });
-    }
-
-    $scope.initZeroClipboard = function() {
-        new ZeroClipboard(document.getElementById('copy'), {
-                moviePath: 'bower_components/zeroclipboard/dist/ZeroClipboard.swf'
-            });
+        $scope.$broadcast('updateURL');
     }
 
     $scope.init = function() {
@@ -298,7 +285,6 @@ angular.module('pmpApp').controller('PerformanceController', ['$http', '$interva
             }
         } else {
             $scope.url = $location.absUrl();
-            //$scope.url = $scope.setURL();
         }
     }
 }]);

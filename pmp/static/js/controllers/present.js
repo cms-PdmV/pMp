@@ -1,4 +1,4 @@
-angular.module('pmpApp').controller('PresentController', ['$http', '$location', '$interval', '$q', '$rootScope', '$scope', '$timeout', 'PageDetailsProvider', function($http, $location, $interval, $q, $rootScope, $scope, $timeout, PageDetailsProvider) {
+angular.module('pmpApp').controller('PresentController', ['$http', '$location', '$interval', '$scope', '$timeout', 'PageDetailsProvider', function($http, $location, $interval, $scope, $timeout, PageDetailsProvider) {
 
     // currently displayed data (after filtering)
     $scope.allRequestData = [];
@@ -88,7 +88,7 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location', 
                 $scope.load(tmp[i], true, tmp.length, $scope.isEmpty($scope.allPWG), $scope.isEmpty($scope.allStatus));
             }
         } else {
-            $scope.url = $location.absUrl();
+            $scope.$broadcast('updateURL');
         }
     }
 
@@ -271,7 +271,7 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location', 
         }
 
         $location.search(params);
-        $scope.url = $location.absUrl();
+        $scope.$broadcast('updateURL');
     }
 
     $scope.setScaleAndOperation = function(i, value) {
@@ -383,17 +383,4 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location', 
 
     $interval($scope.updateUpdate, 2*60*1000);
     $scope.updateUpdate();
-
-    $scope.shortenURL = function() {
-        var promise = $http.get("shorten/"+ $scope.url);
-        promise.then(function(data) {
-                $scope.url = data.data;
-            });
-    }
-
-    $scope.initZeroClipboard = function() {
-        new ZeroClipboard(document.getElementById('copy'), {
-                moviePath: 'bower_components/zeroclipboard/dist/ZeroClipboard.swf'
-            });
-    }
 }]);

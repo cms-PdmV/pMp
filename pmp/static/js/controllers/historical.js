@@ -270,17 +270,4 @@ angular.module('pmpApp').controller('HistoricalController', ['$http', '$location
 
     $interval($scope.updateUpdate, 2*60*1000);
     $scope.updateUpdate();
-
-    $scope.shortenURL = function() {
-        var promise = $http.get("shorten/"+ $scope.url);
-        promise.then(function(data) {
-                $scope.url = data.data;
-            });
-    }
-
-    $scope.initZeroClipboard = function() {
-        new ZeroClipboard(document.getElementById('copy'), {
-                moviePath: 'bower_components/zeroclipboard/dist/ZeroClipboard.swf'
-            });
-    }
 }]);
