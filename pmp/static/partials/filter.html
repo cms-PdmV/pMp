@@ -1,10 +1,10 @@
 <div id="filter" class="collapse col-xs-12 col-sm-12 col-md-12 col-lg-12 spacing" ng-controller="FilterController" ng-init="initFilter()">
-  <div ng-show="isEmpty(allStatus)">
+  <div ng-show="isEmpty(filterStatus)">
     <small>
       No data to filter
     </small>
   </div>
-  <div ng-show="!isEmpty(allStatus)">
+  <div ng-show="!isEmpty(filterStatus)">
     <form class="form-group form-inline form-group-sm">
       <small class="text-uppercase col-sm-12 col-md-12 col-lg-12">
         Priority filter
@@ -24,18 +24,21 @@
             {{key}}
           </option>
         </select>
-        <input type="text" class="form-control" placeholder="max"  ng-change="applyFilterChanges()" ng-disabled="loadingData" ng-model="filterPriority[1]">
+        <input type="text" class="form-control" placeholder="max" ng-change="applyFilterChanges()" ng-disabled="loadingData" ng-model="filterPriority[1]">
       </div>
     </form>
     
     <form class="form-group form-inline form-group-sm spacing">
-      <small class="text-uppercase col-sm-12 col-md-12 col-lg-12">Status filter</small>
+      <small class="text-uppercase col-sm-12 col-md-12 col-lg-12">
+        Status filter
+      </small>
       <div class="input-group">
-        <div class="col-lg-6 col-md-4 col-sm-4 col-xs-6" ng-repeat="(key, _) in allStatus">
+        <div class="col-lg-6 col-md-4 col-sm-4 col-xs-6" ng-repeat="(key, _) in filterStatus">
           <label class="checkbox-inline">
-            <input type="checkbox" ng-model="allStatus[key]" ng-disabled="loadingData"
-                   ng-change="updateRequestData();setURL()">
-            <small>{{key}}</small>
+            <input type="checkbox" ng-change="applyFilterChanges()" ng-disabled="loadingData" ng-model="filterStatus[key]">
+            <small>
+              {{key}}
+            </small>
           </label>
         </div>
       </div>

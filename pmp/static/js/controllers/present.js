@@ -64,12 +64,7 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location', 
         $scope.modeUpdate(true);
 
         if ($location.search().x !== undefined && $location.search().x != '') Data.setFilterPriority($location.search().x.split(','));
-
-        var tmp = "";
-        if ($location.search().s != undefined) {
-            tmp = $location.search().s;
-        }
-        $scope.updateStatus([], true, true, tmp);
+        if ($location.search().s !== undefined && $location.search().s != '') Data.initializeFilter($location.search().s.split(','), true); 
 
         var tmp = "";
         if ($location.search().w != undefined) {
@@ -81,27 +76,12 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location', 
         if ($location.search().r != undefined) {
             $scope.loadingData = true;
             var tmp = $location.search().r.split(',');
+            
             for (var i = 0; i < tmp.length; i++) {
-                $scope.load(tmp[i], true, tmp.length, $scope.isEmpty($scope.allPWG), $scope.isEmpty($scope.allStatus));
+                $scope.load(tmp[i], true, tmp.length, $scope.isEmpty($scope.allPWG), $scope.isEmpty(Data.getFilterStatus()));
             }
         } else {
             $scope.$broadcast('updateURL');
-        }
-    }
-
-    $scope.updateStatus = function(dataDetails, resetObject, defaultValue, initCSV) {
-        if (resetObject) $scope.allStatus = {};
-        if (initCSV !== undefined) {
-            var tmp = initCSV.split(',');
-            for (var i = 0; i < tmp.length; i++) {
-                if (tmp[i] != "") $scope.allStatus[tmp[i]] = defaultValue;
-            }
-        }
-        for (var i = 0; i < dataDetails.length; i++) {
-            var statusId = dataDetails[i].status; 
-            if ($scope.allStatus[statusId] === undefined) {
-                $scope.allStatus[statusId] = defaultValue;
-            }
         }
     }
 
@@ -156,7 +136,7 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location', 
                         // apply appending campaign
                         if ($scope.parseLoadedRequestsForTags(false, data.data.results, campaign)) {
                             data.data.results.push.apply(data.data.results, $scope.cachedRequestData);
-                            $scope.updateStatus(data.data.results, false, defaultStatus);
+                            Data.changeFilter(data.data.results, false, defaultStatus, true);
                             $scope.updatePWG(data.data.results, false, defaultPWG);
                             $scope.showPopUp('success', 'Succesfully appended requests');
                         } else {
@@ -166,7 +146,7 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location', 
                     } else {
                         // apply loading all or single campaign
                         $scope.updateOnRemoval([], {}, {});
-                        $scope.updateStatus(data.data.results, true, true);
+                        Data.changeFilter(data.data.results, true, true, true);
                         $scope.updatePWG(data.data.results, true, true);
                         $scope.parseLoadedRequestsForTags(true, data.data.results, campaign);
                         $scope.showPopUp('success', 'Succesfully loaded requests');
@@ -176,6 +156,7 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location', 
                 }
                 if (!more || more == $scope.inputTags.length) {
                     $scope.updateRequestData();
+                    $scope.$broadcast('updateFilterTag');
                     $scope.loadingData == false;
                 }
             }, function() {
@@ -249,11 +230,10 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location', 
             }
             params.w = w.join(',');
         }
-
-        if (!$scope.isEmpty($scope.allStatus)) {
+        if (!$scope.isEmpty(Data.getFilterStatus())) {
             var s = [];
-            for (var i in $scope.allStatus) {
-                if ($scope.allStatus[i]) s.push(i);
+            for (var i in Data.getFilterStatus()) {
+                if (Data.getFilterStatus()[i]) s.push(i);
             }
             params.s = s.join(',');
         }
@@ -261,7 +241,7 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location', 
         $location.search(params);
         $scope.$broadcast('updateURL');
     }
-
+    
     $scope.setScaleAndOperation = function(i, value) {
         if ($scope.aRadioValues[i] != value) {
             $scope.aRadioValues[i] = value;
@@ -282,7 +262,7 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location', 
                         data1.push(tmp[i]);
 
                         if (newStatusObjectTmp[tmp[i].status] == undefined) {
-                            newStatusObjectTmp[tmp[i].status] = $scope.allStatus[tmp[i].status]
+                            newStatusObjectTmp[tmp[i].status] = Data.getFilterStatus()[tmp[i].status]
                         }
 
                         if (newPWGObjectTmp[tmp[i].pwg] == undefined) {
@@ -297,9 +277,10 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location', 
     }
 
     $scope.updateOnRemoval = function(requestData, newPWGObject, newStatusObject) {
+        console.log(newStatusObject)
         $scope.cachedRequestData = requestData;
         $scope.allPWG = newPWGObject;
-        $scope.allStatus = newStatusObject;
+        Data.setFilterStatus(newStatusObject);
         $scope.setURL();
         $scope.updateRequestData();
     }
@@ -345,7 +326,7 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location', 
             for (var i = 0; i < tmp.length; i++) {
                 if (tmp[i].priority >= min &&
                     tmp[i].priority <= max &&
-                    $scope.allStatus[tmp[i].status] &&
+                    Data.getFilterStatus()[tmp[i].status] &&
                     $scope.allPWG[tmp[i].pwg]) {
                     data.push(tmp[i]);
                 }
