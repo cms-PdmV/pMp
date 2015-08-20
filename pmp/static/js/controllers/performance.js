@@ -1,8 +1,7 @@
-angular.module('pmpApp').controller('PerformanceController', ['$http', '$interval', '$location', '$scope', 'PageDetailsProvider', function($http, $interval, $location, $scope, PageDetailsProvider) {
+angular.module('pmpApp').controller('PerformanceController', ['$http', '$interval', '$location', '$scope', 'PageDetailsProvider', 'Data', function($http, $interval, $location, $scope, PageDetailsProvider, Data) {
         $scope.cachedRequestData = [];
         $scope.allRequestData = [];
         $scope.inputTags = [];
-        $scope.filterPriority = ['', '']
         $scope.load = function(input, add, more, defaultPWG, defaultStatus) {
         if (!input) {
             $scope.showPopUp('warning', 'Your request parameters are empty');
@@ -114,20 +113,11 @@ angular.module('pmpApp').controller('PerformanceController', ['$http', '$interva
         $scope.setURL();
     }
 
-    $scope.priorityPerBlock = {
-        1: 110000,
-        2: 90000,
-        3: 85000,
-        4: 80000,
-        5: 70000,
-        6: 63000
-    };
-
     $scope.updateRequestData = function() {
         $scope.loadingData = true;
 
-        var max = $scope.filterPriority[1];
-        var min = $scope.filterPriority[0];
+        var max = Data.getFilterPriority()[1];
+        var min = Data.getFilterPriority()[0];
         if (isNaN(max) || max == '') {
             max = Number.MAX_VALUE;
         }
@@ -174,9 +164,7 @@ angular.module('pmpApp').controller('PerformanceController', ['$http', '$interva
             params.t = $scope.showDate + ''
         }
         // set filter priority
-        if ($scope.filterPriority[1] != '' || $scope.filterPriority[0] != '') {
-            params.x = $scope.filterPriority.join(',');
-        }
+        params.x = Data.getFilterPriority().join(',');
         // set filter pwgs
         if (!$scope.isEmpty($scope.allPWG)) {
             var w = [];
@@ -240,12 +228,7 @@ angular.module('pmpApp').controller('PerformanceController', ['$http', '$interva
         } else {
             $scope.bins = 10;
         }
-
-        $scope.filterPriority = ['',''];
-        if ($location.search().x != undefined) {
-            var tmp = $location.search().x.split(',');
-            $scope.filterPriority = tmp;
-        }
+        if ($location.search().x !== undefined && $location.search().x != '') Data.setFilterPriority($location.search().x.split(','));
 
         $scope.allPWG = {};
         if ($location.search().w != undefined) {
@@ -277,7 +260,7 @@ angular.module('pmpApp').controller('PerformanceController', ['$http', '$interva
             $scope.url = $location.absUrl();
         }
     }
-
-    $interval($scope.updateLastUpdate('requests'), 2*60*1000);
     $interval($scope.updateCurrentDate, 1000);
+    $interval(function(){$scope.updateLastUpdate('requests')}, 2*60*1000);
+    $scope.updateLastUpdate('requests');
 }]);

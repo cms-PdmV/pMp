@@ -1,4 +1,4 @@
-angular.module('pmpApp').controller('HistoricalController', ['$http', '$location', '$scope', '$interval', 'PageDetailsProvider', function($http, $location, $scope, $interval, PageDetailsProvider) {
+angular.module('pmpApp').controller('HistoricalController', ['$http', '$location', '$scope', '$interval', 'PageDetailsProvider', 'Data', function($http, $location, $scope, $interval, PageDetailsProvider, Data) {
 
     $scope.allPWG = {};
 
@@ -28,13 +28,7 @@ angular.module('pmpApp').controller('HistoricalController', ['$http', '$location
             $scope.showDate = false;
         }
 
-        if ($location.search().x != undefined && $location.search().x != '') {
-            var tmp = $location.search().x.split(',');
-            $scope.filterPriority = {'0': tmp[0], '1': tmp[1]};
-            $scope.showDate = $location.search().t;
-        } else {
-            $scope.filterPriority = {'0': '', '1': ''};
-        }
+        if ($location.search().x !== undefined && $location.search().x != '') Data.setFilterPriority($location.search().x.split(','));
 
         if ($location.search().w != undefined && $location.search().w != '') {
             var tmp = $location.search().w.split(',');
@@ -94,16 +88,6 @@ angular.module('pmpApp').controller('HistoricalController', ['$http', '$location
         }
     };
 
-
-    $scope.priorityPerBlock = {
-        1: 110000,
-        2: 90000,
-        3: 85000,
-        4: 80000,
-        5: 70000,
-        6: 63000
-    };
-
     $scope.query = function(filter) {
         if (!$scope.inputTags.length) {
             return null;
@@ -113,13 +97,13 @@ angular.module('pmpApp').controller('HistoricalController', ['$http', '$location
         
         // Add priority filter
         var x = '';
-        if(filter && $scope.filterPriority != undefined) {
-            if($scope.filterPriority[0] != undefined) {
-                x += $scope.filterPriority[0];
+        if(filter && Data.getFilterPriority() != undefined) {
+            if(Data.getFilterPriority()[0] != undefined) {
+                x += Data.getFilterPriority()[0];
             }
             x += ',';
-            if($scope.filterPriority[1] != undefined) {
-                x += $scope.filterPriority[1];
+            if(Data.getFilterPriority()[1] != undefined) {
+                x += Data.getFilterPriority()[1];
             }
         } else {
             x = ','
@@ -204,9 +188,7 @@ angular.module('pmpApp').controller('HistoricalController', ['$http', '$location
             params.r = $scope.inputTags.join(',');
         }
         params.t = $scope.showDate + "";
-        if ($scope.filterPriority['0'] != '' || $scope.filterPriority['1'] != '') {
-            params.x = $scope.filterPriority['0'] + ',' + $scope.filterPriority['1'];
-        }
+        params.x = Data.getFilterPriority().join(',');
 
         var w = [];
         for (var i in $scope.allPWG) {
@@ -259,7 +241,7 @@ angular.module('pmpApp').controller('HistoricalController', ['$http', '$location
     $scope.updateRequestData = function() {
         $scope.query(true);
     }
-
-    $interval($scope.updateLastUpdate('stats'), 2*60*1000);
     $interval($scope.updateCurrentDate, 1000);
+    $interval(function(){$scope.updateLastUpdate('stats')}, 2*60*1000);
+    $scope.updateLastUpdate('stats');
 }]);

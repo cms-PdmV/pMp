@@ -4,11 +4,13 @@ module.exports = function(grunt) {
    js: {
     src: ['static/js/app.js',
           'static/js/services/info.js',
+          'static/js/services/data.js',
           'static/js/controllers/main.js',
           'static/js/controllers/index.js',
           'static/js/controllers/present.js',
           'static/js/controllers/historical.js',
           'static/js/controllers/performance.js',
+          'static/js/controllers/filter.js',
           'static/js/controllers/share.js',
           'static/js/controllers/typeahead.js',
           'static/js/services.js'],

@@ -1,25 +1,30 @@
-<div id="filter" class="collapse col-xs-12 col-sm-12 col-md-12 col-lg-12 spacing">
-  <div ng-show="isEmpty(allStatus)"><small>No data to filter</small></div>
-
+<div id="filter" class="collapse col-xs-12 col-sm-12 col-md-12 col-lg-12 spacing" ng-controller="FilterController" ng-init="initFilter()">
+  <div ng-show="isEmpty(allStatus)">
+    <small>
+      No data to filter
+    </small>
+  </div>
   <div ng-show="!isEmpty(allStatus)">
     <form class="form-group form-inline form-group-sm">
-      <small class="text-uppercase col-sm-12 col-md-12 col-lg-12">Priority filter</small>
+      <small class="text-uppercase col-sm-12 col-md-12 col-lg-12">
+        Priority filter
+      </small>
       <div class="input-group col-sm-12">
-        <select class="form-control text-center" ng-model="filterPriority[0]"
-                ng-change="updateRequestData();setURL()" ng-disabled="loadingData">
-          <option ng-repeat="(key, value) in priorityPerBlock" value="{{value}}">{{key}}</option>
+        <select class="form-control text-center" ng-change="applyFilterChanges()" ng-disabled="loadingData" ng-model="filterPriority[0]">
+          <option ng-repeat="(key, value) in priorityPerBlock" value="{{value}}">
+            {{key}}
+          </option>
         </select>
-        <input type="text" class="form-control" placeholder="min" ng-disabled="loadingData"
-               ng-model="filterPriority[0]" ng-change="updateRequestData();setURL()">
+        <input type="text" class="form-control" placeholder="min" ng-change="applyFilterChanges()" ng-disabled="loadingData" ng-model="filterPriority[0]">
         <div class="input-group-addon">
             &le;x&le;
         </div>
-        <select class="form-control text-center" ng-model="filterPriority[1]"
-                ng-change="updateRequestData();setURL()" ng-disabled="loadingData">
-          <option ng-repeat="(key, value) in priorityPerBlock" value="{{value}}">{{key}}</option>
+        <select class="form-control text-center" ng-change="applyFilterChanges()" ng-disabled="loadingData" ng-model="filterPriority[1]">
+          <option ng-repeat="(key, value) in priorityPerBlock" value="{{value}}">
+            {{key}}
+          </option>
         </select>
-        <input type="text" class="form-control" placeholder="max"
-               ng-model="filterPriority[1]" ng-change="updateRequestData();setURL()">
+        <input type="text" class="form-control" placeholder="max"  ng-change="applyFilterChanges()" ng-disabled="loadingData" ng-model="filterPriority[1]">
       </div>
     </form>
     

@@ -1,4 +1,4 @@
-angular.module('pmpApp').controller('PresentController', ['$http', '$location', '$interval', '$scope', 'PageDetailsProvider', function($http, $location, $interval, $scope, PageDetailsProvider) {
+angular.module('pmpApp').controller('PresentController', ['$http', '$location', '$interval', '$scope', 'PageDetailsProvider', 'Data', function($http, $location, $interval, $scope, PageDetailsProvider, Data) {
 
     // currently displayed data (after filtering)
     $scope.allRequestData = [];
@@ -62,12 +62,9 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location', 
         $scope.growingMode = ($location.search().m === 'true');
         $scope.displayChains = ($location.search().c === 'true');
         $scope.modeUpdate(true);
-        
-        $scope.filterPriority = ['', '']
-        if ($location.search().x != undefined) {
-            var tmp = $location.search().x.split(',');
-            $scope.filterPriority = tmp;
-        }
+
+        if ($location.search().x !== undefined && $location.search().x != '') Data.setFilterPriority($location.search().x.split(','));
+
         var tmp = "";
         if ($location.search().s != undefined) {
             tmp = $location.search().s;
@@ -223,15 +220,6 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location', 
     $scope.piecharts.nestBy = ["member_of_campaign", "status"];
     $scope.piecharts.sum = "total_events";
 
-    $scope.priorityPerBlock = {
-        1: 110000,
-        2: 90000,
-        3: 85000,
-        4: 80000,
-        5: 70000,
-        6: 63000
-    };
-
     $scope.requests = {};
     $scope.requests.settings = {
         duration: 1000,
@@ -252,7 +240,7 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location', 
         params.t = $scope.showDate + "";
         params.m = $scope.growingMode + "";
         params.c = $scope.displayChains + "";
-        params.x = $scope.filterPriority.join(',');
+        params.x = Data.getFilterPriority().join(',');
 
         if (!$scope.isEmpty($scope.allPWG)) {
             var w = [];
@@ -345,8 +333,8 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location', 
     $scope.updateRequestData = function() {
         $scope.loadingData = true;
 
-        var max = $scope.filterPriority[1];
-        var min = $scope.filterPriority[0];
+        var max = Data.getFilterPriority()[1];
+        var min = Data.getFilterPriority()[0];
         if (isNaN(max) || max == '') {
             max = Number.MAX_VALUE;
         }
@@ -369,6 +357,7 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location', 
         }, 0);
     }
 
-    $interval($scope.updateLastUpdate('campaigns,chained_campaigns,requests,chained_requests'), 2*60*1000);
     $interval($scope.updateCurrentDate, 1000);
+    $interval(function(){$scope.updateLastUpdate('campaigns,chained_campaigns,requests,chained_requests')}, 2*60*1000);
+    $scope.updateLastUpdate('campaigns,chained_campaigns,requests,chained_requests');
 }]);
