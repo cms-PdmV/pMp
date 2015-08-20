@@ -1,4 +1,4 @@
-angular.module('pmpApp').controller('MainController', ['$location', '$route', '$rootScope', '$interval', '$scope', '$timeout', 'browser', function($location, $route, $rootScope, $interval, $scope, $timeout, isSupportedBrowser) {
+angular.module('pmpApp').controller('MainController', ['$http', '$location', '$route', '$rootScope', '$scope', '$timeout', 'browser', function($http, $location, $route, $rootScope, $scope, $timeout, isSupportedBrowser) {
     // controls visibility of page main container
     $scope.showView = false;
     // show unsupported modal if the page is not supported
@@ -95,8 +95,16 @@ angular.module('pmpApp').controller('MainController', ['$location', '$route', '$
     /*
      * Update current time variable
      */
-    $scope.updateDate = function() {
+    $scope.updateCurrentDate = function() {
         $scope.dt = new Date();
     }
-    $interval($scope.updateDate, 1000);
+
+    /*
+     * Query API for last successful update timestamp. Pass indexes as input as csv
+     */
+    $scope.updateLastUpdate = function(fieldsCSV) {
+        $http.get("api/" + fieldsCSV +"/lastupdate/_").then(function(data) {
+            $scope.lastUpdate = data.data.results.last_update
+        });
+    }
 }]);

@@ -1,4 +1,4 @@
-angular.module('pmpApp').controller('PerformanceController', ['$http', '$interval', '$location', '$rootScope', '$scope', 'PageDetailsProvider', function($http, $interval, $location, $rootScope, $scope, PageDetailsProvider) {
+angular.module('pmpApp').controller('PerformanceController', ['$http', '$interval', '$location', '$scope', 'PageDetailsProvider', function($http, $interval, $location, $scope, PageDetailsProvider) {
         $scope.cachedRequestData = [];
         $scope.allRequestData = [];
         $scope.inputTags = [];
@@ -149,16 +149,6 @@ angular.module('pmpApp').controller('PerformanceController', ['$http', '$interva
         $scope.loadingData = false;
     }
 
-    $scope.updateUpdate = function() {
-        var promise = $http.get("api/requests/lastupdate/_");
-        promise.then(function(data) {
-            $scope.lastUpdate = data.data.results.last_update
-        });
-    }
-
-    $interval($scope.updateUpdate, 2*60*1000);
-    $scope.updateUpdate();
-
     $scope.takeScreenshot = function() {
         var tmp = document.getElementById("ctn");
         var svg = tmp.getElementsByTagName("svg")[0];
@@ -287,4 +277,7 @@ angular.module('pmpApp').controller('PerformanceController', ['$http', '$interva
             $scope.url = $location.absUrl();
         }
     }
+
+    $interval($scope.updateLastUpdate('requests'), 2*60*1000);
+    $interval($scope.updateCurrentDate, 1000);
 }]);

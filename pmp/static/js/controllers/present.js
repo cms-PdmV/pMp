@@ -1,4 +1,4 @@
-angular.module('pmpApp').controller('PresentController', ['$http', '$location', '$interval', '$scope', '$timeout', 'PageDetailsProvider', function($http, $location, $interval, $scope, $timeout, PageDetailsProvider) {
+angular.module('pmpApp').controller('PresentController', ['$http', '$location', '$interval', '$scope', 'PageDetailsProvider', function($http, $location, $interval, $scope, PageDetailsProvider) {
 
     // currently displayed data (after filtering)
     $scope.allRequestData = [];
@@ -326,18 +326,6 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location', 
         });
     }
 
-    $scope.updateUpdate = function() {
-        if ($scope.growingMode) {
-            var promise = $http.get("api/campaigns,chained_campaigns," +
-                                    "requests,chained_requests/lastupdate/_");
-        } else {
-            var promise = $http.get("api/campaigns/lastupdate/_");
-        }
-        promise.then(function(data) {
-            $scope.lastUpdate = data.data.results.last_update
-        });
-    }
-
     $scope.updatePWG = function(dataDetails, resetObject, defaultValue, initCSV) {
         if (resetObject) $scope.allPWG = {};
         if (initCSV !== undefined) {
@@ -381,6 +369,6 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location', 
         }, 0);
     }
 
-    $interval($scope.updateUpdate, 2*60*1000);
-    $scope.updateUpdate();
+    $interval($scope.updateLastUpdate('campaigns,chained_campaigns,requests,chained_requests'), 2*60*1000);
+    $interval($scope.updateCurrentDate, 1000);
 }]);

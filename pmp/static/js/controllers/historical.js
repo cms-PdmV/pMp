@@ -1,4 +1,4 @@
-angular.module('pmpApp').controller('HistoricalController', ['$http', '$location', '$scope', '$rootScope', '$interval', 'PageDetailsProvider', function($http, $location, $scope, $rootScope, $interval, PageDetailsProvider) {
+angular.module('pmpApp').controller('HistoricalController', ['$http', '$location', '$scope', '$interval', 'PageDetailsProvider', function($http, $location, $scope, $interval, PageDetailsProvider) {
 
     $scope.allPWG = {};
 
@@ -57,8 +57,7 @@ angular.module('pmpApp').controller('HistoricalController', ['$http', '$location
             }
             $scope.query(true);
         }
-        
-        $scope.url = $location.absUrl();
+        $scope.$broadcast('updateURL');
     }
 
     $scope.load = function(request, add, more, defaultPWG, defaultStatus) {
@@ -261,13 +260,6 @@ angular.module('pmpApp').controller('HistoricalController', ['$http', '$location
         $scope.query(true);
     }
 
-    $scope.updateUpdate = function() {
-        var promise = $http.get("api/stats/lastupdate/_");
-        promise.then(function(data) {
-            $scope.lastUpdate = data.data.results.last_update
-        });
-    }
-
-    $interval($scope.updateUpdate, 2*60*1000);
-    $scope.updateUpdate();
+    $interval($scope.updateLastUpdate('stats'), 2*60*1000);
+    $interval($scope.updateCurrentDate, 1000);
 }]);
