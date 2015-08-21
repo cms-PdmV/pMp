@@ -6,14 +6,24 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location', 
     // all gathered data (before filtering)
     $scope.cachedRequestData = [];
 
-    $scope.graphParam = ['selections', 'grouping', 'stacking', 'coloring'];
-
-    $scope.graphTabs = ['member_of_campaign', 'total_events', 'status', 'prepid', 'priority', 'pwg'];
-
     $scope.inputTags = [];
 
+    /*
+     * Core method: onStart load default $scope values and data from URL
+     */
     $scope.init = function() {
         $scope.page = PageDetailsProvider.present;
+
+        $scope.graphParam = ['selections', 'grouping', 'stacking', 'coloring'];
+        $scope.graphTabs = ['member_of_campaign', 'total_events', 'status', 'prepid', 'priority', 'pwg'];
+
+        $scope.piecharts = {};
+        $scope.piecharts.compactTerms = ["done", "to do"];
+        $scope.piecharts.domain = ["new", "validation", "done", "approved", "submitted", "nothing", "defined", "to do"];
+        $scope.piecharts.fullTerms = ["new", "validation", "defined", "approved", "submitted", "done", "upcoming"];
+        $scope.piecharts.nestBy = ["member_of_campaign", "status"];
+        $scope.piecharts.sum = "total_events";
+
         $scope.aOptionsValues = [1, 0, 3, 0, 0, 0];
         $scope.aRadioValues = [0, 0];
 
@@ -22,6 +32,9 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location', 
             $scope.aOptionsValues = toLoad.slice(0, 6);
             $scope.aRadioValues = toLoad.slice(6, 8);
         }
+
+        $scope.requests = {};
+        $scope.requests.settings = {duration: 1000, legend: true, sort: true};
         $scope.requests.selections = [];
         var initGrouping = [];
         var initStacking = [];
@@ -183,24 +196,6 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location', 
         }
     };
 
-    $scope.piecharts = {};
-    $scope.piecharts.compactTerms = ["done", "to do"];
-    $scope.piecharts.domain = ["new", "validation", "done", "approved",
-        "submitted", "nothing", "defined", "to do"
-    ];
-    $scope.piecharts.fullTerms = ["new", "validation", "defined",
-        "approved", "submitted", "done", "upcoming"
-    ];
-    $scope.piecharts.nestBy = ["member_of_campaign", "status"];
-    $scope.piecharts.sum = "total_events";
-
-    $scope.requests = {};
-    $scope.requests.settings = {
-        duration: 1000,
-        legend: true,
-        sort: true
-    };
-
     $scope.setURL = function(name, value) {
         $location.path($location.path(), false);
         if (typeof name != undefined && typeof value != undefined) {
@@ -275,6 +270,7 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location', 
         Data.setPWGFilter(newPWGObject);
         $scope.setURL();
         $scope.updateRequestData();
+        $scope.$broadcast('updateFilterTag');
     }
 
     $scope.takeScreenshot = function(format) {
@@ -302,8 +298,7 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location', 
             for (var i = 0; i < tmp.length; i++) {
                 if (tmp[i].priority >= min &&
                     tmp[i].priority <= max &&
-                    Data.getStatusFilter()[tmp[i].status] &&
-                    Data.getPWGFilter()[tmp[i].pwg]) {
+                    Data.getStatusFilter()[tmp[i].status] && Data.getPWGFilter()[tmp[i].pwg]) {
                     data.push(tmp[i]);
                 }
             }

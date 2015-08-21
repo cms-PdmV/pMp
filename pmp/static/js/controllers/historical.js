@@ -1,10 +1,6 @@
 angular.module('pmpApp').controller('HistoricalController', ['$http', '$location', '$scope', '$interval', 'PageDetailsProvider', 'Data', function($http, $location, $scope, $interval, PageDetailsProvider, Data) {
 
-    $scope.allPWG = {};
-
     $scope.allRequestData = [];
-
-    $scope.allStatus = {};
 
     $scope.inputTags = [];
 
@@ -28,21 +24,9 @@ angular.module('pmpApp').controller('HistoricalController', ['$http', '$location
             $scope.showDate = false;
         }
 
-        if ($location.search().x !== undefined && $location.search().x != '') Data.setFilterPriority($location.search().x.split(','));
-
-        if ($location.search().w != undefined && $location.search().w != '') {
-            var tmp = $location.search().w.split(',');
-            for (var i = 0; i < tmp.length; i++) {
-                $scope.allPWG[tmp[i]] = true;
-            }
-        }
-
-        if ($location.search().s != undefined) {
-            var tmp = $location.search().s.split(',');
-            for (var i = 0; i < tmp.length; i++) {
-                $scope.allStatus[tmp[i]] = true;
-            }
-        }
+        if ($location.search().x !== undefined && $location.search().x != '') Data.setPriorityFilter($location.search().x.split(','));
+        if ($location.search().s !== undefined && $location.search().s != '') Data.initializeFilter($location.search().s.split(','), true); 
+        if ($location.search().w !== undefined && $location.search().w != '') Data.initializeFilter($location.search().w.split(','), false);
 
         if ($location.search().r != undefined && $location.search().r != '') {
             var tmp = $location.search().r.split(',');
@@ -69,15 +53,15 @@ angular.module('pmpApp').controller('HistoricalController', ['$http', '$location
             var filter = add
             if (filter) {
                 filter = false;
-                for (var i = 0; i < Object.keys($scope.allStatus).length; i++) {
-                    if (!$scope.allStatus[Object.keys($scope.allStatus)[i]]) {
+                for (var i = 0; i < Object.keys(Data.getStatusFilter()).length; i++) {
+                    if (!Data.getStatusFilter()[Object.keys(Data.getStatusFilter())[i]]) {
                         filter = true;
                         break;
                     }
                 }
                 if (!filter) {
-                    for (var i = 0; i < Object.keys($scope.allPWG).length; i++) {
-                        if (!$scope.allPWG[Object.keys($scope.allPWG)[i]]) {
+                    for (var i = 0; i < Object.keys(Data.getPWGFilter()).length; i++) {
+                        if (!Data.getPWGFilter()[Object.keys(Data.getPWGFilter())[i]]) {
                             filter = true;
                             break;
                         }
@@ -97,24 +81,24 @@ angular.module('pmpApp').controller('HistoricalController', ['$http', '$location
         
         // Add priority filter
         var x = '';
-        if(filter && Data.getFilterPriority() != undefined) {
-            if(Data.getFilterPriority()[0] != undefined) {
-                x += Data.getFilterPriority()[0];
+        if(filter && Data.getPriorityFilter() != undefined) {
+            if(Data.getPriorityFilter()[0] != undefined) {
+                x += Data.getPriorityFilter()[0];
             }
             x += ',';
-            if(Data.getFilterPriority()[1] != undefined) {
-                x += Data.getFilterPriority()[1];
+            if(Data.getPriorityFilter()[1] != undefined) {
+                x += Data.getPriorityFilter()[1];
             }
         } else {
             x = ','
         }
-        
+
         // Add status filter
         var s = '';
-        if (filter && Object.keys($scope.allStatus).length) {
-            for (var i = 0; i < Object.keys($scope.allStatus).length; i++) {
-                if ($scope.allStatus[Object.keys($scope.allStatus)[i]]) {
-                    s += Object.keys($scope.allStatus)[i] + ',';
+        if (filter && Object.keys(Data.getStatusFilter()).length) {
+            for (var i = 0; i < Object.keys(Data.getStatusFilter()).length; i++) {
+                if (Data.getStatusFilter()[Object.keys(Data.getStatusFilter())[i]]) {
+                    s += Object.keys(Data.getStatusFilter())[i] + ',';
                 }
             }
             if (s.length > 1) {
@@ -125,13 +109,14 @@ angular.module('pmpApp').controller('HistoricalController', ['$http', '$location
         } else {
             s = 'all'
         }
+        console.log(s);
 
         // Add pwg filter
         var w = '';
-        if (filter && Object.keys($scope.allPWG).length) {
-            for (var i = 0; i < Object.keys($scope.allPWG).length; i++) {
-                if ($scope.allPWG[Object.keys($scope.allPWG)[i]]) {
-                    w += Object.keys($scope.allPWG)[i] + ',';
+        if (filter && Object.keys(Data.getPWGFilter()).length) {
+            for (var i = 0; i < Object.keys(Data.getPWGFilter()).length; i++) {
+                if (Data.getPWGFilter()[Object.keys(Data.getPWGFilter())[i]]) {
+                    w += Object.keys(Data.getPWGFilter())[i] + ',';
                 }
             }
             if (w.length > 1) {
@@ -158,12 +143,13 @@ angular.module('pmpApp').controller('HistoricalController', ['$http', '$location
                         data.data.results.error != '' ? $scope.showPopUp('error', data.data.results.error) : $scope.showPopUp('warning', 'All data is filtered');
                     }
                     $scope.allRequestData = data.data.results.data;
-                    $scope.allStatus = data.data.results.status;
-                    $scope.allPWG = data.data.results.pwg;
+                    Data.setStatusFilter(data.data.results.status);
+                    Data.setPWGFilter(data.data.results.pwg);
                     $scope.loadTaskChain = data.data.results.taskchain;
                 }
                 $scope.loadingData = false;
                 $scope.setURL();
+                $scope.$broadcast('updateFilterTag');
             }, function() {
                 $scope.showPopUp('error', 'Error getting requests');
                 $scope.loadingData = false;
@@ -188,19 +174,19 @@ angular.module('pmpApp').controller('HistoricalController', ['$http', '$location
             params.r = $scope.inputTags.join(',');
         }
         params.t = $scope.showDate + "";
-        params.x = Data.getFilterPriority().join(',');
+        params.x = Data.getPriorityFilter().join(',');
 
         var w = [];
-        for (var i in $scope.allPWG) {
-            if ($scope.allPWG[i]) {
+        for (var i in Data.getPWGFilter()) {
+            if (Data.getPWGFilter()[i]) {
                 w.push(i);
             }
         }
         params.w = w.join(',');
 
         var s = [];
-        for (var i in $scope.allStatus) {
-            if ($scope.allStatus[i]) {
+        for (var i in Data.getStatusFilter()) {
+            if (Data.getStatusFilter()[i]) {
                 s.push(i);
             }
         }
@@ -223,9 +209,10 @@ angular.module('pmpApp').controller('HistoricalController', ['$http', '$location
     $scope.tagsRemoveAll = function() {
         $scope.inputTags = [];
         $scope.allRequestData = [];
-        $scope.allStatus = {};
-        $scope.allPWG = {};
+        Data.setStatusFilter({});
+        Data.setPWGFilter({});
         $scope.setURL();
+        $scope.$broadcast('updateFilterTag');
     }
 
     $scope.takeScreenshot = function(format) {
