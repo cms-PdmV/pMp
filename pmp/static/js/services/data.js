@@ -1,33 +1,54 @@
 angular.module('pmpApp').service('Data', function() {
-        var filterPriority = ['', ''];
-        var filterStatus = {};
+        var priorityFilter = ['', ''];
+        var statusFilter = {};
+        var pwgFilter = {};
         return {
-            getFilterPriority: function() {
-                return filterPriority;
+            getPriorityFilter: function() {
+                return priorityFilter;
             },
-            setFilterPriority: function(i) {
-                filterPriority = i;
+            setPriorityFilter: function(i) {
+                priorityFilter = i;
             },
-            getFilterStatus: function() {
-                return filterStatus;
+            getPWGFilter: function() {
+                return pwgFilter;
             },
-            setFilterStatus: function(i) {
-                filterStatus = i;
+            setPWGFilter: function(i) {
+                pwgFilter = i;
+            },
+            getStatusFilter: function() {
+                return statusFilter;
+            },
+            setStatusFilter: function(i) {
+                statusFilter = i;
             },
             initializeFilter: function(data, isStatusFilter) {
-                if (isStatusFilter) {
-                    for (var i = 0; i < data.length; i++) {
-                        if (data[i] != '') filterStatus[data[i]] = true;
+                for (var i = 0; i < data.length; i++) {
+                    if (data[i] != '') {
+                        if (isStatusFilter) { 
+                            statusFilter[data[i]] = true;
+                        } else {
+                            pwgFilter[data[i]] = true;
+                        }
                     }
                 }
             },
             changeFilter: function(data, reset, value, isStatusFilter) {
                 if (reset) {
-                    if(isStatusFilter) filterStatus = {};
+                    if(isStatusFilter) {
+                        statusFilter = {};
+                    } else {
+                        pwgFilter = {};
+                    }
                 }
+                var key;
                 for (var i = 0; i < data.length; i++) {
-                    var key = data[i].status; 
-                    if (filterStatus[key] === undefined) filterStatus[key] = value;
+                    if (isStatusFilter) {
+                        key = data[i].status; 
+                        if (statusFilter[key] === undefined) statusFilter[key] = value;
+                    } else {
+                        key = data[i].pwg;
+                        if (pwgFilter[key] === undefined) pwgFilter[key] = value;
+                    }
                 }
             }
         }

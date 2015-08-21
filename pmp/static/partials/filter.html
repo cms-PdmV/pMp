@@ -10,32 +10,31 @@
         Priority filter
       </small>
       <div class="input-group col-sm-12">
-        <select class="form-control text-center" ng-change="applyFilterChanges()" ng-disabled="loadingData" ng-model="filterPriority[0]">
+        <select class="form-control text-center" ng-change="applyFilterChanges()" ng-disabled="loadingData" ng-model="priorityFilter[0]">
           <option ng-repeat="(key, value) in priorityPerBlock" value="{{value}}">
             {{key}}
           </option>
         </select>
-        <input type="text" class="form-control" placeholder="min" ng-change="applyFilterChanges()" ng-disabled="loadingData" ng-model="filterPriority[0]">
+        <input type="text" class="form-control" placeholder="min" ng-change="applyFilterChanges()" ng-disabled="loadingData" ng-model="priorityFilter[0]">
         <div class="input-group-addon">
             &le;x&le;
         </div>
-        <select class="form-control text-center" ng-change="applyFilterChanges()" ng-disabled="loadingData" ng-model="filterPriority[1]">
+        <select class="form-control text-center" ng-change="applyFilterChanges()" ng-disabled="loadingData" ng-model="priorityFilter[1]">
           <option ng-repeat="(key, value) in priorityPerBlock" value="{{value}}">
             {{key}}
           </option>
         </select>
-        <input type="text" class="form-control" placeholder="max" ng-change="applyFilterChanges()" ng-disabled="loadingData" ng-model="filterPriority[1]">
+        <input type="text" class="form-control" placeholder="max" ng-change="applyFilterChanges()" ng-disabled="loadingData" ng-model="priorityFilter[1]">
       </div>
     </form>
-    
     <form class="form-group form-inline form-group-sm spacing">
       <small class="text-uppercase col-sm-12 col-md-12 col-lg-12">
         Status filter
       </small>
       <div class="input-group">
-        <div class="col-lg-6 col-md-4 col-sm-4 col-xs-6" ng-repeat="(key, _) in filterStatus">
+        <div class="col-lg-6 col-md-4 col-sm-4 col-xs-6" ng-repeat="(key, _) in statusFilter">
           <label class="checkbox-inline">
-            <input type="checkbox" ng-change="applyFilterChanges()" ng-disabled="loadingData" ng-model="filterStatus[key]">
+            <input type="checkbox" ng-change="applyFilterChanges()" ng-disabled="loadingData" ng-model="statusFilter[key]">
             <small>
               {{key}}
             </small>
@@ -43,14 +42,16 @@
         </div>
       </div>
     </form>
-    
     <form class="form-group form-inline form-group-sm">
-      <small class="text-uppercase col-xs-12 col-sm-12 col-md-12 col-lg-12">PWG filter</small>
-      <div class="col-sm-3 col-md-3 col-lg-4 col-xs-4" ng-repeat="(key, _) in allPWG">
+      <small class="text-uppercase col-xs-12 col-sm-12 col-md-12 col-lg-12">
+        PWG filter
+      </small>
+      <div class="col-sm-3 col-md-3 col-lg-4 col-xs-4" ng-repeat="(key, _) in pwgFilter">
         <label class="checkbox-inline">
-          <input type="checkbox" ng-model="allPWG[key]" ng-disabled="loadingData"
-                 ng-change="updateRequestData();setURL()">
-          <small>{{key}}</small>
+          <input type="checkbox" ng-change="applyFilterChanges()" ng-disabled="loadingData" ng-model="pwgFilter[key]">
+          <small>
+            {{key}}
+          </small>
         </label>
       </div>
     </form>

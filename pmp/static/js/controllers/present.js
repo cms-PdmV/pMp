@@ -8,9 +8,7 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location', 
 
     $scope.graphParam = ['selections', 'grouping', 'stacking', 'coloring'];
 
-    $scope.graphTabs = ['member_of_campaign', 'total_events',
-        'status', 'prepid', 'priority', 'pwg'
-    ];
+    $scope.graphTabs = ['member_of_campaign', 'total_events', 'status', 'prepid', 'priority', 'pwg'];
 
     $scope.inputTags = [];
 
@@ -63,22 +61,17 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location', 
         $scope.displayChains = ($location.search().c === 'true');
         $scope.modeUpdate(true);
 
-        if ($location.search().x !== undefined && $location.search().x != '') Data.setFilterPriority($location.search().x.split(','));
+        if ($location.search().x !== undefined && $location.search().x != '') Data.setPriorityFilter($location.search().x.split(','));
         if ($location.search().s !== undefined && $location.search().s != '') Data.initializeFilter($location.search().s.split(','), true); 
-
-        var tmp = "";
-        if ($location.search().w != undefined) {
-            tmp = $location.search().w;
-        }
-        $scope.updatePWG([], true, true, tmp);
+        if ($location.search().w !== undefined && $location.search().w != '') Data.initializeFilter($location.search().w.split(','), false); 
 
         //initiate allRequestData from URL
         if ($location.search().r != undefined) {
             $scope.loadingData = true;
             var tmp = $location.search().r.split(',');
-            
+            var empty = [$scope.isEmpty(Data.getPWGFilter()), $scope.isEmpty(Data.getStatusFilter())];
             for (var i = 0; i < tmp.length; i++) {
-                $scope.load(tmp[i], true, tmp.length, $scope.isEmpty($scope.allPWG), $scope.isEmpty(Data.getFilterStatus()));
+                $scope.load(tmp[i], true, tmp.length, empty[0], empty[1]);
             }
         } else {
             $scope.$broadcast('updateURL');
@@ -137,7 +130,7 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location', 
                         if ($scope.parseLoadedRequestsForTags(false, data.data.results, campaign)) {
                             data.data.results.push.apply(data.data.results, $scope.cachedRequestData);
                             Data.changeFilter(data.data.results, false, defaultStatus, true);
-                            $scope.updatePWG(data.data.results, false, defaultPWG);
+                            Data.changeFilter(data.data.results, false, defaultPWG, false);
                             $scope.showPopUp('success', 'Succesfully appended requests');
                         } else {
                             data.data.results = $scope.cachedRequestData;
@@ -147,7 +140,7 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location', 
                         // apply loading all or single campaign
                         $scope.updateOnRemoval([], {}, {});
                         Data.changeFilter(data.data.results, true, true, true);
-                        $scope.updatePWG(data.data.results, true, true);
+                        Data.changeFilter(data.data.results, true, true, false);
                         $scope.parseLoadedRequestsForTags(true, data.data.results, campaign);
                         $scope.showPopUp('success', 'Succesfully loaded requests');
                     }
@@ -221,19 +214,19 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location', 
         params.t = $scope.showDate + "";
         params.m = $scope.growingMode + "";
         params.c = $scope.displayChains + "";
-        params.x = Data.getFilterPriority().join(',');
+        params.x = Data.getPriorityFilter().join(',');
 
-        if (!$scope.isEmpty($scope.allPWG)) {
+        if (!$scope.isEmpty(Data.getPWGFilter())) {
             var w = [];
-            for (var i in $scope.allPWG) {
-                if ($scope.allPWG[i]) w.push(i);
+            for (var i in Data.getPWGFilter()) {
+                if (Data.getPWGFilter()[i]) w.push(i);
             }
             params.w = w.join(',');
         }
-        if (!$scope.isEmpty(Data.getFilterStatus())) {
+        if (!$scope.isEmpty(Data.getStatusFilter())) {
             var s = [];
-            for (var i in Data.getFilterStatus()) {
-                if (Data.getFilterStatus()[i]) s.push(i);
+            for (var i in Data.getStatusFilter()) {
+                if (Data.getStatusFilter()[i]) s.push(i);
             }
             params.s = s.join(',');
         }
@@ -261,12 +254,12 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location', 
                     if (tmp[i].member_of_campaign !== tagToRemove) {
                         data1.push(tmp[i]);
 
-                        if (newStatusObjectTmp[tmp[i].status] == undefined) {
-                            newStatusObjectTmp[tmp[i].status] = Data.getFilterStatus()[tmp[i].status]
+                        if (newStatusObjectTmp[tmp[i].status] === undefined) {
+                            newStatusObjectTmp[tmp[i].status] = Data.getStatusFilter()[tmp[i].status]
                         }
 
-                        if (newPWGObjectTmp[tmp[i].pwg] == undefined) {
-                            newPWGObjectTmp[tmp[i].pwg] = $scope.allPWG[tmp[i].pwg]
+                        if (newPWGObjectTmp[tmp[i].pwg] === undefined) {
+                            newPWGObjectTmp[tmp[i].pwg] = Data.getPWGFilter()[tmp[i].pwg]
                         }
                     }
                 }
@@ -277,10 +270,9 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location', 
     }
 
     $scope.updateOnRemoval = function(requestData, newPWGObject, newStatusObject) {
-        console.log(newStatusObject)
         $scope.cachedRequestData = requestData;
-        $scope.allPWG = newPWGObject;
-        Data.setFilterStatus(newStatusObject);
+        Data.setStatusFilter(newStatusObject);
+        Data.setPWGFilter(newPWGObject);
         $scope.setURL();
         $scope.updateRequestData();
     }
@@ -295,27 +287,11 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location', 
         });
     }
 
-    $scope.updatePWG = function(dataDetails, resetObject, defaultValue, initCSV) {
-        if (resetObject) $scope.allPWG = {};
-        if (initCSV !== undefined) {
-            var tmp = initCSV.split(',');
-            for (var i = 0; i < tmp.length; i++) {
-                if (tmp[i] != "") $scope.allPWG[tmp[i]] = defaultValue;
-            }
-        }
-        for (var i = 0; i < dataDetails.length; i++) {
-            var pwgId = dataDetails[i].pwg; 
-            if ($scope.allPWG[pwgId] === undefined) {
-                $scope.allPWG[pwgId] = defaultValue;
-            }
-        }
-    }
-
     $scope.updateRequestData = function() {
         $scope.loadingData = true;
 
-        var max = Data.getFilterPriority()[1];
-        var min = Data.getFilterPriority()[0];
+        var max = Data.getPriorityFilter()[1];
+        var min = Data.getPriorityFilter()[0];
         if (isNaN(max) || max == '') {
             max = Number.MAX_VALUE;
         }
@@ -326,8 +302,8 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location', 
             for (var i = 0; i < tmp.length; i++) {
                 if (tmp[i].priority >= min &&
                     tmp[i].priority <= max &&
-                    Data.getFilterStatus()[tmp[i].status] &&
-                    $scope.allPWG[tmp[i].pwg]) {
+                    Data.getStatusFilter()[tmp[i].status] &&
+                    Data.getPWGFilter()[tmp[i].pwg]) {
                     data.push(tmp[i]);
                 }
             }
