@@ -10,15 +10,32 @@ module.exports = function(grunt) {
           'static/js/controllers/present.js',
           'static/js/controllers/historical.js',
           'static/js/controllers/performance.js',
+          //'static/js/controllers/chains.js',
           'static/js/controllers/filter.js',
           'static/js/controllers/share.js',
           'static/js/controllers/typeahead.js',
           'static/js/services.js'],
-    dest: 'static/build/pmp.build.js',
+    dest: 'static/build/pmp.build.js'
    },
-   css: {
+   dependjs: {
+    src: ['static/bower_components/jquery/dist/jquery.min.js',
+          'static/bower_components/jquery-sortable/source/js/jquery-sortable-min.js',
+          'static/bower_components/bootstrap/dist/js/bootstrap.min.js',
+          'static/bower_components/angular/angular.min.js',
+          'static/bower_components/angular-animate/angular-animate.min.js',
+          'static/bower_components/angular-route/angular-route.min.js',
+          'static/bower_components/d3/d3.min.js',
+          'static/bower_components/angular-bootstrap/ui-bootstrap-tpls.min.js'],
+    dest: 'static/build/depend.build.js'
+   },
+   pmpcss: {
     src: ['static/css/pmp.css'],
-    dest: 'static/build/pmp.build.css',
+    dest: 'static/build/pmp.build.css'
+   },
+   dependcss: {
+    src: ['static/bower_components/animate.css/animate.min.css',
+          'static/bower_components/bootstrap/dist/css/bootstrap.min.css'],
+    dest: 'static/build/depend.build.css'
    },
    html: {
     src:['templates/valid-head.html',
