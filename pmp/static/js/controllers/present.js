@@ -1,11 +1,6 @@
 angular.module('pmpApp').controller('PresentController', ['$http', '$location', '$interval', '$scope', 'PageDetailsProvider', 'Data', function($http, $location, $interval, $scope, PageDetailsProvider, Data) {
 
-    // currently displayed data (after filtering)
-    $scope.allRequestData = [];
-
-    // all gathered data (before filtering)
-    $scope.cachedRequestData = [];
-
+            /**TAGS**/
     $scope.inputTags = [];
 
     /*
@@ -13,6 +8,7 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location', 
      */
     $scope.init = function() {
         $scope.page = PageDetailsProvider.present;
+        Data.resetEverything();
 
         $scope.graphParam = ['selections', 'grouping', 'stacking', 'coloring'];
         $scope.graphTabs = ['member_of_campaign', 'total_events', 'status', 'prepid', 'priority', 'pwg'];
@@ -78,7 +74,7 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location', 
         if ($location.search().s !== undefined && $location.search().s != '') Data.initializeFilter($location.search().s.split(','), true); 
         if ($location.search().w !== undefined && $location.search().w != '') Data.initializeFilter($location.search().w.split(','), false); 
 
-        //initiate allRequestData from URL
+        //initiate from URL
         if ($location.search().r != undefined) {
             $scope.loadingData = true;
             var tmp = $location.search().r.split(',');
@@ -90,7 +86,7 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location', 
             $scope.$broadcast('updateURL');
         }
     }
-
+    /**TAGS**/
     $scope.parseLoadedRequestsForTags = function(doReset, newRequests, campaign) {
         if (doReset) $scope.inputTags = [];
         if ($scope.displayChains) {
@@ -137,36 +133,24 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location', 
                     $scope.setURL();
                     $scope.loadingData = false;
                 } else {
-                    $scope.allRequestData = [];
                     if (add) {
                         // apply appending campaign
-                        if ($scope.parseLoadedRequestsForTags(false, data.data.results, campaign)) {
-                            data.data.results.push.apply(data.data.results, $scope.cachedRequestData);
-                            Data.changeFilter(data.data.results, false, defaultStatus, true);
-                            Data.changeFilter(data.data.results, false, defaultPWG, false);
-                            $scope.showPopUp('success', 'Succesfully appended requests');
-                        } else {
-                            data.data.results = $scope.cachedRequestData;
-                            $scope.showPopUp('error', 'Unable to process, some requests to be duplicated');
-                        }
+                        Data.changeFilter(data.data.results, false, defaultStatus, true);
+                        Data.changeFilter(data.data.results, false, defaultPWG, false);
+                        Data.setLoadedData(data.data.results, true);
+                        $scope.showPopUp('success', 'Succesfully appended requests');
                     } else {
                         // apply loading all or single campaign
                         $scope.updateOnRemoval([], {}, {});
                         Data.changeFilter(data.data.results, true, true, true);
                         Data.changeFilter(data.data.results, true, true, false);
-                        $scope.parseLoadedRequestsForTags(true, data.data.results, campaign);
+                        Data.setLoadedData(data.data.results, false);
                         $scope.showPopUp('success', 'Succesfully loaded requests');
                     }
-                    $scope.cachedRequestData = data.data.results;
                     $scope.setURL();
                 }
-                if (!more || more == $scope.inputTags.length) {
-                    $scope.updateRequestData();
-                    $scope.$broadcast('updateFilterTag');
-                    $scope.loadingData == false;
-                }
             }, function() {
-                $scope.showPopUp('error', 'Error getting requests');
+                $scope.showPopUp('error', 'Error occured while getting requests');
                 $scope.loadingData = false;
             });
         }
@@ -178,12 +162,11 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location', 
         } else {
             $scope.mode = ': Announced Mode';
         }
-        $scope.cachedRequestData = [];
-        $scope.allRequestData = [];
-        
+        Data.setLoadedData([]);
         if (onlyTitle) {
             return null;
         }
+        /**TAGS**/
         var tmp = angular.copy($scope.inputTags);
         $scope.inputTags = [];
 
@@ -202,6 +185,7 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location', 
             $scope.aOptionsValues[$scope.graphTabs.indexOf(value)] = $scope.graphParam.indexOf(name);
         }
         var params = {}
+        /**TAGS**/
         if ($scope.inputTags.length) {
             params.r = $scope.inputTags.join(',')
         }
@@ -237,9 +221,13 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location', 
         }
     }
 
+    /**TAGS**/
     $scope.tagRemove = function(tagToRemove) {
         $scope.loadingData = true;
         setTimeout(function() {
+
+                /**fixme**/
+
             var tmp = $scope.cachedRequestData;
             var data1 = [];
             var newPWGObjectTmp = {};
@@ -264,52 +252,30 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location', 
         }, 1000);
     }
 
-    $scope.updateOnRemoval = function(requestData, newPWGObject, newStatusObject) {
-        $scope.cachedRequestData = requestData;
-        Data.setStatusFilter(newStatusObject);
+    $scope.updateOnRemoval = function(newData, newPWGObject, newStatusObject) {
         Data.setPWGFilter(newPWGObject);
-        $scope.setURL();
-        $scope.updateRequestData();
-        $scope.$broadcast('updateFilterTag');
+        Data.setStatusFilter(newStatusObject);
+        Data.setLoadedData(newData);
     }
 
     $scope.takeScreenshot = function(format) {
-        $scope.loading = true;
+        $scope.loadingData = true;
         if (format === undefined) format = 'svg';
         var xml = (new XMLSerializer).serializeToString(document.getElementById("ctn").getElementsByTagName("svg")[0]).replace(/#/g,'U+0023').replace(/\n/g, ' ').replace(/\//g, '\\\\');
         $http.get('ts/'+ format +'/' + encodeURIComponent(xml)).then(function(data) {
             window.open(data.data);
-            $scope.loading = false;
+            $scope.loadingData = false;
         });
     }
 
-    $scope.updateRequestData = function() {
-        $scope.loadingData = true;
-
-        var max = Data.getPriorityFilter()[1];
-        var min = Data.getPriorityFilter()[0];
-        if (isNaN(max) || max == '') {
-            max = Number.MAX_VALUE;
-        }
-
-        setTimeout(function() {
-            var tmp = $scope.cachedRequestData;
-            var data = [];
-            for (var i = 0; i < tmp.length; i++) {
-                if (tmp[i].priority >= min &&
-                    tmp[i].priority <= max &&
-                    Data.getStatusFilter()[tmp[i].status] && Data.getPWGFilter()[tmp[i].pwg]) {
-                    data.push(tmp[i]);
-                }
-            }
-            $scope.$apply(function() {
-                $scope.allRequestData = data;
-                $scope.loadingData = false;
-            });
-        }, 0);
-    }
+    $scope.$on('onChangeNotification:FilteredData', function() {
+        $scope.data = Data.getFilteredData();
+        $scope.setURL();
+        $scope.loadingData = false;
+    });
 
     $interval($scope.updateCurrentDate, 1000);
     $interval(function(){$scope.updateLastUpdate('campaigns,chained_campaigns,requests,chained_requests')}, 2*60*1000);
+
     $scope.updateLastUpdate('campaigns,chained_campaigns,requests,chained_requests');
 }]);

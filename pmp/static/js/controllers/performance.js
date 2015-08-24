@@ -188,6 +188,7 @@ angular.module('pmpApp').controller('PerformanceController', ['$http', '$interva
 
     $scope.init = function() {
         $scope.page = PageDetailsProvider.performance;
+        Data.resetEverything();
         $scope.difference = {minuend: 'done', subtrahend: 'created'}        
         $scope.selections = ['validation', 'approved', 'submitted'];
 

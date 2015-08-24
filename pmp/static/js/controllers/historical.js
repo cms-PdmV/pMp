@@ -6,6 +6,7 @@ angular.module('pmpApp').controller('HistoricalController', ['$http', '$location
 
     $scope.init = function() {
         $scope.page = PageDetailsProvider.historical;
+        Data.resetEverything();
         if ($location.search().y != undefined && $location.search().y != '') {
             $scope.zoomOnY = ($location.search().y == 'true');
         } else {
