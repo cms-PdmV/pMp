@@ -1,7 +1,7 @@
 angular.module('pmpApp').service('Data', ['$rootScope', function($rootScope) {
-        var filteredData, // currently displayed data (after filtering)
-            loadedData, // currently loaded data (before filtering)
-            inputTags, // input tags management
+        var filteredData = [], // currently displayed data (after filtering)
+            loadedData = [], // currently loaded data (before filtering)
+            inputTags = [], // input tags management
             priorityFilter, statusFilter, pwgFilter; // filter details
         return {
             getFilteredData: function() {
@@ -101,13 +101,14 @@ angular.module('pmpApp').service('Data', ['$rootScope', function($rootScope) {
                 this.setPWGFilter(newPWG);
                 this.setLoadedData(data);
             },
-            resetEverything: function() {
-                this.filteredData = [];
-                this.inputTags = [];
+            reset: function(ifFilter) {
                 this.loadedData = [];
-                this.priorityFilter = ['', ''];
-                this.statusFilter = {};
-                this.pwgFilter = {};
+                this.setInputTags([], false, false);
+                if (filter) {
+                    this.priorityFilter = ['', ''];
+                    this.statusFilter = {};
+                    this.pwgFilter = {};
+                }
             }
         }
 }]);

@@ -4,7 +4,7 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location', 
      */
     $scope.init = function() {
         $scope.page = PageDetailsProvider.present;
-        Data.resetEverything();
+        Data.reset(true);
 
         $scope.graphParam = ['selections', 'grouping', 'stacking', 'coloring'];
         $scope.graphTabs = ['member_of_campaign', 'total_events', 'status', 'prepid', 'priority', 'pwg'];
@@ -110,8 +110,7 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location', 
                         $scope.showPopUp(PageDetailsProvider.messages.S1.type, PageDetailsProvider.messages.S1.message);
                     } else {
                         // apply loading all or single campaign
-                        Data.setInputTags([], false, false);
-                        $scope.updateOnRemoval([], {}, {});
+                        Data.reset(false);
                         Data.changeFilter(data.data.results, true, true, true);
                         Data.changeFilter(data.data.results, true, true, false);
                         Data.setLoadedData(data.data.results, false);
@@ -133,7 +132,7 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location', 
         } else {
             $scope.mode = ': Announced Mode';
         }
-        Data.setLoadedData([]);
+        Data.setLoadedData([], false);
         if (onlyTitle) {
             return null;
         }
@@ -144,7 +143,7 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location', 
                 $scope.load(tmp[i], true, tmp.length);
             }
         } else {
-            $scope.updateOnRemoval([], {}, {});
+            Data.reset(false);
         }
     };
 
@@ -186,12 +185,6 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location', 
             $scope.aRadioValues[i] = value;
             $scope.setURL();
         }
-    }
-
-    $scope.updateOnRemoval = function(newData, newPWGObject, newStatusObject) {
-        Data.setPWGFilter(newPWGObject);
-        Data.setStatusFilter(newStatusObject);
-        Data.setLoadedData(newData);
     }
 
     $scope.takeScreenshot = function(format) {

@@ -3,8 +3,9 @@ module.exports = function(grunt) {
   concat: {
    js: {
     src: ['static/js/app.js',
-          'static/js/services/info.js',
+          'static/js/services/browser.js',
           'static/js/services/data.js',
+          'static/js/services/info.js',
           'static/js/controllers/main.js',
           'static/js/controllers/index.js',
           'static/js/controllers/present.js',
@@ -14,8 +15,7 @@ module.exports = function(grunt) {
           'static/js/controllers/filter.js',
           'static/js/controllers/share.js',
           'static/js/controllers/tags.js',
-          'static/js/controllers/typeahead.js',
-          'static/js/services.js'],
+          'static/js/controllers/typeahead.js'],
     dest: 'static/build/pmp.build.js'
    },
    dependjs: {

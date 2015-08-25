@@ -2700,7 +2700,7 @@ angular.module('pmpCharts', [])
                  * Draw block separations if necessary
                  */
                 function drawBlockSeparations() {
-
+                    var priorityPerBlock = {1: 110000, 2: 90000, 3: 85000, 4: 80000, 5: 70000, 6: 63000};
                     // remove all block separations
                     svg.selectAll('.' + config.blockSeparatorClass).remove();
                     // terminate if the grouping is not by priority
@@ -2717,7 +2717,7 @@ angular.module('pmpCharts', [])
                                         .split('(')[1].split(',')[0];
                                     var f = e['__data__'];
                                     for(var i = 6; i > 0; i--) {
-                                        var g = scope.$parent.$parent.priorityPerBlock[i];
+                                        var g = priorityPerBlock[i];
                                         if (f == '' || f <= g) {
                                             if (f == g) {
                                                 blockXCoordinates[6-i] = x;

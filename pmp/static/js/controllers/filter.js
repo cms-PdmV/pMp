@@ -9,6 +9,7 @@ angular.module('pmpApp').controller('FilterController', ['$scope', 'Data', funct
     }
 
     $scope.initFilter = function() {
+        Data.reset(true);
         $scope.priorityFilter = Data.getPriorityFilter();
         $scope.statusFilter = Data.getStatusFilter();
         $scope.pwgFilter = Data.getPWGFilter();
