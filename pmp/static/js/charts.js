@@ -1122,6 +1122,7 @@ angular.module('pmpCharts', [])
                 }
 
                 scope.$watch('chartData', function(d) {
+                        if(d === undefined) return null;
                     data = [];
                     if (d.length) {
                         d.forEach(function (e, i) {

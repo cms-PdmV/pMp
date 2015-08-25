@@ -5,6 +5,7 @@ angular.module('pmpApp').controller('TagsController', ['$scope', 'Data', functio
     }
 
     $scope.tagRemove = function(tagToRemove) {
+        $scope.loadingData = true;
         var tmp = Data.getLoadedData();
         var data = [];
         setTimeout(function() {

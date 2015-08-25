@@ -7,6 +7,16 @@ body {
     font-family: 'Roboto', sans-serif;
 }
 
+.full {
+    background-image: url("/img/loading.png");
+    height: 100%;
+    left: 0px;
+    position: absolute;
+    width: 100%;
+    top: 0px;
+    z-index: 999;
+}
+
 .brand-adjust {
     height: 30px;
     margin: 10px;
