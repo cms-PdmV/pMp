@@ -1,8 +1,4 @@
 angular.module('pmpApp').controller('PresentController', ['$http', '$location', '$interval', '$scope', 'PageDetailsProvider', 'Data', function($http, $location, $interval, $scope, PageDetailsProvider, Data) {
-
-            /**TAGS**/
-    $scope.inputTags = [];
-
     /*
      * Core method: onStart load default $scope values and data from URL
      */
@@ -86,38 +82,11 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location', 
             $scope.$broadcast('updateURL');
         }
     }
-    /**TAGS**/
-    $scope.parseLoadedRequestsForTags = function(doReset, newRequests, campaign) {
-        if (doReset) $scope.inputTags = [];
-        if ($scope.displayChains) {
-            $scope.inputTags.push(campaign);
-            return true;
-        }
-        var newTags = [];
-        var tmpMOC, broken = false;
-        for (var i = 0; i < newRequests.length; i++) {
-            tmpMOC = newRequests[i].member_of_campaign;
-            if ($scope.inputTags.indexOf(tmpMOC) === -1) {
-                if (newTags.indexOf(tmpMOC) === -1) {
-                    newTags.push(newRequests[i].member_of_campaign);
-                }
-            } else {
-                broken++;
-                break;
-            }
-        }
-        if (broken) {
-            return false;
-        } else {
-            $scope.inputTags.push.apply($scope.inputTags, newTags);
-            return true;
-        }
-    }
 
     $scope.load = function(campaign, add, more, defaultPWG, defaultStatus) {
         if (!campaign) {
             $scope.showPopUp('warning', 'Your request parameters are empty');
-        } else if (add & $scope.inputTags.indexOf(campaign) !== -1) {
+        } else if (add & Data.getInputTags().indexOf(campaign) !== -1) {
             $scope.showPopUp('warning', 'Your request is already loaded');
         } else {
             $scope.loadingData = true;
@@ -141,12 +110,14 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location', 
                         $scope.showPopUp('success', 'Succesfully appended requests');
                     } else {
                         // apply loading all or single campaign
+                        Data.setInputTags([], false, false);
                         $scope.updateOnRemoval([], {}, {});
                         Data.changeFilter(data.data.results, true, true, true);
                         Data.changeFilter(data.data.results, true, true, false);
                         Data.setLoadedData(data.data.results, false);
                         $scope.showPopUp('success', 'Succesfully loaded requests');
                     }
+                    Data.setInputTags(campaign, true, false);
                     $scope.setURL();
                 }
             }, function() {
@@ -167,8 +138,8 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location', 
             return null;
         }
         /**TAGS**/
-        var tmp = angular.copy($scope.inputTags);
-        $scope.inputTags = [];
+        var tmp = Data.getInputTags();
+        Data.setInputTags([], false, false);
 
         if (tmp.length < 2 || !$scope.displayChains) {
             for (var i = 0; i < tmp.length; i++) {
@@ -185,10 +156,8 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location', 
             $scope.aOptionsValues[$scope.graphTabs.indexOf(value)] = $scope.graphParam.indexOf(name);
         }
         var params = {}
-        /**TAGS**/
-        if ($scope.inputTags.length) {
-            params.r = $scope.inputTags.join(',')
-        }
+        var r = Data.getInputTags()
+        if (r.length) params.r = r.join(',');
         params.p = $scope.aOptionsValues.join(',') + ',' + $scope.aRadioValues.join(',');
         params.t = $scope.showDate + "";
         params.m = $scope.growingMode + "";
@@ -219,37 +188,6 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location', 
             $scope.aRadioValues[i] = value;
             $scope.setURL();
         }
-    }
-
-    /**TAGS**/
-    $scope.tagRemove = function(tagToRemove) {
-        $scope.loadingData = true;
-        setTimeout(function() {
-
-                /**fixme**/
-
-            var tmp = $scope.cachedRequestData;
-            var data1 = [];
-            var newPWGObjectTmp = {};
-            var newStatusObjectTmp = {}
-            if (tagToRemove !== '*') {
-                for (var i = 0; i < tmp.length; i++) {
-                    if (tmp[i].member_of_campaign !== tagToRemove) {
-                        data1.push(tmp[i]);
-
-                        if (newStatusObjectTmp[tmp[i].status] === undefined) {
-                            newStatusObjectTmp[tmp[i].status] = Data.getStatusFilter()[tmp[i].status]
-                        }
-
-                        if (newPWGObjectTmp[tmp[i].pwg] === undefined) {
-                            newPWGObjectTmp[tmp[i].pwg] = Data.getPWGFilter()[tmp[i].pwg]
-                        }
-                    }
-                }
-                $scope.inputTags.splice($scope.inputTags.indexOf(tagToRemove), 1);
-            }
-            $scope.updateOnRemoval(data1, newPWGObjectTmp, newStatusObjectTmp);
-        }, 1000);
     }
 
     $scope.updateOnRemoval = function(newData, newPWGObject, newStatusObject) {

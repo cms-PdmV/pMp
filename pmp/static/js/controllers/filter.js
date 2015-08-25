@@ -41,6 +41,7 @@ angular.module('pmpApp').controller('FilterController', ['$scope', 'Data', funct
         $scope.priorityFilter = Data.getPriorityFilter();
         $scope.pwgFilter = Data.getPWGFilter();
         $scope.statusFilter = Data.getStatusFilter();
+        console.log($scope.statusFilter)
         $scope.updateFilteredData();
     });
 }]);

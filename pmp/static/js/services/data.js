@@ -1,6 +1,7 @@
 angular.module('pmpApp').service('Data', ['$rootScope', function($rootScope) {
         var filteredData, // currently displayed data (after filtering)
             loadedData, // currently loaded data (before filtering)
+            inputTags, // input tags management
             priorityFilter, statusFilter, pwgFilter; // filter details
         return {
             getFilteredData: function() {
@@ -9,6 +10,24 @@ angular.module('pmpApp').service('Data', ['$rootScope', function($rootScope) {
             setFilteredData: function(i) {
                 this.filteredData = i;
                 $rootScope.$broadcast('onChangeNotification:FilteredData')
+            },
+            getInputTags: function() {
+                return this.inputTags;
+            },
+            setInputTags: function(i, append, remove) {
+                if (i === 'all') {
+                    for (var j = 0; j < this.loadedData.length; j++) {
+                        var input = this.loadedData[j].input;
+                        if (this.inputTags.indexOf(input) === -1) this.inputTags.push(input);
+                    }
+                } else if (append) {
+                    this.inputTags.push(i);
+                } else if (remove) {
+                    this.inputTags.splice(this.inputTags.indexOf(i), 1);
+                } else {
+                    this.inputTags = i;
+                }
+                $rootScope.$broadcast('onChangeNotification:InputTags')
             },
             getLoadedData: function() {
                 return this.loadedData;
@@ -66,8 +85,26 @@ angular.module('pmpApp').service('Data', ['$rootScope', function($rootScope) {
                     }
                 }
             },
+            reloadFilters: function(data) {
+                var iter, newStatus = {}, newPWG = {};
+                for (var i = 0; i < data.length; i++) {
+                    iter = data[i].status;
+                    if (newStatus[iter] === undefined) {
+                        newStatus[iter] = this.statusFilter[iter]
+                    }
+                    iter = data[i].pwg;
+                    if (newPWG[iter] === undefined) {
+                        newPWG[iter] = this.pwgFilter[iter]
+                    }
+                }
+                console.log(newStatus);
+                this.setStatusFilter(newStatus);
+                this.setPWGFilter(newPWG);
+                this.setLoadedData(data);
+            },
             resetEverything: function() {
                 this.filteredData = [];
+                this.inputTags = [];
                 this.loadedData = [];
                 this.priorityFilter = ['', ''];
                 this.statusFilter = {};

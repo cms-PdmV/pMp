@@ -1,5 +1,6 @@
-<button ng-repeat="tag in inputTags" type="button" class="btn btn-default btn-sm"
-        ng-click="tagRemove(tag)">
-  <span>{{tag}}</span>
-  <i class="glyphicon glyphicon-remove-sign"></i>
-</button>
+<div ng-controller="TagsController">
+  <button ng-repeat="tag in inputTags" type="button" class="btn btn-default btn-sm" ng-click="tagRemove(tag)">
+    <span>{{tag}}</span>
+    <i class="fa fa-times"></i>
+  </button>
+</div>

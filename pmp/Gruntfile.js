@@ -13,6 +13,7 @@ module.exports = function(grunt) {
           //'static/js/controllers/chains.js',
           'static/js/controllers/filter.js',
           'static/js/controllers/share.js',
+          'static/js/controllers/tags.js',
           'static/js/controllers/typeahead.js',
           'static/js/services.js'],
     dest: 'static/build/pmp.build.js'

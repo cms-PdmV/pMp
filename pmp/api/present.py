@@ -141,6 +141,12 @@ class AnnouncedAPI(esadapter.InitConnection):
                           'output_dataset']:
                 if field in res:
                     del res[field]
+            
+            if query == '*':
+                res['input'] = res['member_of_campaign']
+            else:
+                res['input'] = query
+
         for rr in remove_requests:
             response.remove(rr)
         response += dump_requests
