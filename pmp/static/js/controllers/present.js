@@ -85,9 +85,9 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location', 
 
     $scope.load = function(campaign, add, more, defaultPWG, defaultStatus) {
         if (!campaign) {
-            $scope.showPopUp('warning', 'Your request parameters are empty');
+            $scope.showPopUp(PageDetailsProvider.messages.W0.type, PageDetailsProvider.messages.W0.message);
         } else if (add & Data.getInputTags().indexOf(campaign) !== -1) {
-            $scope.showPopUp('warning', 'Your request is already loaded');
+            $scope.showPopUp(PageDetailsProvider.messages.W1.type, PageDetailsProvider.messages.W1.message);
         } else {
             $scope.loadingData = true;
             if ($scope.growingMode) {
@@ -98,7 +98,7 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location', 
             promise.then(function(data) {
                 if (!data.data.results.length) {
                     // if API response is empty 
-                    $scope.showPopUp('error', 'No results for this request parameters');
+                    $scope.showPopUp(PageDetailsProvider.messages.W2.type, PageDetailsProvider.messages.W2.message);
                     $scope.setURL();
                     $scope.loadingData = false;
                 } else {
@@ -107,7 +107,7 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location', 
                         Data.changeFilter(data.data.results, false, defaultStatus, true);
                         Data.changeFilter(data.data.results, false, defaultPWG, false);
                         Data.setLoadedData(data.data.results, true);
-                        $scope.showPopUp('success', 'Succesfully appended requests');
+                        $scope.showPopUp(PageDetailsProvider.messages.S1.type, PageDetailsProvider.messages.S1.message);
                     } else {
                         // apply loading all or single campaign
                         Data.setInputTags([], false, false);
@@ -115,13 +115,13 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location', 
                         Data.changeFilter(data.data.results, true, true, true);
                         Data.changeFilter(data.data.results, true, true, false);
                         Data.setLoadedData(data.data.results, false);
-                        $scope.showPopUp('success', 'Succesfully loaded requests');
+                        $scope.showPopUp(PageDetailsProvider.messages.S0.type, PageDetailsProvider.messages.S0.message);
                     }
                     Data.setInputTags(campaign, true, false);
                     $scope.setURL();
                 }
             }, function() {
-                $scope.showPopUp('error', 'Error occured while getting requests');
+                $scope.showPopUp(PageDetailsProvider.messages.E0.type, PageDetailsProvider.messages.E1.message);
                 $scope.loadingData = false;
             });
         }
@@ -137,10 +137,8 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location', 
         if (onlyTitle) {
             return null;
         }
-        /**TAGS**/
         var tmp = Data.getInputTags();
         Data.setInputTags([], false, false);
-
         if (tmp.length < 2 || !$scope.displayChains) {
             for (var i = 0; i < tmp.length; i++) {
                 $scope.load(tmp[i], true, tmp.length);
@@ -207,9 +205,9 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location', 
     }
 
     $scope.$on('onChangeNotification:FilteredData', function() {
-        $scope.data = Data.getFilteredData();
-        $scope.setURL();
         $scope.loadingData = false;
+        $scope.setURL();
+        $scope.data = Data.getFilteredData();
     });
 
     $interval($scope.updateCurrentDate, 1000);

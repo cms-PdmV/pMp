@@ -97,7 +97,6 @@ angular.module('pmpApp').service('Data', ['$rootScope', function($rootScope) {
                         newPWG[iter] = this.pwgFilter[iter]
                     }
                 }
-                console.log(newStatus);
                 this.setStatusFilter(newStatus);
                 this.setPWGFilter(newPWG);
                 this.setLoadedData(data);

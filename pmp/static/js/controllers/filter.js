@@ -31,9 +31,7 @@ angular.module('pmpApp').controller('FilterController', ['$scope', 'Data', funct
                     data.push(tmp[i]);
                 }
             }
-            $scope.$apply(function() {
-                Data.setFilteredData(data);
-            });
+            Data.setFilteredData(data);
         }, 0);
     }
 
@@ -41,7 +39,6 @@ angular.module('pmpApp').controller('FilterController', ['$scope', 'Data', funct
         $scope.priorityFilter = Data.getPriorityFilter();
         $scope.pwgFilter = Data.getPWGFilter();
         $scope.statusFilter = Data.getStatusFilter();
-        console.log($scope.statusFilter)
         $scope.updateFilteredData();
     });
 }]);
