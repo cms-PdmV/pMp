@@ -1612,7 +1612,7 @@ angular.module('pmpCharts', [])
 
                 // Watch for data change
                 scope.$watch('zoomY', function(d) {onYZoomChange(d)});
-                scope.$watch('chartData', function(d) {if (d.length) prepareData(d);});
+                scope.$watch('chartData', function(d) {if (d !== undefined && d.length) prepareData(d);});
             }
         }
     }])

@@ -4,7 +4,12 @@ angular.module('pmpApp').controller('TagsController', ['$scope', 'Data', functio
         $scope.inputTags = [];
     }
 
-    $scope.tagRemove = function(tagToRemove) {
+    $scope.tagRemove = function(tagToRemove, isServerSide) {
+        if (isServerSide) {
+            Data.setInputTags(tagToRemove, false, true);
+            $scope.query(true);
+            return false;
+        }
         $scope.loadingData = true;
         var tmp = Data.getLoadedData();
         var data = [];

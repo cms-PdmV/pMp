@@ -1,6 +1,6 @@
-<div class="row" ng-show="allRequestData.length">
+<div class="row" ng-show="data.length">
   <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 text-center" id="measure">
-    <linear-lifetime chart-data="allRequestData" task-chain="loadTaskChain" zoom-y="zoomOnY"
+    <linear-lifetime chart-data="data" task-chain="loadTaskChain" zoom-y="zoomOnY"
                      human-readable-numbers="humanReadableNumbers" class="spacing"></linear-lifetime>
     <p ng-hide="isEmpty(listSubmitted)">
       List of requests on status submitted:

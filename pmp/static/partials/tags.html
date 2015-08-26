@@ -1,5 +1,5 @@
 <div ng-controller="TagsController">
-  <button ng-repeat="tag in inputTags" type="button" class="btn btn-default btn-sm" ng-click="tagRemove(tag)">
+  <button ng-repeat="tag in inputTags" type="button" class="btn btn-default btn-sm" ng-click="tagRemove(tag, page.id == 2)">
     <span>{{tag}}</span>
     <i class="fa fa-times"></i>
   </button>

@@ -1,11 +1,16 @@
 angular.module('pmpApp').controller('FilterController', ['$scope', 'Data', function($scope, Data) {
 
-    $scope.applyFilterChanges = function() {
+    $scope.applyFilterChanges = function(isServerSide) {
+        console.log(isServerSide);
         Data.setPriorityFilter($scope.priorityFilter);
         Data.setStatusFilter($scope.statusFilter);
-        Data.setPWGFilter($scope.pwgFilter);
-        $scope.updateFilteredData();
-        $scope.setURL();
+        if (isServerSide) {
+            $scope.query(true);
+        } else {
+            Data.setPWGFilter($scope.pwgFilter);
+            $scope.updateFilteredData();
+            $scope.setURL();
+        }
     }
 
     $scope.initFilter = function() {
@@ -36,10 +41,12 @@ angular.module('pmpApp').controller('FilterController', ['$scope', 'Data', funct
         }, 0);
     }
 
-    $scope.$on('onChangeNotification:LoadedData', function() {
+    $scope.$on('onChangeNotification:LoadedData', function(event, data) {
         $scope.priorityFilter = Data.getPriorityFilter();
         $scope.pwgFilter = Data.getPWGFilter();
         $scope.statusFilter = Data.getStatusFilter();
-        $scope.updateFilteredData();
+        if (data !== undefined && data.update) {
+            $scope.updateFilteredData();
+        }
     });
 }]);
