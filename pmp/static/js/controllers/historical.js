@@ -54,7 +54,7 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
                 }
                 $scope.query(true);
             }
-            $scope.$broadcast('updateURL');
+            $scope.$broadcast('onChangeNotification:URL');
         };
 
         /**
@@ -263,6 +263,7 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
                 '' : params.y = 'false';
             $location.search(params);
             $scope.url = $location.absUrl();
+            $scope.$broadcast('onChangeNotification:URL');
         };
 
         /**
@@ -280,13 +281,6 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
                 window.open(data.data);
                 $scope.loading = false;
             });
-        };
-
-        /**
-         * @description Used when data is to be reloaded
-         */
-        $scope.updateRequestData = function () {
-            $scope.query(true);
         };
 
         // Broadcast receiver, change filtered data on loaded data change

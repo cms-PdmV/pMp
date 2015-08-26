@@ -121,7 +121,7 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
                         empty[1]);
                 }
             } else {
-                $scope.$broadcast('updateURL');
+                $scope.$broadcast('onChangeNotification:URL');
             }
         };
 
@@ -244,7 +244,7 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
             }
 
             $location.search(params);
-            $scope.$broadcast('updateURL');
+            $scope.$broadcast('onChangeNotification:URL');
         };
 
         /**

@@ -28,7 +28,7 @@ angular.module('pmpApp').controller('ShareController', ['$http', '$location',
         };
 
         // Broadcast receiver, change url in scope
-        $scope.$on('updateURL', function () {
+        $scope.$on('onChangeNotification:URL', function () {
             $scope.url = $location.absUrl();
         });
     }

@@ -70,6 +70,7 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
             } else {
                 $scope.url = $location.absUrl();
             }
+            $scope.$broadcast('onChangeNotification:URL');
         };
 
         /**
@@ -195,7 +196,7 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
             }
 
             $location.search(params);
-            $scope.$broadcast('updateURL');
+            $scope.$broadcast('onChangeNotification:URL');
         };
 
         /**
