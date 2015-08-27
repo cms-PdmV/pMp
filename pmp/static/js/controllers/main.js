@@ -110,6 +110,19 @@ angular.module('pmpApp').controller('MainController', ['$http', '$location',
         };
 
         /**
+         * @description Generates CSV for all keys having true value
+         * @param {Object} obj to check
+         * @return {String} CSV string
+         */
+        $scope.getCSVPerFilter = function (obj) {
+            var a = [];
+            for (var i in obj) {
+                if (obj[i]) a.push(i);
+            }
+            return a.join(',');
+        };
+
+        /**
          * @description Update current time variable
          */
         $scope.updateCurrentDate = function () {

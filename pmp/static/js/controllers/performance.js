@@ -151,51 +151,44 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
             $location.path($location.path(), false);
             var params = {};
 
-            // number of bins
-            if ($scope.bins !== undefined || $scope.bins !== '') {
-                params.b = $scope.bins;
-            }
-            // list of requests separated by comma
+            // collect user inputs
             var r = Data.getInputTags();
             if (r.length) params.r = r.join(',');
-            // if show the time block
-            if ($scope.showDate !== undefined) {
-                params.t = $scope.showDate + '';
-            }
-            // set filter priority
-            params.x = Data.getPriorityFilter().join(',');
-            // set filter pwgs
-            if (!$scope.isEmpty(Data.getPWGFilter())) {
-                var w = [];
-                for (var i in Data.getPWGFilter()) {
-                    if (Data.getPWGFilter()[i]) w.push(i);
-                }
-                params.w = w.join(',');
-            }
 
-            // set filter status
-            if (!$scope.isEmpty(Data.getStatusFilter())) {
-                var s = [];
-                for (var j in Data.getStatusFilter()) {
-                    if (Data.getStatusFilter()[j]) s.push(j);
-                }
-                params.s = s.join(',');
-            }
+            // number of bins
+            if ($scope.bins !== '') params.b = $scope.bins;
 
             // setting minuend
-            if ($scope.difference.minuend !== '') {
-                params.min = $scope.difference.minuend;
-            }
+            if ($scope.difference.minuend !== '') params.min = $scope.difference.minuend;
+
             // setting subtrahend
-            if ($scope.difference.subtrahend !== '') {
-                params.sub = $scope.difference.subtrahend;
-            }
+            if ($scope.difference.subtrahend !== '') params.sub = $scope.difference.subtrahend;
+
             // set scale
-            if ($scope.linearScale !== undefined) {
-                params.l = $scope.linearScale + '';
+            params.l = $scope.linearScale + '';
+
+            // if show the time block
+            params.t = $scope.showDate + '';
+
+            // set priority filter
+            params.x = Data.getPriorityFilter().join(',');
+
+            // init loads differently for no param (all true) and empty param (all false)
+            // hence the isEmpty check
+
+            // set pwg filter
+            if (!$scope.isEmpty(Data.getPWGFilter())) {
+                params.w = $scope.getCSVPerFilter(Data.getPWGFilter());
             }
 
+            // set status filter
+            if (!$scope.isEmpty(Data.getStatusFilter())) {
+                params.s = $scope.getCSVPerFilter(Data.getStatusFilter());
+            }
+
+            // reload url
             $location.search(params);
+            // broadcast change notification
             $scope.$broadcast('onChangeNotification:URL');
         };
 

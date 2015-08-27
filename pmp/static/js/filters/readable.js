@@ -1,11 +1,11 @@
 /**
- * @name humanReadableNumber.filter
+ * @name readableNumber.filter
  * @type filter
  * @description Parse numbers to the human readable format
  * @param {Integer} d the number to parse
  * @return {String} number in a form "239M"
  */
-angular.module('customFilters', []).filter('humanReadableNumbers', function () {
+angular.module('pmpApp').filter('readableNumbers', function () {
     'use strict';
     return function (d) {
         var significantFigures = 3;

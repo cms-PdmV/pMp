@@ -11,10 +11,10 @@
  * 80 characters lines, braces with control statement
  */
 angular.module('pmpApp', ['ngAnimate', 'ngRoute', 'ui.bootstrap', 'pmpCharts',
-        'customFilters', 'customTags'
+        'customTags'
     ])
     .config(['$routeProvider', '$locationProvider',
-        function ($routeProvider, $locationProvider) {
+        function($routeProvider, $locationProvider) {
             'use strict';
             $routeProvider
                 .when('/', {

@@ -20,6 +20,10 @@ module.exports = function(grunt) {
           'static/js/controllers/typeahead.js'],
     dest: 'static/build/pmp.build.js'
    },
+   js2: {
+    src: ['static/js/charts.js'],
+    dest: 'static/build/directives.pmp.build.js'
+   },
    dependjs: {
     src: ['static/bower_components/jquery/dist/jquery.min.js',
           'static/bower_components/jquery-sortable/source/js/jquery-sortable-min.js',

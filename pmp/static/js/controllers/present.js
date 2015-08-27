@@ -39,13 +39,13 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
             ];
             $scope.piecharts.sum = "total_events";
 
-            $scope.aOptionsValues = [1, 0, 3, 0, 0, 0];
-            $scope.aRadioValues = [0, 0];
+            $scope.parameters = [1, 0, 3, 0, 0, 0];
+            $scope.radio = [0, 0];
 
             if ($location.search().p !== undefined) {
                 var toLoad = $location.search().p.split(',');
-                $scope.aOptionsValues = toLoad.slice(0, 6);
-                $scope.aRadioValues = toLoad.slice(6, 8);
+                $scope.parameters = toLoad.slice(0, 6);
+                $scope.radio = toLoad.slice(6, 8);
             }
 
             $scope.requests = {};
@@ -58,17 +58,17 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
             var initGrouping = [];
             var initStacking = [];
             var initColoring = '';
-            for (var i = 0; i < $scope.aOptionsValues.length; i++) {
-                if ($scope.aOptionsValues[i] === 0) {
-                    $scope.requests.selections.push($scope.graphTabs[
-                        i]);
-                } else if ($scope.aOptionsValues[i] == 1) {
+            for (var i = 0; i < $scope.parameters.length; i++) {
+                if ($scope.parameters[i] === '0') {
+                    $scope.requests.selections.push($scope.graphTabs[i]);
+                } else if ($scope.parameters[i] == '1') {
                     initGrouping.push($scope.graphTabs[i]);
-                } else if ($scope.aOptionsValues[i] == 2) {
+                } else if ($scope.parameters[i] == '2') {
                     initStacking.push($scope.graphTabs[i]);
-                } else if ($scope.aOptionsValues[i] == 3) {
+                } else if ($scope.parameters[i] == '3') {
                     initColoring = $scope.graphTabs[i];
                 }
+                console.log($scope.requests)
             }
             $scope.requests.options = {
                 grouping: initGrouping,
@@ -80,15 +80,15 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
             $scope.requests.radio.mode = ['events', 'requests',
                 'seconds'
             ];
-            if ($scope.aRadioValues[1] == 1) {
+            if ($scope.radio[1] == 1) {
                 $scope.requests.radio.scale = ["log", "linear"];
             }
-            if ($scope.aRadioValues[0] == 1) {
+            if ($scope.radio[0] == 1) {
                 $scope.requests.radio.mode = ['requests', 'events',
                     'seconds'
                 ];
             }
-            if ($scope.aRadioValues[0] == 2) {
+            if ($scope.radio[0] == 2) {
                 $scope.requests.radio.mode = ['seconds', 'events',
                     'requests'
                 ];
@@ -212,38 +212,50 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
          * @param {Integer} value the position of parameter that has changed
          */
         $scope.setURL = function (name, value) {
-            $location.path($location.path(), false);
-            if (typeof name !== undefined && typeof value !==
-                undefined) {
-                $scope.aOptionsValues[$scope.graphTabs.indexOf(
+            if (name !== undefined && value !== undefined) {
+                $scope.parameters[$scope.graphTabs.indexOf(
                     value)] = $scope.graphParam.indexOf(name);
             }
+
+            $location.path($location.path(), false);
             var params = {};
+            
+            // collect user inputs
             var r = Data.getInputTags();
             if (r.length) params.r = r.join(',');
-            params.p = $scope.aOptionsValues.join(',') + ',' +
-                $scope.aRadioValues.join(',');
-            params.t = $scope.showDate + "";
+
+            // graph parameters
+            params.p = $scope.parameters.join(',') + ',' +
+                $scope.radio.join(',');
+
+            // is in growing mode
             params.m = $scope.growingMode + "";
+
+            // is in chain mode
             params.c = $scope.displayChains + "";
+
+            // show time label
+            params.t = $scope.showDate + "";
+
+            // set priority filter
             params.x = Data.getPriorityFilter().join(',');
 
+            // init loads differently for no param (all true) and empty param (all false)
+            // hence the isEmpty check
+
+            // set pwg filter
             if (!$scope.isEmpty(Data.getPWGFilter())) {
-                var w = [];
-                for (var i in Data.getPWGFilter()) {
-                    if (Data.getPWGFilter()[i]) w.push(i);
-                }
-                params.w = w.join(',');
-            }
-            if (!$scope.isEmpty(Data.getStatusFilter())) {
-                var s = [];
-                for (var j in Data.getStatusFilter()) {
-                    if (Data.getStatusFilter()[j]) s.push(j);
-                }
-                params.s = s.join(',');
+                params.w = $scope.getCSVPerFilter(Data.getPWGFilter());
             }
 
+            // set status filter
+            if (!$scope.isEmpty(Data.getStatusFilter())) {
+                params.s = $scope.getCSVPerFilter(Data.getStatusFilter());
+            }
+
+            // reload url
             $location.search(params);
+            // broadcast change notification
             $scope.$broadcast('onChangeNotification:URL');
         };
 
@@ -291,11 +303,11 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
         };
 
         /**
-         * @description When scale has been changed
+         * @description When scale has been changed.
          */
         $scope.setScaleAndOperation = function (i, value) {
-            if ($scope.aRadioValues[i] != value) {
-                $scope.aRadioValues[i] = value;
+            if ($scope.radio[i] != value) {
+                $scope.radio[i] = value;
                 $scope.setURL();
             }
         };

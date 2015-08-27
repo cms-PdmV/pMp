@@ -18,7 +18,7 @@
       </td>
       <td class="text-right" ng-show="element.term !== 'upcoming' || showUpcoming" ng-repeat="element in terms.terms">
         <span ng-show="humanReadableNumbers">
-          {{element.count | humanReadableNumbers}}
+          {{element.count | readableNumbers}}
         </span>
         <span ng-hide="humanReadableNumbers">
           {{element.count}}
@@ -46,7 +46,7 @@
             <td class="pull-left spacing-r"><small><strong>{{element.term}}</strong></small></td>
             <td class="text-right">
               <span ng-show="humanReadableNumbers">
-                {{element.count | humanReadableNumbers}}
+                {{element.count | readableNumbers}}
               </span>
               <span ng-hide="humanReadableNumbers">
                 {{element.count}}

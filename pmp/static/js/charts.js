@@ -846,7 +846,7 @@ angular.module('pmpCharts', [])
                 var getDate = function(d) { return dateFormat.parse(d) }
 
                 var showTable = function() {
-                    var innerHtml = '<table class="table table-bordered table-striped table-condensed col-lg-12 col-md-12 col-sm-12"><thead><tr><th class="text-center" ng-repeat="(key, _) in statistics">{{key}}</th></tr></thead><tbody><tr><td class="text-center" ng-repeat="(key, element) in statistics"><span ng-show="key == \'population\'">{{element}}</span><span ng-hide="key == \'population\'">{{element | millSecondsToTimeString}}</span></td></tr></tbody></table>';
+                    var innerHtml = '<table class="table table-bordered table-striped table-condensed col-lg-12 col-md-12 col-sm-12"><thead><tr><th class="text-center" ng-repeat="(key, _) in statistics">{{key}}</th></tr></thead><tbody><tr><td class="text-center" ng-repeat="(key, element) in statistics"><span ng-show="key == \'population\'">{{element}}</span><span ng-hide="key == \'population\'">{{element | milliSecondsToTimeString}}</span></td></tr></tbody></table>';
                     element.append($compile(innerHtml)(scope));
                     isDrawn = true;
                 }
@@ -1138,7 +1138,7 @@ angular.module('pmpCharts', [])
                 var l1, l2, l3, containerBox, hoverLineGroup, clipPath, rectLifetime, rectTaskChain;
                 var fiveShadesOfGrey = ['#4fc3f7', '#4dd0e1', '#4db6ac', '#81c784', '#aed581', '#dce775'];
                 // add data label
-                var innerHtml = '<div class="hidden-sm hidden-xs"><span ng-repeat=\'d in labelData\' style=\'{{d.style}}\'>{{d.label}}<span ng-show=\'humanReadableNumbers && d.label != "Time: "\'>{{d.data | humanReadableNumbers}}</span><span ng-hide=\'humanReadableNumbers && d.label != "Time: "\'>{{d.data}}</span></span></div>';
+                var innerHtml = '<div class="hidden-sm hidden-xs"><span ng-repeat=\'d in labelData\' style=\'{{d.style}}\'>{{d.label}}<span ng-show=\'humanReadableNumbers && d.label != "Time: "\'>{{d.data | readableNumbers}}</span><span ng-hide=\'humanReadableNumbers && d.label != "Time: "\'>{{d.data}}</span></span></div>';
                 element.append($compile(innerHtml)(scope));
 
                 // add main svg

@@ -115,7 +115,7 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
                 Data.setFilteredData([], false);
                 Data.setStatusFilter({});
                 Data.setPWGFilter({});
-                $scope.$broadcast('onChangeNotification:LoadedData');
+                $scope.$broadcast('onChangeNotification:LoadedData', {update: false});
                 return null;
             }
 
@@ -202,9 +202,8 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
                     Data.setPWGFilter(data.data.results.pwg);
                     $scope.loadTaskChain = data.data.results
                         .taskchain;
-                    $scope.$broadcast(
-                        'onChangeNotification:LoadedData'
-                    );
+                    $scope.$broadcast('onChangeNotification:LoadedData',
+                                      {update: false});
                 }
                 $scope.loadingData = false;
                 $scope.setURL();
@@ -237,32 +236,36 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
         $scope.setURL = function () {
             $location.path($location.path(), false);
             var params = {};
-            params.p = $scope.probing;
+
+            // collect user inputs
             var r = Data.getInputTags();
             if (r.length) params.r = r.join(',');
+
+            // set probing
+            params.p = $scope.probing;
+
+            // show time label
             params.t = $scope.showDate + "";
+
+            // set zoom
+            params.y = $scope.zoomOnY + "";
+
+            // set priority filter
             params.x = Data.getPriorityFilter().join(',');
 
-            var w = [];
-            for (var i in Data.getPWGFilter()) {
-                if (Data.getPWGFilter()[i]) {
-                    w.push(i);
-                }
+            // set pwg filter
+            if (!$scope.isEmpty(Data.getPWGFilter())) {
+                params.w = $scope.getCSVPerFilter(Data.getPWGFilter());
             }
-            params.w = w.join(',');
 
-            var s = [];
-            for (var j in Data.getStatusFilter()) {
-                if (Data.getStatusFilter()[j]) {
-                    s.push(j);
-                }
+            // set status filter
+            if (!$scope.isEmpty(Data.getStatusFilter())) {
+                params.s = $scope.getCSVPerFilter(Data.getStatusFilter());
             }
-            params.s = s.join(',');
 
-            $scope.zoomOnY !== undefined ? params.y = $scope.zoomOnY +
-                '' : params.y = 'false';
+            // reload url
             $location.search(params);
-            $scope.url = $location.absUrl();
+            // broadcast change notification
             $scope.$broadcast('onChangeNotification:URL');
         };
 

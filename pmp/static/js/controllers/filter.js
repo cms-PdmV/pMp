@@ -73,7 +73,7 @@ angular.module('pmpApp').controller('FilterController', ['$scope', 'Data',
             $scope.priorityFilter = Data.getPriorityFilter();
             $scope.pwgFilter = Data.getPWGFilter();
             $scope.statusFilter = Data.getStatusFilter();
-            if (data !== undefined && data.update) {
+            if (data === undefined) {
                 $scope.updateFilteredData();
             }
         });
