@@ -13,92 +13,92 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
          * @description Core: Init method for the page. Init scope variables from url.
          */
         $scope.init = function () {
+            // get information about page
             $scope.page = PageDetailsProvider.present;
+
+            // reset data and filters
             Data.reset(true);
 
-            $scope.graphParam = ['selections', 'grouping',
-                'stacking', 'coloring'
-            ];
-            $scope.graphTabs = ['member_of_campaign',
-                'total_events', 'status', 'prepid', 'priority',
-                'pwg'
-            ];
+            // define piecharts options
+            $scope.piecharts = {
+                compactTerms = ["done", "to do"],
+                domain = ["new", "validation", "done", "approved", "submitted", "nothing", "defined", "to do"],
+                fullTerms = ["new", "validation", "defined", "approved", "submitted", "done", "upcoming"],
+                nestBy = ["member_of_campaign", "status"],
+                sum = "total_events"
+            };
 
-            $scope.piecharts = {};
-            $scope.piecharts.compactTerms = ["done", "to do"];
-            $scope.piecharts.domain = ["new", "validation", "done",
-                "approved", "submitted", "nothing", "defined",
-                "to do"
-            ];
-            $scope.piecharts.fullTerms = ["new", "validation",
-                "defined", "approved", "submitted", "done",
-                "upcoming"
-            ];
-            $scope.piecharts.nestBy = ["member_of_campaign",
-                "status"
-            ];
-            $scope.piecharts.sum = "total_events";
-
-            $scope.parameters = [1, 0, 3, 0, 0, 0];
-            $scope.radio = [0, 0];
-
+            // get graph parameters or set defaults
             if ($location.search().p !== undefined) {
                 var toLoad = $location.search().p.split(',');
                 $scope.parameters = toLoad.slice(0, 6);
                 $scope.radio = toLoad.slice(6, 8);
+            } else {
+                $scope.parameters = [1, 0, 3, 0, 0, 0];
+                $scope.radio = [0, 0];
             }
 
-            $scope.requests = {};
-            $scope.requests.settings = {
-                duration: 1000,
-                legend: true,
-                sort: true
+            // set requests globals
+            $scope.requests = {
+                options: {
+                    grouping: [],
+                    stacking: [],
+                    coloring: ''
+                },
+                radio: {
+                    mode = ['events', 'requests', 'seconds'],
+                    scale = ["linear", "log"]
+                },
+                selections: [],
+                settings = {
+                    duration: 1000,
+                    legend: true,
+                    sort: true
+                }
             };
-            $scope.requests.selections = [];
-            var initGrouping = [];
-            var initStacking = [];
-            var initColoring = '';
+
+            // assign selections to options
+            $scope.options = ['selections', 'grouping', 'stacking', 'coloring'];
+            $scope.selections = ['member_of_campaign', 'total_events', 'status', 'prepid', 'priority',      'pwg'];
             for (var i = 0; i < $scope.parameters.length; i++) {
                 if ($scope.parameters[i] === '0') {
-                    $scope.requests.selections.push($scope.graphTabs[i]);
-                } else if ($scope.parameters[i] == '1') {
-                    initGrouping.push($scope.graphTabs[i]);
-                } else if ($scope.parameters[i] == '2') {
-                    initStacking.push($scope.graphTabs[i]);
-                } else if ($scope.parameters[i] == '3') {
-                    initColoring = $scope.graphTabs[i];
+                    $scope.requests.selections.push($scope.selections[i]);
+                } else if ($scope.parameters[i] === '1') {
+                    $scope.requests.options.grouping.push($scope.selections[i]);
+                } else if ($scope.parameters[i] === '2') {
+                    $scope.requests.options.stacking.push($scope.selections[i]);
+                } else if ($scope.parameters[i] === '3') {
+                    $scope.requests.options.coloring = $scope.selections[i];
                 }
-                console.log($scope.requests)
             }
-            $scope.requests.options = {
-                grouping: initGrouping,
-                stacking: initStacking,
-                coloring: initColoring
-            };
-            $scope.requests.radio = {};
-            $scope.requests.radio.scale = ["linear", "log"];
-            $scope.requests.radio.mode = ['events', 'requests',
-                'seconds'
-            ];
-            if ($scope.radio[1] == 1) {
+
+            // assign radio values, scale and mode
+            if ($scope.radio[1] === '1') {
                 $scope.requests.radio.scale = ["log", "linear"];
             }
-            if ($scope.radio[0] == 1) {
+            if ($scope.radio[0] === '1') {
                 $scope.requests.radio.mode = ['requests', 'events',
                     'seconds'
                 ];
-            }
-            if ($scope.radio[0] == 2) {
+            } else if ($scope.radio[0] === '2') {
                 $scope.requests.radio.mode = ['seconds', 'events',
                     'requests'
                 ];
             }
 
+            // if show time label
             $scope.showDate = $location.search().t === 'true';
-            $scope.growingMode = ($location.search().m === 'true');
-            $scope.displayChains = ($location.search().c === 'true');
+
+            // if in growing mode
+            $scope.growingMode = $location.search().m === 'true';
+
+            // if in display mode
+            $scope.displayChains = $location.search().c === 'true';
+
+            // update mode
             $scope.modeUpdate(true);
 
+            // initiate filters
             if ($location.search().x !== undefined && $location.search()
                 .x !== '') Data.setPriorityFilter($location.search()
                 .x.split(','));
@@ -109,10 +109,11 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
                 .w !== '') Data.initializeFilter($location.search()
                 .w.split(','), false);
 
-            //initiate from URL
-            if ($location.search().r !== undefined) {
-                $scope.loadingData = true;
+            // load graph data
+            if ($location.search().r !== undefined && $location.search()
+                .r !== '') {
                 var tmp = $location.search().r.split(',');
+                // if filter is empty, assume all true
                 var empty = [$scope.isEmpty(Data.getPWGFilter()),
                     $scope.isEmpty(Data.getStatusFilter())
                 ];
@@ -121,7 +122,9 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
                         empty[1]);
                 }
             } else {
-                $scope.$broadcast('onChangeNotification:URL');
+                // if this is empty just change URL as some filters
+                // could have been initiated
+                $scope.setURL();
             }
         };
 
@@ -213,8 +216,7 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
          */
         $scope.setURL = function (name, value) {
             if (name !== undefined && value !== undefined) {
-                $scope.parameters[$scope.graphTabs.indexOf(
-                    value)] = $scope.graphParam.indexOf(name);
+                $scope.parameters[$scope.selections.indexOf(value)] = $scope.options.indexOf(name);
             }
 
             $location.path($location.path(), false);

@@ -13,29 +13,27 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
          * @description Core: Init method for the page. Init scope variables from url.
          */
         $scope.init = function () {
+            // get information about page
             $scope.page = PageDetailsProvider.historical;
-            Data.reset(true);
-            if ($location.search().y !== undefined && $location.search()
-                .y !== '') {
-                $scope.zoomOnY = ($location.search().y == 'true');
-            } else {
-                $scope.zoomOnY = false;
-            }
 
-            if ($location.search().p !== undefined && $location.search()
-                .p !== '') {
+            // reset data and filters
+            Data.reset(true);
+
+            // if show time label
+            $scope.showDate = ($location.search().t == 'true');
+
+            // if zoom on y label
+            $scope.zoomOnY = ($location.search().y === 'true');
+
+            // set default probing
+            if ($location.search().p !== '' && !isNaN($location.search()
+                    .p)) {
                 $scope.probing = parseInt($location.search().p, 10);
             } else {
                 $scope.probing = 40;
             }
 
-            if ($location.search().t !== undefined && $location.search()
-                .t !== '') {
-                $scope.showDate = ($location.search().t == 'true');
-            } else {
-                $scope.showDate = false;
-            }
-
+            // initiate filters
             if ($location.search().x !== undefined && $location.search()
                 .x !== '') Data.setPriorityFilter($location.search()
                 .x.split(','));
@@ -46,6 +44,7 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
                 .w !== '') Data.initializeFilter($location.search()
                 .w.split(','), false);
 
+            // load graph data
             if ($location.search().r !== undefined && $location.search()
                 .r !== '') {
                 var tmp = $location.search().r.split(',');
@@ -53,8 +52,10 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
                     Data.setInputTags(tmp[i], true, false);
                 }
                 $scope.query(true);
-            }
-            $scope.$broadcast('onChangeNotification:URL');
+            }                
+            // if this is empty just change URL as some filters
+            // could have been initiated
+            $scope.setURL();
         };
 
         /**

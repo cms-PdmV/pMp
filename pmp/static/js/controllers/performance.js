@@ -13,8 +13,13 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
          * @description Core: Init method for the page. Init scope variables from url.
          */
         $scope.init = function () {
+            // get information about page
             $scope.page = PageDetailsProvider.performance;
+
+            // reset data and filters
             Data.reset(true);
+
+            // define graph difference
             $scope.difference = {
                 minuend: 'done',
                 subtrahend: 'created'
@@ -22,6 +27,7 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
             $scope.selections = ['validation', 'approved',
                 'submitted'
             ];
+
             var inx;
             if ($location.search().min !== undefined) {
                 inx = $scope.selections.indexOf($location.search().min);
@@ -40,14 +46,21 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
                 }
             }
 
-            $scope.showDate = ($location.search().t === 'true');
-            $scope.linearScale = ($location.search().l === 'true');
+            // if show time label
+            $scope.showDate = $location.search().t === 'true';
+
+            // if linear scale
+            $scope.linearScale = $location.search().l === 'true';
+
+            // set number of bins
             if ($location.search.b !== '' && !isNaN($location.search()
                     .b)) {
                 $scope.bins = parseInt($location.search().b, 10);
             } else {
                 $scope.bins = 10;
             }
+
+            // initiate filters
             if ($location.search().x !== undefined && $location.search()
                 .x !== '') Data.setPriorityFilter($location.search()
                 .x.split(','));
@@ -57,20 +70,24 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
             if ($location.search().w !== undefined && $location.search()
                 .w !== '') Data.initializeFilter($location.search()
                 .w.split(','), false);
-            if ($location.search().r !== undefined) {
+
+            // load graph data
+            if ($location.search().r !== undefined && $location.search()
+                .r !== '') {
                 $scope.loadingData = true;
                 var tmp = $location.search().r.split(',');
-                var arg = false;
-                if (Object.keys(Data.getPWGFilter()).length) {
-                    arg = tmp.length;
-                }
+                // if filter is empty, assume all true
+                var empty = [$scope.isEmpty(Data.getPWGFilter()),
+                    $scope.isEmpty(Data.getStatusFilter())
+                ];
                 for (var i = 0; i < tmp.length; i++) {
-                    $scope.load(tmp[i], true, arg);
+                    $scope.load(tmp[i], true, tmp.length, empty[0], empty[1]);
                 }
             } else {
-                $scope.url = $location.absUrl();
+                // if this is empty just change URL as some filters
+                // could have been initiated
+                $scope.setURL();
             }
-            $scope.$broadcast('onChangeNotification:URL');
         };
 
         /**
