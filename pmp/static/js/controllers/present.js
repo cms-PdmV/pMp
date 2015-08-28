@@ -21,11 +21,17 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
 
             // define piecharts options
             $scope.piecharts = {
-                compactTerms = ["done", "to do"],
-                domain = ["new", "validation", "done", "approved", "submitted", "nothing", "defined", "to do"],
-                fullTerms = ["new", "validation", "defined", "approved", "submitted", "done", "upcoming"],
-                nestBy = ["member_of_campaign", "status"],
-                sum = "total_events"
+                compactTerms: ["done", "to do"],
+                domain: ["new", "validation", "done",
+                    "approved", "submitted", "nothing",
+                    "defined", "to do"
+                ],
+                fullTerms: ["new", "validation", "defined",
+                    "approved", "submitted", "done",
+                    "upcoming"
+                ],
+                nestBy: ["member_of_campaign", "status"],
+                sum: "total_events"
             };
 
             // get graph parameters or set defaults
@@ -46,11 +52,11 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
                     coloring: ''
                 },
                 radio: {
-                    mode = ['events', 'requests', 'seconds'],
-                    scale = ["linear", "log"]
+                    mode: ['events', 'requests', 'seconds'],
+                    scale: ["linear", "log"]
                 },
                 selections: [],
-                settings = {
+                settings: {
                     duration: 1000,
                     legend: true,
                     sort: true
@@ -58,17 +64,26 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
             };
 
             // assign selections to options
-            $scope.options = ['selections', 'grouping', 'stacking', 'coloring'];
-            $scope.selections = ['member_of_campaign', 'total_events', 'status', 'prepid', 'priority',      'pwg'];
+            $scope.options = ['selections', 'grouping', 'stacking',
+                'coloring'
+            ];
+            $scope.selections = ['member_of_campaign',
+                'total_events', 'status', 'prepid', 'priority',
+                'pwg'
+            ];
             for (var i = 0; i < $scope.parameters.length; i++) {
                 if ($scope.parameters[i] === '0') {
-                    $scope.requests.selections.push($scope.selections[i]);
+                    $scope.requests.selections.push($scope.selections[
+                        i]);
                 } else if ($scope.parameters[i] === '1') {
-                    $scope.requests.options.grouping.push($scope.selections[i]);
+                    $scope.requests.options.grouping.push($scope.selections[
+                        i]);
                 } else if ($scope.parameters[i] === '2') {
-                    $scope.requests.options.stacking.push($scope.selections[i]);
+                    $scope.requests.options.stacking.push($scope.selections[
+                        i]);
                 } else if ($scope.parameters[i] === '3') {
-                    $scope.requests.options.coloring = $scope.selections[i];
+                    $scope.requests.options.coloring = $scope.selections[
+                        i];
                 }
             }
 
@@ -216,12 +231,13 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
          */
         $scope.setURL = function (name, value) {
             if (name !== undefined && value !== undefined) {
-                $scope.parameters[$scope.selections.indexOf(value)] = $scope.options.indexOf(name);
+                $scope.parameters[$scope.selections.indexOf(value)] =
+                    $scope.options.indexOf(name);
             }
 
             $location.path($location.path(), false);
             var params = {};
-            
+
             // collect user inputs
             var r = Data.getInputTags();
             if (r.length) params.r = r.join(',');

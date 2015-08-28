@@ -52,7 +52,7 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
                     Data.setInputTags(tmp[i], true, false);
                 }
                 $scope.query(true);
-            }                
+            }
             // if this is empty just change URL as some filters
             // could have been initiated
             $scope.setURL();
@@ -78,30 +78,19 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
             } else {
                 $scope.loadingData = true;
                 if (!add) {
+                    // reset data but not filters
                     Data.reset(false);
                 }
                 Data.setInputTags(request, true, false);
+                // if not appending, reset filters
                 var filter = add;
                 if (filter) {
                     filter = false;
-                    for (var i = 0; i < Object.keys(Data.getStatusFilter())
-                        .length; i++) {
-                        if (!Data.getStatusFilter()[Object.keys(
-                                Data.getStatusFilter())[i]]) {
-                            filter = true;
-                            break;
-                        }
-                    }
-                    if (!filter) {
-                        for (i = 0; i < Object.keys(Data.getPWGFilter())
-                            .length; i++) {
-                            if (!Data.getPWGFilter()[Object.keys(
-                                    Data.getPWGFilter())[i]]) {
-                                filter = true;
-                                break;
-                            }
-                        }
-                    }
+                    // it's faster to query with no filter on, check if necessary
+                    if ($scope.getCSVPerFilter(Data.getStatusFilter()) !==
+                        '') filter = true;
+                    if (!filter && $scope.getCSVPerFilter(Data.getStatusFilter()) !==
+                        '') filter = true;
                 }
                 $scope.query(filter);
             }
@@ -116,13 +105,15 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
                 Data.setFilteredData([], false);
                 Data.setStatusFilter({});
                 Data.setPWGFilter({});
-                $scope.$broadcast('onChangeNotification:LoadedData', {update: false});
+                $scope.$broadcast('onChangeNotification:LoadedData', {
+                    update: false
+                });
                 return null;
             }
 
             $scope.loadingData = true;
 
-            // Add priority filter
+            // add priority filter
             var x = '';
             if (filter && Data.getPriorityFilter() !== undefined) {
                 if (Data.getPriorityFilter()[0] !== undefined) {
@@ -136,7 +127,7 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
                 x = ',';
             }
 
-            // Add status filter
+            // add status filter
             var s = '';
             if (filter && Object.keys(Data.getStatusFilter()).length) {
                 for (var i = 0; i < Object.keys(Data.getStatusFilter())
@@ -156,7 +147,7 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
                 s = 'all';
             }
 
-            // Add pwg filter
+            // add pwg filter
             var w = '';
             if (filter && Object.keys(Data.getPWGFilter()).length) {
                 for (var j = 0; j < Object.keys(Data.getPWGFilter())
@@ -176,11 +167,13 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
                 w = 'all';
             }
 
+            // add probing
             var p = 40;
             if ($scope.probing !== '') {
                 p = $scope.probing;
             }
 
+            // query for linear chart data
             var promise = $http.get("api/" + Data.getInputTags().join(
                     ',') + '/historical/' + p + '/' + x + '/' +
                 s + '/' + w);
@@ -191,11 +184,16 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
                         .W2.message);
                 } else {
                     if (!data.data.results.data.length) {
-                        data.data.results.error !== '' ?
+                        if (data.data.results.error !== '') {
                             $scope.showPopUp('error', data.data
-                                .results.error) : $scope.showPopUp(
-                                'warning',
-                                'All data is filtered');
+                                .results.error);
+                        } else {
+                            $scope.showPopUp(
+                                PageDetailsProvider.messages
+                                .W3.type,
+                                PageDetailsProvider.messages
+                                .W3.message);
+                        }
                     }
                     Data.setFilteredData(data.data.results.data,
                         false);
@@ -203,20 +201,20 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
                     Data.setPWGFilter(data.data.results.pwg);
                     $scope.loadTaskChain = data.data.results
                         .taskchain;
-                    $scope.$broadcast('onChangeNotification:LoadedData',
-                                      {update: false});
                 }
-                $scope.loadingData = false;
+                $scope.$broadcast(
+                    'onChangeNotification:LoadedData', {
+                        update: false
+                    });
                 $scope.setURL();
-                $scope.$broadcast('updateFilterTag', {
-                    update: false
-                });
             }, function () {
-                $scope.showPopUp('error',
-                    'Error getting requests');
+                $scope.showPopUp(PageDetailsProvider.messages
+                    .E0.type, PageDetailsProvider.messages
+                    .E1.message);
                 $scope.loadingData = false;
             });
 
+            // query for submitted
             $http.get("api/" + Data.getInputTags().join(',') +
                 '/submitted/' + x + '/' + w).then(function (
                 data) {
@@ -226,8 +224,9 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
                     $scope.listSubmitted = {};
                 }
             }, function () {
-                $scope.showPopUp('error',
-                    'Error getting requests');
+                $scope.showPopUp(PageDetailsProvider.messages
+                    .E0.type, PageDetailsProvider.messages
+                    .E1.message);
             });
         };
 

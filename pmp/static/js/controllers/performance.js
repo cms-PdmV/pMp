@@ -81,7 +81,8 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
                     $scope.isEmpty(Data.getStatusFilter())
                 ];
                 for (var i = 0; i < tmp.length; i++) {
-                    $scope.load(tmp[i], true, tmp.length, empty[0], empty[1]);
+                    $scope.load(tmp[i], true, tmp.length, empty[0],
+                        empty[1]);
                 }
             } else {
                 // if this is empty just change URL as some filters
@@ -176,10 +177,12 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
             if ($scope.bins !== '') params.b = $scope.bins;
 
             // setting minuend
-            if ($scope.difference.minuend !== '') params.min = $scope.difference.minuend;
+            if ($scope.difference.minuend !== '') params.min =
+                $scope.difference.minuend;
 
             // setting subtrahend
-            if ($scope.difference.subtrahend !== '') params.sub = $scope.difference.subtrahend;
+            if ($scope.difference.subtrahend !== '') params.sub =
+                $scope.difference.subtrahend;
 
             // set scale
             params.l = $scope.linearScale + '';
