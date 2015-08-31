@@ -378,7 +378,8 @@ class SubmittedStatusAPI(esadapter.InitConnection):
         """Return number of completed events from based on stats not McM"""
         completed_events = 0
         if not len(request['output_dataset']):
-            return 0
+            # output dataset not set, do not add request to the list
+            return -1
         output_dataset = request['output_dataset'][0]
         for workflow in request['reqmgr_name']:
             try:
@@ -420,7 +421,7 @@ class SubmittedStatusAPI(esadapter.InitConnection):
                              and (request['priority'] < priority[1] or \
                                       priority[1] == -1)):
                 completed = self.completed_deep(request)
-                if completed:
+                if completed >= 0:
                     submitted[request['prepid']] = (100 * completed /
                                                     request['total_events'])
         return json.dumps({"results": submitted})
