@@ -40,8 +40,8 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
                 $scope.parameters = toLoad.slice(0, 6);
                 $scope.radio = toLoad.slice(6, 8);
             } else {
-                $scope.parameters = [1, 0, 3, 0, 0, 0];
-                $scope.radio = [0, 0];
+                $scope.parameters = ['1', '0', '3', '0', '0', '0'];
+                $scope.radio = ['0', '0'];
             }
 
             // set requests globals
