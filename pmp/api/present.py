@@ -13,7 +13,7 @@ class AnnouncedAPI(esadapter.InitConnection):
         for member in mcm_r.keys():
             if member not in ['prepid', 'pwg', 'efficiency', 'total_events',
                               'status', 'priority', 'member_of_campaign',
-                              'time_event']:
+                              'time_event', 'input']:
                 mcm_r.pop(member)
         return mcm_r
 
@@ -131,22 +131,23 @@ class AnnouncedAPI(esadapter.InitConnection):
             if res['time_event'] == -1:
                 res['time_event'] = 0
 
-            # remove unnecessary fields to speed up api
-            if flip_to_done and res['status'] == 'submitted':
-                dump_requests += self.get_fakes_from_submitted(res)
-                remove_requests.append(res)
-                continue
-
-            for field in ['completed_events', 'reqmgr_name', 'history',
-                          'output_dataset']:
-                if field in res:
-                    del res[field]
-            
+            # assign to which query request belongs
             if query == '*':
                 res['input'] = res['member_of_campaign']
             else:
                 res['input'] = query
 
+            if flip_to_done and res['status'] == 'submitted':
+                dump_requests += self.get_fakes_from_submitted(res)
+                remove_requests.append(res)
+                continue
+
+            # remove unnecessary fields to speed up api
+            for field in ['completed_events', 'reqmgr_name', 'history',
+                          'output_dataset']:
+                if field in res:
+                    del res[field]
+            
         for rr in remove_requests:
             response.remove(rr)
         response += dump_requests
