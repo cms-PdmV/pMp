@@ -21,7 +21,11 @@ angular.module('pmpApp', ['ngAnimate', 'ngRoute', 'ui.bootstrap', 'pmpCharts',
                     templateUrl: 'build/index.min.html',
                     controller: 'IndexController'
                 })
-                // chains plot is depreciated
+                .when('/index', {
+                    templateUrl: 'build/index.min.html',
+                    controller: 'IndexController'
+                })
+                // chains plot is not used
                 .when('/chains', {
                     templateUrl: 'build/plot.min.html',
                     controller: 'ChainsController'
