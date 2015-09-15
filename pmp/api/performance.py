@@ -22,7 +22,8 @@ class PerformanceAPI(esadapter.InitConnection):
         # loop over and remove documents' fields
         for request in response:
             for field in ['time_event', 'total_events', 'completed_events',
-                          'reqmgr_name', 'efficiency', 'output_dataset']:
+                          'reqmgr_name', 'efficiency', 'output_dataset',
+                          'flown_with']:
                 if field in request:
                     del request[field]
 
@@ -31,6 +32,7 @@ class PerformanceAPI(esadapter.InitConnection):
             for history in request['history']:
                 patch_history[history['action']] = history['time']
             request['history'] = patch_history
+            request['input'] = request['member_of_campaign']
 
         return json.dumps({"results": response})
 
