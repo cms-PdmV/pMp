@@ -13,7 +13,8 @@ class AnnouncedAPI(esadapter.InitConnection):
         for member in mcm_r.keys():
             if member not in ['prepid', 'pwg', 'efficiency', 'total_events',
                               'status', 'priority', 'member_of_campaign',
-                              'time_event', 'input']:
+                              'time_event', 'input', 'completed_events',
+                              'output_dataset']:
                 mcm_r.pop(member)
         return mcm_r
 
@@ -285,7 +286,8 @@ class GrowingAPI(esadapter.InitConnection):
         for member in mcm_r.keys():
             if member not in ['prepid', 'pwg', 'efficiency', 'total_events',
                               'status', 'priority', 'member_of_campaign',
-                              'time_event']:
+                              'time_event', 'input', 'completed_events',
+                              'output_dataset']:
                 mcm_r.pop(member)
         return mcm_r
 
@@ -361,11 +363,14 @@ class GrowingAPI(esadapter.InitConnection):
                 upcoming = int(mcm_r['total_events']*abs(mcm_r['efficiency']))
             for noyet in all_cc[chain_request['member_of_campaign']]\
                     ['campaigns'][len(chain_request['chain']):]:
-                # create a fake request with the proper member of campaign
-                dump_requests.append(self.create_fake_request( \
-                        all_requests[chain_request['chain'] \
-                                         [len(chain_request['chain'])-1]],
-                        noyet[0], total=upcoming))
+                try:
+                    # create a fake request with the proper member of campaign
+                    dump_requests.append(self.create_fake_request( \
+                            all_requests[chain_request['chain'] \
+                                             [len(chain_request['chain'])-1]],
+                            noyet[0], total=upcoming))
+                except KeyError:
+                    pass
 
         # add req that does not belong to chain (from org campaign)
         for req in req_copy:
