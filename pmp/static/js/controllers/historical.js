@@ -30,7 +30,7 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
                     .p)) {
                 $scope.probing = parseInt($location.search().p, 10);
             } else {
-                $scope.probing = 40;
+                $scope.probing = 100;
             }
 
             // initiate filters
@@ -168,7 +168,7 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
             }
 
             // add probing
-            var p = 40;
+            var p = 100;
             if ($scope.probing !== '') {
                 p = $scope.probing;
             }
