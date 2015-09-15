@@ -14,46 +14,6 @@ angular.module('customTags', [])
         };
     });
 
-angular.module('customFilters', [])
-
-/*
-Parse time in milliseconds to the human readable format
- */
-
-    .filter('millSecondsToTimeString', function() {
-        return function (ms) {
-            var seconds = Math.floor(ms / 1000);
-            var days = Math.floor(seconds / 86400);
-            var hours = Math.floor((seconds % 86400) / 3600);
-            var minutes = Math.floor(((seconds % 86400) % 3600) / 60);
-            return days + "D " + hours + "h ";
-        };
-    })
-
-/*
-Parse numbers to the human readable format
- */
-
-    .filter('humanReadableNumbers', function() {
-        return function (d) {
-            var significantFigures = 3;
-            if (!d) { return 0;}
-            var l = ['G', 'M', 'k', ''];
-            var s, j = 0;
-            for (var i = 1e9; i >= 1; i = i / 1e3) {
-                s = (Math.round(d * 100 / i) / 100).toFixed(2);
-                if (s >= 1) {
-                    if ((s + '').substring(0, significantFigures).indexOf('.') === -1) {
-                        return (s + '').substring(0, significantFigures) + l[j];
-                    }
-                    return (s + '').substring(0, significantFigures+1) + l[j];
-                }
-                j++;
-            }
-            return '';
-        };
-    });
-
 angular.module('pmpCharts', [])
 
     .directive('chainsLandscape', function($compile) {
@@ -654,7 +614,9 @@ angular.module('pmpCharts', [])
                     .scale(x)
                     .orient('bottom')
                     .tickFormat(formatXAxis);
-               
+
+
+
                 var y = d3.scale.log().clamp(true).range([height, 0]).nice();
 
                 var yAxis = d3.svg.axis()
@@ -688,12 +650,14 @@ angular.module('pmpCharts', [])
                         var val = (scope.chartData[a]-mMin)/(mMax-mMin);
                         dataStats.push(val);
                     }
-                    if (dataStats.length){
+                    
+                    //if (dataStats.length){
                         updateHistogram();
-                    }
+                    //}
                 }
 
                 var updateHistogram = function() {
+                    console.log(dataStats);
                     scope.numberOfBins = scope.numberOfBins || 10;
 
                     var data = d3.layout.histogram()
@@ -708,6 +672,9 @@ angular.module('pmpCharts', [])
                         y = d3.scale.log().range([height, 0]).domain([1, cMax]);
                         yAxis.scale(y);
                     }
+
+                    svg.selectAll('.x path').style('stroke', '#777777').style('fill', 'none');
+                    svg.selectAll('.x line').style('stroke', '#777777').style('fill', 'none');
 
                     bar = svg.selectAll('.bar')
                     .data(data, function(d) { return d; });
@@ -742,6 +709,7 @@ angular.module('pmpCharts', [])
                     .attr('width', x(data[0].dx) - 1)
                     .attr('x', 1)
                     .style('shape-rendering', 'optimizeSpeed')
+                    .style('fill', '#263238')
                     .on('mouseover', function(d) { d3.select(this).style('fill', '#b0bec5'); })
                     .on('mouseout', function(d) { d3.select(this).style('fill', '#263238'); })
                     .on('click', function(data) {
@@ -758,6 +726,7 @@ angular.module('pmpCharts', [])
                     .attr('y', 6)
                     .attr('x', x(data[0].dx) / 2)
                     .attr('text-anchor', 'middle')
+                    .style('fill', '#eeeeee')
                     .text(function(d) { return formatCount(d.y); });
 
                     bar.exit()
@@ -787,7 +756,7 @@ angular.module('pmpCharts', [])
                         updateHistogram();
                     }
                 }
-
+                svg.selectAll('.axis path').style('fill', 'none');
                 scope.$watch('chartData', function(d) {inputChange()});
                 scope.$watch('numberOfBins', function(d) {changed()});
                 scope.$watch('linearScale', function(d) {dataStats = [];changed();inputChange();});
@@ -815,17 +784,17 @@ angular.module('pmpCharts', [])
                     scope.$apply();
                 };
 
-                var innerHtml = "<style>.nav.dnd {margin-bottom: 0;}</style><div class='row'><div class='col-lg-9 col-md-12 col-sm-12' style='margin-bottom: 3px'><span class='col-lg-2 col-md-2 col-sm-2 nav-header text-muted'>selections</span><ul id='possible-selections' class='nav nav-pills dnd col-lg-10 col-md-10 col-sm-10 inline' style='min-height:22px'><li class='btn btn-default btn-xs text-uppercase' ng-repeat='value in selections'>{{value}}</li></ul></div>";
+                var innerHtml = "<style>.nav.dnd {margin-bottom: 0;}</style><div class='row'><div class='col-lg-9 col-md-12 col-sm-12 col-xs-12' style='margin-bottom: 3px'><span class='col-lg-2 col-md-2 col-sm-3 col-xs-5 nav-header text-muted'>selections</span><ul id='possible-selections' class='nav nav-pills dnd col-lg-10 col-md-10 col-sm-9 col-xs-7 inline' style='min-height:22px'><li class='btn btn-default btn-xs text-uppercase' ng-repeat='value in selections'>{{value}}</li></ul></div>";
 
                 for(var key in scope.difference) {
-                    innerHtml += "<div class='col-lg-6 col-md-12 col-sm-12'><span class='col-lg-3 col-md-2 col-sm-2 nav-header' style='margin-bottom: 3px'>" + key + "</span><ul id='" + key + "' class='nav nav-pills dnd single col-lg-9 col-md-10 col-sm-10 inline alert-info' style='min-height:23px; margin-top:1px'>";
+                    innerHtml += "<div class='col-lg-6 col-md-6 col-sm-12 col-xs-12'><span class='col-lg-3 col-md-4 col-sm-3 col-xs-5 nav-header' style='margin-bottom: 3px'>" + key + "</span><ul id='" + key + "' class='nav nav-pills dnd single col-lg-9 col-md-8 col-sm-9 col-xs-7 inline alert-info' style='min-height:23px; margin-top:1px'>";
                     if(scope.difference[key] !="") {
                         innerHtml+="<li class='btn btn-default btn-xs text-uppercase'>" + scope.difference[key] + "</li>";
                     }
                     innerHtml+="</ul></div>";
                 }
 
-                innerHtml += "<div class='col-lg-6 col-md-6 col-sm-12 spacing-sm' style='margin-top:3px;'><span class='col-lg-3 col-md-4 col-sm-2 nav-header'>scale</span><ul class='nav nav-pills inline col-lg-9 col-md-8 col-sm-10'><li><div class='btn-group'><button type='button' class='btn btn-primary btn-xs text-uppercase' ng-model='linearScale' ng-click='changeScale(true)' btn-radio='true'>linear</button><button type='button' class='btn btn-primary btn-xs text-uppercase' ng-model='logScale' ng-click='changeScale(false)' btn-radio='true'>log</button></div></li></ul></div></div>";
+                innerHtml += "<div class='col-lg-6 col-md-6 col-sm-12 col-xs-12 spacing-sm' style='margin-top:3px;'><span class='col-lg-3 col-md-4 col-sm-3 col-xs-5 nav-header'>scale</span><ul class='nav nav-pills inline col-lg-9 col-md-8 col-sm-9 col-xs-7'><li><div class='btn-group'><button type='button' class='btn btn-primary btn-xs text-uppercase' ng-model='linearScale' ng-click='changeScale(true)' btn-radio='true'>linear</button><button type='button' class='btn btn-primary btn-xs text-uppercase' ng-model='logScale' ng-click='changeScale(false)' btn-radio='true'>log</button></div></li></ul></div></div>";
 
                 scope.changeScale = function(s) {
                     if (scope.linearScale != s) {
@@ -879,27 +848,30 @@ angular.module('pmpCharts', [])
                 var getDate = function(d) { return dateFormat.parse(d) }
 
                 var showTable = function() {
-                    var innerHtml = '<table class="table table-bordered table-striped table-condensed col-lg-12 col-md-12 col-sm-12"><thead><tr><th class="text-center" ng-repeat="(key, _) in statistics">{{key}}</th></tr></thead><tbody><tr><td class="text-center" ng-repeat="(key, element) in statistics"><span ng-show="key == \'population\'">{{element}}</span><span ng-hide="key == \'population\'">{{element | millSecondsToTimeString}}</span></td></tr></tbody></table>';
+                    var innerHtml = '<table class="table table-bordered table-striped table-condensed col-lg-12 col-md-12 col-sm-12"><thead><tr><th class="text-center" ng-repeat="(key, _) in statistics">{{key}}</th></tr></thead><tbody><tr><td class="text-center" ng-repeat="(key, element) in statistics"><span ng-show="key == \'population\'">{{element}}</span><span ng-hide="key == \'population\'">{{element | milliSecondsToTimeString}}</span></td></tr></tbody></table>';
                     element.append($compile(innerHtml)(scope));
                     isDrawn = true;
                 }
 
-                scope.statistics = {
-                    max: 0,
-                    mean: 0,
-                    median: 0,
-                    min: 0,
-                    population: 0,
-                    range: 0,
-                }
-                
                 var updateStats = function() {
-                    scope.statistics.max = d3.max(dataStats, function(d) {return d;});
-                    scope.statistics.mean = d3.mean(dataStats, function(d) {return d})
-                    scope.statistics.median = d3.median(dataStats, function(d) {return d;});
-                    scope.statistics.min = d3.min(dataStats, function(d) {return d;});
-                    scope.statistics.population = dataStats.length;
-                    scope.statistics.range = scope.statistics.max - scope.statistics.min;
+                    if (dataStats.length) {
+                        scope.statistics = {};
+                        scope.statistics.max = d3.max(dataStats, function(d) {return d;});
+                        scope.statistics.mean = d3.mean(dataStats, function(d) {return d})
+                        scope.statistics.median = d3.median(dataStats, function(d) {return d;});
+                        scope.statistics.min = d3.min(dataStats, function(d) {return d;});
+                        scope.statistics.population = dataStats.length;
+                        scope.statistics.range = scope.statistics.max - scope.statistics.min;
+                    } else {
+                        scope.statistics = {
+                            max: 0, 
+                            mean: 0,
+                            median: 0,
+                            min: 0,
+                            population: 0,
+                            range: 0,
+                        }
+                    }
                 }
 
                 var inputChange = function() {
@@ -1063,16 +1035,6 @@ angular.module('pmpCharts', [])
                         .attr('transform', 'translate(' + config.margin.left + ', '
                               + (config.margin.top - 15) + ')');
 
-                    var lines = graphBody.selectAll('g').data(data);
-                    lines.enter()
-                        .append('g')
-                        .classed('line', true)
-                        .attr('transform', function(d, i) {
-                                return 'translate(0,' + i*40 + ')';
-                            })
-                        .style('fill', config.axisLineColor);
-                    lines.exit().remove();
-                    
                     currentMin = d3.min(data, function(d) {
                             return d.date;
                         });
@@ -1093,7 +1055,7 @@ angular.module('pmpCharts', [])
                     yAxis.scale(y);
                     yAxisG.call(yAxis);
                     yAxisG.append('line')
-                        .attr('fill', config.axisLineColor)
+                        .attr('fill', 'none')
                         .classed('y-tick', true)
                         .attr('x1', 0)
                         .attr('x2', 0 + graphWidth-100)
@@ -1109,6 +1071,9 @@ angular.module('pmpCharts', [])
                         .style('fill', function(d) { return getColor(d) })
                         .append('title')
                         .text(function(d) { return d.prepid});
+
+                    svg.selectAll('.axis path').style('stroke', '#777777').style('fill', 'none');
+                    svg.selectAll('.x line').style('stroke', '#777777').style('fill', 'none');
                 }
 
                 // Zoom
@@ -1122,6 +1087,7 @@ angular.module('pmpCharts', [])
                 }
 
                 scope.$watch('chartData', function(d) {
+                        if(d === undefined) return null;
                     data = [];
                     if (d.length) {
                         d.forEach(function (e, i) {
@@ -1177,7 +1143,7 @@ angular.module('pmpCharts', [])
                 var l1, l2, l3, containerBox, hoverLineGroup, clipPath, rectLifetime, rectTaskChain;
                 var fiveShadesOfGrey = ['#4fc3f7', '#4dd0e1', '#4db6ac', '#81c784', '#aed581', '#dce775'];
                 // add data label
-                var innerHtml = '<span ng-repeat=\'d in labelData\' class=\'{{d.class}}\'>{{d.label}}<span ng-show=\'humanReadableNumbers && d.class != "label-time"\'>{{d.data | humanReadableNumbers}}</span><span ng-hide=\'humanReadableNumbers && d.class != "label-time"\'>{{d.data}}</span></span>';
+                var innerHtml = '<div ng-show="taskChain" class="hidden-sm hidden-xs"><span ng-repeat=\'d in labelData\' style=\'{{d.style}}\'>{{d.label}}<span ng-show=\'humanReadableNumbers && d.label != "Time: "\'>{{d.data | readableNumbers}}</span><span ng-hide=\'humanReadableNumbers && d.label != "Time: "\'>{{d.data}}</span></span></div>';
                 element.append($compile(innerHtml)(scope));
 
                 // add main svg
@@ -1530,6 +1496,8 @@ angular.module('pmpCharts', [])
                         constructDataLabel();
                         onZoom();
                     }
+                    svg.selectAll('.tick line').style('opacity', '0.2').style('stroke', '#000000').style('stroke-width', '0.6').style('fill', 'none').style('stroke-dasharray', '3px, 1px');
+                    svg.selectAll('.axis path').style('fill', 'none');
                 }
 
                 // Create a data label
@@ -1537,7 +1505,7 @@ angular.module('pmpCharts', [])
                     if (containerBox == undefined) {
                         containerBox = document.querySelector('#lifetime');
                         hoverLineGroup = chartBody.append("svg:g").attr("class", "hover-line");
-                        var hoverLine = hoverLineGroup.append("svg:line").attr("y1", 0).attr("y2", height + 10);
+                        var hoverLine = hoverLineGroup.append("svg:line").attr("y1", 0).attr("y2", height + 10).style('stroke-width', '1px').style('stroke', '#777777');
                     }
 
                     var handleMouseOverGraph = function(event) {
@@ -1564,7 +1532,7 @@ angular.module('pmpCharts', [])
                         } else {
                             tmp = ''
                         }
-                        scope.labelData = [{label: 'Time: ', class:'label-time', data: tmp}, {label: 'Expected events: ', class:'label-expected', data: data[1]}, {label: 'Events in DAS: ', class:'label-events-in-das', data: data[2]}, {label: 'Done events in DAS: ', class: 'label-done-events-in-das', data: data[3]}];
+                        scope.labelData = [{label: 'Time: ', style: 'color: #90a4ae; position: absolute; left: 0px', data: tmp}, {label: 'Expected events: ', style: 'color: #263238; position: absolute; left: 250px', data: data[1]}, {label: 'Events in DAS: ', style: 'color: #ff6f00; position: absolute; left: 450px', data: data[2]}, {label: 'Done events in DAS: ', style: 'color: #01579b; position: absolute; left: 650px', data: data[3]}];
                     }
 
                     var displayValueLabelsForPositionX = function(xPosition) {
@@ -1609,7 +1577,7 @@ angular.module('pmpCharts', [])
 
                 // Watch for data change
                 scope.$watch('zoomY', function(d) {onYZoomChange(d)});
-                scope.$watch('chartData', function(d) {if (d.length) prepareData(d);});
+                scope.$watch('chartData', function(d) {if (d !== undefined && d.length) prepareData(d);});
             }
         }
     }])
@@ -2362,8 +2330,10 @@ angular.module('pmpCharts', [])
                             svg.select(".x.axis").transition().duration(duration)
                                 .call(xAxis).selectAll(".x.axis .tick")
                                 .call(endall, function(){
-                            svg.selectAll(".x.axis .tick")
-                                .filter(function(){
+                                        svg.selectAll('.x.axis path').style('display', 'none'); 
+                                svg.selectAll('.x.axis line').style('stroke', '#aaaaaa');
+                                svg.selectAll(".x.axis .tick")
+                                    .filter(function(){
                                     return d3.select(this).select("title").empty()
                                 })
                                 .append("title");
@@ -2385,7 +2355,7 @@ angular.module('pmpCharts', [])
                                 .each(function(){
                                 maxHeight = d3.max(this.getBBox().width, maxHeight)
                                     });
-                        }, 1000);
+                        }, 0);
                     
                     svg.selectAll(".x.axis text")
                         .on("mouseover", function(d) {
@@ -2393,7 +2363,7 @@ angular.module('pmpCharts', [])
                         })
                         .on("mouseout", function(d) {
                                 svg.selectAll("rect.grouping" + d).style("fill", function(d) {return colors(d);});
-                        })
+                            });
 
                 }
 
@@ -2696,7 +2666,7 @@ angular.module('pmpCharts', [])
                  * Draw block separations if necessary
                  */
                 function drawBlockSeparations() {
-
+                    var priorityPerBlock = {1: 110000, 2: 90000, 3: 85000, 4: 80000, 5: 70000, 6: 63000};
                     // remove all block separations
                     svg.selectAll('.' + config.blockSeparatorClass).remove();
                     // terminate if the grouping is not by priority
@@ -2713,7 +2683,7 @@ angular.module('pmpCharts', [])
                                         .split('(')[1].split(',')[0];
                                     var f = e['__data__'];
                                     for(var i = 6; i > 0; i--) {
-                                        var g = scope.$parent.$parent.priorityPerBlock[i];
+                                        var g = priorityPerBlock[i];
                                         if (f == '' || f <= g) {
                                             if (f == g) {
                                                 blockXCoordinates[6-i] = x;
@@ -2745,6 +2715,15 @@ angular.module('pmpCharts', [])
                             }
                         });
                 }
+                
+                function updateStylesheet() {
+                    svg.selectAll('.domain').style('stroke', '#777777').style('fill', 'none');
+                    svg.selectAll('.y line').style('stroke', '#777777').style('fill', 'none');
+                    svg.selectAll('.x path').style('stroke', '#777777').style('fill', 'none');
+                    svg.selectAll('.grid g').style('stroke', '#aaaaaa').style('stroke-width', '0.4');
+                    svg.selectAll('.grid path').style('display', 'none');
+                    svg.selectAll('.x g').style('stroke-width', '0');
+                }
 
                 function redraw() {
                     prepareArguments();
@@ -2755,6 +2734,7 @@ angular.module('pmpCharts', [])
                     updateScales();
                     draw();
                     updateAxes();
+                    updateStylesheet();
                 }
 
                 scope.$watch('data', function(dat) {
@@ -2816,24 +2796,24 @@ angular.module('pmpCharts', [])
 
                 var innerHtml = "<style>.nav.dnd {margin-bottom: 0;}</style>";
                 //innerHtml += "<div class='row' align='middle'><h4>{{title}}</h4></div>";
-                innerHtml += "<div class='row'><div class='col-lg-9 col-md-12 col-sm-12' style='margin-bottom: 3px'><span class='col-lg-2 col-md-2 col-sm-2 nav-header text-muted'>selections</span>";
+                innerHtml += "<div class='row'><div class='col-lg-12 col-md-12 col-sm-12 col-xs-12' style='margin-bottom: 3px'><span class='col-lg-2 col-md-2 col-sm-2 col-xs-4 nav-header text-muted'>selections</span>";
 
-                innerHtml += "<ul id='possible-selections' class='nav nav-pills dnd col-lg-10 col-md-10 col-sm-10 inline' style='min-height:22px'>";
+                innerHtml += "<ul id='possible-selections' class='nav nav-pills dnd col-lg-10 col-md-10 col-sm-10 col-xs-8 inline' style='min-height:22px'>";
                 innerHtml += "<li class='btn btn-default btn-xs text-uppercase' ng-repeat='value in selections'>{{value}}</li>";
                 innerHtml += "</ul></div>";
                 // options for drag and drop
                 for(var key in scope.options) {
                     var value = scope.options[key];
                     if(value instanceof Array) {
-                        innerHtml += "<div class='col-lg-6 col-md-12 col-sm-12'><span class='col-lg-3 col-md-2 col-sm-2 nav-header' style='margin-bottom: 3px'>"+key+"</span>";
-                        innerHtml += "<ul id='"+key+"' class='nav nav-pills dnd col-lg-9 col-md-10 col-sm-10 inline alert-info' style='min-height:23px; margin-top:1px'>";
+                        innerHtml += "<div class='col-lg-6 col-md-6 col-sm-6 col-xs-12'><span class='col-lg-4 col-md-4 col-sm-4 col-xs-4 nav-header' style='margin-bottom: 3px'>"+key+"</span>";
+                        innerHtml += "<ul id='"+key+"' class='nav nav-pills dnd col-lg-8 col-md-8 col-sm-8 col-xs-8 inline alert-info' style='min-height:23px; margin-top:1px'>";
                         for(var i=0;i<value.length;i++) {
                             innerHtml+="<li class='btn btn-default btn-xs text-uppercase'>"+value[i]+"</li>";
                         }
                         innerHtml+="</ul></div>";
                     } else {
-                        innerHtml += "<div class='col-lg-6 col-md-12 col-sm-12'><span class='col-lg-3 col-md-2 col-sm-2 nav-header' style='margin-bottom: 3px'>"+key+"</span>";
-                        innerHtml+="<ul id='"+key+"' class='nav nav-pills dnd single col-lg-9 col-md-10 col-sm-10 inline alert-info' style='min-height:23px; margin-top:1px'>";
+                        innerHtml += "<div class='col-lg-6 col-md-6 col-sm-6'><span class='col-lg-4 col-md-4 col-sm-4 col-xs-4 nav-header' style='margin-bottom: 3px'>"+key+"</span>";
+                        innerHtml+="<ul id='"+key+"' class='nav nav-pills dnd single col-lg-8 col-md-8 col-sm-8 col-xs-8 inline alert-info' style='min-height:23px; margin-top:1px'>";
                         if(value!="") {
                             innerHtml+="<li class='btn btn-default btn-xs text-uppercase'>" + value + "</li>";
                         }
@@ -2846,10 +2826,10 @@ angular.module('pmpCharts', [])
                 scope.radiovalue = {};
                 for(key in scope.radio) {
 
-                    innerHtml += "<div class='col-lg-6 col-md-6 col-sm-12 spacing-sm' style='margin-top:3px;'>";
-                    innerHtml += "<span class='col-lg-3 col-md-4 col-sm-2 nav-header'>" + key + "</span>";
+                    innerHtml += "<div class='col-lg-6 col-md-6 col-sm-6 col-xs-12 spacing-sm' style='margin-top:3px;'>";
+                    innerHtml += "<span class='col-lg-4 col-md-4 col-sm-4 col-xs-4 nav-header'>" + key + "</span>";
 
-                    innerHtml += "<ul class='nav nav-pills inline col-lg-9 col-md-8 col-sm-10'>";
+                    innerHtml += "<ul class='nav nav-pills inline col-lg-8 col-md-8 col-sm-8 col-xs-8'>";
                     scope.radiovalue[key] = scope.radio[key][0];
                     innerHtml += "<li>";
 
@@ -2909,7 +2889,7 @@ angular.module('pmpCharts', [])
             }
         }
     }])
-    .directive("multiplePieCharts", ['$compile', function($compile) {
+    .directive("multiplePieCharts", ['$compile', '$http', function($compile, $http) {
     return {
         restrict: 'EA',
         scope: {
@@ -3049,9 +3029,11 @@ angular.module('pmpCharts', [])
 
             var innerHtml = '<mcm-donut-chart ng-repeat="(key, terms) in current_data" data="terms.data" outer-radius="100" inner-radius="40" inner-title="{{key}}" on-click-title="changeChart" domain="domain"></mcm-donut-chart>';
             if (showTable) {
-                innerHtml += '<table class="table table-bordered table-striped table-condensed col-lg-12 col-md-12 col-sm-12"><thead><tr><th class="text-center">{{tableTitle}}</th><th class="text-center" ng-repeat="term in fullTerms">{{term}}</th></tr></thead><tbody><tr ng-repeat="(key, terms) in piechart_data_full"><td class="text-left">{{key}}</td><td class="text-right" ng-show="element.term !== \'upcoming\' || showUpcoming" ng-repeat="element in terms.terms"><span ng-show=\'humanReadableNumbers\'>{{element.count | humanReadableNumbers}}</span><span ng-hide=\'humanReadableNumbers\'>{{element.count}}</span></td></tr></tbody></table>';
+                $http.get('build/table.min.html').success(function(html) {
+                        innerHtml += html;
+                        element.append($compile(innerHtml)(scope));
+                    });
             }
-            element.append($compile(innerHtml)(scope));
         }
     }
 }]);

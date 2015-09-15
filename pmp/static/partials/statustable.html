@@ -1,0 +1,60 @@
+<table class="table table-bordered table-striped table-condensed col-lg-12 col-md-12 col-sm-12 hidden-xs">
+  <thead>
+    <tr>
+      <th class="text-center">
+        {{tableTitle}}
+      </th>
+      <th class="text-center" ng-repeat="term in fullTerms">
+        <span>
+          {{term}}
+        </span>
+      </th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr ng-repeat="(key, terms) in piechart_data_full">
+      <td class="text-left">
+        {{key}}
+      </td>
+      <td class="text-right" ng-show="element.term !== 'upcoming' || showUpcoming" ng-repeat="element in terms.terms">
+        <span ng-show="humanReadableNumbers">
+          {{element.count | readableNumbers}}
+        </span>
+        <span ng-hide="humanReadableNumbers">
+          {{element.count}}
+        </span>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<table class="table table-bordered table-striped table-condensed hidden-lg hidden-md hidden-sm col-xs-12">
+  <thead>
+    <tr>
+      <th class="text-center">
+        {{tableTitle}}
+      </th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr ng-repeat="(key, terms) in piechart_data_full">
+      <td class="text-left">
+        {{key}}
+      </td>
+      <td>
+        <table><tbody>
+          <tr ng-show="element.term !== 'upcoming' || showUpcoming" ng-repeat="element in terms.terms">
+            <td class="pull-left spacing-r"><small><strong>{{element.term}}</strong></small></td>
+            <td class="text-right">
+              <span ng-show="humanReadableNumbers">
+                {{element.count | readableNumbers}}
+              </span>
+              <span ng-hide="humanReadableNumbers">
+                {{element.count}}
+              </span>
+            </td>
+          </tr>
+        </tbody></table>
+      </td>
+    </tr>
+  </tbody>
+</table>

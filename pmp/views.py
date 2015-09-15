@@ -2,6 +2,7 @@
 from flask import make_response, redirect, render_template
 from pmp import app, models
 from flask import request
+import config
 
 
 @app.route('/404')
@@ -20,24 +21,28 @@ def about():
 @app.route('/')
 @app.route('/chains')
 @app.route('/historical')
+@app.route('/index')
 @app.route('/performance')
 @app.route('/present')
 def dashboard():
     """Redirect to graph template"""
-    return make_response(open('pmp/static/build/valid.min.html').read())
+    if config.DEBUG:
+        return make_response(open('pmp/static/build/valid.dev.html').read())
+    else:
+        return make_response(open('pmp/static/build/valid.min.html').read())
 
 
-@app.route('/api/<i>/<typeof>')
-def api(i, typeof):
+@app.route('/api/<i>/<typeof>/<extra>')
+def api(i, typeof, extra):
     """Simple API call"""
     call = models.APICall()
     res = make_response('{}')
     if typeof == 'announced':
-        res = make_response(call.present_announced_mode(i))
+        res = make_response(call.present_announced_mode(i, extra == 'true'))
     elif typeof == 'chain':
         res = make_response(call.chain_landscape())
     elif typeof == 'growing':
-        res = make_response(call.present_growing_mode(i))
+        res = make_response(call.present_growing_mode(i, extra == 'true'))
     elif typeof == 'historical':
         res = make_response(call.historical_simple(i))
     elif typeof == 'performance':

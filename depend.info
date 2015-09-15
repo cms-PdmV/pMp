@@ -1,13 +1,4 @@
-AngularJS v1.3.16
-Animate.css  v3.3.0
-Bootstrap v3.3.5
-D3.js v3.5.5
 Elasticsearch 1.4.4
 Flask 0.10.1
-Font Awesome v4.3.0
-jQuery v2.1.4
-jQuerySortable v0.9.13
 pyelasticsearch 1.2
-rsvg v2.26.0
-ui.bootstrap v0.13.0
-ZeroClipboard v2.2.0
+rsvg 2.26.0

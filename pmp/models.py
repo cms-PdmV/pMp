@@ -34,16 +34,22 @@ class APICall(object):
         return call.PerformanceAPI().get(campaign)
 
     @staticmethod
-    def present_announced_mode(campaign):
+    def present_announced_mode(query, extra):
         """Announced mode call"""
         from pmp.api import present as call
-        return call.AnnouncedAPI().get(campaign)
+        if extra:
+            return call.GrowingAPI().get(query, False)
+        else:
+            return call.AnnouncedAPI().get(query, False)
 
     @staticmethod
-    def present_growing_mode(query):
+    def present_growing_mode(query, extra):
         """Growing mode call"""
         from pmp.api import present as call
-        return call.GrowingAPI().get(query)
+        if extra:
+            return call.GrowingAPI().get(query, True)
+        else:
+            return call.AnnouncedAPI().get(query, True)
 
     @staticmethod
     def priority(campaign):

@@ -13,8 +13,7 @@ class SuggestionsAPI(esadapter.InitConnection):
     def __init__(self, typeof):
         esadapter.InitConnection.__init__(self)
         self.overflow = 10
-        self.announced = (typeof == 'announced')
-        self.growing = (typeof == 'growing')
+        self.present = (typeof == 'present')
         self.historical = (typeof == 'historical')
         self.performance = (typeof == 'performance')
 
@@ -30,25 +29,26 @@ class SuggestionsAPI(esadapter.InitConnection):
 
         results = []
 
-        if self.historical or self.growing or self.announced \
-                or self.performance:
+        if self.historical or self.present or self.performance:
             # campaigns are expected in all modes
             results += [s['_id'] for s in
                         self.es.search(search, index='campaigns',
                                        size=self.overflow)['hits']['hits']]
-
-            # extended search for historical
-            if self.historical:
+            
+            if self.historical or self.present:
+                results += [s['_id'] for s in
+                            self.es.search(search, index='flows',
+                                           size=self.overflow)['hits']['hits']]
                 results += [s['_id'] for s in
                             self.es.search(search, index='requests',
                                            size=self.overflow)['hits']['hits']]
 
+            if self.historical:
                 results += [s['_id'] for s in
                             self.es.search(search_stats, index='stats',
                                            size=self.overflow)['hits']['hits']]
 
-            # extended search fo growing
-            if self.growing:
+            if self.present:
                 results += [s['_id'] for s in
                             self.es.search(search, index="chained_campaigns",
                                            size=self.overflow)['hits']['hits']]
