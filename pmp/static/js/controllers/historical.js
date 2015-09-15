@@ -51,7 +51,7 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
                 for (var i = 0; i < tmp.length; i++) {
                     Data.setInputTags(tmp[i], true, false);
                 }
-                $scope.query(true);
+                $scope.query(true, true);
             }
             // if this is empty just change URL as some filters
             // could have been initiated
@@ -100,7 +100,7 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
          * @description Core: Parse filters to query API
          * @param {Boolean} filter If filter data is present.
          */
-        $scope.query = function (filter) {
+        $scope.query = function (filter, init) {
             if (!Data.getInputTags().length) {
                 Data.setFilteredData([], false);
                 Data.setStatusFilter({});
@@ -126,22 +126,15 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
             } else {
                 x = ',';
             }
-
             // add status filter
             var s = '';
             if (filter && Object.keys(Data.getStatusFilter()).length) {
-                for (var i = 0; i < Object.keys(Data.getStatusFilter())
-                    .length; i++) {
-                    if (Data.getStatusFilter()[Object.keys(Data.getStatusFilter())[
-                            i]]) {
-                        s += Object.keys(Data.getStatusFilter())[i] +
-                            ',';
-                    }
-                }
-                if (s.length > 1) {
-                    s = s.substr(0, s.length - 1);
-                } else {
+                s = $scope.getCSVPerFilter(Data.getStatusFilter());
+                if (s.length === 0) {
                     s = '_';
+                } else if(!init && s.split(',').length ===
+                          Object.keys(Data.getStatusFilter()).length) {
+                    s = 'all';
                 }
             } else {
                 s = 'all';
@@ -150,18 +143,12 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
             // add pwg filter
             var w = '';
             if (filter && Object.keys(Data.getPWGFilter()).length) {
-                for (var j = 0; j < Object.keys(Data.getPWGFilter())
-                    .length; j++) {
-                    if (Data.getPWGFilter()[Object.keys(Data.getPWGFilter())[
-                            j]]) {
-                        w += Object.keys(Data.getPWGFilter())[j] +
-                            ',';
-                    }
-                }
-                if (w.length > 1) {
-                    w = w.substr(0, w.length - 1);
-                } else {
+                w = $scope.getCSVPerFilter(Data.getPWGFilter());
+                if (w.length === 0) {
                     w = '_';
+                } else if(!init && w.split(',').length ===
+                          Object.keys(Data.getPWGFilter()).length) {
+                    w = 'all';
                 }
             } else {
                 w = 'all';
