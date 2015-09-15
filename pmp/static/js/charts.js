@@ -650,12 +650,14 @@ angular.module('pmpCharts', [])
                         var val = (scope.chartData[a]-mMin)/(mMax-mMin);
                         dataStats.push(val);
                     }
-                    if (dataStats.length){
+                    
+                    //if (dataStats.length){
                         updateHistogram();
-                    }
+                    //}
                 }
 
                 var updateHistogram = function() {
+                    console.log(dataStats);
                     scope.numberOfBins = scope.numberOfBins || 10;
 
                     var data = d3.layout.histogram()
@@ -851,22 +853,25 @@ angular.module('pmpCharts', [])
                     isDrawn = true;
                 }
 
-                scope.statistics = {
-                    max: 0,
-                    mean: 0,
-                    median: 0,
-                    min: 0,
-                    population: 0,
-                    range: 0,
-                }
-                
                 var updateStats = function() {
-                    scope.statistics.max = d3.max(dataStats, function(d) {return d;});
-                    scope.statistics.mean = d3.mean(dataStats, function(d) {return d})
-                    scope.statistics.median = d3.median(dataStats, function(d) {return d;});
-                    scope.statistics.min = d3.min(dataStats, function(d) {return d;});
-                    scope.statistics.population = dataStats.length;
-                    scope.statistics.range = scope.statistics.max - scope.statistics.min;
+                    if (dataStats.length) {
+                        scope.statistics = {};
+                        scope.statistics.max = d3.max(dataStats, function(d) {return d;});
+                        scope.statistics.mean = d3.mean(dataStats, function(d) {return d})
+                        scope.statistics.median = d3.median(dataStats, function(d) {return d;});
+                        scope.statistics.min = d3.min(dataStats, function(d) {return d;});
+                        scope.statistics.population = dataStats.length;
+                        scope.statistics.range = scope.statistics.max - scope.statistics.min;
+                    } else {
+                        scope.statistics = {
+                            max: 0, 
+                            mean: 0,
+                            median: 0,
+                            min: 0,
+                            population: 0,
+                            range: 0,
+                        }
+                    }
                 }
 
                 var inputChange = function() {
