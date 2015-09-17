@@ -56,7 +56,7 @@ angular.module('pmpApp').factory('PageDetailsProvider', function () {
                 message: 'Succesfully appended requests'
             },
 
-            E0: {
+            E1: {
                 type: 'error',
                 message: 'Error occured while getting requests'
             }

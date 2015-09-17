@@ -190,7 +190,7 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
                                 false, defaultPWG,
                                 false);
                             Data.setLoadedData(data.data.results,
-                                true);
+                                true, true);
                             $scope.showPopUp(
                                 PageDetailsProvider.messages
                                 .S1.type,
@@ -204,7 +204,7 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
                             Data.changeFilter(data.data.results,
                                 true, true, false);
                             Data.setLoadedData(data.data.results,
-                                false);
+                                false, true);
                             $scope.showPopUp(
                                 PageDetailsProvider.messages
                                 .S0.type,
@@ -305,10 +305,10 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
             } else {
                 $scope.mode = ': Announced Mode';
             }
-            Data.setLoadedData([], false);
             if (onlyTitle) {
                 return null;
             }
+            Data.reloadFilters([]);
             var tmp = Data.getInputTags();
             Data.setInputTags([], false, false);
             if (tmp.length < 2 || !$scope.displayChains) {

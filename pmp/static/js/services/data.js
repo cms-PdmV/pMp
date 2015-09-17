@@ -69,9 +69,10 @@ angular.module('pmpApp').service('Data', ['$rootScope', function ($rootScope) {
          * @params {Array} i the Array of loaded data objects.
          * @params {Boolean} append the array is supposed to be added instead of overwrite.
          */
-        setLoadedData: function (i, append) {
+        setLoadedData: function (i, append, sort) {
             if (append) Array.prototype.push.apply(i, this.loadedData);
             this.loadedData = i;
+            if (sort) this.sortDataByStatus();
             $rootScope.$broadcast(
                 'onChangeNotification:LoadedData');
         },
@@ -194,6 +195,14 @@ angular.module('pmpApp').service('Data', ['$rootScope', function ($rootScope) {
                 this.statusFilter = {};
                 this.pwgFilter = {};
             }
+        },
+        sortDataByStatus: function() {
+            var fixedOrder = ['upcoming', 'new', 'validation', 'defined',
+                              'approved', 'submitted', 'done'];
+            this.loadedData.sort(function(a, b) {
+                    return (fixedOrder.indexOf(a.status) >
+                            fixedOrder.indexOf(b.status)) * 2 - 1;
+                });
         }
     };
 }]);
