@@ -332,9 +332,9 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
 
         // Broadcast receiver, change filtered data on loaded data change
         $scope.$on('onChangeNotification:FilteredData', function () {
-            $scope.loadingData = false;
             $scope.setURL();
             $scope.data = Data.getFilteredData();
+            $scope.loadingData = false;
         });
 
         // Set interval update of time variables
