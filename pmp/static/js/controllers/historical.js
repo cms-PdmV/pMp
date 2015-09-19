@@ -172,7 +172,7 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
                 } else {
                     if (!data.data.results.data.length) {
                         if (data.data.results.error !== '') {
-                            $scope.showPopUp('error', data.data
+                            $scope.showPopUp('warning', data.data
                                 .results.error);
                         } else {
                             $scope.showPopUp(

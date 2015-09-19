@@ -214,11 +214,13 @@ class HistoricalAPI(esadapter.InitConnection):
         filters['status'] = dict()
         filters['pwg'] = dict()
         incorrect = True
-
         for one in query:
-            incorrect = False
+
             # Process the db documents
             for (is_request, document, details) in self.db_query(one):
+
+                if incorrect and document is not None:
+                    incorrect = False
 
                 # skip empty documents and legacy request with no prep_id
                 if document is None or document['pdmv_prep_id'] == '':
