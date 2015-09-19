@@ -313,7 +313,7 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
             Data.setInputTags([], false, false);
             if (tmp.length < 2 || !$scope.displayChains) {
                 for (var i = 0; i < tmp.length; i++) {
-                    $scope.load(tmp[i], true, tmp.length);
+                    $scope.load(tmp[i], true, tmp.length, true, true);
                 }
             } else {
                 Data.reset(false);
@@ -334,6 +334,7 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
         $scope.$on('onChangeNotification:FilteredData', function () {
             $scope.setURL();
             $scope.data = Data.getFilteredData();
+            console.log('onLoaded rec: '+$scope.data.length);
             $scope.loadingData = false;
         });
 
