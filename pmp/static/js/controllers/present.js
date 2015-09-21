@@ -287,7 +287,8 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
             var xml = (new XMLSerializer()).serializeToString(
                 document.getElementById("ctn").getElementsByTagName(
                     "svg")[0])
-            .replace('xmlns="http://www.w3.org/2000/svg"', 'xmlns="http://www.w3.org/2000/svg" font-family = "sans-serif"')
+            .replace('viewBox="0 0 1125 434"', 'viewBox="0 0 1125 534" font-family="sans-serif"')
+            .replace('</svg>', '<text transform="translate(0, 434)">Generated: ' + $scope.dt + '. For input: ' + Data.getInputTags().join(', ') + '</text></svg>')
             .replace(/#/g, 'U+0023').replace(
                 /\n/g, ' ')
             .replace(/\//g, '\\\\');

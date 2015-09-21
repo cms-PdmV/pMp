@@ -265,8 +265,11 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
             if (format === undefined) format = 'svg';
             var xml = (new XMLSerializer()).serializeToString(
                 document.getElementById("ctn").getElementsByTagName("svg")[0])
-            .replace('xmlns="http://www.w3.org/2000/svg"', 'xmlns="http://www.w3.org/2000/svg" font-family = "sans-serif"')
-            .replace(/#/g, 'U+0023');
+            .replace('viewBox="0 -20 1160 500"', 'viewBox="0 -20 1160 600" font-family = "sans-serif"')
+            .replace('</svg>', '<text transform="translate(0, 500)">Generated: ' + $scope.dt + '. For input: ' + Data.getInputTags().join(', ') + '</text></svg>')
+            .replace(/#/g, 'U+0023')
+            .replace("</svg>", "</svg>")
+            ;
             $http.get('ts/' + format + '/' + xml).then(function (
                 data) {
                 window.open(data.data);
