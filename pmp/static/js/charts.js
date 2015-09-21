@@ -657,7 +657,6 @@ angular.module('pmpCharts', [])
                 }
 
                 var updateHistogram = function() {
-                    console.log(dataStats);
                     scope.numberOfBins = scope.numberOfBins || 10;
 
                     var data = d3.layout.histogram()

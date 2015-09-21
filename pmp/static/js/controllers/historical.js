@@ -264,8 +264,9 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
             $scope.loading = true;
             if (format === undefined) format = 'svg';
             var xml = (new XMLSerializer()).serializeToString(
-                document.getElementById("ctn").getElementsByTagName(
-                    "svg")[0]).replace(/#/g, 'U+0023');
+                document.getElementById("ctn").getElementsByTagName("svg")[0])
+            .replace('xmlns="http://www.w3.org/2000/svg"', 'xmlns="http://www.w3.org/2000/svg" font-family = "sans-serif"')
+            .replace(/#/g, 'U+0023');
             $http.get('ts/' + format + '/' + xml).then(function (
                 data) {
                 window.open(data.data);
