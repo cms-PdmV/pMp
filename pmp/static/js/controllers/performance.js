@@ -220,13 +220,18 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
             $scope.loadingData = true;
             if (format === undefined) format = 'svg';
             var xml = (new XMLSerializer()).serializeToString(
-                document.getElementById("ctn").getElementsByTagName(
-                    "svg")[0])
-            .replace('viewBox="0 -20 1170 300"', 'viewBox="0 -20 1170 400" font-family="sans-serif"')
-            .replace('</svg>', '<text transform="translate(0, 300)">Generated: ' + $scope.dt + '. For input: ' + Data.getInputTags().join(', ') + '</text></svg>')
-            .replace(/#/g, 'U+0023').replace(
-                /\n/g, ' ')
-            .replace(/\//g, '\\\\');
+                    document.getElementById("ctn").getElementsByTagName(
+                        "svg")[0])
+                .replace('viewBox="0 -20 1170 300"',
+                    'viewBox="0 -20 1170 400" font-family="sans-serif"'
+                ).replace('</svg>',
+                    '<text transform="translate(0, 300)">Generated: ' +
+                    $scope.dt + '. For input: ' + Data.getInputTags()
+                    .join(', ') + '. Time difference between ' +
+                    $scope.difference.minuend + ' and ' + $scope.difference
+                    .subtrahend + '</text></svg>').replace(/#/g,
+                    'U+0023').replace(/\n/g, ' ').replace(/\//g,
+                    '\\\\');
             $http.get('ts/' + format + '/' + encodeURIComponent(xml))
                 .then(function (data) {
                     window.open(data.data);

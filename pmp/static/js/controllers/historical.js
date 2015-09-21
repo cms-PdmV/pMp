@@ -132,8 +132,8 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
                 s = $scope.getCSVPerFilter(Data.getStatusFilter());
                 if (s.length === 0) {
                     s = '_';
-                } else if(!init && s.split(',').length ===
-                          Object.keys(Data.getStatusFilter()).length) {
+                } else if (!init && s.split(',').length ===
+                    Object.keys(Data.getStatusFilter()).length) {
                     s = 'all';
                 }
             } else {
@@ -146,8 +146,8 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
                 w = $scope.getCSVPerFilter(Data.getPWGFilter());
                 if (w.length === 0) {
                     w = '_';
-                } else if(!init && w.split(',').length ===
-                          Object.keys(Data.getPWGFilter()).length) {
+                } else if (!init && w.split(',').length ===
+                    Object.keys(Data.getPWGFilter()).length) {
                     w = 'all';
                 }
             } else {
@@ -172,7 +172,8 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
                 } else {
                     if (!data.data.results.data.length) {
                         if (data.data.results.error !== '') {
-                            $scope.showPopUp('warning', data.data
+                            $scope.showPopUp('warning',
+                                data.data
                                 .results.error);
                         } else {
                             $scope.showPopUp(
@@ -264,12 +265,15 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
             $scope.loading = true;
             if (format === undefined) format = 'svg';
             var xml = (new XMLSerializer()).serializeToString(
-                document.getElementById("ctn").getElementsByTagName("svg")[0])
-            .replace('viewBox="0 -20 1160 500"', 'viewBox="0 -20 1160 600" font-family = "sans-serif"')
-            .replace('</svg>', '<text transform="translate(0, 500)">Generated: ' + $scope.dt + '. For input: ' + Data.getInputTags().join(', ') + '</text></svg>')
-            .replace(/#/g, 'U+0023')
-            .replace("</svg>", "</svg>")
-            ;
+                    document.getElementById("ctn").getElementsByTagName(
+                        "svg")[0])
+                .replace('viewBox="0 -20 1160 500"',
+                    'viewBox="0 -20 1160 600" font-family="sans-serif"'
+                ).replace('</svg>',
+                    '<text transform="translate(0, 500)">Generated: ' +
+                    $scope.dt + '. For input: ' + Data.getInputTags()
+                    .join(', ') + '</text></svg>').replace(/#/g,
+                    'U+0023').replace("</svg>", "</svg>");
             $http.get('ts/' + format + '/' + xml).then(function (
                 data) {
                 window.open(data.data);
