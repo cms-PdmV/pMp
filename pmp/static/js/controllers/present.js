@@ -190,7 +190,7 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
                                 false, defaultPWG,
                                 false);
                             Data.setLoadedData(data.data.results,
-                                true);
+                                true, true);
                             $scope.showPopUp(
                                 PageDetailsProvider.messages
                                 .S1.type,
@@ -204,7 +204,7 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
                             Data.changeFilter(data.data.results,
                                 true, true, false);
                             Data.setLoadedData(data.data.results,
-                                false);
+                                false, true);
                             $scope.showPopUp(
                                 PageDetailsProvider.messages
                                 .S0.type,
@@ -286,8 +286,14 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
             if (format === undefined) format = 'svg';
             var xml = (new XMLSerializer()).serializeToString(
                 document.getElementById("ctn").getElementsByTagName(
-                    "svg")[0]).replace(/#/g, 'U+0023').replace(
-                /\n/g, ' ').replace(/\//g, '\\\\');
+                    "svg")[0]).replace('viewBox="0 0 1125 434"',
+                'viewBox="0 0 1125 534" font-family="sans-serif"'
+            ).replace('</svg>',
+                '<text transform="translate(0, 434)">Generated: ' +
+                $scope.dt + '. For input: ' + Data.getInputTags()
+                .join(', ') + '</text></svg>').replace(/#/g,
+                'U+0023').replace(/\n/g, ' ').replace(/\//g,
+                '\\\\');
             $http.get('ts/' + format + '/' + encodeURIComponent(xml))
                 .then(function (data) {
                     window.open(data.data);
@@ -305,15 +311,16 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
             } else {
                 $scope.mode = ': Announced Mode';
             }
-            Data.setLoadedData([], false);
             if (onlyTitle) {
                 return null;
             }
+            Data.reloadFilters([]);
             var tmp = Data.getInputTags();
             Data.setInputTags([], false, false);
             if (tmp.length < 2 || !$scope.displayChains) {
                 for (var i = 0; i < tmp.length; i++) {
-                    $scope.load(tmp[i], true, tmp.length);
+                    $scope.load(tmp[i], true, tmp.length, true,
+                        true);
                 }
             } else {
                 Data.reset(false);
@@ -332,9 +339,10 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
 
         // Broadcast receiver, change filtered data on loaded data change
         $scope.$on('onChangeNotification:FilteredData', function () {
-            $scope.loadingData = false;
             $scope.setURL();
             $scope.data = Data.getFilteredData();
+            console.log('onLoaded rec: ' + $scope.data.length);
+            $scope.loadingData = false;
         });
 
         // Set interval update of time variables

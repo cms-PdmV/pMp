@@ -13,7 +13,7 @@ class TestIntegrityEventsInDAS(object):
 
     def __init__(self, arg):
         self.db_url = 'http://127.0.0.1:9200'
-        self.pmp_api = 'http://cms-pdmv-pmpdev.cern.ch/api/'
+        self.pmp_api = 'https://127.0.0.1/api/'
         self.elastic_search = pyelasticsearch.ElasticSearch(self.db_url)
         self.overflow = 100000
         self.setlog()

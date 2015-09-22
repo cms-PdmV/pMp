@@ -45,6 +45,7 @@ angular.module('pmpApp').controller('FilterController', ['$scope', 'Data',
          * @description Updates filtered data after filter change.
          */
         $scope.updateFilteredData = function () {
+            $scope.loadingData = true;
             var tmp = Data.getLoadedData();
             var max = $scope.priorityFilter[1];
             var min = $scope.priorityFilter[0];
@@ -64,6 +65,7 @@ angular.module('pmpApp').controller('FilterController', ['$scope', 'Data',
                     }
                 }
                 Data.setFilteredData(data);
+                $scope.loadingData = false;
             }, 1000);
         };
 

@@ -216,15 +216,27 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
          * @description Core: Query server for a report of current view
          * @param {String} format which will be requested (pdf/png/svg)
          */
-        $scope.takeScreenshot = function () {
-            var tmp = document.getElementById("ctn");
-            var svg = tmp.getElementsByTagName("svg")[0];
-            var svg_xml = (new XMLSerializer()).serializeToString(
-                svg);
-            var blob = new Blob([svg_xml], {
-                type: "text/plain;charset=utf-8"
-            });
-            saveAs(blob, "screenshot.html");
+        $scope.takeScreenshot = function (format) {
+            $scope.loadingData = true;
+            if (format === undefined) format = 'svg';
+            var xml = (new XMLSerializer()).serializeToString(
+                    document.getElementById("ctn").getElementsByTagName(
+                        "svg")[0])
+                .replace('viewBox="0 -20 1170 300"',
+                    'viewBox="0 -20 1170 400" font-family="sans-serif"'
+                ).replace('</svg>',
+                    '<text transform="translate(0, 300)">Generated: ' +
+                    $scope.dt + '. For input: ' + Data.getInputTags()
+                    .join(', ') + '. Time difference between ' +
+                    $scope.difference.minuend + ' and ' + $scope.difference
+                    .subtrahend + '</text></svg>').replace(/#/g,
+                    'U+0023').replace(/\n/g, ' ').replace(/\//g,
+                    '\\\\');
+            $http.get('ts/' + format + '/' + encodeURIComponent(xml))
+                .then(function (data) {
+                    window.open(data.data);
+                    $scope.loadingData = false;
+                });
         };
 
         /**

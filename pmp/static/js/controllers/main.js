@@ -67,7 +67,7 @@ angular.module('pmpApp').controller('MainController', ['$http', '$location',
                     icon: 'fa-frown-o'
                 };
                 $timeout(function () {
-                    $scope.showPopUp('', '');
+                    $scope.popUp.show = false;
                 }, 2000);
                 break;
             case 'warning':
@@ -79,7 +79,7 @@ angular.module('pmpApp').controller('MainController', ['$http', '$location',
                     icon: 'fa-exclamation-triangle'
                 };
                 $timeout(function () {
-                    $scope.showPopUp('', '');
+                    $scope.popUp.show = false;
                 }, 2000);
                 break;
             case 'success':
@@ -91,11 +91,10 @@ angular.module('pmpApp').controller('MainController', ['$http', '$location',
                     icon: 'fa-check'
                 };
                 $timeout(function () {
-                    $scope.showPopUp('', '');
+                    $scope.popUp.show = false;
                 }, 2000);
                 break;
             default:
-                $scope.popUp.show = false;
                 break;
             }
         };

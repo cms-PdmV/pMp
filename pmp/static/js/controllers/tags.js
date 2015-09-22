@@ -20,12 +20,12 @@ angular.module('pmpApp').controller('TagsController', ['$scope', 'Data',
          * @param {Boolean} isServerSide the mark if to process the data or requery API.
          */
         $scope.tagRemove = function (tagToRemove, isServerSide) {
+            $scope.loadingData = true;
             if (isServerSide) {
                 Data.setInputTags(tagToRemove, false, true);
                 $scope.query(true);
                 return null;
             }
-            $scope.loadingData = true;
             var tmp = Data.getLoadedData();
             var data = [];
             setTimeout(function () {
@@ -36,6 +36,7 @@ angular.module('pmpApp').controller('TagsController', ['$scope', 'Data',
                 }
                 Data.reloadFilters(data);
                 Data.setInputTags(tagToRemove, false, true);
+                $scope.loadingData = false;
             }, 1000);
         };
 

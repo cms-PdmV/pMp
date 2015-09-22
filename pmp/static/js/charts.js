@@ -657,7 +657,6 @@ angular.module('pmpCharts', [])
                 }
 
                 var updateHistogram = function() {
-                    console.log(dataStats);
                     scope.numberOfBins = scope.numberOfBins || 10;
 
                     var data = d3.layout.histogram()
@@ -1143,7 +1142,7 @@ angular.module('pmpCharts', [])
                 var l1, l2, l3, containerBox, hoverLineGroup, clipPath, rectLifetime, rectTaskChain;
                 var fiveShadesOfGrey = ['#4fc3f7', '#4dd0e1', '#4db6ac', '#81c784', '#aed581', '#dce775'];
                 // add data label
-                var innerHtml = '<div ng-show="taskChain" class="hidden-sm hidden-xs"><span ng-repeat=\'d in labelData\' style=\'{{d.style}}\'>{{d.label}}<span ng-show=\'humanReadableNumbers && d.label != "Time: "\'>{{d.data | readableNumbers}}</span><span ng-hide=\'humanReadableNumbers && d.label != "Time: "\'>{{d.data}}</span></span></div>';
+                var innerHtml = '<div ng-hide="taskChain" class="hidden-sm hidden-xs"><span ng-repeat=\'d in labelData\' style=\'{{d.style}}\'>{{d.label}}<span ng-show=\'humanReadableNumbers && d.label != "Time: "\'>{{d.data | readableNumbers}}</span><span ng-hide=\'humanReadableNumbers && d.label != "Time: "\'>{{d.data}}</span></span></div>';
                 element.append($compile(innerHtml)(scope));
 
                 // add main svg
