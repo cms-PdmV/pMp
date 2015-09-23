@@ -1939,10 +1939,10 @@ angular.module('pmpCharts', [])
 
                 var colorMap = {
                     approved: '#4caf50', // green 500
-                    defined: '#f44336', // red 500
+                    defined: '#9c27b0', // purple 500
                     done: '#2196f3', // blue 500
-                    new: '#ff9800', // orange 500
-                    submitted: '#9c27b0', // purple 500
+                    new: '#f44336', // red 500
+                    submitted: '#ff9800', // orange 500 
                     upcoming: '#e91e63', // pink 500
                     validation: '#795548', // brown 500
 
