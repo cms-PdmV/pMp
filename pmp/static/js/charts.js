@@ -1567,6 +1567,7 @@ angular.module('pmpCharts', [])
                         handleMouseOverGraph(event);
                     });
                     updateDataLabel([false, '', '', '']);
+                    displayValueLabelsForPositionX(1100);
                 }
 
                 var prepareData = function(d) {
