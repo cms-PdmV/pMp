@@ -1430,7 +1430,11 @@ angular.module('pmpCharts', [])
                             return d.t;
                         });
                         currentMax = d3.max(a, function(d) {
-                            return d.t;
+                            var max = d3.max(a, function(d) { return d.t});
+                            return d3.max(a, function(d) {
+                                if (d.t === max) { return 0 };
+                                return d.t
+                            });
                         });
 
                         // Axes
