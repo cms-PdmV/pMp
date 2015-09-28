@@ -3,8 +3,8 @@
  * @type controller
  * @description Handles input management: tags.
  */
-angular.module('pmpApp').controller('TagsController', ['$scope', 'Data',
-    function ($scope, Data) {
+angular.module('pmpApp').controller('TagsController', ['$rootScope', '$scope', 'Data',
+                                                       function ($rootScope, $scope, Data) {
         'use strict';
 
         /**
@@ -20,7 +20,7 @@ angular.module('pmpApp').controller('TagsController', ['$scope', 'Data',
          * @param {Boolean} isServerSide the mark if to process the data or requery API.
          */
         $scope.tagRemove = function (tagToRemove, isServerSide) {
-            $scope.loadingData = true;
+            $rootScope.loadingData = true;
             if (isServerSide) {
                 Data.setInputTags(tagToRemove, false, true);
                 $scope.query(true);
@@ -36,7 +36,6 @@ angular.module('pmpApp').controller('TagsController', ['$scope', 'Data',
                 }
                 Data.reloadFilters(data);
                 Data.setInputTags(tagToRemove, false, true);
-                $scope.loadingData = false;
             }, 1000);
         };
 

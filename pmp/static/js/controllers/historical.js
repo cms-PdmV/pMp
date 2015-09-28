@@ -4,8 +4,8 @@
  * @description Historical Graph Controller
  */
 angular.module('pmpApp').controller('HistoricalController', ['$http',
-    '$location', '$scope', '$interval', 'PageDetailsProvider', 'Data',
-    function ($http, $location, $scope, $interval, PageDetailsProvider,
+    '$location', '$rootScope', '$scope', '$interval', 'PageDetailsProvider', 'Data',
+    function ($http, $location, $rootScope, $scope, $interval, PageDetailsProvider,
         Data) {
         'use strict';
 
@@ -76,7 +76,7 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
                 $scope.showPopUp(PageDetailsProvider.messages.W1.type,
                     PageDetailsProvider.messages.W1.message);
             } else {
-                $scope.loadingData = true;
+                $rootScope.loadingData = true;
                 if (!add) {
                     // reset data but not filters
                     Data.reset(false);
@@ -111,7 +111,7 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
                 return null;
             }
 
-            $scope.loadingData = true;
+            $rootScope.loadingData = true;
 
             // add priority filter
             var x = '';
@@ -199,7 +199,7 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
                 $scope.showPopUp(PageDetailsProvider.messages
                     .E0.type, PageDetailsProvider.messages
                     .E1.message);
-                $scope.loadingData = false;
+                $rootScope.loadingData = false;
             });
 
             // query for submitted
@@ -262,7 +262,7 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
          * @param {String} format which will be requested (pdf/png/svg)
          */
         $scope.takeScreenshot = function (format) {
-            $scope.loading = true;
+            $rootScope.loading = true;
             if (format === undefined) format = 'svg';
             var xml = (new XMLSerializer()).serializeToString(
                     document.getElementById("ctn").getElementsByTagName(
@@ -277,13 +277,13 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
             $http.get('ts/' + format + '/' + xml).then(function (
                 data) {
                 window.open(data.data);
-                $scope.loading = false;
+                $rootScope.loading = false;
             });
         };
 
         // Broadcast receiver, change filtered data on loaded data change
         $scope.$on('onChangeNotification:FilteredData', function () {
-            $scope.loadingData = false;
+            $rootScope.loadingData = false;
             $scope.setURL();
             $scope.data = Data.getFilteredData();
         });

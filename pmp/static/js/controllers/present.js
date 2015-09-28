@@ -4,8 +4,8 @@
  * @description Present Graph Controller
  */
 angular.module('pmpApp').controller('PresentController', ['$http', '$location',
-    '$interval', '$scope', 'PageDetailsProvider', 'Data',
-    function ($http, $location, $interval, $scope, PageDetailsProvider,
+    '$interval', '$rootScope', '$scope', 'PageDetailsProvider', 'Data',
+    function ($http, $location, $interval, $rootScope, $scope, PageDetailsProvider,
         Data) {
         'use strict';
 
@@ -161,7 +161,7 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
                 $scope.showPopUp(PageDetailsProvider.messages.W1.type,
                     PageDetailsProvider.messages.W1.message);
             } else {
-                $scope.loadingData = true;
+                $rootScope.loadingData = true;
                 var promise;
                 if ($scope.growingMode) {
                     promise = $http.get("api/" + campaign +
@@ -179,7 +179,7 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
                             PageDetailsProvider.messages
                             .W2.message);
                         $scope.setURL();
-                        $scope.loadingData = false;
+                        $rootScope.loadingData = false;
                     } else {
                         if (add) {
                             // apply appending campaign
@@ -190,7 +190,7 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
                                 false, defaultPWG,
                                 false);
                             Data.setLoadedData(data.data.results,
-                                true, true);
+                                               true, true, more);
                             $scope.showPopUp(
                                 PageDetailsProvider.messages
                                 .S1.type,
@@ -219,7 +219,7 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
                     $scope.showPopUp(PageDetailsProvider.messages
                         .E0.type, PageDetailsProvider.messages
                         .E1.message);
-                    $scope.loadingData = false;
+                    $rootScope.loadingData = false;
                 });
             }
         };
@@ -282,7 +282,7 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
          * @param {String} format which will be requested (pdf/png/svg)
          */
         $scope.takeScreenshot = function (format) {
-            $scope.loadingData = true;
+            $rootScope.loadingData = true;
             if (format === undefined) format = 'svg';
             var xml = (new XMLSerializer()).serializeToString(
                 document.getElementById("ctn").getElementsByTagName(
@@ -297,7 +297,7 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
             $http.get('ts/' + format + '/' + encodeURIComponent(xml))
                 .then(function (data) {
                     window.open(data.data);
-                    $scope.loadingData = false;
+                    $rootScope.loadingData = false;
                 });
         };
 
@@ -341,8 +341,7 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
         $scope.$on('onChangeNotification:FilteredData', function () {
             $scope.setURL();
             $scope.data = Data.getFilteredData();
-            console.log('onLoaded rec: ' + $scope.data.length);
-            $scope.loadingData = false;
+            $rootScope.loadingData = false;
         });
 
         // Set interval update of time variables
