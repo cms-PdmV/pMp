@@ -21,7 +21,18 @@ module.exports = function(grunt) {
     dest: 'static/build/pmp.build.js'
    },
    js2: {
-    src: ['static/js/charts.js'],
+    src: ['static/js/charts.js',
+          'static/js/directives/drop-selections-performance.js',
+          'static/js/directives/drop-selections-present.js',
+          'static/js/directives/event-drop.js',
+          'static/js/directives/historical-linear.js',
+          'static/js/directives/multiple-pie.js',
+          'static/js/directives/performance-histogram.js',
+          'static/js/directives/present-column.js',
+          'static/js/directives/present-donut.js',
+          'static/js/directives/stats-table.js',
+          'static/js/directives/tags.js'
+          ],
     dest: 'static/build/directives.pmp.build.js'
    },
    dependjs: {
