@@ -17,7 +17,7 @@ fi
 if [[ $1 == "stop" ]]
 then
     echo "Stopping pMp..."
-    NUMBER=`ps aux | grep '/home/pmp/' | grep python | awk '{print $2}'`
+    NUMBER=`ps aux | grep 'run.py' | grep python | awk '{print $2}'`
 
     if [[ $NUMBER != "" ]]
     then
