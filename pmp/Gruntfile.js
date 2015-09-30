@@ -86,6 +86,7 @@ module.exports = function(grunt) {
       files: {
         'static/build/advanced.min.html': 'static/partials/advanced.html',
         'static/build/chains.min.html': 'static/partials/chains.html',
+        'static/build/drop-selections.min.html': 'static/partials/drop-selections.html',
         'static/build/filter.min.html': 'static/partials/filter.html',
         'static/build/historical.min.html': 'static/partials/historical.html',
         'static/build/index.min.html': 'static/partials/index.html',
