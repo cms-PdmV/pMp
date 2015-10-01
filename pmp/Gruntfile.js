@@ -13,7 +13,6 @@ module.exports = function(grunt) {
           'static/js/controllers/present.js',
           'static/js/controllers/historical.js',
           'static/js/controllers/performance.js',
-          //'static/js/controllers/chains.js',
           'static/js/controllers/filter.js',
           'static/js/controllers/share.js',
           'static/js/controllers/tags.js',
@@ -22,6 +21,7 @@ module.exports = function(grunt) {
    },
    js2: {
     src: ['static/js/charts.js',
+          'static/js/directives/__init__.js',
           'static/js/directives/drop-selections-performance.js',
           'static/js/directives/drop-selections-present.js',
           'static/js/directives/event-drop.js',

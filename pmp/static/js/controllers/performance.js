@@ -34,6 +34,7 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
                 if (inx != -1) {
                     $scope.difference.minuend = $location.search().min;
                     $scope.selections.splice(inx, 1);
+                    $scope.selections.push('done');
                 }
             }
 
@@ -43,6 +44,7 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
                     $scope.difference.subtrahend = $location.search()
                         .sub;
                     $scope.selections.splice(inx, 1);
+                    $scope.selections.push('created');
                 }
             }
 
