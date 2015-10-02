@@ -89,8 +89,13 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
 
             // assign radio values, scale and mode
             if ($scope.radio[1] === '1') {
-                $scope.requests.radio.scale = ["log", "linear"];
+                $scope.linearScale = false;
+                $scope.scaleType = "log";
+            } else {
+                $scope.linearScale = true;
+                $scope.scaleType = "linear";
             }
+
             if ($scope.radio[0] === '1') {
                 $scope.requests.radio.mode = ['requests', 'events',
                     'seconds'
@@ -325,6 +330,10 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
             } else {
                 Data.reset(false);
             }
+        };
+
+        $scope.changeScale = function (type) {
+            $scope.scaleType = type;
         };
 
         /**

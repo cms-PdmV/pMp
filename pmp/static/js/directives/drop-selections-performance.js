@@ -9,7 +9,9 @@
         scope: {
             linearScale: '=?', // boolean, determines if the scale is linear or log
             options: '=?', // specifies list of assigned selections
-            selections: '=?' // specifies list of unassigned selections
+            selections: '=?', // specifies list of unassigned selections
+            showScale: '=?', // show scale radio
+            showMode: '=?' // show mode radio
         },
         link: function (scope, element) {
 

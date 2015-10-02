@@ -19,29 +19,57 @@
     <span class="col-lg-4 col-md-4 col-sm-4 col-xs-4 nav-header" style="margin-bottom: 3px">
       {{key}}
     </span>
-    <ul id="{{key}}" class="nav nav-pills dnd single col-lg-8 col-md-8 col-sm-8 col-xs-8 inline alert-info" style="min-height: 23px; margin-top: 1px;">
+    <ul id="{{key}}" class="nav nav-pills dnd single col-lg-8 col-md-8 col-sm-8 col-xs-8 inline alert-info" style="min-height: 23px; margin-top: 1px;" ng-if="!(value | isArray)">
       <li class="btn btn-default btn-xs text-uppercase">
         {{value}}
       </li>
     </ul>
+    <ul id="{{key}}" class="nav nav-pills dnd col-lg-8 col-md-8 col-sm-8 col-xs-8 inline alert-info" style="min-height: 23px; margin-top: 1px;" ng-if="(value | isArray)">
+      <li class="btn btn-default btn-xs text-uppercase" ng-repeat="v in value">
+        {{v}}
+      </li>
+    </ul>
   </div>
 </div>
+
 <div class="row">
-  <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12 spacing-sm" style="margin-top: 3px;">
+  <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12 spacing-sm" style="margin-top: 3px;" ng-show="showScale">
     <span class="col-lg-4 col-md-4 col-sm-4 col-xs-4 nav-header">
       scale
     </span>
     <ul class="nav nav-pills inline col-lg-8 col-md-8 col-sm-8 col-xs-8">
       <li>
-        <div class="btn-group">
-          <button type="button" class="btn btn-primary btn-xs text-uppercase" ng-model="linearScale" ng-click="changeScale(true)" btn-radio="true">
+        <div class="btn-group" ng-click="changeScale()">
+          <button type="button" class="btn btn-primary btn-xs text-uppercase" ng-model="radio.scale" btn-radio="'linear'" ng-class="{active: linearScale}">
             linear
           </button>
-          <button type="button" class="btn btn-primary btn-xs text-uppercase" ng-model="!linearScale" ng-click="changeScale(false)" btn-radio="true">
+          <button type="button" class="btn btn-primary btn-xs text-uppercase" ng-model="radio.scale" btn-radio="'log'" ng-class="{active: !linearScale}">
             log
           </button>
         </div>
       </li>
     </ul>
   </div>
+
+  <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12 spacing-sm" style="margin-top: 3px;" ng-show="showMode">
+    <span class="col-lg-4 col-md-4 col-sm-4 col-xs-4 nav-header">
+      mode
+    </span>
+    <ul class="nav nav-pills inline col-lg-8 col-md-8 col-sm-8 col-xs-8">
+      <li>
+        <div class="btn-group" ng-click="changeMode()">
+          <button type="button" class="btn btn-primary btn-xs text-uppercase" ng-model="radio.mode" btn-radio="'events'">
+            events
+          </button>
+          <button type="button" class="btn btn-primary btn-xs text-uppercase" ng-model="radio.mode" btn-radio="'requests'">
+            requests
+          </button>
+          <button type="button" class="btn btn-primary btn-xs text-uppercase" ng-model="radio.mode" btn-radio="'seconds'">
+            seconds
+          </button>
+        </div>
+      </li>
+    </ul>
+  </div>
 </div>
+

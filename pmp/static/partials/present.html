@@ -1,11 +1,9 @@
 <div class="row" ng-show="data.length">
   <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 text-center">
 
-    <mcm-customizable-chart chart-type="'mcm-column-chart'" chart-title="Requests chart"
-                            radio="requests.radio" settings="requests.settings"
-                            selections="requests.selections" options="requests.options"
-                            chart-data="data" priority-markup="priorityBlockMarkup">
-    </mcm-customizable-chart>
+    <mcm-customizable-chart linear-scale="scaleType == 'linear'" options="requests.options" selections="requests.selections" show-mode="true" show-scale="{{true}}"></mcm-customizable-chart>
+
+    <mcm-column-chart scale="scaleType" mode="events" sort="requests.settigns.sort" legend="requests.settings.legend" duration="requests.settings.duration" coloring="'status'" stacking="" grouping="['member_of_campaign']" data="data" priority-markup="priorityMarkup"></mcm-column-chart>
     
     <multiple-pie-charts color-domain="piecharts.domain" table-title="Campaigns"
                          data="data" full-terms="piecharts.fullTerms"
