@@ -52,7 +52,11 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
             $scope.showDate = $location.search().t === 'true';
 
             // if linear scale
-            $scope.linearScale = $location.search().l === 'true';
+            if ($location.search().l === "false") {
+                $scope.scaleType = "log";
+            } else {
+                $scope.scaleType = "linear";
+            }
 
             // set number of bins
             if ($location.search.b !== '' && !isNaN($location.search()
@@ -187,7 +191,7 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
                 $scope.difference.subtrahend;
 
             // set scale
-            params.l = $scope.linearScale + '';
+            params.l = ($scope.scaleType === "linear") + "";
 
             // if show the time block
             params.t = $scope.showDate + '';
@@ -260,10 +264,11 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
         /**
          * @description On scale change 
          */
-        $scope.changeScale = function (a) {
-            $scope.linearScale = a;
+        $scope.changeScale = function (type) {
+            $scope.scaleType = type;
             $scope.setURL();
         };
+
 
         // Broadcast receiver, change filtered data on loaded data change
         $scope.$on('onChangeNotification:FilteredData', function () {

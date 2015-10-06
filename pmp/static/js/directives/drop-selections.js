@@ -7,38 +7,55 @@
     return {
         restrict: 'E',
         scope: {
-            linearScale: '=?', // boolean, determines if the scale is linear or log
-            options: '=?', // specifies list of assigned selections
-            selections: '=?', // specifies list of unassigned selections
-            showScale: '=?', // show scale radio
-            showMode: '=?' // show mode radio
+            scale: '=', // type of scale in use
+            mode: '=', // type of mode in use
+            options: '=', // dictionary with all the options for selections (value can be a string (single value) or list (multiple values possible))
+            selections: '=', // specifies list of unassigned selections
+            showScale: '@', // show scale radio
+            showMode: '@' // show mode radio
         },
         link: function (scope, element) {
 
             // init values
-            scope.linearScale = scope.linearScale || true;
             scope.optionsHelper = angular.copy(scope.options || {});
             scope.selectionsHelper = angular.copy(scope.selections || []);
 
+            // working on optionsHelper changes bindings
             var tmp = angular.copy(scope.optionsHelper);
-            scope.applyChange = function (optionName, optionValue) {
+            scope.applyChange = function (optionName, optionValue, optionIndex) {
                 if (optionName === "possible-selections") {
                     for (var key in tmp) {
                         if (tmp[key] === optionValue) {
                             tmp[key] = "";
+                        } else if (tmp[key].indexOf(optionValue) !== -1) {
+                            tmp[key] = tmp[key].splice(tmp[key].indexOf(optionValue) + 1,
+                                1);
                         }
                     }
                 } else {
-                    tmp[optionName] = optionValue;
+                    if (tmp[optionName] instanceof Array) {
+                        tmp[optionName].splice(optionIndex - 1, 0, optionValue);
+                    } else {
+                        tmp[optionName] = optionValue;
+                    }
                 }
-                scope.$parent.applyDifference(tmp);
+                scope.$parent.applyDifference(tmp, optionName, optionValue);
             };
 
-            scope.changeScale = function (s) {
-                if (scope.linearScale != s) {
-                    scope.linearScale = s;
-                    scope.$parent.changeScale(s);
-                }
+            // set radio buttons and functions
+
+            scope.radio = {};
+
+            scope.radio.scale = scope.scale;
+            scope.changeScale = function () {
+                if (!scope.showScale) return null;
+                scope.$parent.changeScale(scope.radio.scale);
+            };
+
+            scope.radio.mode = scope.mode;
+            scope.changeMode = function () {
+                if (!scope.showMode) return null;
+                scope.$parent.changeMode(scope.radio.mode);
             };
 
             $http.get('build/drop-selections.min.html').success(function (html) {
@@ -62,11 +79,20 @@
                         },
                         onDrop: function ($item, container, _super) {
                             scope.applyChange(container.el[0].id,
-                                $item[0].textContent);
+                                $item[0].textContent, $(
+                                    container.el[0].children)
+                                .index($item[0]));
                             _super($item, container);
                         },
                     });
                 }, 0);
+            });
+
+            scope.$watch('showScale', function (d) {
+                scope.showScale = (d + "") === "true";
+            });
+            scope.$watch('showMode', function (d) {
+                scope.showMode = (d + "") === "true";
             });
         }
     };

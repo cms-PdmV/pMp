@@ -355,16 +355,13 @@
                                 t.columnsXDomainAttribute = filtered_leaves[i].column;
                                 t.tooltipInfoAttribute = filtered_leaves[i].info_attribute;
                                 if (valueOperation == 'events') {
-                                    scope.$parent.$parent.setScaleAndOperation(0, 0);
                                     t[value] = d3.sum(filtered_leaves[i].values,
                                                       function(d) {
                                                           return d['total_events']
                                                       });
                                 } else if (valueOperation == 'requests') {
-                                    scope.$parent.$parent.setScaleAndOperation(0, 1);
                                     t[value] = filtered_leaves[i].values.length;
                                 } else if (valueOperation == 'seconds') {
-                                    scope.$parent.$parent.setScaleAndOperation(0, 2);
                                     // sum over product of time_event and total_events
                                     t[value] = d3.sum(filtered_leaves[i].values,
                                                       function(d) {
@@ -505,13 +502,11 @@
                         }
                     }
                     if (yScaleType=="log"){
-                        scope.$parent.$parent.setScaleAndOperation(1, 1);
                         sums = sums.filter(function(el) {
                             return el!=0;
                         });
                         sums.push(d3.min(sums)-d3.min(sums)/5); // for nicer formatting of data
                     } else {
-                        scope.$parent.$parent.setScaleAndOperation(1, 0);
                         sums.push(0);
                     }
                 }

@@ -1,11 +1,11 @@
 <div class="row" ng-show="data.length">
 
   <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 text-center">
-    <drop-selections options="difference" selections="selections" linear-scale="linearScale" show-scale="true" show-mode="false"></drop-selections>
+    <drop-selections options="difference" selections="selections" scale="scaleType" show-scale="true" show-mode="false"></drop-selections>
   </div>
 
   <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 text-center">
-    <performance-histogram chart-data="histogramData" chart-data-extended="histogramDataExtended" linear-scale="linearScale", number-of-bins="bins"></performance-histogram>
+    <performance-histogram chart-data="histogramData" chart-data-extended="histogramDataExtended" linear-scale="scaleType", number-of-bins="bins"></performance-histogram>
   </div>
 
   <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 text-center">

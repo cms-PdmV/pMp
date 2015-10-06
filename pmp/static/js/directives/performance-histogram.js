@@ -74,7 +74,7 @@
 
                     cMax = d3.max(data, function(d) { return d.y; });
 
-                    if (scope.linearScale) {
+                    if (scope.linearScale === "linear") {
                         y = d3.scale.linear().range([height, 0]).domain([0,cMax]);
                         yAxis.scale(y);
                     } else {

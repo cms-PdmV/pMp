@@ -3,6 +3,7 @@ module.exports = function(grunt) {
   concat: {
    js: {
     src: ['static/js/app.js',
+          'static/js/filters/array.js',
           'static/js/filters/readable.js',
           'static/js/filters/time.js',
           'static/js/services/browser.js',
@@ -22,8 +23,7 @@ module.exports = function(grunt) {
    js2: {
     src: ['static/js/charts.js',
           'static/js/directives/__init__.js',
-          'static/js/directives/drop-selections-performance.js',
-          'static/js/directives/drop-selections-present.js',
+          'static/js/directives/drop-selections.js',
           'static/js/directives/event-drop.js',
           'static/js/directives/historical-linear.js',
           'static/js/directives/multiple-pie.js',

@@ -49,11 +49,7 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
                 options: {
                     grouping: [],
                     stacking: [],
-                    coloring: ''
-                },
-                radio: {
-                    mode: ['events', 'requests', 'seconds'],
-                    scale: ["linear", "log"]
+                    coloring: ""
                 },
                 selections: [],
                 settings: {
@@ -88,22 +84,18 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
             }
 
             // assign radio values, scale and mode
-            if ($scope.radio[1] === '1') {
-                $scope.linearScale = false;
+            if ($scope.radio[1] === "1") {
                 $scope.scaleType = "log";
             } else {
-                $scope.linearScale = true;
                 $scope.scaleType = "linear";
             }
 
-            if ($scope.radio[0] === '1') {
-                $scope.requests.radio.mode = ['requests', 'events',
-                    'seconds'
-                ];
-            } else if ($scope.radio[0] === '2') {
-                $scope.requests.radio.mode = ['seconds', 'events',
-                    'requests'
-                ];
+            if ($scope.radio[0] === "1") {
+                $scope.modeType = "requests";
+            } else if ($scope.radio[0] === "2") {
+                $scope.modeType = "seconds";
+            } else {
+                $scope.modeType = "events";
             }
 
             // if show time label
@@ -236,8 +228,9 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
          */
         $scope.setURL = function (name, value) {
             if (name !== undefined && value !== undefined) {
-                $scope.parameters[$scope.selections.indexOf(value)] =
-                    $scope.options.indexOf(name);
+                var i = $scope.options.indexOf(name);
+                if (i < 0) i = 0;
+                $scope.parameters[$scope.selections.indexOf(value)] = i;
             }
 
             $location.path($location.path(), false);
@@ -332,13 +325,29 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
             }
         };
 
+        /**
+         * @description When scale has been changed.
+         */
         $scope.changeScale = function (type) {
             $scope.scaleType = type;
+            $scope.setScaleAndOperation(1, (type === "log") + 0)
         };
 
         /**
          * @description When scale has been changed.
          */
+        $scope.changeMode = function (type) {
+            $scope.modeType = type;
+            $scope.setScaleAndOperation(0, ['events', 'requests', 'seconds'].indexOf(type));
+        };
+
+        $scope.applyDifference = function(values, optionName, optionValue) {
+            console.log(optionValue);
+            console.log(optionName)
+            $scope.requests.options = values;
+            $scope.setURL(optionName, optionValue);
+        };
+
         $scope.setScaleAndOperation = function (i, value) {
             if ($scope.radio[i] != value) {
                 $scope.radio[i] = value;
