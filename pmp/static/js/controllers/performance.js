@@ -278,10 +278,14 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
         });
 
         // Set interval update of time variables
-        $interval($scope.updateCurrentDate, 1000);
-        $interval(function () {
+        var intervalUpdate1 = $interval($scope.updateCurrentDate, 1000);
+        var intervalUpdate2 = $interval(function () {
             $scope.updateLastUpdate('requests');
         }, 2 * 60 * 1000);
         $scope.updateLastUpdate('requests');
+        $scope.$on('$destroy', function () {
+            $interval.cancel(intervalUpdate1);
+            $interval.cancel(intervalUpdate2);
+        });
     }
 ]);

@@ -26,7 +26,7 @@ def about():
 @app.route('/present')
 def dashboard():
     """Redirect to graph template"""
-    if config.DEBUG:
+    if app.debug:
         return make_response(open('pmp/static/build/valid.dev.html').read())
     else:
         return make_response(open('pmp/static/build/valid.min.html').read())

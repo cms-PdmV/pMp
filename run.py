@@ -11,8 +11,7 @@ import sys
 
 if __name__ == '__main__':
     if len(sys.argv) > 1 and sys.argv[1] == 'dev':
-        global DEBUG
-        DEBUG = True
+        app.debug = True
         app.run(host='0.0.0.0', port=80)
     else:
         if not app.debug:
