@@ -363,8 +363,8 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
         });
 
         // Set interval update of time variables
-        $interval($scope.updateCurrentDate, 1000);
-        $interval(function () {
+        var intervalUpdate1 = $interval($scope.updateCurrentDate, 1000);
+        var intervalUpdate2 = $interval(function () {
             $scope.updateLastUpdate(
                 'campaigns,chained_campaigns,requests,chained_requests'
             );
@@ -372,5 +372,9 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
         $scope.updateLastUpdate(
             'campaigns,chained_campaigns,requests,chained_requests'
         );
+        $scope.$on('$destroy', function () {
+            $interval.cancel(intervalUpdate1);
+            $interval.cancel(intervalUpdate2);
+        });
     }
 ]);

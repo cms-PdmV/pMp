@@ -19,6 +19,7 @@
                 return dateFormat.parse(d)
             };
 
+            // recalculate statistics
             var updateStats = function () {
                 if (dataStats.length) {
                     scope.statistics = {};
@@ -48,6 +49,7 @@
                 }
             };
 
+            // react to input change, calculate differences and apply
             var inputChange = function () {
                 var m = scope.minuend;
                 var s = scope.subtrahend;

@@ -37,9 +37,9 @@ then
     (cd $DIR && ./pmp.sh stop)
     echo "Pulling updates..."
     (cd $DIR && git pull)
-    echo "Running grunt..."
-    (cd $DIR/pmp/ && grunt &)
     echo "Running bower..."
     (cd $DIR/pmp/static && bower --allow-root -f install)
+    echo "Running grunt..."
+    (cd $DIR/pmp/ && grunt &)
     (cd $DIR && ./pmp.sh start)
 fi
