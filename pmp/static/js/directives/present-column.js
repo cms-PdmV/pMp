@@ -1,4 +1,4 @@
-    .directive('mcmColumnChart', function(){
+    .directive('columnChart', function(){
         return {
             restrict: 'AE',
             scope: {
@@ -443,7 +443,7 @@
 
                     var maxHeight = 0;
 
-                    setTimeout(function() {
+                    //setTimeout(function() {
                             var fontSizeAdjustable = "10px";
                             var classedAdjustable = "text-uppercase";
                             if((grouping.length && grouping[0] === "prepid") || (!grouping.length && columns === "prepid")) {
@@ -453,17 +453,17 @@
 
                             svg.select(".x.axis").transition().duration(duration)
                                 .call(xAxis).selectAll(".x.axis .tick")
-                                .call(endall, function(){
+                                /*    .call(endall, function(){
                                         svg.selectAll('.x.axis path').style('display', 'none'); 
-                                svg.selectAll('.x.axis line').style('stroke', '#aaaaaa');
-                                svg.selectAll(".x.axis .tick")
-                                    .filter(function(){
-                                    return d3.select(this).select("title").empty()
-                                })
-                                .append("title");
-                            drawBlockSeparations();
-                            svg.selectAll(".x.axis .tick title").text(function(d){
-                                    var descriptionString = '';
+                                        svg.selectAll('.x.axis line').style('stroke', '#aaaaaa');
+                                        svg.selectAll(".x.axis .tick")
+                                            .filter(function(){
+                                                    return d3.select(this).select("title").empty()
+                                                        })
+                                            .append("title");
+                                        drawBlockSeparations();
+                                        svg.selectAll(".x.axis .tick title").text(function(d){
+                                                var descriptionString = '';
                                     if(valueOperation == 'events') {
                                         descriptionString = 'Number of events';
                                     } else if(valueOperation == 'requests') {
@@ -478,8 +478,8 @@
                                 .selectAll("text").attr("class", classedAdjustable).style("text-anchor", "end").style("font-size", fontSizeAdjustable).style("font-weight", "lighter").style("cursor", "default").attr("dx", "-0.5em").attr("dy", "0.5em").attr("transform", "rotate(-55)")
                                 .each(function(){
                                 maxHeight = d3.max(this.getBBox().width, maxHeight)
-                                    });
-                        }, 0);
+                                });*/
+                            //}, 0);
                     
                     svg.selectAll(".x.axis text")
                         .on("mouseover", function(d) {
@@ -567,7 +567,6 @@
                         .append("g")
                         .attr("class",  function(d){return "group lvl0 top" + d.key;});
 
-
                     svg_group
                         .exit()
                         .selectAll("rect")
@@ -578,7 +577,7 @@
                         .attr("y", height)
                         .call(endall, function(){
                             svg_group.exit().remove();
-                        });
+                            });
 
                     var l = 1;
                     if(grouping.length) {
@@ -614,9 +613,9 @@
                                 .attr("width", 0)
                                 .attr("height", 0)
                                 .attr("y", height)
-                                .call(endall, function(){
+                                /*.call(endall, function(){
                                     svg_group.exit().remove();
-                                });
+                                    });*/
                         }
                     } else {
                         svg_group
@@ -634,9 +633,9 @@
                         .attr("width", 0)
                         .attr("height", 0)
                         .attr("y", height)
-                        .call(endall, function(){
+                        /*.call(endall, function(){
                             svg_group.selectAll(".group.lvl"+l).remove();
-                        });
+                            });*/
 
                     if(columns) {
                         column_width = scales[columns].rangeBand();
@@ -848,6 +847,7 @@
                 }
 
                 function redraw() {
+                    console.log('redraw');
                     prepareArguments();
                     changeWidthHeight();
                     updateDataStructure();
@@ -859,15 +859,7 @@
                     updateStylesheet();
                 }
 
-                scope.$watch('data', function(dat) {
-                    redraw();
-                });
-
-                scope.optionsChange = function() {
-                    return ('stacking + columns + grouping + yScaleType + valueOperation + priorityMarkup');
-                };
-
-                scope.$watch(scope.optionsChange(), function(dat) {
+                scope.$watchGroup(['data', 'stacking', 'grouping', 'columns', 'yScaleType', 'valueOperation', 'priorityMarkup'], function(dat) {
                     redraw();
                 });
             }
