@@ -342,8 +342,6 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
         };
 
         $scope.applyDifference = function(values, optionName, optionValue) {
-            console.log(optionValue);
-            console.log(optionName)
             $scope.requests.options = values;
             $scope.setURL(optionName, optionValue);
         };
