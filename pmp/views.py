@@ -51,6 +51,8 @@ def api(i, typeof, extra):
         res = make_response(call.priority(i))
     elif typeof == 'lastupdate':
         res = make_response(call.last_update(i))
+    elif typeof == 'overall':
+        res = make_response(call.overall(i))
     return res
 
 

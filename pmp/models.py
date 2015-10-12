@@ -28,6 +28,12 @@ class APICall(object):
         return call.LastUpdateAPI().get(collections)
 
     @staticmethod
+    def overall(collections):
+        """Performance of campaign call"""
+        from pmp.api import common as call
+        return call.OverallAPI().get(collections.split(','))
+
+    @staticmethod
     def performance(campaign):
         """Performance of campaign call"""
         from pmp.api import performance as call
