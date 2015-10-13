@@ -5,6 +5,10 @@ from flask import request
 import config
 
 
+def sanitize(string):
+    return string.replace("\\", "")
+
+
 @app.route('/404')
 def four_oh_four():
     """Redirect on 404"""
@@ -35,6 +39,7 @@ def dashboard():
 @app.route('/api/<i>/<typeof>/<extra>')
 def api(i, typeof, extra):
     """Simple API call"""
+    i = sanitize(i)
     call = models.APICall()
     res = make_response('{}')
     if typeof == 'announced':
@@ -65,6 +70,7 @@ def api_historical_extended(i, probes, priority, status, pwg):
     status - list of statuses to include (csv)
     pwg - list of pwg to include (csv)
     """
+    i = sanitize(i)
     if status is "":
         status = None
     if pwg is "":
@@ -82,6 +88,7 @@ def api_submitted(i, priority, pwg):
     priority - in a form of string <min_pririty,max_priority>
     pwg - list of pwg to include (csv)
     """
+    i = sanitize(i)
     return models.APICall().submitted_stats(i, priority, pwg)
 
 
@@ -91,6 +98,7 @@ def suggest(fragment, typeof):
     fragment - input string to search in db
     typeof - lifetime/growing/announced/performance
     """
+    fragment = sanitize(fragment)
     return make_response(models.APICall().suggestions(typeof, fragment))
 
 
