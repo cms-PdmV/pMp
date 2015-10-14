@@ -42,10 +42,21 @@
                     .attr("viewBox", "0 -20 " + config.customWidth + " " + config.customHeight)
                     .attr("width", "100%")
                     .attr("height", "100%")
+                    .attr("xmlns", "http://www.w3.org/2000/svg")
                     .append("svg:g")
                     .attr("transform", "translate(" + config.margin.left + ","
                           + config.margin.top + ")")
                     .attr('style', 'fill: none');
+
+                // Prevent hover over axis while moving
+                var clipPath = svg.append("svg:clipPath")
+                    .attr("id", "clip")
+                    .append("svg:rect")
+                    .attr("id", "clip-rect")
+                    .attr("x", "0")
+                    .attr("y", "0")
+                    .attr("width", width)
+                    .attr("height", height);
 
                 // define zoom
                 var zoom = d3.behavior.zoom()
@@ -53,8 +64,6 @@
 
                 // axes
                 var x = d3.time.scale();
-                var y = d3.scale.linear();
-
                 var xAxis = d3.svg.axis().scale(x).tickSize(-height).ticks(4).tickSubdivide(1);
                 var gx = svg.append("svg:g")
                     .attr("class", "x axis minorx")
@@ -62,6 +71,7 @@
                     .attr("transform", "translate(0," + (height + 10) + ")")
                     .call(xAxis);
 
+                var y = d3.scale.linear();
                 var yAxis = d3.svg.axis().scale(y).ticks(4).orient("left");
                 var gy = svg.append("svg:g")
                     .attr("class", "y axis minory")
@@ -75,31 +85,6 @@
                     .attr("font-size", "13")
                     .text('events');
 
-                // data-label
-                var dateLabelGroup = svg.append("svg:g")
-                    .attr("class", "date-label-group")
-                    .attr("font-size", "14");
-                dateLabelGroup.append("svg:text")
-                    .attr("class", "date-label")
-                    .attr('fill', '#263238')
-                    .attr("y", -15)
-                    .attr("x", 10);
-
-                var defs = svg.append("defs");
-
-                // Prevent hover over axis while moving
-                var clipPath = defs.append("svg:clipPath")
-                    .attr("id", "clip")
-                    .append("svg:rect")
-                    .attr("id", "clip-rect")
-                    .attr("x", "0")
-                    .attr("y", "0")
-                    .attr("width", width)
-                    .attr("height", height);
-
-                var chartBody = svg.append("g")
-                    .attr("clip-path", "url(#clip)");
-                
                 // Draw lines
                 var pathNotOpenEvents = d3.svg.area()
                     .x(function(d) {
@@ -345,34 +330,37 @@
 
                         // Draw lifetime
                         if (l3 == undefined) {
-                            l3 = chartBody.append("svg:path")
+                            l3 = svg.append("svg:path")
                             .attr("d", pathTargetEvents(a))
                             .attr("class", "data3")
+                            .attr('clip-path', 'url(#clip)')
                             .style('stroke-width', 1)
                             .style('stroke', '#263238')
                             .style('opacity', '0.4')
                             .style("fill", '#263238');
                         }                        
                         if (l2 == undefined) {
-                            l2 = chartBody.append("svg:path")
+                            l2 = svg.append("svg:path")
                             .attr("d", pathNotOpenEvents(a))
                             .attr("class", "data2")
+                            .attr('clip-path', 'url(#clip)')
                             .style('stroke-width', 1)
                             .style('stroke', '#ff6f00')
                             .style('opacity', '0.4')
                             .style("fill", '#ff6f00');
                         }
                         if (l1 == undefined) {
-                            l1 = chartBody.append("svg:path")
+                            l1 = svg.append("svg:path")
                             .attr("d", pathOnlyDoneEvents(a))
                             .attr("class", "data1")
+                            .attr('clip-path', 'url(#clip)')
                             .style('stroke-width', 1)
                             .style('stroke', '#01579b')
                             .style('opacity', '0.4')
                             .style("fill", '#01579b');
                         }
                         if (rectLifetime == undefined) {
-                            rectLifetime = chartBody.append("rect")
+                            rectLifetime = svg.append("rect")
                             .attr('id', 'lifetime')
                             .attr("class", "pane")
                             .attr("x", 0)
@@ -398,7 +386,7 @@
                 var constructDataLabel = function() {
                     if (containerBox == undefined) {
                         containerBox = document.querySelector('#lifetime');
-                        hoverLineGroup = chartBody.append("svg:g").attr("class", "hover-line");
+                        hoverLineGroup = svg.append("svg:g").attr("class", "hover-line");
                         var hoverLine = hoverLineGroup.append("svg:line").attr("y1", 0).attr("y2", height + 10).style('stroke-width', '1px').style('stroke', '#777777');
                     }
 
