@@ -1,5 +1,5 @@
 /*** Life-Time Representation of Requests directive:***/
-.directive('linearLifetime', ['$compile', function($compile) {
+.directive('linearLifetime', ['$compile', '$http', function($compile, $http) {
     return {
         restrict: 'AE',
         scope: {
@@ -8,7 +8,7 @@
             taskChain: '=',
             zoomY: '='
         },
-        link: function(scope, element, compile) {
+            link: function(scope, element, compile, http) {
             // graph configuration
             config = {
                 customWidth: 1160,
@@ -28,18 +28,18 @@
             // General attributes
             var width = config.customWidth - config.margin.left - config.margin.right;
             var height = config.customHeight - config.margin.top - config.margin.bottom;
-            var l1, l2, l3, containerBox, hoverLineGroup, clipPath, rectLifetime,
+            var l1, l2, l3, svg, containerBox, hoverLineGroup, clipPath, rectLifetime,
                 rectTaskChain;
             var fiveShadesOfGrey = ['#4fc3f7', '#4dd0e1', '#4db6ac', '#81c784', '#aed581',
                 '#dce775'
             ];
             // add data label
-            var innerHtml =
-                '<div ng-hide="taskChain" class="hidden-sm hidden-xs"><span ng-repeat=\'d in labelData\' style=\'{{d.style}}\'>{{d.label}}<span ng-show=\'humanReadableNumbers && d.label != "Time: "\'>{{d.data | readableNumbers}}</span><span ng-hide=\'humanReadableNumbers && d.label != "Time: "\'>{{d.data}}</span></span></div>';
-            element.append($compile(innerHtml)(scope));
+            $http.get('build/data-label.min.html').success(function (html) {
+                element.prepend($compile(html)(scope));
+            });
 
             // add main svg
-            var svg = d3.select(element[0])
+            svg = d3.select(element[0])
                 .append('svg:svg')
                 .attr("viewBox", "0 -20 " + config.customWidth + " " + config.customHeight)
                 .attr("width", "100%")
@@ -59,10 +59,6 @@
                 .attr("y", "0")
                 .attr("width", width)
                 .attr("height", height);
-
-            // define zoom
-            var zoom = d3.behavior.zoom()
-                .on("zoom", onZoom);
 
             // axes
             var x = d3.time.scale();
@@ -86,6 +82,10 @@
                 .style("text-anchor", "end")
                 .attr("font-size", "13")
                 .text('events');
+
+            // define zoom
+            var zoom = d3.behavior.zoom()
+                .on("zoom", onZoom);
 
             // Draw lines
             var pathNotOpenEvents = d3.svg.area()
@@ -390,8 +390,8 @@
                     l3.transition().duration(600).ease('linear').attr('d',
                         pathTargetEvents(a));
 
-                    constructDataLabel();
                     onZoom();
+                    constructDataLabel();
                 }
                 svg.selectAll('.tick line').style('opacity', '0.2').style('stroke',
                     '#000000').style(
@@ -463,7 +463,9 @@
                     var min = s[0].getTime();
                     var max = s[1].getTime();
                     var local = scope.dataCopy;
-                    var w = $('#measure').width() * width / config.customWidth;
+                    var measure = $('#measure').width();
+                    if (measure <= 100) measure = 1140; //dirty
+                    var w = measure * width / config.customWidth;
 
                     tmp = min + (xPosition / w * (max - min));
 

@@ -1,0 +1,6 @@
+<div ng-hide="taskChain" class="hidden-sm hidden-xs">
+  <span ng-repeat="d in labelData" style="{{d.style}}">{{d.label}}
+    <span ng-if="humanReadableNumbers && d.label != 'Time: '">{{d.data | readableNumbers}}</span>
+    <span ng-if="!humanReadableNumbers || d.label == 'Time: '">{{d.data}}</span>
+  </span>
+</div>
