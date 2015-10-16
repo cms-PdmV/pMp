@@ -115,7 +115,7 @@ module.exports = function(grunt) {
    },
    css: {
     files: ['static/css/*.css'],
-    tasks: ['concat:css', 'cssmin']
+    tasks: ['concat:pmpcss', 'cssmin']
    },
    htmlpartials: {
     files: ['static/partials/*.html'],

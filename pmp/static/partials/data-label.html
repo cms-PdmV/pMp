@@ -1,6 +1,22 @@
-<div ng-hide="taskChain" class="hidden-sm hidden-xs">
+<div ng-if="!taskChain" class="hidden-sm hidden-xs">
   <span ng-repeat="d in labelData" style="{{d.style}}">{{d.label}}
     <span ng-if="humanReadableNumbers && d.label != 'Time: '">{{d.data | readableNumbers}}</span>
     <span ng-if="!humanReadableNumbers || d.label == 'Time: '">{{d.data}}</span>
   </span>
+</div>
+<div ng-if="taskChain" class="col-lg-12 hidden-sm hidden-xs">
+  <ul class="nav nav-pills">
+    <li role="presentation" class="spacing-r" ng-repeat="(key, d) in taskChainData">
+      <div ng-if="key == 'time'">
+        <small>Time: {{d}}</small>
+      </div>
+      <div ng-if="key != 'time'">
+        <div id="circle" class="legend" style="background: {{d.color}};" title="{{d.dataset}}"></div>
+        <div style="float:left">
+          <small ng-if="humanReadableNumbers">{{key}}: {{d.v | readableNumbers}}</small>
+          <small ng-if="!humanReadableNumbers">{{key}}: {{d.v}}</small>
+        </div>
+      </div>
+    </li>
+  </ul>
 </div>

@@ -140,6 +140,16 @@ rect.pane {
     pointer-events: all;
 }
 
+.legend {
+    margin: 3px;
+    float: left;
+    width: 13px;
+    height: 13px;
+    -webkit-border-radius: 7px;
+    -moz-border-radius: 7px;
+    border-radius: 7px;
+}
+
 /*
  *Chains
  *Currently not available from frontend

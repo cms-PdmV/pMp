@@ -30,9 +30,7 @@
             var height = config.customHeight - config.margin.top - config.margin.bottom;
             var l1, l2, l3, svg, containerBox, hoverLineGroup, clipPath, rectLifetime,
                 rectTaskChain;
-            var fiveShadesOfGrey = ['#4fc3f7', '#4dd0e1', '#4db6ac', '#81c784', '#aed581',
-                '#dce775'
-            ];
+            var fiveShadesOfGrey = ['#c5cae9', '#7986cb', '#3f51b5', '#303f9f', '#1a237e'];
             // add data label
             $http.get('build/data-label.min.html').success(function (html) {
                 element.prepend($compile(html)(scope));
@@ -131,7 +129,7 @@
                 .y(function(d) {
                     return y(d.e);
                 })
-                .interpolate("step-after");
+                .interpolate("step-before");
 
             // Zoom
             function onZoom() {
@@ -171,31 +169,28 @@
             // When new data to load
             var onLoad = function(a) {
                 if (scope.taskChain) {
-                    // remove
-                    if (l1 !== undefined) {
-                        l1.remove();
-                        l1 = undefined;
-                    }
-                    if (l2 !== undefined) {
-                        l2.remove();
-                        l2 = undefined;
-                    }
-                    if (l3 !== undefined) {
-                        l3.remove();
-                        l3 = undefined;
-                    }
+                    var yMax = 0;
+                    scope.taskChainData = {};
+
+                    // clear the graph
+                    svg.selectAll('path').remove();
+                    l1 = undefined;
+                    l2 = undefined;
+                    l3 = undefined;
                     if (clipPath !== undefined) {
-                        svg.selectAll('clipPath').remove();
+                        clipPath.remove();
                         clipPath = undefined;
                     }
                     if (rectLifetime !== undefined) {
                         rectLifetime.remove();
                         rectLifetime = undefined;
                     }
-                    svg.select('text.date-label').text('');
                     if (hoverLineGroup !== undefined) {
                         hoverLineGroup.remove();
                         hoverLineGroup = undefined;
+                    }
+                    if (containerBox !== undefined) {
+                        containerBox.remove();
                         containerBox = undefined;
                     }
 
@@ -212,14 +207,12 @@
                     xAxis.scale(x);
                     svg.selectAll("g .x.axis").transition().duration(200)
                         .ease("linear").call(xAxis);
-                    var yMax = 0;
                     for (var i = 0; i < a.length; i++) {
-                        yMax = d3.max(a[0].data, function(d) {
+                        yMax = d3.max(a[i].data, function(d) {
                             return Math.max(d.x, d.e, yMax);
                         });
                     }
-                    yMax *= 1.1;
-                    y.domain([0, yMax]).range([height, 0]);
+                    y.domain([0, yMax*1.1]).range([height, 0]);
                     yAxis.scale(y).tickFormat(formatY);
                     svg.selectAll("g .y.axis").transition().duration(200)
                         .ease("linear").call(yAxis);
@@ -230,73 +223,68 @@
                     if (scope.zoomY) zoom.y(y);
 
                     // Prevent hover over axis while moving
-                    clipPath = svg.append("clipPath")
-                        .attr("id", "clip")
-                        .append("rect")
-                        .attr("x", 1)
-                        .attr("y", 0)
-                        .attr("width", width)
-                        .attr("height", height);
+                    clipPath = svg.append("svg:clipPath")
+                    .attr("id", "clip")
+                    .append("svg:rect")
+                    .attr("id", "clip-rect")
+                    .attr("x", "0")
+                    .attr("y", "0")
+                    .attr("width", width)
+                    .attr("height", height);
 
                     // Draw lines
+                    scope.taskChainData.time = "."
                     for (i = 0; i < a.length; i++) {
                         var c = fiveShadesOfGrey[i % fiveShadesOfGrey.length];
+                        var n = a[i].request.split('\/')[3];
+                        scope.taskChainData[n] = {
+                                    dataset: a[i].request, color: c
+                            };
                         svg.append("svg:path")
                             .attr("d", taskChainLine(a[i].data))
                             .attr("class", a[i].request.replace(/\//g, ''))
-                            .style('stroke-width', 1.5)
-                            .style('stroke', c)
+                            .style("stroke", c)
+                            .style("stroke-width", 10)
+                            .style("opacity", "0.8")
                             .attr("clip-path", "url(#clip)");
                     }
 
                     // Hover-over functionality
                     rectTaskChain = svg.append("rect")
                         .attr('id', 'lifetime')
-                        .attr('class', 'pane')
-                        .attr('x', 1)
+                        .attr("class", "pane")
+                        .attr("x", 0)
                         .style('cursor', 'move')
                         .style('fill', 'none')
                         .style('pointer-events', 'all')
-                        .attr('width', width)
-                        .attr('height', height)
+                        .attr("width", width)
+                        .attr("height", height)
                         .call(zoom);
 
-                    for (i = 0; i < a.length; i++) {
-                        var t = svg.append('svg:path')
-                            .attr('d', taskChainLine(a[i].data))
-                            .attr('class', 'v' + a[i].request.replace(/\//g, ''))
-                            .attr('name', a[i].request)
-                            .attr('clip-path', 'url(#clip)')
-                            .style('stroke-width', 3)
-                            .style('fill', 'none')
-                            .style('pointer-events', 'all')
-                            .style('stroke', 'none')
-                            .append('title')
-                            .text(function(d) {
-                                return a[i].request;
-                            });
-                        svg.select('path.v' + a[i].request.replace(/\//g, ''))
-                            .on('mouseover', function(d) {
-                                var tmp = d3.select(this);
-                                tmp.style('stroke', '#aeea00');
-                                updateDataLabel('Dataset: ' + tmp.attr('name'));
-                            }).on('mouseout', function(d) {
-                                d3.select(this).style('stroke', 'none');
-                                updateDataLabel('');
-                            });
-                    }
-
-                    var updateDataLabel = function(data) {
-                        svg.select('text.date-label').text(data);
-                    };
-
+                    constructDataLabel(true);
                     onZoom();
                 } else {
                     if (l1 === undefined || l2 === undefined || l3 === undefined) {
                         // clean after taskchain
                         svg.selectAll('path').remove();
-                        for (var i in [l1, l2, l3]) {
-                            i = undefined;
+                        l1 = undefined;
+                        l2 = undefined;
+                        l3 = undefined;
+                        if (clipPath !== undefined) {
+                            clipPath.remove();
+                            clipPath = undefined;
+                        }
+                        if (rectTaskChain !== undefined) {
+                            rectTaskChain.remove();
+                            rectTaskChain = undefined;
+                        }
+                        if (hoverLineGroup !== undefined) {
+                            hoverLineGroup.remove();
+                            hoverLineGroup = undefined;
+                        }
+                        if (containerBox !== undefined) {
+                            containerBox.remove();
+                            containerBox = undefined;
                         }
                     }
                     if (rectTaskChain !== undefined) {
@@ -402,7 +390,7 @@
             };
 
             // Create a data label
-            var constructDataLabel = function() {
+            var constructDataLabel = function(taskchain) {
                 if (containerBox === undefined) {
                     containerBox = document.querySelector('#lifetime');
                     hoverLineGroup = svg.append("svg:g").attr("class", "hover-line");
@@ -432,6 +420,7 @@
                 };
 
                 var updateDataLabel = function(data) {
+                    if (taskchain) return null;
                     var tmp;
                     if (data[0]) {
                         tmp = data[0].toDateString() + ' ' + data[0].toLocaleTimeString();
@@ -466,18 +455,33 @@
                     var measure = $('#measure').width();
                     if (measure <= 100) measure = 1140; //dirty
                     var w = measure * width / config.customWidth;
-
                     tmp = min + (xPosition / w * (max - min));
-
-                    for (var i = 0; i < local.length; i++) {
-                        if (tmp > local[i].t || i === 0) {
-                            data[0] = local[i].t;
-                            data[1] = local[i].x;
-                            data[2] = local[i].e;
-                            data[3] = local[i].d;
+                    if (!taskchain) {
+                        for (var i = 0; i < local.length; i++) {
+                            if (tmp > local[i].t || i === 0) {
+                                data[0] = local[i].t;
+                                data[1] = local[i].x;
+                                data[2] = local[i].e;
+                                data[3] = local[i].d;
+                            }
+                        }
+                    } else {
+                        for (var i = local[0]['data'].length-1; i >= 0; i--) {
+                            if (tmp > local[0]['data'][i].t || i === local[0]['data'].length-1) {
+                                data[0] = local[0]['data'][i].t;
+                                for (var j = 0; j < local.length; j++) {
+                                    var key = local[j].request.split('\/')[3];
+                                    scope.taskChainData[key].v = local[j].data[i].e;
+                                }
+                            } else {
+                                break;
+                            }
                         }
                     }
                     data[0] = new Date(data[0]);
+                    if (taskchain) {
+                    scope.taskChainData.time = data[0].toDateString() + ' ' + data[0].toLocaleTimeString();
+                    }
                     updateDataLabel(data);
                     tmp = (data[0] - min) / ((max - min) / width);
                     updateIndicatorPosition(tmp);
