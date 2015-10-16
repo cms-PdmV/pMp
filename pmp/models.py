@@ -10,6 +10,12 @@ class APICall(object):
         return call.ChainAPI().get()
 
     @staticmethod
+    def crazy(campaign):
+        """Chain landscape call"""
+        from pmp.api import crazy as call
+        return call.CrazyAPI().get(campaign)
+
+    @staticmethod
     def historical_complex(query, probe=100, priority=",", filters=None):
         """Complex historical call"""
         from pmp.api import historical as call

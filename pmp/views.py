@@ -46,6 +46,8 @@ def api(i, typeof, extra):
         res = make_response(call.present_announced_mode(i, extra == 'true'))
     elif typeof == 'chain':
         res = make_response(call.chain_landscape())
+    elif typeof == 'crazy':
+        res = make_response(call.crazy(i))
     elif typeof == 'growing':
         res = make_response(call.present_growing_mode(i, extra == 'true'))
     elif typeof == 'historical':
