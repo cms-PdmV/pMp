@@ -3,6 +3,7 @@ from flask import make_response, redirect, render_template
 from pmp import app, models
 from flask import request
 import config
+import json
 
 
 def sanitize(string):
@@ -110,8 +111,9 @@ def shorten(url):
     return make_response(models.APICall().shorten_url(url,
                                                       request.query_string))
 
-@app.route('/ts/<ext>/<path:svg>')
-def take_screenshot(ext, svg):
+@app.route('/ts', methods=['POST'])
+def take_screenshot():
     """Take screenshot"""
-    return models.APICall().take_screenshot(svg.replace('\\\\', '/'), ext)
+    data = json.loads(request.data)
+    return models.APICall().take_screenshot(data['data'], data['ext'])
 

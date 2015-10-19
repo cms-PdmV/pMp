@@ -272,12 +272,14 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
                 ).replace('</svg>',
                     '<text transform="translate(0, 500)">Generated: ' +
                     $scope.dt + '. For input: ' + Data.getInputTags()
-                    .join(', ') + '</text></svg>').replace(/#/g,
-                    'U+0023').replace("</svg>", "</svg>");
-            $http.get('ts/' + format + '/' + xml).then(function (
-                data) {
+                    .join(', ') + '</text></svg>');
+            $http({
+                url: 'ts',
+                method: "POST",
+                data: {data: xml, ext: format}
+            }).then(function (data) {
                 window.open(data.data);
-                $rootScope.loading = false;
+                $rootScope.loadingData = false;
             });
         };
 

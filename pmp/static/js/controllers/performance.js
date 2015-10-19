@@ -235,14 +235,15 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
                     $scope.dt + '. For input: ' + Data.getInputTags()
                     .join(', ') + '. Time difference between ' +
                     $scope.difference.minuend + ' and ' + $scope.difference
-                    .subtrahend + '</text></svg>').replace(/#/g,
-                    'U+0023').replace(/\n/g, ' ').replace(/\//g,
-                    '\\\\');
-            $http.get('ts/' + format + '/' + encodeURIComponent(xml))
-                .then(function (data) {
-                    window.open(data.data);
-                    $rootScope.loadingData = false;
-                });
+                    .subtrahend + '</text></svg>').replace(/\n/g, ' ');
+            $http({
+                url: 'ts',
+                method: "POST",
+                data: {data: xml, ext: format}
+            }).then(function (data) {
+                window.open(data.data);
+                $rootScope.loadingData = false;
+            });
         };
 
         /**

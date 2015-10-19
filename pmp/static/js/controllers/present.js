@@ -289,14 +289,15 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
             ).replace('</svg>',
                 '<text transform="translate(0, 434)">Generated: ' +
                 $scope.dt + '. For input: ' + Data.getInputTags()
-                .join(', ') + '</text></svg>').replace(/#/g,
-                'U+0023').replace(/\n/g, ' ').replace(/\//g,
-                '\\\\');
-            $http.get('ts/' + format + '/' + encodeURIComponent(xml))
-                .then(function (data) {
-                    window.open(data.data);
-                    $rootScope.loadingData = false;
-                });
+                .join(', ') + '</text></svg>').replace(/\n/g, ' ');
+            $http({
+                url: 'ts',
+                method: "POST",
+                data: {data: xml, ext: format}
+            }).then(function (data) {
+                window.open(data.data);
+                $rootScope.loadingData = false;
+            });
         };
 
         /**
