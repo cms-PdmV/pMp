@@ -321,7 +321,7 @@ class GrowingAPI(esadapter.InitConnection):
         parent_chains = self.es.get('requests', 'request', query,
                 fields='member_of_chain')['fields']['member_of_chain']
         common_requests = []
-        common_request_prepids = [] # To avoid duplicates
+        common_request_prepids = set() # To avoid duplicates
 
         for chain in parent_chains:
             requests = self.es.get('chained_requests', 'chained_request', chain,
@@ -331,7 +331,7 @@ class GrowingAPI(esadapter.InitConnection):
                 request_object = self.es.get('requests', 'request', request)['_source']
                 if request_object['prepid'] not in common_request_prepids:
                     common_requests.append(request_object)
-                    common_request_prepids.append(request_object['prepid'])
+                    common_request_prepids.add(request_object['prepid'])
 
         return common_requests
 
