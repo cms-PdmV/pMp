@@ -1,4 +1,6 @@
-<table class="table table-bordered table-striped table-condensed col-lg-12 col-md-12 col-sm-12 hidden-xs">
+<donut-chart ng-repeat="(key, terms) in current_data" data="terms.data" outer-radius="100" inner-radius="40" inner-title="{{key}}" on-click-title="changeChart" domain="domain"></donut-chart>
+
+<table class="table table-bordered table-striped table-condensed col-lg-12 col-md-12 col-sm-12 hidden-xs" ng-show="showTable">
   <thead>
     <tr>
       <th class="text-center">
@@ -43,7 +45,11 @@
       <td>
         <table><tbody>
           <tr ng-show="element.term !== 'upcoming' || showUpcoming" ng-repeat="element in terms.terms">
-            <td class="pull-left spacing-r"><small><strong>{{element.term}}</strong></small></td>
+            <td class="pull-left spacing-r">
+              <small>
+                <strong>{{element.term}}</strong>
+              </small>
+            </td>
             <td class="text-right">
               <span ng-show="humanReadableNumbers">
                 {{element.count | readableNumbers}}

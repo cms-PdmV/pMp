@@ -3,6 +3,11 @@ from flask import make_response, redirect, render_template
 from pmp import app, models
 from flask import request
 import config
+import json
+
+
+def sanitize(string):
+    return string.replace("\\", "")
 
 
 @app.route('/404')
@@ -35,12 +40,15 @@ def dashboard():
 @app.route('/api/<i>/<typeof>/<extra>')
 def api(i, typeof, extra):
     """Simple API call"""
+    i = sanitize(i)
     call = models.APICall()
     res = make_response('{}')
     if typeof == 'announced':
         res = make_response(call.present_announced_mode(i, extra == 'true'))
     elif typeof == 'chain':
         res = make_response(call.chain_landscape())
+    elif typeof == 'crazy':
+        res = make_response(call.crazy(i))
     elif typeof == 'growing':
         res = make_response(call.present_growing_mode(i, extra == 'true'))
     elif typeof == 'historical':
@@ -51,6 +59,8 @@ def api(i, typeof, extra):
         res = make_response(call.priority(i))
     elif typeof == 'lastupdate':
         res = make_response(call.last_update(i))
+    elif typeof == 'overall':
+        res = make_response(call.overall(i))
     return res
 
 
@@ -63,6 +73,7 @@ def api_historical_extended(i, probes, priority, status, pwg):
     status - list of statuses to include (csv)
     pwg - list of pwg to include (csv)
     """
+    i = sanitize(i)
     if status is "":
         status = None
     if pwg is "":
@@ -80,6 +91,7 @@ def api_submitted(i, priority, pwg):
     priority - in a form of string <min_pririty,max_priority>
     pwg - list of pwg to include (csv)
     """
+    i = sanitize(i)
     return models.APICall().submitted_stats(i, priority, pwg)
 
 
@@ -89,6 +101,7 @@ def suggest(fragment, typeof):
     fragment - input string to search in db
     typeof - lifetime/growing/announced/performance
     """
+    fragment = sanitize(fragment)
     return make_response(models.APICall().suggestions(typeof, fragment))
 
 
@@ -98,8 +111,9 @@ def shorten(url):
     return make_response(models.APICall().shorten_url(url,
                                                       request.query_string))
 
-@app.route('/ts/<ext>/<path:svg>')
-def take_screenshot(ext, svg):
+@app.route('/ts', methods=['POST'])
+def take_screenshot():
     """Take screenshot"""
-    return models.APICall().take_screenshot(svg.replace('\\\\', '/'), ext)
+    data = json.loads(request.data)
+    return models.APICall().take_screenshot(data['data'], data['ext'])
 

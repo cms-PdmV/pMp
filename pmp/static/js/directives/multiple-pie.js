@@ -1,4 +1,9 @@
-    .directive("multiplePieCharts", ['$compile', '$http', function($compile, $http) {
+/**
+ * @name multiplePieCharts.directive
+ * @type directive
+ * @description Creates donut charts showing completion of the campaign and status table
+ */
+.directive("multiplePieCharts", ['$compile', '$http', function ($compile, $http) {
     return {
         restrict: 'EA',
         scope: {
@@ -13,7 +18,8 @@
             humanReadableNumbers: '=',
             colorDomain: "=?" // order of colors (colors are taken as 10 basic colors from d3.js)
         },
-        link: function(scope, element, attrs) {
+        link: function (scope, element) {
+            var showTable;
             var nested = d3.nest();
             var nestBy = scope.nestBy || [];
             var sumBy = scope.sumBy || [];
@@ -31,13 +37,13 @@
             }
 
             if (!foundNonExistant) {
-                compactTerms.push('rest')
+                compactTerms.push('rest');
             }
 
             if (typeof scope.showTable === 'boolean' && scope.showTable === false) {
-                var showTable = false;
+                showTable = false;
             } else {
-                var showTable = true;
+                showTable = true;
             }
 
             var dataTermsFull = {};
@@ -50,21 +56,21 @@
                 dataTermsCompact[compactTerms[i]] = i;
             }
 
-            nestBy.forEach(function(key) {
-                nested.key(function(d) {
-                    return d[key]
+            nestBy.forEach(function (key) {
+                nested.key(function (d) {
+                    return d[key];
                 });
-            })
-            nested.rollup(function(leaves) {
-                return d3.sum(leaves, function(d) {
-                    return d[sumBy];
-                })
             });
-            scope.$watch('data', function(dat) {
+            nested.rollup(function (leaves) {
+                return d3.sum(leaves, function (d) {
+                    return d[sumBy];
+                });
+            });
+            scope.$watch('data', function (dat) {
                 scope.piechart_data = {};
                 scope.piechart_data_full = {};
                 scope.current_data = {};
-                dat = dat || []
+                dat = dat || [];
                 var nested_data = nested.entries(dat);
                 for (var i = 0; i < nested_data.length; i++) {
                     var key = nested_data[i].key;
@@ -102,11 +108,14 @@
 
                     for (var j = 0; j < nested_data[i].values.length; j++) {
                         if (nested_data[i].values[j].key in dataTermsFull) {
-                            piechart_data_full.terms[dataTermsFull[nested_data[i].values[j].key]].count = nested_data[i].values[j].values;
+                            piechart_data_full.terms[dataTermsFull[nested_data[i].values[
+                                j].key]].count = nested_data[i].values[j].values;
                             if (nested_data[i].values[j].key in dataTermsCompact) {
-                                piechart_data.terms[dataTermsCompact[nested_data[i].values[j].key]].count = nested_data[i].values[j].values;
+                                piechart_data.terms[dataTermsCompact[nested_data[i].values[
+                                    j].key]].count = nested_data[i].values[j].values;
                             } else {
-                                piechart_data.terms[compactTerms.length - 1].count += nested_data[i].values[j].values;
+                                piechart_data.terms[compactTerms.length - 1].count +=
+                                    nested_data[i].values[j].values;
                             }
                         }
                     }
@@ -125,7 +134,7 @@
                 }
             });
 
-            scope.changeChart = function(name, term, state) {
+            scope.changeChart = function (name, term, state) {
                 if (state.state) {
                     scope.current_data[state.key].data = scope.piechart_data[state.key];
                 } else {
@@ -134,15 +143,11 @@
             };
 
             // domain for colors
-            scope.domain = scope.colorDomain || _.union(fullTerms, compactTerms);
+            scope.domain = scope.colorDomain;
 
-            var innerHtml = '<mcm-donut-chart ng-repeat="(key, terms) in current_data" data="terms.data" outer-radius="100" inner-radius="40" inner-title="{{key}}" on-click-title="changeChart" domain="domain"></mcm-donut-chart>';
-            if (showTable) {
-                $http.get('build/table.min.html').success(function(html) {
-                        innerHtml += html;
-                        element.append($compile(innerHtml)(scope));
-                    });
-            }
+            $http.get('build/table.min.html').success(function (html) {
+                element.append($compile(html)(scope));
+            });
         }
-    }
+    };
 }])

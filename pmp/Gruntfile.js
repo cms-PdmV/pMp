@@ -21,8 +21,7 @@ module.exports = function(grunt) {
     dest: 'static/build/pmp.build.js'
    },
    js2: {
-    src: ['static/js/charts.js',
-          'static/js/directives/__init__.js',
+    src: ['static/js/directives/__init__.js',
           'static/js/directives/drop-selections.js',
           'static/js/directives/event-drop.js',
           'static/js/directives/historical-linear.js',
@@ -86,6 +85,7 @@ module.exports = function(grunt) {
       files: {
         'static/build/advanced.min.html': 'static/partials/advanced.html',
         'static/build/chains.min.html': 'static/partials/chains.html',
+        'static/build/data-label.min.html': 'static/partials/data-label.html',
         'static/build/drop-selections.min.html': 'static/partials/drop-selections.html',
         'static/build/filter.min.html': 'static/partials/filter.html',
         'static/build/historical.min.html': 'static/partials/historical.html',
@@ -115,7 +115,7 @@ module.exports = function(grunt) {
    },
    css: {
     files: ['static/css/*.css'],
-    tasks: ['concat:css', 'cssmin']
+    tasks: ['concat:pmpcss', 'cssmin']
    },
    htmlpartials: {
     files: ['static/partials/*.html'],

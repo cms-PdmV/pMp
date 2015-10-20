@@ -10,6 +10,12 @@ class APICall(object):
         return call.ChainAPI().get()
 
     @staticmethod
+    def crazy(campaign):
+        """Chain landscape call"""
+        from pmp.api import crazy as call
+        return call.CrazyAPI().get(campaign)
+
+    @staticmethod
     def historical_complex(query, probe=100, priority=",", filters=None):
         """Complex historical call"""
         from pmp.api import historical as call
@@ -26,6 +32,12 @@ class APICall(object):
         """Last successful DB update call"""
         from pmp.api import common as call
         return call.LastUpdateAPI().get(collections)
+
+    @staticmethod
+    def overall(collections):
+        """Performance of campaign call"""
+        from pmp.api import common as call
+        return call.OverallAPI().get(collections.split(','))
 
     @staticmethod
     def performance(campaign):
