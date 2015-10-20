@@ -130,3 +130,24 @@ class TakeScreenshotAPI(object):
             call(['rsvg-convert', '-o', output_file, '-f', output_format,
                   '--background-color', 'white', svg_file])
         return gen_name + '.' + output_format
+
+
+class OverallAPI(esadapter.InitConnection):
+    """Get overall statistics from DB"""
+
+    def __init__(self):
+        esadapter.InitConnection.__init__(self)
+        self.overflow = 0
+
+    def get(self, collections):
+        """Query DB and return response"""
+        results = {}
+        for c in collections:
+            if c != 'stats':
+                results[c] = self.es.search(
+                    'prepid:*', index=c, size=self.overflow)["hits"]["total"]
+            else:
+                results['workflows'] = self.es.search(
+                    'pdmv_prep_id:*', index=c,
+                    size=self.overflow)["hits"]["total"]
+        return json.dumps({"results": results})

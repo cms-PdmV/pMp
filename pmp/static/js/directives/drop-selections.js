@@ -23,16 +23,16 @@
             // working on optionsHelper changes bindings
             var tmp = angular.copy(scope.optionsHelper);
             scope.applyChange = function (optionName, optionValue, optionIndex) {
-                if (optionName === "possible-selections") {
-                    for (var key in tmp) {
-                        if (tmp[key] === optionValue) {
-                            tmp[key] = "";
-                        } else if (tmp[key].indexOf(optionValue) !== -1) {
-                            tmp[key] = tmp[key].splice(tmp[key].indexOf(optionValue) + 1,
-                                1);
-                        }
+                for (var key in tmp) {
+                    if (tmp[key] === optionValue) {
+                        tmp[key] = "";
+                    } else if (tmp[key].indexOf(optionValue) !== -1) {
+                        tmp[key] = tmp[key].splice(tmp[key].indexOf(optionValue) + 1,
+                                                   1);
                     }
-                } else {
+                }
+                if (optionName !== "possible-selections") {
+
                     if (tmp[optionName] instanceof Array) {
                         tmp[optionName].splice(optionIndex - 1, 0, optionValue);
                     } else {

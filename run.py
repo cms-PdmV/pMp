@@ -35,5 +35,6 @@ if __name__ == '__main__':
         SETTINGS = dict(ssl_options={'certfile': config.CERTFILE,
                                      'keyfile': config.KEYFILE})
         HTTP_SERVER = HTTPServer(WSGIContainer(app), **SETTINGS)
-        HTTP_SERVER.listen(config.PORT)
+        HTTP_SERVER.bind(config.PORT)
+        HTTP_SERVER.start(0)
         IOLoop.instance().start()
