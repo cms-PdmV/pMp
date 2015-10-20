@@ -197,7 +197,7 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
                 $scope.setURL();
             }, function () {
                 $scope.showPopUp(PageDetailsProvider.messages
-                    .E0.type, PageDetailsProvider.messages
+                    .E1.type, PageDetailsProvider.messages
                     .E1.message);
                 $rootScope.loadingData = false;
             });
@@ -213,7 +213,7 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
                 }
             }, function () {
                 $scope.showPopUp(PageDetailsProvider.messages
-                    .E0.type, PageDetailsProvider.messages
+                    .E1.type, PageDetailsProvider.messages
                     .E1.message);
             });
         };
