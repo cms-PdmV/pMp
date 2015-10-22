@@ -317,6 +317,30 @@ class GrowingAPI(esadapter.InitConnection):
                 all_requests[response['prepid']] = response
         return all_requests
 
+    def get_requests_in_same_chain(self, query, flip_to_done):
+        parent_chains = self.es.get('requests', 'request', query,
+                fields='member_of_chain')['fields']['member_of_chain']
+        common_requests = []
+        common_request_prepids = set() # To avoid duplicates
+
+        for chain in parent_chains:
+            requests = self.es.get('chained_requests', 'chained_request', chain,
+                    fields='chain')['fields']['chain']
+
+            for request in requests:
+                request_object = self.es.get('requests', 'request', request)['_source']
+                if request_object['prepid'] not in common_request_prepids:
+                    request_object['total_events'] = self.get_total_events(request_object)
+
+                    if request_object['status'] == 'submitted' and flip_to_done:
+                        common_requests += self.get_fakes_from_submitted(request_object)
+                    else:
+                        common_requests.append(request_object)
+
+                    common_request_prepids.add(request_object['prepid'])
+
+        return common_requests
+
     def get_fakes_from_submitted(self, mcm_r):
         """Split submitted requests"""
         real_completed_events = self.completed_deep(mcm_r)
@@ -328,10 +352,22 @@ class GrowingAPI(esadapter.InitConnection):
             [0, mcm_r['total_events'] - real_completed_events])
         return [self.pop(mcm_r_fake_subm), self.pop(mcm_r_fake_done)]
 
-    def get(self, campaign, flip_to_done):
+    def is_instance(self, prepid, typeof, index):
+        """Checks if prepid matches any typeof in the index"""
+        try:
+            self.es.get(index, typeof, prepid)['_source']
+        except esadapter.pyelasticsearch.exceptions.ElasticHttpNotFoundError:
+            return False
+        return True
+
+    def get(self, query, flip_to_done):
         """Execute growing API"""
+        if self.is_instance(query, "request", "requests"):
+            # Get requests instead and return (FIXME: Feels like a dirty hack)
+            return json.dumps({'results': self.get_requests_in_same_chain(query, flip_to_done)})
+
         all_requests, all_cr, all_cc = self.get_chained_requests(
-            list(set(self.get_chained_campaigns(campaign.split(',')))))
+            list(set(self.get_chained_campaigns(query.split(',')))))
         req_copy = dict(all_requests)
 
         # avoid double counting
@@ -375,7 +411,7 @@ class GrowingAPI(esadapter.InitConnection):
         # add req that does not belong to chain (from org campaign)
         for req in req_copy:
             req = req_copy[req]
-            if req['member_of_campaign'] == campaign:
+            if req['member_of_campaign'] == query:
                 req['total_events'] = self.get_total_events(req)
                 dump_requests.append(req)
 

@@ -214,7 +214,7 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
                     }
                 }, function () {
                     $scope.showPopUp(PageDetailsProvider.messages
-                        .E0.type, PageDetailsProvider.messages
+                        .E1.type, PageDetailsProvider.messages
                         .E1.message);
                     $rootScope.loadingData = false;
                 });
