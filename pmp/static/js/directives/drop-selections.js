@@ -27,8 +27,7 @@
                     if (tmp[key] === optionValue) {
                         tmp[key] = "";
                     } else if (tmp[key].indexOf(optionValue) !== -1) {
-                        tmp[key] = tmp[key].splice(tmp[key].indexOf(optionValue) + 1,
-                                                   1);
+                        tmp[key].splice(tmp[key].indexOf(optionValue), 1);
                     }
                 }
                 if (optionName !== "possible-selections") {
