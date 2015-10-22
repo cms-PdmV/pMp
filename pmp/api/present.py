@@ -44,6 +44,16 @@ class AnnouncedAPI(esadapter.InitConnection):
                             monitor['monitor'][0], completed_events)
         return completed_events
 
+    def orphan_requests(self, req_mgr):
+        for workflow in req_mgr:
+            try:
+                stats = self.es.get('stats', 'stats', workflow)['_source']
+                return False
+            except esadapter.pyelasticsearch.exceptions\
+                    .ElasticHttpNotFoundError:
+                continue
+        return True
+
     def get_fakes_from_submitted(self, mcm_r):
         """Split submitted requests"""
         real_completed_events = self.completed_deep(mcm_r)
@@ -72,13 +82,12 @@ class AnnouncedAPI(esadapter.InitConnection):
         else:
             return 0
 
-    @staticmethod
-    def number_of_events_for_submitted(request):
+    def number_of_events_for_submitted(self, request):
         """Requests that have just been submitted and no req_mgr data"""
         if 'reqmgr_name' in request and len(request['reqmgr_name']):
-            return request['total_events']
-        else:
-            return 0
+            if not self.orphan_requests(request['reqmgr_name']):
+                return request['total_events']
+        return 0
 
     def is_instance(self, prepid, typeof, index):
         """Checks if prepid matches any typeof in the index"""
@@ -120,6 +129,7 @@ class AnnouncedAPI(esadapter.InitConnection):
         remove_requests = []
         # loop over and parse the db data
         for res in response:
+
             if res['status'] == 'done':
                 res['total_events'] = self.number_of_events_for_done(res)
             elif res['status'] == 'submitted':

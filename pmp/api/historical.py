@@ -165,9 +165,8 @@ class HistoricalAPI(esadapter.InitConnection):
         else:
             data['d'] = 0
         # get timestamp, if field is empty set 1/1/2013
-        if 'pdmv_monitor_time' in monitor:
+        if len(monitor['pdmv_monitor_time']):
             if monitor['pdmv_monitor_time'] == "FLAG":
-                print details
                 data['t'] = int(round(time.time() * 1000))
             else:
                 data['t'] = self.parse_time(monitor['pdmv_monitor_time'])
