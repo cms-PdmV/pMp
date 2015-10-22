@@ -65,6 +65,8 @@ class HistoricalAPI(esadapter.InitConnection):
     @staticmethod
     def check_dataset(output_dataset, doc):
         """Check for secondary datasets"""
+        if doc is None:
+            return True
         if doc['pdmv_dataset_name'] != output_dataset and \
                 'pdmv_monitor_datasets' in doc:
             if output_dataset in [i['dataset'] for i \
@@ -150,7 +152,10 @@ class HistoricalAPI(esadapter.InitConnection):
         """Parse input and return fixed data points"""
         data = dict()
 
-        if details is None or details['output_dataset'] is not None:
+        if ((details is None or 
+            (details['output_dataset'] is not None
+             and len(details['output_dataset']))) and
+            'pdmv_evts_in_DAS' in monitor):
             data['e'] = (monitor['pdmv_evts_in_DAS'] +
                          monitor['pdmv_open_evts_in_DAS'])
         else:
@@ -160,8 +165,12 @@ class HistoricalAPI(esadapter.InitConnection):
         else:
             data['d'] = 0
         # get timestamp, if field is empty set 1/1/2013
-        if len(monitor['pdmv_monitor_time']):
-            data['t'] = self.parse_time(monitor['pdmv_monitor_time'])
+        if 'pdmv_monitor_time' in monitor:
+            if monitor['pdmv_monitor_time'] == "FLAG":
+                print details
+                data['t'] = int(round(time.time() * 1000))
+            else:
+                data['t'] = self.parse_time(monitor['pdmv_monitor_time'])
         else:
             data['t'] = self.parse_time("Tue Jan 1 00:00:00 2013")
         if request:
@@ -223,9 +232,9 @@ class HistoricalAPI(esadapter.InitConnection):
                     incorrect = False
 
                 # skip empty documents and legacy request with no prep_id
-                if document is None or document['pdmv_prep_id'] == '':
+                if (document is None or document['pdmv_prep_id'] == ''):# and details['status'] != 'submitted':
                     continue
-
+                
                 # filter out requests
                 if is_request:
 
@@ -264,6 +273,27 @@ class HistoricalAPI(esadapter.InitConnection):
                         response['data'].append(self.get_data_points( \
                                 is_request, record, details,
                                 document['pdmv_expected_events']))
+
+                elif (document['pdmv_dataset_name'] == "None Yet" or
+                      (details is not None and
+                       details['status'] == 'submitted' and
+                       (details['output_dataset'] is None or
+                        len(details['output_dataset']) == 0))):
+                    """
+                    Fix for submitted requests that have no output dataset
+                    specified. Ensures present == historical(expected).
+                    if query is workflow pdmv_dataset_name is None Yet
+                    if query is request/above details not none and array len 0
+                    """
+                    record = dict()
+                    if 'pdmv_monitor_history' in document:
+                        record = document['pdmv_monitor_history'][0]
+                    else:
+                        record['pdmv_monitor_time'] = "FLAG"
+
+                    response['data'].append(self.get_data_points( \
+                            is_request, record,
+                            details, document['pdmv_expected_events']))
 
                 elif ('pdmv_monitor_datasets' in document
                       and (document['pdmv_type'] == 'TaskChain'
