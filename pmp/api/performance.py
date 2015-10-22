@@ -23,7 +23,7 @@ class PerformanceAPI(esadapter.InitConnection):
         for request in response:
             for field in ['time_event', 'total_events', 'completed_events',
                           'reqmgr_name', 'efficiency', 'output_dataset',
-                          'flown_with']:
+                          'flown_with', 'member_of_chain']:
                 if field in request:
                     del request[field]
 
