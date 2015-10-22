@@ -4,7 +4,7 @@ from datetime import datetime
 from pmp.api.models import esadapter
 from subprocess import call
 import pycurl
-import json
+import simplejson as json
 import os
 
 

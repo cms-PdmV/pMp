@@ -1,6 +1,6 @@
 """A list of classes supporting performance statistics API"""
 from pmp.api.models import esadapter
-import json
+import simplejson as json
 import time
 
 

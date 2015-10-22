@@ -1,7 +1,7 @@
 """A list of classes supporting historical statistics API"""
 from pmp.api.utils import utils as apiutils
 from pmp.api.models import esadapter
-import json
+import simplejson as json
 import time
 
 

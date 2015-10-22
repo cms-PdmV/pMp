@@ -1,5 +1,5 @@
 """fetchd.py Fetch deamon. Update database with changes in McM/stats DB"""
-import json
+import simplejson as json
 import logging
 import time
 import utils

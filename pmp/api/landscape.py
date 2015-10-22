@@ -1,6 +1,6 @@
 """A list of classes supporting landscape API"""
 from pmp.api.models import esadapter
-import json
+import simplejson as json
 
 
 class ChainAPI(esadapter.InitConnection):

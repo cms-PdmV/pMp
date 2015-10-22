@@ -1,6 +1,6 @@
 """A list of classes supporting crazy API"""
 from pmp.api.models import esadapter
-import json
+import simplejson as json
 
 
 class CrazyAPI(esadapter.InitConnection):

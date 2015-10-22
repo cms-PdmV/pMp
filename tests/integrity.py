@@ -2,7 +2,7 @@
 from datetime import datetime
 from cStringIO import StringIO
 import logging
-import json
+import simplejson as json
 import pycurl
 import pyelasticsearch
 import sys
