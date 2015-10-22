@@ -13,7 +13,7 @@ class TestIntegrityEventsInDAS(object):
 
     def __init__(self, arg):
         self.db_url = 'http://127.0.0.1:9200'
-        self.pmp_api = 'https://127.0.0.1/api/'
+        self.pmp_api = 'http://127.0.0.1/api/'
         self.elastic_search = pyelasticsearch.ElasticSearch(self.db_url)
         self.overflow = 100000
         self.setlog()
@@ -146,6 +146,91 @@ class TestIntegrityEventsInDAS(object):
                                           ' Inconsistency for ' +
                                           request['prepid'])
 
+class TestIntegrityExpectedEvents(object):
+    """Check if present has same numbers as historical"""
+
+    def __init__(self):
+        self.db_url = 'http://127.0.0.1:9200'
+        self.pmp_api = 'http://127.0.0.1/api/'
+        self.elastic_search = pyelasticsearch.ElasticSearch(self.db_url)
+        self.overflow = 100000
+        self.setlog()
+        logging.info(str(datetime.now()) + ' Lauching check for expected events')
+        self.present_url = '/announced/false'
+        self.historical_url = '/historical/3/,/submitted/all'
+
+    @staticmethod
+    def curl(url):
+        """Perform curl"""
+        out = StringIO()
+        curl = pycurl.Curl()
+        curl.setopt(pycurl.URL, str(url))
+        curl.setopt(pycurl.WRITEFUNCTION, out.write)
+        curl.setopt(pycurl.SSL_VERIFYPEER, 0)
+        curl.setopt(pycurl.SSL_VERIFYHOST, 0)
+        curl.perform()
+        try:
+            return (json.loads(out.getvalue()),
+                    curl.getinfo(curl.RESPONSE_CODE))
+        except ValueError:
+            print "Status: %s/n%s" % (curl.getinfo(curl.RESPONSE_CODE),
+                                      out.getvalue())
+
+    @staticmethod
+    def setlog():
+        """Set logging level"""
+        logging.basicConfig(level=logging.INFO)
+
+    def get_historical(self, campaign):
+        """Get data from historical API"""
+        details, _ = self.curl(self.pmp_api + campaign + self.historical_url)
+        if len(details['results']['data']):
+            return details['results']['data'][-1]['x']
+        else:
+            return 0
+
+    def get_announced(self, campaign):
+        """Get data from announced API"""
+        sum_events = 0
+        for request in self.get_requests(campaign):
+            sum_events += request['total_events']
+        return sum_events
+
+    def get_requests(self, campaign):
+        """Get list of reqeusts on status submitted in a given campaign"""
+        details, _ = self.curl(self.pmp_api + campaign + self.present_url)
+        for request in details['results']:
+            if request['status'] == 'submitted' \
+                    and request['member_of_campaign'] == campaign:
+                yield request
+
+    def run(self, deep_check=False):
+        """Run tests"""
+        # get list of campaigns
+        campaigns = [s['_source'] for s in \
+                         self.elastic_search.search( \
+                'prepid:*', index='campaigns', size=self.overflow)
+                     ['hits']['hits']]
+        for campaign in campaigns:
+            logging.info(str(datetime.now()) + " Checking " +
+                         campaign['prepid'])
+
+            if self.get_historical(campaign['prepid']) != \
+                    self.get_announced(campaign['prepid']):
+                logging.error(str(datetime.now()) + ' Inconsistency "expected '
+                              + 'events" (historical) and status "submitted" '
+                              + '(present) for ' + campaign['prepid'])
+                if not deep_check:
+                    continue
+                logging.info(str(datetime.now()) + ' Checking requests')
+
+                for request in self.get_requests(campaign['prepid']):
+                    if request['total_events'] != \
+                            self.get_historical(request['prepid']):
+                        logging.error(str(datetime.now()) +
+                                      ' Inconsistency for ' +
+                                      request['prepid'])
+
 
 if __name__ == "__main__":
     DEEP = False
@@ -155,4 +240,5 @@ if __name__ == "__main__":
     TESTS.run(DEEP)
     TESTS = TestIntegrityEventsInDAS(False)
     TESTS.run(DEEP)
-
+    TESTS2 = TestIntegrityExpectedEvents()
+    TESTS2.run(DEEP)
