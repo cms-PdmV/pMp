@@ -186,10 +186,7 @@ if __name__ == "__main__":
                 if index == "stats":
                     if 'pdmv_monitor_history' not in data\
                             and 'pdvm_monitor_history' not in data:
-                        current_time = datetime.now().strftime('%c') # FIXME: Locale-dependent
-                        #data['pdmv_monitor_history'] = ['{"pdmv_evts_in_DAS":0, ' +
-                        #        '"pdmv_monitor_time":"' + current_time +
-                        #        '", "pdmv_open_evts_in_DAS":0}']
+                        current_time = datetime.now().strftime('%c') # Locale-dependent
                         data['pdmv_monitor_history'] = [{"pdmv_evts_in_DAS": 0,
                                 "pdmv_monitor_time": current_time,
                                 "pdmv_open_evts_in_DAS": 0}]
@@ -211,6 +208,7 @@ if __name__ == "__main__":
                                     data['pdmv_monitor_history'] = data[misspelled]
                             except KeyError:
                                 pass
+
                 # parsing requests
                 if 'reqmgr_name' in data:
                     data['reqmgr_name'] = parse_reqmgr(data['reqmgr_name'])
@@ -229,15 +227,9 @@ if __name__ == "__main__":
                     if s in [200, 201]:
                         logging.info(UTL.get_time() + " New record " + r)
                     else:
-                        error_json = json.dumps(re)
                         logging.error(UTL.get_time() +
                                       " Failed to update record at " + r +
-                                      ". Reason: " + error_json)
-
-                        # TODO: Remove debugging code
-                        with open("errors.txt", "a") as myfile:
-                            myfile.write(r + ': ' + error_json + "\n")
-                            myfile.close()
+                                      ". Reason: " + json.dumps(re))
                 else:
                     logging.error(UTL.get_time() +
                                   " Failed to receive information about " + r)
