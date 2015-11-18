@@ -66,11 +66,18 @@
                             if (history[m] !== undefined && history[s] !==
                                 undefined) {
                                 var tmp = getDate(history[m]) - getDate(history[s]);
-                                dataStats.push(tmp);
-                                dataStatsExtended.push({
-                                    id: e.prepid,
-                                    value: tmp
-                                });
+                                /* Due to resubmission or other issues some requests have negative
+                                 * results i.e. computing produced requests in -80 days :O
+                                 * Below is dirty hack on frontend that will do, but eventually we
+                                 * want to move it to backend.
+                                 */
+                                if (tmp >= 0) {
+                                    dataStats.push(tmp);
+                                    dataStatsExtended.push({
+                                        id: e.prepid,
+                                        value: tmp
+                                    });
+                                }
                             }
                         }
                     });

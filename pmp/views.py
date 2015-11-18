@@ -3,7 +3,7 @@ from flask import make_response, redirect, render_template
 from pmp import app, models
 from flask import request
 import config
-import json
+import simplejson as json
 
 
 def sanitize(string):

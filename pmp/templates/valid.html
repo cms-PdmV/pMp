@@ -50,30 +50,25 @@
     </nav>
 
     <div class="container" id="ctn">
-      <div class="row">
-          <div class="col-lg-offset-9 col-lg-3 col-md-offset-9 col-md-3 col-sm-offset-9 col-sm-3">
 
-            <div class="panel {{popUp.style}} popup" ng-show="popUp.show">
-              <div class="panel-heading text-uppercase">
-                <i class="fa {{popUp.icon}} spacing-r"></i> 
-                <strong>{{popUp.title}}</strong>
-              </div>
-              <div class="panel-body">
-                <small>{{popUp.message}}</small>
-              </div>
-            </div>
-
-            <div class="panel panel-danger popup" ng-show="showError">
-              <div class="panel-heading text-uppercase">
-                <i class="fa fa-frown-o spacing-r"></i> 
-                <strong>Error</strong>
-              </div>
-              <div class="panel-body">
-                <small>{{popUpMessage}}</small>
-              </div>
-            </div>
-            
-          </div>
+      <div class="panel {{popUp.style}} popup" ng-show="popUp.show">
+        <div class="panel-heading text-uppercase">
+          <i class="fa {{popUp.icon}} spacing-r"></i> 
+          <strong>{{popUp.title}}</strong>
+        </div>
+        <div class="panel-body">
+          <small>{{popUp.message}}</small>
+        </div>
+      </div>
+      
+      <div class="panel panel-danger popup" ng-show="showError">
+        <div class="panel-heading text-uppercase">
+          <i class="fa fa-frown-o spacing-r"></i> 
+          <strong>Error</strong>
+        </div>
+        <div class="panel-body">
+          <small>{{popUpMessage}}</small>
+        </div>
       </div>
       
       <div ng-view ng-show="showView"></div>

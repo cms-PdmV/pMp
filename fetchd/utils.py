@@ -1,5 +1,5 @@
 """Utils classes for pMp scripts"""
-import json
+import simplejson as json
 import os
 import pycurl
 import re

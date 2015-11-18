@@ -1,7 +1,7 @@
 """A list of classes supporting present statistics API"""
 from pmp.api.models import esadapter
 import copy
-import json
+import simplejson as json
 
 
 class AnnouncedAPI(esadapter.InitConnection):
@@ -44,6 +44,21 @@ class AnnouncedAPI(esadapter.InitConnection):
                             monitor['monitor'][0], completed_events)
         return completed_events
 
+    def orphan_requests(self, req_mgr):
+        """Orphan requests are the ones not corresponding to anything in
+        production. They were submitted and rejected and they hang in McM
+        due to lack of action eg. delete or reset. This check is needed to
+        ensure pMp internal integrity between historical and present statistics
+        """
+        for workflow in req_mgr:
+            try:
+                stats = self.es.get('stats', 'stats', workflow)['_source']
+                return False
+            except esadapter.pyelasticsearch.exceptions\
+                    .ElasticHttpNotFoundError:
+                continue
+        return True
+
     def get_fakes_from_submitted(self, mcm_r):
         """Split submitted requests"""
         real_completed_events = self.completed_deep(mcm_r)
@@ -72,13 +87,12 @@ class AnnouncedAPI(esadapter.InitConnection):
         else:
             return 0
 
-    @staticmethod
-    def number_of_events_for_submitted(request):
+    def number_of_events_for_submitted(self, request):
         """Requests that have just been submitted and no req_mgr data"""
         if 'reqmgr_name' in request and len(request['reqmgr_name']):
-            return request['total_events']
-        else:
-            return 0
+            if not self.orphan_requests(request['reqmgr_name']):
+                return request['total_events']
+        return 0
 
     def is_instance(self, prepid, typeof, index):
         """Checks if prepid matches any typeof in the index"""
@@ -120,6 +134,7 @@ class AnnouncedAPI(esadapter.InitConnection):
         remove_requests = []
         # loop over and parse the db data
         for res in response:
+
             if res['status'] == 'done':
                 res['total_events'] = self.number_of_events_for_done(res)
             elif res['status'] == 'submitted':
@@ -145,7 +160,8 @@ class AnnouncedAPI(esadapter.InitConnection):
 
             # remove unnecessary fields to speed up api
             for field in ['completed_events', 'reqmgr_name', 'history',
-                          'output_dataset']:
+                          'output_dataset', 'flown_with', 'efficiency',
+                          'member_of_chain']:
                 if field in res:
                     del res[field]
             
@@ -284,10 +300,9 @@ class GrowingAPI(esadapter.InitConnection):
     def pop(mcm_r):
         """Remove unused fileds"""
         for member in mcm_r.keys():
-            if member not in ['prepid', 'pwg', 'efficiency', 'total_events',
+            if member not in ['prepid', 'pwg', 'total_events',
                               'status', 'priority', 'member_of_campaign',
-                              'time_event', 'input', 'completed_events',
-                              'output_dataset']:
+                              'time_event', 'input']:
                 mcm_r.pop(member)
         return mcm_r
 
@@ -391,12 +406,12 @@ class GrowingAPI(esadapter.InitConnection):
 
                 mcm_r['total_events'] = self.get_total_events(mcm_r)
                 
+                upcoming = int(mcm_r['total_events']*abs(mcm_r['efficiency']))
+
                 if mcm_r['status'] == 'submitted' and flip_to_done:
                     dump_requests += self.get_fakes_from_submitted(mcm_r)
                 else:
                     dump_requests.append(self.pop(mcm_r))
-
-                upcoming = int(mcm_r['total_events']*abs(mcm_r['efficiency']))
             for noyet in all_cc[chain_request['member_of_campaign']]\
                     ['campaigns'][len(chain_request['chain']):]:
                 try:
@@ -413,7 +428,7 @@ class GrowingAPI(esadapter.InitConnection):
             req = req_copy[req]
             if req['member_of_campaign'] == query:
                 req['total_events'] = self.get_total_events(req)
-                dump_requests.append(req)
+                dump_requests.append(self.pop(req))
 
         return json.dumps({"results": dump_requests})
 
