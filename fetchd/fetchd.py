@@ -4,7 +4,7 @@ import logging
 import time
 import utils
 import sys
-
+from datetime import datetime
 
 def setlog():
     """Set loggging level"""
@@ -160,7 +160,9 @@ if __name__ == "__main__":
 
     setlog()
     UTL = utils.Utils()
-    CFG = utils.Config(sys.argv[1])
+
+    index = sys.argv[1]
+    CFG = utils.Config(index)
 
     logging.info(UTL.get_time() + " Getting SSO Cookie")
     UTL.get_cookie(CFG.url_mcm, CFG.cookie)
@@ -181,23 +183,34 @@ if __name__ == "__main__":
                 data, status = UTL.curl('GET', url, cookie=CFG.cookie)
 
                 # parsing stats documents
-                for misspelled in ['pdmv_monitor_history',
-                                   'pdvm_monitor_history']:
-                    try:
-                        if len(data['pdmv_dataset_list']) > 0:
-                            tc = parse_datasets(data[misspelled])
-                            if len(tc):
-                                data['pdmv_monitor_datasets'] = tc
-                        if len(data[misspelled]):
-                            for i, _ in enumerate(data[misspelled]):
-                                data[misspelled][i] = \
-                                    parse(data[misspelled][i],
-                                          ['pdmv_evts_in_DAS',
-                                           'pdmv_monitor_time',
-                                           'pdmv_open_evts_in_DAS'])
-                            data['pdmv_monitor_history'] = data[misspelled]
-                    except KeyError:
-                        pass
+                if index == "stats":
+                    if 'pdmv_monitor_history' not in data\
+                            and 'pdvm_monitor_history' not in data:
+                        current_time = datetime.now().strftime('%c') # FIXME: Locale-dependent
+                        #data['pdmv_monitor_history'] = ['{"pdmv_evts_in_DAS":0, ' +
+                        #        '"pdmv_monitor_time":"' + current_time +
+                        #        '", "pdmv_open_evts_in_DAS":0}']
+                        data['pdmv_monitor_history'] = [{"pdmv_evts_in_DAS": 0,
+                                "pdmv_monitor_time": current_time,
+                                "pdmv_open_evts_in_DAS": 0}]
+                    else:
+                        for misspelled in ['pdmv_monitor_history',
+                                           'pdvm_monitor_history']:
+                            try:
+                                if len(data['pdmv_dataset_list']) > 0:
+                                    tc = parse_datasets(data[misspelled])
+                                    if len(tc):
+                                        data['pdmv_monitor_datasets'] = tc
+                                if len(data[misspelled]):
+                                    for i, _ in enumerate(data[misspelled]):
+                                        data[misspelled][i] = \
+                                            parse(data[misspelled][i],
+                                                  ['pdmv_evts_in_DAS',
+                                                   'pdmv_monitor_time',
+                                                   'pdmv_open_evts_in_DAS'])
+                                    data['pdmv_monitor_history'] = data[misspelled]
+                            except KeyError:
+                                pass
                 # parsing requests
                 if 'reqmgr_name' in data:
                     data['reqmgr_name'] = parse_reqmgr(data['reqmgr_name'])
@@ -216,9 +229,15 @@ if __name__ == "__main__":
                     if s in [200, 201]:
                         logging.info(UTL.get_time() + " New record " + r)
                     else:
+                        error_json = json.dumps(re)
                         logging.error(UTL.get_time() +
                                       " Failed to update record at " + r +
-                                      ". Reason: " + re)
+                                      ". Reason: " + error_json)
+
+                        # TODO: Remove debugging code
+                        with open("errors.txt", "a") as myfile:
+                            myfile.write(r + ': ' + error_json + "\n")
+                            myfile.close()
                 else:
                     logging.error(UTL.get_time() +
                                   " Failed to receive information about " + r)
