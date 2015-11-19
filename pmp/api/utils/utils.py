@@ -22,6 +22,7 @@ class APIUtils(object):
         return arr
 
 class Timer(object):
+    """Context manager for timing stuff - from huyng.com"""
     def __init__(self, description, verbose=True):
         self.description = description
         self.verbose = verbose
@@ -34,5 +35,5 @@ class Timer(object):
         self.end = time.time()
         self.secs = self.end - self.start
         self.msecs = self.secs * 1000
-        print('"' + self.description + '" took ' + str(self.secs) + ' seconds')
+        print('[Timer] => "' + self.description + '" took ' + str(self.secs) + ' seconds')
 
