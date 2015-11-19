@@ -20,3 +20,19 @@ class APIUtils(object):
             else:
                 arr[index] = int(value)
         return arr
+
+class Timer(object):
+    def __init__(self, description, verbose=True):
+        self.description = description
+        self.verbose = verbose
+
+    def __enter__(self):
+        self.start = time.time()
+        return self
+
+    def __exit__(self, *args):
+        self.end = time.time()
+        self.secs = self.end - self.start
+        self.msecs = self.secs * 1000
+        print('"' + self.description + '" took ' + str(self.secs) + ' seconds')
+
