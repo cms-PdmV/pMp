@@ -3,10 +3,12 @@ import os
 import sys
 
 from flask import Flask, make_response
+from werkzeug.contrib.cache import SimpleCache
 
 app = Flask(__name__, static_url_path='')
 app.config.from_object('config')
 
+cache = SimpleCache()
 
 @app.errorhandler(404)
 def page_not_found(error):

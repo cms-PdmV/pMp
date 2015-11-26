@@ -1,10 +1,9 @@
 """pMp views"""
 from flask import make_response, redirect, render_template
-from pmp import app, models
+from pmp import app, models, cache
 from flask import request
 import config
 import simplejson as json
-
 
 def sanitize(string):
     return string.replace("\\", "")
@@ -43,6 +42,14 @@ def api(i, typeof, extra):
     i = sanitize(i)
     call = models.APICall()
     res = make_response('{}')
+
+    cache_key = 'api:' + i + ':' + typeof + ':' + extra
+    cache_item = cache.get(cache_key)
+
+    if cache_item is not None:
+        logging.info('Returning "' + cache_key + '" from cache')
+        return cache_item
+
     if typeof == 'announced':
         res = make_response(call.present_announced_mode(i, extra == 'true'))
     elif typeof == 'chain':
@@ -61,6 +68,9 @@ def api(i, typeof, extra):
         res = make_response(call.last_update(i))
     elif typeof == 'overall':
         res = make_response(call.overall(i))
+
+    timeout = 30 * 60 # TODO: Put in config somewhere
+    cache.set(cache_key, res, timeout=timeout)
     return res
 
 
