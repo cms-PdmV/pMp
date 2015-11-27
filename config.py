@@ -8,3 +8,4 @@ HOST = '127.0.0.1'
 HOSTMAIL = 'vocms088@noreply.com'
 PORT = 443
 SECRET_KEY = ''
+CACHE_TIMEOUT=30*60
