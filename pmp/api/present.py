@@ -117,65 +117,60 @@ class AnnouncedAPI(esadapter.InitConnection):
         """Execute announced API"""
         response = []
 
-        with Timer("parsing query"):
-            field, query = self.parse_query(query)
+        field, query = self.parse_query(query)
 
-        with Timer("querying database"):
-            if field is not None:
-                # campaign or flow
-                response = self.query_database(field, query)
+        if field is not None:
+            # campaign or flow
+            response = self.query_database(field, query)
+        else:
+            # possibly request
+            try:
+                response = [self.es.get('requests', 'request',
+                                        query)['_source']]
+            except esadapter.pyelasticsearch.exceptions\
+                    .ElasticHttpNotFoundError:
+                pass
+
+        dump_requests = []
+        remove_requests = []
+        # loop over and parse the db data
+        for res in response:
+
+            if res['status'] == 'done':
+                res['total_events'] = self.number_of_events_for_done(res)
+            elif res['status'] == 'submitted':
+                res['total_events'] = self.number_of_events_for_submitted(res)
+
+            # requests that are new (-1) should have zero events
+            if res['total_events'] == -1:
+                res['total_events'] = 0
+
+            if res['time_event'] == -1:
+                res['time_event'] = 0
+
+            # assign to which query request belongs
+            if query == '*':
+                res['input'] = res['member_of_campaign']
             else:
-                # possibly request
-                try:
-                    response = [self.es.get('requests', 'request',
-                                            query)['_source']]
-                except esadapter.pyelasticsearch.exceptions\
-                        .ElasticHttpNotFoundError:
-                    pass
+                res['input'] = query
 
-        with Timer("looping over results"):
-            dump_requests = []
-            remove_requests = []
-            # loop over and parse the db data
-            for res in response:
+            if flip_to_done and res['status'] == 'submitted':
+                dump_requests += self.get_fakes_from_submitted(res)
+                remove_requests.append(res)
+                continue
 
-                if res['status'] == 'done':
-                    res['total_events'] = self.number_of_events_for_done(res)
-                elif res['status'] == 'submitted':
-                    res['total_events'] = self.number_of_events_for_submitted(res)
+            # remove unnecessary fields to speed up api
+            for field in ['completed_events', 'reqmgr_name', 'history',
+                          'output_dataset', 'flown_with', 'efficiency',
+                          'member_of_chain']:
+                if field in res:
+                    del res[field]
 
-                # requests that are new (-1) should have zero events
-                if res['total_events'] == -1:
-                    res['total_events'] = 0
-
-                if res['time_event'] == -1:
-                    res['time_event'] = 0
-
-                # assign to which query request belongs
-                if query == '*':
-                    res['input'] = res['member_of_campaign']
-                else:
-                    res['input'] = query
-
-                if flip_to_done and res['status'] == 'submitted':
-                    dump_requests += self.get_fakes_from_submitted(res)
-                    remove_requests.append(res)
-                    continue
-
-                # remove unnecessary fields to speed up api
-                for field in ['completed_events', 'reqmgr_name', 'history',
-                              'output_dataset', 'flown_with', 'efficiency',
-                              'member_of_chain']:
-                    if field in res:
-                        del res[field]
-
-        with Timer("removing results from response"):
-            for rr in remove_requests:
-                response.remove(rr)
+        for rr in remove_requests:
+            response.remove(rr)
         response += dump_requests
 
-        with Timer("converting to JSON"):
-            return json.dumps({"results": response})
+        return json.dumps({"results": response})
 
     @staticmethod
     def stats_maximum(data, previous):
