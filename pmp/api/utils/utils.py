@@ -22,6 +22,8 @@ class APIUtils(object):
         return arr
 
 class Timer(object):
+    import time
+
     """Context manager for timing stuff - from huyng.com"""
     def __init__(self, description, verbose=True):
         self.description = description
