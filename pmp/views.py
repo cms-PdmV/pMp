@@ -47,7 +47,6 @@ def api(i, typeof, extra):
     cache_item = cache.get(cache_key)
 
     if cache_item is not None:
-        logging.info('Returning "' + cache_key + '" from cache')
         return cache_item
 
     if typeof == 'announced':
