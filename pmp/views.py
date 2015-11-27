@@ -8,6 +8,15 @@ import simplejson as json
 def sanitize(string):
     return string.replace("\\", "")
 
+@app.before_request
+def check_cache():
+    path = request.path
+
+    if path.startswith('/api'):
+        cache_item = cache.get(request.path)
+
+        if cache_item is not None:
+            return cache_item
 
 @app.route('/404')
 def four_oh_four():
@@ -43,7 +52,7 @@ def api(i, typeof, extra):
     call = models.APICall()
     res = make_response('{}')
 
-    cache_key = 'api:' + i + ':' + typeof + ':' + extra
+    cache_key = 'api:present:' + ':'.join((i, typeof, extra))
     cache_item = cache.get(cache_key)
 
     if cache_item is not None:
@@ -68,8 +77,7 @@ def api(i, typeof, extra):
     elif typeof == 'overall':
         res = make_response(call.overall(i))
 
-    timeout = 30 * 60 # TODO: Put in config somewhere
-    cache.set(cache_key, res, timeout=timeout)
+    cache.set(cache_key, res, timeout=config.CACHE_TIMEOUT)
     return res
 
 
@@ -90,7 +98,16 @@ def api_historical_extended(i, probes, priority, status, pwg):
     filters = dict()
     filters['status'] = status
     filters['pwg'] = pwg
-    return models.APICall().historical_complex(i, probes, priority, filters)
+
+    cache_key = 'api:historical:' + ':'.join((i, probes, priority, status, pwg))
+    cache_item = cache.get(cache_key)
+
+    if cache_item is not None:
+        return cache_item
+
+    result = models.APICall().historical_complex(i, probes, priority, filters)
+    cache.set(cache_key, result, timeout=config.CACHE_TIMEOUT)
+    return result
 
 
 @app.route('/api/<i>/submitted/<priority>/<pwg>')
@@ -101,7 +118,16 @@ def api_submitted(i, priority, pwg):
     pwg - list of pwg to include (csv)
     """
     i = sanitize(i)
-    return models.APICall().submitted_stats(i, priority, pwg)
+
+    cache_key = 'api:submitted:' + ':'.join((i, priority, pwg))
+    cache_item = cache.get(cache_key)
+
+    if cache_item is not None:
+        return cache_item
+
+    result = models.APICall().submitted_stats(i, priority, pwg)
+    cache.set(cache_key, result, timeout=config.CACHE_TIMEOUT)
+    return result
 
 
 @app.route('/api/suggest/<fragment>/<typeof>')
@@ -111,7 +137,16 @@ def suggest(fragment, typeof):
     typeof - lifetime/growing/announced/performance
     """
     fragment = sanitize(fragment)
-    return make_response(models.APICall().suggestions(typeof, fragment))
+
+    cache_key = 'api:suggest:' + ':'.join((typeof, fragment))
+    cache_item = cache.get(cache_key)
+
+    if cache_item is not None:
+        return cache_item
+
+    result = make_response(models.APICall().suggestions(typeof, fragment))
+    cache.set(cache_key, result, timeout=config.CACHE_TIMEOUT)
+    return result
 
 
 @app.route('/shorten/<path:url>')
