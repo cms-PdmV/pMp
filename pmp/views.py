@@ -12,7 +12,7 @@ def sanitize(string):
 def check_cache():
     path = request.path
 
-    if path.startswith('/api'):
+    if path.startswith('/api') and 'lastupdate' not in path:
         cache_item = cache.get(request.path)
 
         if cache_item is not None:
@@ -52,12 +52,6 @@ def api(i, typeof, extra):
     call = models.APICall()
     res = make_response('{}')
 
-    cache_key = 'api:present:' + ':'.join((i, typeof, extra))
-    cache_item = cache.get(cache_key)
-
-    if cache_item is not None:
-        return cache_item
-
     if typeof == 'announced':
         res = make_response(call.present_announced_mode(i, extra == 'true'))
     elif typeof == 'chain':
@@ -77,7 +71,7 @@ def api(i, typeof, extra):
     elif typeof == 'overall':
         res = make_response(call.overall(i))
 
-    cache.set(cache_key, res, timeout=config.CACHE_TIMEOUT)
+    cache.add(request.path, res, timeout=config.CACHE_TIMEOUT)
     return res
 
 
@@ -99,14 +93,8 @@ def api_historical_extended(i, probes, priority, status, pwg):
     filters['status'] = status
     filters['pwg'] = pwg
 
-    cache_key = 'api:historical:' + ':'.join((i, probes, priority, status, pwg))
-    cache_item = cache.get(cache_key)
-
-    if cache_item is not None:
-        return cache_item
-
     result = models.APICall().historical_complex(i, probes, priority, filters)
-    cache.set(cache_key, result, timeout=config.CACHE_TIMEOUT)
+    cache.add(request.path, result, timeout=config.CACHE_TIMEOUT)
     return result
 
 
@@ -119,14 +107,8 @@ def api_submitted(i, priority, pwg):
     """
     i = sanitize(i)
 
-    cache_key = 'api:submitted:' + ':'.join((i, priority, pwg))
-    cache_item = cache.get(cache_key)
-
-    if cache_item is not None:
-        return cache_item
-
     result = models.APICall().submitted_stats(i, priority, pwg)
-    cache.set(cache_key, result, timeout=config.CACHE_TIMEOUT)
+    cache.add(request.path, result, timeout=config.CACHE_TIMEOUT)
     return result
 
 
@@ -138,14 +120,8 @@ def suggest(fragment, typeof):
     """
     fragment = sanitize(fragment)
 
-    cache_key = 'api:suggest:' + ':'.join((typeof, fragment))
-    cache_item = cache.get(cache_key)
-
-    if cache_item is not None:
-        return cache_item
-
     result = make_response(models.APICall().suggestions(typeof, fragment))
-    cache.set(cache_key, result, timeout=config.CACHE_TIMEOUT)
+    cache.add(request.path, result, timeout=config.CACHE_TIMEOUT)
     return result
 
 
