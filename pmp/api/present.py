@@ -2,7 +2,6 @@
 from pmp.api.models import esadapter
 import copy
 import simplejson as json
-from utils.utils import Timer
 
 class AnnouncedAPI(esadapter.InitConnection):
     """Used to return list of requests in a given campaign"""
