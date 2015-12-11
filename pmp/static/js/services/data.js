@@ -197,13 +197,47 @@ angular.module('pmpApp').service('Data', ['$rootScope', function ($rootScope) {
                 this.pwgFilter = {};
             }
         },
+        statusOrder: {
+            'upcoming': 0,
+            'new': 1,
+            'validation': 2,
+            'defined': 3,
+            'approved': 4,
+            'submitted': 5,
+            'done': 6
+        },
+        merge: function (left, right) {
+            var result = [], leftIndex = 0, rightIndex = 0;
+
+            while (leftIndex < left.length && rightIndex < right.length){
+                if (this.statusOrder[left[leftIndex].status] <
+                        this.statusOrder[right[rightIndex].status]){
+                    result.push(left[leftIndex++]);
+                } else {
+                    result.push(right[rightIndex++]);
+                }
+            }
+
+            return result.concat(left.slice(leftIndex)).concat(right.slice(rightIndex));
+        },
+        mergeSort: function (items) {
+            if (items.length < 2) {
+                return items;
+            }
+
+            var middle = Math.floor(items.length / 2);
+
+            return this.merge(this.mergeSort(items.slice(0, middle)),
+                    this.mergeSort(items.slice(middle)));
+        },
+        /**
+         * @description Merge sort the loaded data. Incurs a performance penalty in
+         *     sensible browsers, but it hugely faster (by orders of magnitude) in
+         *     Chrome, and so is a somewhat-necessary evil
+         */
         sortDataByStatus: function() {
-            var fixedOrder = ['upcoming', 'new', 'validation', 'defined',
-                              'approved', 'submitted', 'done'];
-            this.loadedData.sort(function(a, b) {
-                    return (fixedOrder.indexOf(a.status) >
-                            fixedOrder.indexOf(b.status)) * 2 - 1;
-                });
+            this.loadedData = this.mergeSort(this.loadedData);
         }
     };
 }]);
+
