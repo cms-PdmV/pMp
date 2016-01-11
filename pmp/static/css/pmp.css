@@ -152,6 +152,11 @@ rect.pane {
     border-radius: 7px;
 }
 
+.historical-drilldown > div {
+	width: 25%;
+	display: inline-block;
+}
+
 /*
  *Chains
  *Currently not available from frontend
