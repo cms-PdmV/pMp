@@ -68,6 +68,20 @@ angular.module('pmpApp').controller('FilterController', ['$rootScope', '$scope',
             }, 1000);
         };
 
+        /**
+         * @description Sets all PWG filters to the same value
+         * @param {string} filter object to set all values of
+         * @param {Boolean} what to set each filter to
+         * @param {Boolean} this is passed to the applyFilterChanges method
+         */
+        $scope.setAllFilterValues = function (filter, value, isServerSide) {
+            for (var key in filter) {
+                filter[key] = value;
+            }
+
+            $scope.applyFilterChanges(isServerSide);
+        };
+
         // Broadcast receiver, change filtered data on loaded data change
         $scope.$on('onChangeNotification:LoadedData', function (event,
             data) {
