@@ -1,8 +1,8 @@
-<div ng-if="!taskChain" class="hidden-sm hidden-xs">
-  <span ng-repeat="d in labelData" style="{{d.style}}">{{d.label}}
+<div ng-if="!taskChain" class="historical-drilldown">
+  <div ng-repeat="d in labelData" style="{{d.style}}">{{d.label}}
     <span ng-if="humanReadableNumbers && d.label != 'Time: '">{{d.data | readableNumbers}}</span>
     <span ng-if="!humanReadableNumbers || d.label == 'Time: '">{{d.data}}</span>
-  </span>
+  </div>
 </div>
 <div ng-if="taskChain" class="col-lg-12 hidden-sm hidden-xs">
   <ul class="nav nav-pills">

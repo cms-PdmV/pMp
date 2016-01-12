@@ -429,19 +429,19 @@
                     }
                     scope.labelData = [{
                         label: 'Time: ',
-                        style: 'color: #90a4ae; position: absolute; left: 0px',
+                        style: 'color: #90a4ae;',
                         data: tmp
                     }, {
                         label: 'Expected events: ',
-                        style: 'color: #263238; position: absolute; left: 250px',
+                        style: 'color: #263238;',
                         data: data[1]
                     }, {
                         label: 'Events in DAS: ',
-                        style: 'color: #ff6f00; position: absolute; left: 450px',
+                        style: 'color: #ff6f00;',
                         data: data[2]
                     }, {
                         label: 'Done events in DAS: ',
-                        style: 'color: #01579b; position: absolute; left: 650px',
+                        style: 'color: #01579b;',
                         data: data[3]
                     }];
                 };
