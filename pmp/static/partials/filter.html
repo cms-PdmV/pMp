@@ -41,6 +41,10 @@
           </label>
         </div>
       </div>
+      <div class="text-uppercase col-xs-12 col-sm-12 col-md-12 col-lg-12">
+        <button class="btn btn-xs" ng-click="setAllFilterValues(statusFilter, true, page.id == 2)">All</button>
+        <button class="btn btn-xs" ng-click="setAllFilterValues(statusFilter, false, page.id == 2)">None</button>
+      </div>
     </form>
     <form class="form-group form-inline form-group-sm">
       <small class="text-uppercase col-xs-12 col-sm-12 col-md-12 col-lg-12">
@@ -53,6 +57,10 @@
             {{key}}
           </small>
         </label>
+      </div>
+      <div class="text-uppercase col-xs-12 col-sm-12 col-md-12 col-lg-12">
+        <button class="btn btn-xs" ng-click="setAllFilterValues(pwgFilter, true, page.id == 2)">All</button>
+        <button class="btn btn-xs" ng-click="setAllFilterValues(pwgFilter, false, page.id == 2)">None</button>
       </div>
     </form>
   </div>
