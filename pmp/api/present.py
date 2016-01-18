@@ -135,6 +135,11 @@ class AnnouncedAPI(esadapter.InitConnection):
         # loop over and parse the db data
         for res in response:
 
+            # Remove new and unchained to clean up output plots
+            if res['status'] == 'new' and not res.get('member_of_chain', []):
+                remove_requests.append(res)
+                continue
+
             if res['status'] == 'done':
                 res['total_events'] = self.number_of_events_for_done(res)
             elif res['status'] == 'submitted':
