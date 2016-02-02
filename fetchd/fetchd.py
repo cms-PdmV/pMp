@@ -11,7 +11,7 @@ def setlog():
     logging.basicConfig(level=logging.INFO)
 
 
-def extract_fields(details, fields):
+def parse(details, fields):
     """Remove all indexes that are not in fields array"""
     parsed = {}
     for field in fields:
@@ -107,39 +107,23 @@ def create_mapping(utl, cfg):
         logging.warning(utl.get_time() + " Mapping not implemented. Reason " +
                         str(code))
 
-def get_last_change(utl, cfg):
-    last_seq = 0
 
+def get_changes(utl, cfg):
+    """Changes since last update Generator"""
+
+    # get pointer to last change
     res, code = utl.curl('GET', cfg.last_seq)
     if code == 200:
         last_seq = res['_source']['val']
         logging.info(utl.get_time() + " Updating since " + str(last_seq))
     else:
+        last_seq = 0
         logging.warning(utl.get_time() + " Cannot get last sequence. Reason " +
                         str(code))
         create_index(utl, cfg)
         # create mapping
         if cfg.mapping != '':
             create_mapping(utl, cfg)
-
-    return last_seq
-
-def get_rereco_configs(utl):
-    """Get "fake" rereco index configs and try to ensure they exist"""
-    rereco_campaign_cfg = utils.Config('rereco_campaigns')
-    rereco_request_cfg = utils.Config('rereco_requests')
-
-    # ensure that they exist - we don't actually need the last change
-    get_last_change(utl, rereco_campaign_cfg)
-    get_last_change(utl, rereco_request_cfg)
-
-    return rereco_campaign_cfg, rereco_request_cfg
-
-def get_changes(utl, cfg):
-    """Changes since last update Generator"""
-
-    # get pointer to last change
-    last_seq = get_last_change(utl, cfg)
 
     # get list of documents to fetch
     if last_seq:
@@ -171,42 +155,6 @@ def get_changes(utl, cfg):
         logging.error(utl.get_time() + " Status " + status +
                       " while getting list of documents")
 
-def save(r, data, utl, cfg):
-    re, s = utl.curl('PUT', '%s%s' % (cfg.pmp_db, r), data)
-    if s in [200, 201]:
-        logging.info(UTL.get_time() + " New record " + r)
-    else:
-        logging.error(UTL.get_time() +
-                      " Failed to update record at " + r +
-                      ". Reason: " + json.dumps(re))
-
-def create_fake_request(data, utl, cfg):
-    """Creates a request-like object from a given stats object"""
-    fake_request = {}
-
-    # Copy over the 1:1 equivalents from stats to the fake request
-    mc_rereco_equivalents = {
-        'prepid': 'pdmv_prep_id',
-        'total_events': 'pdmv_expected_events',
-        'priority': 'pdmv_priority',
-        'member_of_campaign': 'pdmv_campaign',
-        'output_dataset': 'pdmv_dataset_name',
-        'reqmgr_name': 'pdmv_request_name',
-        'status': 'pdmv_status', # TODO: Need to this this one
-    }
-
-    for mc_name, rereco_name in mc_rereco_equivalents.iteritems():
-        if rereco_name in data:
-            fake_request[mc_name] = data[rereco_name]
-
-    # Find the completed events
-    try:
-        fake_request['completed_events'] =\
-                data['pdmv_monitor_history'][0]['pdmv_evts_in_DAS']
-    except KeyError:
-        fake_request['completed_events'] = 0
-
-    save(fake_request['prepid'], fake_request, utl, cfg)
 
 if __name__ == "__main__":
 
@@ -218,10 +166,6 @@ if __name__ == "__main__":
 
     logging.info(UTL.get_time() + " Getting SSO Cookie")
     UTL.get_cookie(CFG.url_mcm, CFG.cookie)
-
-    # Ensure that the rereco wrapper indices are ready
-    if index == 'stats':
-        rereco_campaign_cfg, rereco_request_cfg = get_rereco_configs(UTL)
 
     for r, deleted in get_changes(UTL, CFG):
 
@@ -237,18 +181,6 @@ if __name__ == "__main__":
             else:
                 url = str(CFG.url_db + r)
                 data, status = UTL.curl('GET', url, cookie=CFG.cookie)
-                pdmv_type = data.get('pdmv_type', '')
-
-                # parsing requests
-                if 'reqmgr_name' in data:
-                    data['reqmgr_name'] = parse_reqmgr(data['reqmgr_name'])
-
-                if 'history' in data:
-                    data['history'] = parse_history(data['history'])
-
-                if 'generator_parameters' in data:
-                    data['efficiency'] = parse_efficiency(
-                        data['generator_parameters'])
 
                 # parsing stats documents
                 if index == "stats":
@@ -269,7 +201,7 @@ if __name__ == "__main__":
                                 if len(data[misspelled]):
                                     for i, _ in enumerate(data[misspelled]):
                                         data[misspelled][i] = \
-                                            extract_fields(data[misspelled][i],
+                                            parse(data[misspelled][i],
                                                   ['pdmv_evts_in_DAS',
                                                    'pdmv_monitor_time',
                                                    'pdmv_open_evts_in_DAS'])
@@ -277,25 +209,27 @@ if __name__ == "__main__":
                             except KeyError:
                                 pass
 
-                    # Is it a ReReco request created in Nov 2013 or later?
-                    if (pdmv_type.lower() == 'rereco'
-                            and int(data.get('pdmv_submission_date', '0')) > 131001):
-                        print('Is ReReco... date is ' + data.get('pdmv_submission_date', '0'))
-                        if 'pdmv_campaign' in data:
-                            campaign = data['pdmv_campaign']
-                            logging.info(UTL.get_time() + ' Creating mock ReReco campaign at '
-                                    + campaign)
-                            save(campaign, { 'prepid': campaign }, UTL, rereco_campaign_cfg)
+                # parsing requests
+                if 'reqmgr_name' in data:
+                    data['reqmgr_name'] = parse_reqmgr(data['reqmgr_name'])
 
-                        logging.info(UTL.get_time() + ' Creating mock ReReco request at '
-                                + data['pdmv_prep_id'])
-                        create_fake_request(data, UTL, rereco_request_cfg)
+                if 'history' in data:
+                    data['history'] = parse_history(data['history'])
 
-                # trim unneeded fields
-                data = extract_fields(data, CFG.fetch_fields)
+                if 'generator_parameters' in data:
+                    data['efficiency'] = parse_efficiency(
+                        data['generator_parameters'])
+
+                data = parse(data, CFG.fetch_fields)
 
                 if status == 200:
-                    save(r, data, UTL, CFG)
+                    re, s = UTL.curl('PUT', '%s%s' % (CFG.pmp_db, r), data)
+                    if s in [200, 201]:
+                        logging.info(UTL.get_time() + " New record " + r)
+                    else:
+                        logging.error(UTL.get_time() +
+                                      " Failed to update record at " + r +
+                                      ". Reason: " + json.dumps(re))
                 else:
                     logging.error(UTL.get_time() +
                                   " Failed to receive information about " + r)
