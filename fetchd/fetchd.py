@@ -277,9 +277,9 @@ if __name__ == "__main__":
                             except KeyError:
                                 pass
 
-                    # Is it a ReReco request created in Nov 2013 or later?
+                    # Is it a ReReco request created in Oct 2015 or later?
                     if (pdmv_type.lower() == 'rereco'
-                            and int(data.get('pdmv_submission_date', '0')) > 131001):
+                            and int(data.get('pdmv_submission_date', '0')) > 151000):
                         print('Is ReReco... date is ' + data.get('pdmv_submission_date', '0'))
                         if 'pdmv_campaign' in data:
                             campaign = data['pdmv_campaign']
