@@ -62,8 +62,8 @@ class Utils(object):
             os.remove(m_file)
 
     @staticmethod
-    def curl(request, url, data=None, cookie=None):
-        """Perform CURL"""
+    def curl(request, url, data=None, cookie=None, return_error=False):
+        """Perform CURL - return_error kwarg returns status after failure - defaults to None"""
         out = StringIO()
         curl = pycurl.Curl()
         curl.setopt(pycurl.URL, str(url))
@@ -86,3 +86,6 @@ class Utils(object):
         except ValueError:
             print "Status: %s/n%s" % (curl.getinfo(curl.RESPONSE_CODE),
                                       out.getvalue())
+            if return_error:
+                return None, curl.getinfo(curl.RESPONSE_CODE)
+
