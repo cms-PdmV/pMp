@@ -192,7 +192,9 @@ def create_fake_request(data, utl, cfg):
         'member_of_campaign': 'pdmv_campaign',
         'output_dataset': 'pdmv_dataset_name',
         'reqmgr_name': 'pdmv_request_name',
-        'status': 'pdmv_status', # TODO: Need to this this one
+        'status_from_reqmngr': 'pdmv_status_from_reqmngr',
+        'status_in_DAS': 'pdmv_status_in_DAS',
+        'status': 'pdmv_status'
     }
 
     for mc_name, rereco_name in mc_rereco_equivalents.iteritems():
@@ -236,7 +238,23 @@ if __name__ == "__main__":
                                     r + " was not deleted")
             else:
                 url = str(CFG.url_db + r)
-                data, status = UTL.curl('GET', url, cookie=CFG.cookie)
+
+                retries = 0
+                while True: # a nice and messy way of retrying for a cookie
+                    data, status = UTL.curl('GET', url, cookie=CFG.cookie, return_error=True)
+                    
+                    if status == 302:
+                        if retries < 2:
+                            logging.warning(UTL.get_time() + ' Retrying for new cookie')
+                            UTL.get_cookie(CFG.url_mcm, CFG.cookie)
+                            retries += 1
+                        else:
+                            logging.error(UTL.get_time() + ' Failed to get valid cookie after two '
+                                    + 'retries')
+                            sys.exit(1)
+                    else:
+                        break
+
                 pdmv_type = data.get('pdmv_type', '')
 
                 # parsing requests
@@ -280,16 +298,18 @@ if __name__ == "__main__":
                     # Is it a ReReco request created in Oct 2015 or later?
                     if (pdmv_type.lower() == 'rereco'
                             and int(data.get('pdmv_submission_date', '0')) > 151000):
-                        print('Is ReReco... date is ' + data.get('pdmv_submission_date', '0'))
-                        if 'pdmv_campaign' in data:
-                            campaign = data['pdmv_campaign']
-                            logging.info(UTL.get_time() + ' Creating mock ReReco campaign at '
-                                    + campaign)
-                            save(campaign, { 'prepid': campaign }, UTL, rereco_campaign_cfg)
+                        if len(data.get('pdmv_prep_id', '')) > 0:
+                            if 'pdmv_campaign' in data:
+                                campaign = data['pdmv_campaign']
+                                logging.info(UTL.get_time() + ' Creating mock ReReco campaign at '
+                                        + campaign)
+                                save(campaign, { 'prepid': campaign }, UTL, rereco_campaign_cfg)
 
-                        logging.info(UTL.get_time() + ' Creating mock ReReco request at '
-                                + data['pdmv_prep_id'])
-                        create_fake_request(data, UTL, rereco_request_cfg)
+                            logging.info(UTL.get_time() + ' Creating mock ReReco request at '
+                                    + data['pdmv_prep_id'])
+                            create_fake_request(data, UTL, rereco_request_cfg)
+                        else:
+                            logging.warning(UTL.get_time() + ' NO PREPID: ' + str(data))
 
                 # trim unneeded fields
                 data = extract_fields(data, CFG.fetch_fields)
