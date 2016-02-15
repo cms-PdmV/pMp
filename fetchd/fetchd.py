@@ -51,7 +51,11 @@ def parse_history(details):
         monitor = {}
         if not index:
             monitor['action'] = 'created'
-            monitor['time'] = detail['updater']['submission_date']
+
+            if 'updater' in detail:
+                monitor['time'] = detail['updater']['submission_date']
+            else:
+                monitor['time'] = detail['time']
         elif (detail['action'] == 'set status' and
               detail['step'] in ['approved', 'submitted',
                                  'validation', 'done']):
