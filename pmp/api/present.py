@@ -69,11 +69,11 @@ class AnnouncedAPI(esadapter.InitConnection):
             [0, mcm_r['total_events'] - real_completed_events])
         return [self.pop(mcm_r_fake_subm), self.pop(mcm_r_fake_done)]
 
-    def query_database(self, field, query):
+    def query_database(self, field, query, index='requests'):
         """Get list of requests - field has to be not analyzed by es"""
         return [s['_source'] for s in
                 self.es.search(('%s:%s' % (field, query)),
-                               index='requests', size=self.overflow)
+                               index=index, size=self.overflow)
                 ['hits']['hits']]
 
     @staticmethod
@@ -105,29 +105,37 @@ class AnnouncedAPI(esadapter.InitConnection):
         """Returns parsed query and correct field"""
         if query == 'all':
             # change all to wildcard or check if chain
-            return 'member_of_campaign', '*'
+            return 'member_of_campaign', '*', False
         elif self.is_instance(query, 'flow', 'flows'):
-            return 'flown_with', query
+            return 'flown_with', query, False
         elif self.is_instance(query, 'campaign', 'campaigns'):
-            return 'member_of_campaign', query
-        return None, query
+            return 'member_of_campaign', query, False
+        elif self.is_instance(query, 'rereco_campaign', 'rereco_campaigns'):
+            return 'member_of_campaign', query, True
+        elif self.is_instance(query, 'rereco_request', 'rereco_requests'):
+            return None, query, True
+        return None, query, False
 
     def get(self, query, flip_to_done):
         """Execute announced API"""
         response = []
 
-        field, query = self.parse_query(query)
+        field, query, is_rereco = self.parse_query(query)
 
         if field is not None:
             # campaign or flow
-            response = self.query_database(field, query)
-        else:
-            # possibly request
+            index = 'rereco_requests' if is_rereco else 'requests'
+            response = self.query_database(field, query, index)
+        elif is_rereco:
             try:
-                response = [self.es.get('requests', 'request',
-                                        query)['_source']]
-            except esadapter.pyelasticsearch.exceptions\
-                    .ElasticHttpNotFoundError:
+                response = [self.es.get('rereco_requests', 'rereco_request', query)['_source']]
+            except esadapter.pyelasticsearch.exceptions.ElasticHttpNotFoundError:
+                pass
+        else:
+            # probably a request
+            try:
+                response = [self.es.get('requests', 'request', query)['_source']]
+            except esadapter.pyelasticsearch.exceptions.ElasticHttpNotFoundError:
                 pass
 
         dump_requests = []
@@ -144,7 +152,7 @@ class AnnouncedAPI(esadapter.InitConnection):
             if res['total_events'] == -1:
                 res['total_events'] = 0
 
-            if res['time_event'] == -1:
+            if res.get('time_event', 0) == -1:
                 res['time_event'] = 0
 
             # assign to which query request belongs
