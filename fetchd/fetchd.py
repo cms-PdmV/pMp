@@ -194,9 +194,9 @@ def create_fake_request(data, utl, cfg):
 
     save(fake_request['prepid'], fake_request, utl, cfg)
 
-def is_excluded_rereco(data)
+def is_excluded_rereco(data):
     """Returns true if the given object is to be excluded from the ReReco requests index"""
-    if int(data.get('pdmv_submission_date', '0')) < 151000):
+    if int(data.get('pdmv_submission_date', '0')) < 151000:
         return True
 
     if len(data.get('pdmv_prep_id', '')) == 0:
@@ -286,7 +286,6 @@ if __name__ == "__main__":
                             except KeyError:
                                 pass
 
-<<<<<<< HEAD
                     # Is it a ReReco request created in Oct 2015 or later?
                     if pdmv_type.lower() == 'rereco' and not is_excluded_rereco(data):
                         if 'pdmv_campaign' in data:
@@ -294,11 +293,14 @@ if __name__ == "__main__":
                             logging.info(UTL.get_time() + ' Creating mock ReReco campaign at '
                                     + campaign)
                             save(campaign, { 'prepid': campaign }, UTL, rereco_campaign_cfg)
-=======
+
+                        logging.info(UTL.get_time() + ' Creating mock ReReco request at '
+                                + data['pdmv_prep_id'])
+                        create_fake_request(data, UTL, rereco_request_cfg)
+
                 # parsing requests
                 if 'reqmgr_name' in data:
                     data['reqmgr_name'] = parse_reqmgr(data['reqmgr_name'])
->>>>>>> development
 
                 if 'history' in data:
                     data['history'] = parse_history(data['history'])
