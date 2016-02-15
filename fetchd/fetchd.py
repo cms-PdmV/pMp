@@ -210,6 +210,17 @@ def create_fake_request(data, utl, cfg):
 
     save(fake_request['prepid'], fake_request, utl, cfg)
 
+def is_excluded_rereco(data)
+    """Returns true if the given object is to be excluded from the ReReco requests index"""
+    if int(data.get('pdmv_submission_date', '0')) < 151000):
+        return True
+
+    if len(data.get('pdmv_prep_id', '')) == 0:
+        return True
+
+    # Fall through
+    return False
+
 if __name__ == "__main__":
 
     setlog()
@@ -296,20 +307,16 @@ if __name__ == "__main__":
                                 pass
 
                     # Is it a ReReco request created in Oct 2015 or later?
-                    if (pdmv_type.lower() == 'rereco'
-                            and int(data.get('pdmv_submission_date', '0')) > 151000):
-                        if len(data.get('pdmv_prep_id', '')) > 0:
-                            if 'pdmv_campaign' in data:
-                                campaign = data['pdmv_campaign']
-                                logging.info(UTL.get_time() + ' Creating mock ReReco campaign at '
-                                        + campaign)
-                                save(campaign, { 'prepid': campaign }, UTL, rereco_campaign_cfg)
+                    if pdmv_type.lower() == 'rereco' and not is_excluded_rereco(data):
+                        if 'pdmv_campaign' in data:
+                            campaign = data['pdmv_campaign']
+                            logging.info(UTL.get_time() + ' Creating mock ReReco campaign at '
+                                    + campaign)
+                            save(campaign, { 'prepid': campaign }, UTL, rereco_campaign_cfg)
 
-                            logging.info(UTL.get_time() + ' Creating mock ReReco request at '
-                                    + data['pdmv_prep_id'])
-                            create_fake_request(data, UTL, rereco_request_cfg)
-                        else:
-                            logging.warning(UTL.get_time() + ' NO PREPID: ' + str(data))
+                        logging.info(UTL.get_time() + ' Creating mock ReReco request at '
+                                + data['pdmv_prep_id'])
+                        create_fake_request(data, UTL, rereco_request_cfg)
 
                 # trim unneeded fields
                 data = extract_fields(data, CFG.fetch_fields)
