@@ -111,23 +111,39 @@ def create_mapping(utl, cfg):
         logging.warning(utl.get_time() + " Mapping not implemented. Reason " +
                         str(code))
 
+def get_last_change(utl, cfg):
+    last_seq = 0
 
-def get_changes(utl, cfg):
-    """Changes since last update Generator"""
-
-    # get pointer to last change
     res, code = utl.curl('GET', cfg.last_seq)
     if code == 200:
         last_seq = res['_source']['val']
         logging.info(utl.get_time() + " Updating since " + str(last_seq))
     else:
-        last_seq = 0
         logging.warning(utl.get_time() + " Cannot get last sequence. Reason " +
                         str(code))
         create_index(utl, cfg)
         # create mapping
         if cfg.mapping != '':
             create_mapping(utl, cfg)
+
+    return last_seq
+
+def get_rereco_configs(utl):
+    """Get "fake" rereco index configs and try to ensure they exist"""
+    rereco_campaign_cfg = utils.Config('rereco_campaigns')
+    rereco_request_cfg = utils.Config('rereco_requests')
+
+    # ensure that they exist - we don't actually need the last change
+    get_last_change(utl, rereco_campaign_cfg)
+    get_last_change(utl, rereco_request_cfg)
+
+    return rereco_campaign_cfg, rereco_request_cfg
+
+def get_changes(utl, cfg):
+    """Changes since last update Generator"""
+
+    # get pointer to last change
+    last_seq = get_last_change(utl, cfg)
 
     # get list of documents to fetch
     if last_seq:
@@ -219,6 +235,10 @@ if __name__ == "__main__":
 
     logging.info(UTL.get_time() + " Getting SSO Cookie")
     UTL.get_cookie(CFG.url_mcm, CFG.cookie)
+
+    # Ensure that the rereco wrapper indices are ready
+    if index == 'stats':
+        rereco_campaign_cfg, rereco_request_cfg = get_rereco_configs(UTL)
 
     for r, deleted in get_changes(UTL, CFG):
 
