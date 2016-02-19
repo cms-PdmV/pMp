@@ -42,6 +42,13 @@ class SuggestionsAPI(esadapter.InitConnection):
                 results += [s['_id'] for s in
                             self.es.search(search, index='requests',
                                            size=self.overflow)['hits']['hits']]
+                results += [s['_id'] for s in
+                            self.es.search(search, index='rereco_campaigns',
+                                           size=self.overflow)['hits']['hits']]
+                rereco_requests = self.es.search(search, index='rereco_requests',
+                                            size=self.overflow)['hits']['hits']
+                results += [s['_id'] for s in rereco_requests]
+                results += [s['_source']['prepid'] for s in rereco_requests]
 
             if self.historical:
                 results += [s['_id'] for s in
