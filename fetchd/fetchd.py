@@ -272,17 +272,6 @@ if __name__ == "__main__":
 
                 pdmv_type = data.get('pdmv_type', '')
 
-                # parsing requests
-                if 'reqmgr_name' in data:
-                    data['reqmgr_name'] = parse_reqmgr(data['reqmgr_name'])
-
-                if 'history' in data:
-                    data['history'] = parse_history(data['history'])
-
-                if 'generator_parameters' in data:
-                    data['efficiency'] = parse_efficiency(
-                        data['generator_parameters'])
-
                 # parsing stats documents
                 if index == "stats":
                     if 'pdmv_monitor_history' not in data\
