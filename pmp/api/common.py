@@ -3,10 +3,10 @@ from cStringIO import StringIO
 from datetime import datetime
 from pmp.api.models import esadapter
 from subprocess import call
+from pyelasticsearch import exceptions
 import pycurl
 import simplejson as json
 import os
-
 
 class SuggestionsAPI(esadapter.InitConnection):
     """Used to search in elastic for simmilar prepid as given"""
@@ -59,19 +59,27 @@ class SuggestionsAPI(esadapter.InitConnection):
 
 class LastUpdateAPI(esadapter.InitConnection):
     """Get time of last successful update to the database"""
-
     def get(self, query):
         """Returning time since the epoch
         query - csv of collections to check
         """
         last_update = 0
-        for collection in query.split(','):
-            # loop and select lowest
-            details = self.es.get(collection, 'seq', 'last_seq')['_source']
-            if last_update == 0 or details['time'] < last_update:
-                last_update = details['time']
-        response = dict()
-        response['last_update'] = last_update
+        response = {}
+
+        try:
+            response['last_update'] = self.es.get('meta', 'meta',
+                    'last_completed_update')['_source']['datetime']
+            response['source'] = 'last completed update'
+        except exceptions.ElasticHttpError:
+            # there's no last_completed_update document!
+            for collection in query.split(','):
+                # loop and select lowest
+                details = self.es.get(collection, 'seq', 'last_seq')['_source']
+                if last_update == 0 or details['time'] < last_update:
+                    last_update = details['time']
+            response['last_update'] = last_update
+            response['source'] = 'last sequence'
+
         return json.dumps({"results": response})
 
 class ShortenAPI(object):
