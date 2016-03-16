@@ -43,7 +43,7 @@ class SuggestionsAPI(esadapter.InitConnection):
                             self.es.search(search, index='requests',
                                            size=self.overflow)['hits']['hits']]
                 results += [s['_id'] for s in
-                            self.es.search(search, index='rereco_campaigns',
+                            self.es.search(search, index='processing_strings',
                                            size=self.overflow)['hits']['hits']]
                 results += [s['_id'] for s in
                             self.es.search(search, index='rereco_requests',
