@@ -10,7 +10,6 @@ def setlog():
     """Set loggging level"""
     logging.basicConfig(level=logging.INFO)
 
-
 def parse(details, fields):
     """Remove all indexes that are not in fields array"""
     parsed = {}
@@ -20,7 +19,6 @@ def parse(details, fields):
         except KeyError:
             continue
     return parsed
-
 
 def parse_efficiency(details):
     """Calculate efficiency for pMp"""
@@ -32,7 +30,6 @@ def parse_efficiency(details):
                 float(details[last]['filter_efficiency']))
     return 1
 
-
 def parse_reqmgr(details):
     """Parse reqmgr_name"""
     res = []
@@ -42,7 +39,6 @@ def parse_reqmgr(details):
         except KeyError:
             res.append(detail['pdmv_request_name'])
     return res
-
 
 def parse_history(details):
     """Parse history field"""
@@ -64,7 +60,6 @@ def parse_history(details):
         if len(monitor.keys()):
             res.append(monitor)
     return res
-
 
 def parse_datasets(details):
     """Parse multiple dataset field"""
@@ -90,7 +85,6 @@ def parse_datasets(details):
         pass
     return ret
 
-
 def create_index(utl, cfg):
     """Create index"""
     _, code = utl.curl('PUT', cfg.pmp_db_index)
@@ -99,7 +93,6 @@ def create_index(utl, cfg):
     else:
         logging.warning(utl.get_time() + " Index not created. Reason " +
                         str(code))
-
 
 def create_mapping(utl, cfg):
     """Create mapping"""
@@ -130,14 +123,14 @@ def get_last_change(utl, cfg):
 
 def get_rereco_configs(utl):
     """Get "fake" rereco index configs and try to ensure they exist"""
-    rereco_campaign_cfg = utils.Config('rereco_campaigns')
+    proc_string_cfg = utils.Config('processing_strings')
     rereco_request_cfg = utils.Config('rereco_requests')
 
     # ensure that they exist - we don't actually need the last change
-    get_last_change(utl, rereco_campaign_cfg)
+    get_last_change(utl, proc_string_cfg)
     get_last_change(utl, rereco_request_cfg)
 
-    return rereco_campaign_cfg, rereco_request_cfg
+    return proc_string_cfg, rereco_request_cfg
 
 def get_changes(utl, cfg):
     """Changes since last update Generator"""
@@ -193,7 +186,7 @@ def create_fake_request(data, utl, cfg):
         'prepid': 'pdmv_prep_id',
         'total_events': 'pdmv_expected_events',
         'priority': 'pdmv_priority',
-        'member_of_campaign': 'pdmv_campaign',
+        'processing_string': 'processing_string',
         'output_dataset': 'pdmv_dataset_name',
         'reqmgr_name': 'pdmv_request_name',
         'status_from_reqmngr': 'pdmv_status_from_reqmngr',
@@ -213,6 +206,12 @@ def create_fake_request(data, utl, cfg):
         fake_request['completed_events'] = 0
 
     save(fake_request['prepid'], fake_request, utl, cfg)
+
+def get_processing_string(reqmgr_name, utl):
+    """Tries to get the processing string for a request from Request Manager"""
+    response = json.loads(utl.httpget(conn,
+        "/couchdb/reqmgr_workload_cache/{0}".format(reqmgr_name)))
+    return response['ProcessingString']
 
 def is_excluded_rereco(data):
     """Returns true if the given object is to be excluded from the ReReco requests index"""
@@ -238,7 +237,8 @@ if __name__ == "__main__":
 
     # Ensure that the rereco wrapper indices are ready
     if index == 'stats':
-        rereco_campaign_cfg, rereco_request_cfg = get_rereco_configs(UTL)
+        proc_string_cfg, rereco_request_cfg = get_rereco_configs(UTL)
+        reqmgr_conn = init_connection('cmsweb.cern.ch')
 
     for r, deleted in get_changes(UTL, CFG):
 
@@ -301,14 +301,33 @@ if __name__ == "__main__":
 
                     # Is it a ReReco request created in Oct 2015 or later?
                     if pdmv_type.lower() == 'rereco' and not is_excluded_rereco(data):
-                        if 'pdmv_campaign' in data:
-                            campaign = data['pdmv_campaign']
-                            logging.info(UTL.get_time() + ' Creating mock ReReco campaign at '
-                                    + campaign)
-                            save(campaign, { 'prepid': campaign }, UTL, rereco_campaign_cfg)
+                        prepid = data['pdmv_prep_id']
+                        proc_string = ''
 
-                        logging.info(UTL.get_time() + ' Creating mock ReReco request at '
-                                + data['pdmv_prep_id'])
+                        # Check if request exists to avoid fetching processing string again
+                        response, status = UTL.curl('GET', '%s%s' % (CFG.pmp_db, prepid))
+
+                        try:
+                            proc_string = json.loads(response)['_source']['processing_string']
+                        except KeyError, ValueError:
+                            logging.info(UTL.get_time() + ' Record has no processing string yet')
+                            
+                            if 'reqmgr_name' in data:
+                                proc_string = get_processing_string(data['reqmgr_name'], UTL,
+                                    reqmgr_conn)
+                            else:
+                                logging.warning('{0} Record {1} has no reqmgr_name'.format(
+                                    UTL.get_time(), prepid))
+                                proc_string = ''
+
+                        data['processing_string'] = proc_string
+
+                        if len(proc_string) > 0:
+                            logging.info(UTL.get_time() + ' Logging processing string at '
+                                    + proc_string)
+                            save(proc_string, { 'prepid': proc_string }, UTL, proc_string_cfg)
+
+                        logging.info(UTL.get_time() + ' Creating mock ReReco request at ' + prepid)
                         create_fake_request(data, UTL, rereco_request_cfg)
 
                 # parsing requests
