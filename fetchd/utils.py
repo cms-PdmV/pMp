@@ -3,6 +3,7 @@ import simplejson as json
 import os
 import pycurl
 import re
+import httplib
 from ConfigParser import SafeConfigParser
 from cStringIO import StringIO
 from datetime import datetime
@@ -44,6 +45,24 @@ class Utils(object):
     def is_file(m_file):
         """Retrun true if file exists and accessible"""
         return os.path.isfile(m_file) and os.access(m_file, os.R_OK)
+
+    def init_connection(url):
+        return httplib.HTTPSConnection(url, port=443,
+                cert_file=os.getenv('X509_USER_PROXY'),
+                key_file=os.getenv('X509_USER_PROXY'))
+
+    def httpget(conn, query):
+        conn.request("GET", query.replace('#', '%23'))
+        try:
+            response = conn.getresponse()
+        except httplib.BadStatusLine as ex:
+            raise RuntimeError(str(ex))
+        if response.status != 200:
+            print "Problems quering DBS3 RESTAPI with %s: %s" % (
+                conn.host + query.replace('#', '%23'), response.read())
+
+            return None
+        return response.read()
 
     def get_cookie(self, url, path):
         """Execute CERN's get SSO cookie"""
