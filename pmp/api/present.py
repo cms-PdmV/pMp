@@ -110,7 +110,7 @@ class AnnouncedAPI(esadapter.InitConnection):
             return 'flown_with', query, False
         elif self.is_instance(query, 'campaign', 'campaigns'):
             return 'member_of_campaign', query, False
-        elif self.is_instance(query, 'rereco_campaign', 'rereco_campaigns'):
+        elif self.is_instance(query, 'processing_string', 'processing_strings'):
             return 'member_of_campaign', query, True
         elif self.is_instance(query, 'rereco_request', 'rereco_requests'):
             return None, query, True
@@ -123,16 +123,17 @@ class AnnouncedAPI(esadapter.InitConnection):
         field, query, is_rereco = self.parse_query(query)
 
         if field is not None:
-            # campaign or flow
+            # campaign, flow or processing_string - search for requests by that member
             index = 'rereco_requests' if is_rereco else 'requests'
             response = self.query_database(field, query, index)
         elif is_rereco:
+            # is probably a rereco_request
             try:
                 response = [self.es.get('rereco_requests', 'rereco_request', query)['_source']]
             except esadapter.pyelasticsearch.exceptions.ElasticHttpNotFoundError:
                 pass
         else:
-            # probably a request
+            # probably an MC request
             try:
                 response = [self.es.get('requests', 'request', query)['_source']]
             except esadapter.pyelasticsearch.exceptions.ElasticHttpNotFoundError:
