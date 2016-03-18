@@ -46,11 +46,13 @@ class Utils(object):
         """Retrun true if file exists and accessible"""
         return os.path.isfile(m_file) and os.access(m_file, os.R_OK)
 
+    @staticmethod
     def init_connection(url):
         return httplib.HTTPSConnection(url, port=443,
                 cert_file=os.getenv('X509_USER_PROXY'),
                 key_file=os.getenv('X509_USER_PROXY'))
 
+    @staticmethod
     def httpget(conn, query):
         conn.request("GET", query.replace('#', '%23'))
         try:
