@@ -239,7 +239,7 @@ if __name__ == "__main__":
     # Ensure that the rereco wrapper indices are ready
     if index == 'stats':
         proc_string_cfg, rereco_request_cfg = get_rereco_configs(UTL)
-        reqmgr_conn = init_connection('cmsweb.cern.ch')
+        reqmgr_conn = UTL.init_connection('cmsweb.cern.ch')
 
     for r, deleted in get_changes(UTL, CFG):
 
