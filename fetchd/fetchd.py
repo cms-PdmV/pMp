@@ -186,7 +186,8 @@ def create_fake_request(data, utl, cfg):
         'prepid': 'pdmv_prep_id',
         'total_events': 'pdmv_expected_events',
         'priority': 'pdmv_priority',
-        'processing_string': 'processing_string',
+        'rereco_campaign': 'member_of_campaign',
+        'member_of_campaign': 'processing_string',
         'output_dataset': 'pdmv_dataset_name',
         'reqmgr_name': 'pdmv_request_name',
         'status_from_reqmngr': 'pdmv_status_from_reqmngr',
@@ -320,9 +321,10 @@ if __name__ == "__main__":
                                     UTL.get_time(), prepid))
                                 proc_string = ''
 
-                        data['processing_string'] = proc_string
 
                         if len(proc_string) > 0:
+                            data['processing_string'] = proc_string
+
                             logging.info(UTL.get_time() + ' Logging processing string at '
                                     + proc_string)
                             save(proc_string, { 'prepid': proc_string }, UTL, proc_string_cfg)
