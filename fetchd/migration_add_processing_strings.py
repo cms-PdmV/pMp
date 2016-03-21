@@ -26,9 +26,9 @@ if __name__ == "__main__":
 
     es_query = {
         'query': {
-            'bool': {
-                'must_not': {
-                    'exists': {
+            'constant_score': {
+                'filter': {
+                    'missing': {
                         'field': 'rereco_campaign'
                     }
                 }
