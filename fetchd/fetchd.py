@@ -192,12 +192,22 @@ def create_fake_request(data, utl, cfg):
         'reqmgr_name': 'pdmv_request_name',
         'status_from_reqmngr': 'pdmv_status_from_reqmngr',
         'status_in_DAS': 'pdmv_status_in_DAS',
-        'status': 'pdmv_status'
+        'pdmv_status': 'pdmv_status' # Keep this in case it's useful in the future
     }
 
     for mc_name, rereco_name in mc_rereco_equivalents.iteritems():
         if rereco_name in data:
             fake_request[mc_name] = data[rereco_name]
+
+    # Get a useful status (using the DAS status)
+    das_status = fake_request.get('status_in_DAS', 'unknown')
+
+    if das_status = 'VALID':
+        fake_request['status'] = 'done'
+    elif das_status = 'PRODUCTION':
+        fake_request['status'] = 'submitted'
+    else:
+        fake_request['status'] = das_status
 
     # Find the completed events
     try:
