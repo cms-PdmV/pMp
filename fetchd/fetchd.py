@@ -202,9 +202,9 @@ def create_fake_request(data, utl, cfg):
     # Get a useful status (using the DAS status)
     das_status = fake_request.get('status_in_DAS', 'unknown')
 
-    if das_status = 'VALID':
+    if das_status == 'VALID':
         fake_request['status'] = 'done'
-    elif das_status = 'PRODUCTION':
+    elif das_status == 'PRODUCTION':
         fake_request['status'] = 'submitted'
     else:
         fake_request['status'] = das_status
