@@ -21,6 +21,8 @@ class Config(object):
         database = parser.get(typeof, 'db')
         url_pmp = parser.get('general', 'pmp')
 
+        self.reqmgr_domain = parser.get('reqmgr', 'domain')
+        self.reqmgr_path = parser.get('reqmgr', 'path')
         self.cookie = os.environ['HOME'] + parser.get('cookie', 'path')
         self.exclude_list = re.split(", ", parser.get('exclude', 'list'))
         self.fetch_fields = re.split(", ", parser.get(typeof, 'fetch_fields'))
