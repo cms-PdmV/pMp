@@ -218,16 +218,14 @@ def create_fake_request(data, utl, cfg):
 
     save(fake_request['prepid'], fake_request, utl, cfg)
 
-def get_processing_string(reqmgr_name, utl, cfg):
+def get_processing_string(reqmgr_name, utl, cfg, conn1, conn2):
     """Tries to get the processing string for a request from Request Manager"""
-    first_conn = utl.init_connection(cfg.reqmgr_domain)
-    response = json.loads(utl.httpget(first_conn, "{0}/{1}".format(cfg.reqmgr_path ,reqmgr_name)))
+    response = json.loads(utl.httpget(conn1, "{0}/{1}".format(cfg.reqmgr_path, reqmgr_name)))
 
     # TODO: I hate myself
-    if 'error' in response and cfg.reqmgr_domain_backup != '':
+    if 'error' in response and conn2 is not None:
         logging.warning(utl.get_time() + ' Processing string not found - trying other ReqMgr')
-        second_conn = UTL.init_connection(CFG.reqmgr_domain_backup)
-        response = json.loads(utl.httpget(second_conn, "{0}/{1}".format(cfg.reqmgr_path, reqmgr_name)))
+        response = json.loads(utl.httpget(conn2, "{0}/{1}".format(cfg.reqmgr_path, reqmgr_name)))
 
     return response['ProcessingString']
 
@@ -256,6 +254,11 @@ if __name__ == "__main__":
     # Ensure that the rereco wrapper indices are ready
     if index == 'stats':
         proc_string_cfg, rereco_request_cfg = get_rereco_configs(UTL)
+        reqmgr_conn1 = UTL.init_connection(CFG.reqmgr_domain)
+        reqmgr_conn2 = None
+
+        if CFG.reqmgr_domain_backup != '': # config allows us to check a different reqmgr
+            reqmgr_conn2 = UTL.init_connection(CFG.reqmgr_domain_backup)
 
     for r, deleted in get_changes(UTL, CFG):
 
@@ -288,6 +291,17 @@ if __name__ == "__main__":
                         break
 
                 pdmv_type = data.get('pdmv_type', '')
+
+                # parsing requests
+                if 'reqmgr_name' in data:
+                    data['reqmgr_name'] = parse_reqmgr(data['reqmgr_name'])
+
+                if 'history' in data:
+                    data['history'] = parse_history(data['history'])
+
+                if 'generator_parameters' in data:
+                    data['efficiency'] = parse_efficiency(
+                        data['generator_parameters'])
 
                 # parsing stats documents
                 if index == "stats":
@@ -322,15 +336,16 @@ if __name__ == "__main__":
                         proc_string = ''
 
                         # Check if request exists to avoid fetching processing string again
-                        response, status = UTL.curl('GET', '%s%s' % (CFG.pmp_db, prepid))
+                        ps_response, _ = UTL.curl('GET', '%s%s' % (CFG.pmp_db, prepid))
 
                         try:
-                            proc_string = json.loads(response)['_source']['processing_string']
+                            proc_string = json.loads(ps_response)['_source']['processing_string']
                         except KeyError, ValueError:
                             logging.info(UTL.get_time() + ' Record has no processing string yet')
                             
                             if 'reqmgr_name' in data:
-                                proc_string = get_processing_string(data['reqmgr_name'], UTL, CFG)
+                                proc_string = get_processing_string(data['reqmgr_name'], UTL, CFG,
+                                    reqmgr_conn1, reqmgr_conn2)
                             else:
                                 logging.warning('{0} Record {1} has no reqmgr_name'.format(
                                     UTL.get_time(), prepid))
@@ -347,17 +362,7 @@ if __name__ == "__main__":
                         logging.info(UTL.get_time() + ' Creating mock ReReco request at ' + prepid)
                         create_fake_request(data, UTL, rereco_request_cfg)
 
-                # parsing requests
-                if 'reqmgr_name' in data:
-                    data['reqmgr_name'] = parse_reqmgr(data['reqmgr_name'])
-
-                if 'history' in data:
-                    data['history'] = parse_history(data['history'])
-
-                if 'generator_parameters' in data:
-                    data['efficiency'] = parse_efficiency(
-                        data['generator_parameters'])
-
+                # Trim fields we don't want
                 data = parse(data, CFG.fetch_fields)
 
                 if status == 200:
