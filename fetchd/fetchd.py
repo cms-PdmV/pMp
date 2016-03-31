@@ -218,10 +218,9 @@ def create_fake_request(data, utl, cfg):
 
     save(fake_request['prepid'], fake_request, utl, cfg)
 
-def get_processing_string(reqmgr_name, utl):
+def get_processing_string(reqmgr_name, utl, cfg, conn):
     """Tries to get the processing string for a request from Request Manager"""
-    response = json.loads(utl.httpget(conn,
-        "/couchdb/reqmgr_workload_cache/{0}".format(reqmgr_name)))
+    response = json.loads(utl.httpget(conn, "{0}/{1}".format(cfg.reqmgr_path ,reqmgr_name)))
     return response['ProcessingString']
 
 def is_excluded_rereco(data):
@@ -249,7 +248,7 @@ if __name__ == "__main__":
     # Ensure that the rereco wrapper indices are ready
     if index == 'stats':
         proc_string_cfg, rereco_request_cfg = get_rereco_configs(UTL)
-        reqmgr_conn = UTL.init_connection('cmsweb.cern.ch')
+        reqmgr_conn = UTL.init_connection(CFG.reqmgr_domain)
 
     for r, deleted in get_changes(UTL, CFG):
 
@@ -324,7 +323,7 @@ if __name__ == "__main__":
                             logging.info(UTL.get_time() + ' Record has no processing string yet')
                             
                             if 'reqmgr_name' in data:
-                                proc_string = get_processing_string(data['reqmgr_name'], UTL,
+                                proc_string = get_processing_string(data['reqmgr_name'], UTL, cfg,
                                     reqmgr_conn)
                             else:
                                 logging.warning('{0} Record {1} has no reqmgr_name'.format(
