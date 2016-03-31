@@ -218,9 +218,17 @@ def create_fake_request(data, utl, cfg):
 
     save(fake_request['prepid'], fake_request, utl, cfg)
 
-def get_processing_string(reqmgr_name, utl, cfg, conn):
+def get_processing_string(reqmgr_name, utl, cfg):
     """Tries to get the processing string for a request from Request Manager"""
-    response = json.loads(utl.httpget(conn, "{0}/{1}".format(cfg.reqmgr_path ,reqmgr_name)))
+    first_conn = utl.init_connection(cfg.reqmgr_domain)
+    response = json.loads(utl.httpget(first_conn, "{0}/{1}".format(cfg.reqmgr_path ,reqmgr_name)))
+
+    # TODO: I hate myself
+    if 'error' in response and cfg.reqmgr_domain_backup != '':
+        logging.warning(utl.get_time() + ' Processing string not found - trying other ReqMgr')
+        second_conn = UTL.init_connection(CFG.reqmgr_domain_backup)
+        response = json.loads(utl.httpget(second_conn, "{0}/{1}".format(cfg.reqmgr_path, reqmgr_name)))
+
     return response['ProcessingString']
 
 def is_excluded_rereco(data):
@@ -248,7 +256,6 @@ if __name__ == "__main__":
     # Ensure that the rereco wrapper indices are ready
     if index == 'stats':
         proc_string_cfg, rereco_request_cfg = get_rereco_configs(UTL)
-        reqmgr_conn = UTL.init_connection(CFG.reqmgr_domain)
 
     for r, deleted in get_changes(UTL, CFG):
 
@@ -323,8 +330,7 @@ if __name__ == "__main__":
                             logging.info(UTL.get_time() + ' Record has no processing string yet')
                             
                             if 'reqmgr_name' in data:
-                                proc_string = get_processing_string(data['reqmgr_name'], UTL, cfg,
-                                    reqmgr_conn)
+                                proc_string = get_processing_string(data['reqmgr_name'], UTL, CFG)
                             else:
                                 logging.warning('{0} Record {1} has no reqmgr_name'.format(
                                     UTL.get_time(), prepid))
