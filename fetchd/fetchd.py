@@ -220,11 +220,14 @@ def create_fake_request(data, utl, cfg):
 
 def get_processing_string(reqmgr_name, utl, cfg, conn1, conn2):
     """Tries to get the processing string for a request from Request Manager"""
+    response1 = ''
+    status1 = 0
+
     try:
         response1, status1 = utl.httpget(conn1, "{0}{1}".format(cfg.reqmgr_path, reqmgr_name))
     except UserWarning as ex:
         logging.warning(utl.get_time() + ' Warning when getting processing string from reqmgr: '
-            + ex.message)
+            + str(ex))
 
     # TODO: I hate myself
     if status1 != 200 and conn2 is not None:
@@ -234,7 +237,7 @@ def get_processing_string(reqmgr_name, utl, cfg, conn1, conn2):
             response, _ = utl.httpget(conn2, "{0}{1}".format(cfg.reqmgr_path, reqmgr_name))
         except UserWarning as ex:
             logging.warning(utl.get_time() + ' Warning when getting processing string from reqmgr: '
-                + ex.message)
+                + str(ex))
             return ''
     else:
         response = response1
@@ -358,7 +361,8 @@ if __name__ == "__main__":
                         try:
                             proc_string = json.loads(ps_response)['_source']['processing_string']
                         except KeyError, ValueError:
-                            logging.info(UTL.get_time() + ' Record has no processing string yet')
+                            logging.info(UTL.get_time() + ' Record has no processing string yet: '
+                                + prepid)
                             
                             try:
                                 reqmgr_name = data.get('reqmgr_name', data['pdmv_request_name'])
