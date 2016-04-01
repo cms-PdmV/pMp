@@ -343,14 +343,14 @@ if __name__ == "__main__":
                         except KeyError, ValueError:
                             logging.info(UTL.get_time() + ' Record has no processing string yet')
                             
-                            if 'reqmgr_name' in data:
-                                proc_string = get_processing_string(data['reqmgr_name'], UTL, CFG,
+                            try:
+                                reqmgr_name = data.get('reqmgr_name', data['pdmv_request_name'])
+                                proc_string = get_processing_string(reqmgr_name, UTL, CFG,
                                     reqmgr_conn1, reqmgr_conn2)
-                            else:
+                            except KeyError:
                                 logging.warning('{0} Record {1} has no reqmgr_name'.format(
                                     UTL.get_time(), prepid))
                                 proc_string = ''
-
 
                         if len(proc_string) > 0:
                             data['processing_string'] = proc_string
