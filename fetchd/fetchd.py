@@ -362,7 +362,7 @@ if __name__ == "__main__":
                             proc_string = json.loads(ps_response)['_source']['processing_string']
                         except KeyError, ValueError:
                             logging.info(UTL.get_time() + ' Record has no processing string yet: '
-                                + prepid)
+                                + r)
                             
                             try:
                                 reqmgr_name = data.get('reqmgr_name', data['pdmv_request_name'])
