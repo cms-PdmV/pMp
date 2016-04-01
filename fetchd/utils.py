@@ -4,6 +4,7 @@ import os
 import pycurl
 import re
 import httplib
+import logging
 from ConfigParser import SafeConfigParser
 from cStringIO import StringIO
 from datetime import datetime
@@ -61,7 +62,7 @@ class Utils(object):
         try:
             response = conn.getresponse()
         except httplib.BadStatusLine as ex:
-            raise RuntimeError(str(ex))
+            logging.warning(self.get_time() + ' Bad status line: ' + str(ex))
 
         return response.read(), response.status
 
