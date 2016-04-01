@@ -4,7 +4,6 @@ import os
 import pycurl
 import re
 import httplib
-import logging
 from ConfigParser import SafeConfigParser
 from cStringIO import StringIO
 from datetime import datetime
@@ -59,11 +58,7 @@ class Utils(object):
     @staticmethod
     def httpget(conn, query):
         conn.request("GET", query.replace('#', '%23'))
-        try:
-            response = conn.getresponse()
-        except httplib.BadStatusLine as ex:
-            logging.warning(self.get_time() + ' Bad status line: ' + str(ex))
-
+        response = conn.getresponse()
         return response.read(), response.status
 
     def get_cookie(self, url, path):
