@@ -220,12 +220,22 @@ def create_fake_request(data, utl, cfg):
 
 def get_processing_string(reqmgr_name, utl, cfg, conn1, conn2):
     """Tries to get the processing string for a request from Request Manager"""
-    response1, status1 = utl.httpget(conn1, "{0}{1}".format(cfg.reqmgr_path, reqmgr_name))
+    try:
+        response1, status1 = utl.httpget(conn1, "{0}{1}".format(cfg.reqmgr_path, reqmgr_name))
+    except UserWarning as ex:
+        logging.warning(utl.get_time() + ' Warning when getting processing string from reqmgr: '
+            + ex.message)
 
     # TODO: I hate myself
     if status1 != 200 and conn2 is not None:
         logging.warning(utl.get_time() + ' Processing string not found - trying backup ReqMgr')
-        response, _ = utl.httpget(conn2, "{0}{1}".format(cfg.reqmgr_path, reqmgr_name))
+
+        try:
+            response, _ = utl.httpget(conn2, "{0}{1}".format(cfg.reqmgr_path, reqmgr_name))
+        except UserWarning as ex:
+            logging.warning(utl.get_time() + ' Warning when getting processing string from reqmgr: '
+                + ex.message)
+            return ''
     else:
         response = response1
 

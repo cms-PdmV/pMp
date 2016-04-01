@@ -58,8 +58,14 @@ class Utils(object):
     @staticmethod
     def httpget(conn, query):
         conn.request("GET", query.replace('#', '%23'))
-        response = conn.getresponse()
-        return response.read(), response.status
+
+        try:
+            response = conn.getresponse()
+        except httplib.BadStatusLine: # worst. exception. eveeerrrr.
+            raise UserWarning('BadStatusLine - this is usually associated with retrieving test '
+                + 'data')
+        else:
+            return response.read(), response.status
 
     def get_cookie(self, url, path):
         """Execute CERN's get SSO cookie"""
