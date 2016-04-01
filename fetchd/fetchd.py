@@ -220,14 +220,21 @@ def create_fake_request(data, utl, cfg):
 
 def get_processing_string(reqmgr_name, utl, cfg, conn1, conn2):
     """Tries to get the processing string for a request from Request Manager"""
-    response = json.loads(utl.httpget(conn1, "{0}/{1}".format(cfg.reqmgr_path, reqmgr_name)))
+    response1, status1 = utl.httpget(conn1, "{0}{1}".format(cfg.reqmgr_path, reqmgr_name))
 
     # TODO: I hate myself
-    if 'error' in response and conn2 is not None:
-        logging.warning(utl.get_time() + ' Processing string not found - trying other ReqMgr')
-        response = json.loads(utl.httpget(conn2, "{0}/{1}".format(cfg.reqmgr_path, reqmgr_name)))
+    if status1 != 200 and conn2 is not None:
+        logging.warning(utl.get_time() + ' Processing string not found - trying backup ReqMgr')
+        response, _ = utl.httpget(conn2, "{0}{1}".format(cfg.reqmgr_path, reqmgr_name))
+    else:
+        response = response1
 
-    return response['ProcessingString']
+    try:
+        processing_string = json.loads(response)['ProcessingString']
+    except KeyError, ValueError:
+        return ''
+    else:
+        return processing_string
 
 def is_excluded_rereco(data):
     """Returns true if the given object is to be excluded from the ReReco requests index"""

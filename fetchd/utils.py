@@ -62,12 +62,8 @@ class Utils(object):
             response = conn.getresponse()
         except httplib.BadStatusLine as ex:
             raise RuntimeError(str(ex))
-        if response.status != 200:
-            print "Problems quering DBS3 RESTAPI with %s: %s" % (
-                conn.host + query.replace('#', '%23'), response.read())
 
-            return None
-        return response.read()
+        return response.read(), response.status
 
     def get_cookie(self, url, path):
         """Execute CERN's get SSO cookie"""
