@@ -5,6 +5,7 @@ manager, instead of through
 import httplib
 import logging
 from utils import Utils
+import json
 
 class NoProcessingString(Exception):
     pass
