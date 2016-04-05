@@ -2,9 +2,9 @@
 import simplejson as json
 import logging
 import time
-import utils
 import sys
 from datetime import datetime
+from utils import *
 from processing_string_provider import *
 
 def setlog():
@@ -86,69 +86,69 @@ def parse_datasets(details):
         pass
     return ret
 
-def create_index(utl, cfg):
+def create_index(cfg):
     """Create index"""
-    _, code = utl.curl('PUT', cfg.pmp_db_index)
+    _, code = Utils.curl('PUT', cfg.pmp_db_index)
     if code == 200:
-        logging.info(utl.get_time() + " Index created")
+        logging.info(Utils.get_time() + " Index created")
     else:
-        logging.warning(utl.get_time() + " Index not created. Reason " +
+        logging.warning(Utils.get_time() + " Index not created. Reason " +
                         str(code))
 
-def create_mapping(utl, cfg):
+def create_mapping(cfg):
     """Create mapping"""
-    _, code = utl.curl('PUT', (cfg.pmp_db + '_mapping'), \
+    _, code = Utils.curl('PUT', (cfg.pmp_db + '_mapping'), \
                            json.loads(cfg.mapping))
     if code == 200:
-        logging.info(utl.get_time() + " Pushed mapping")
+        logging.info(Utils.get_time() + " Pushed mapping")
     else:
-        logging.warning(utl.get_time() + " Mapping not implemented. Reason " +
+        logging.warning(Utils.get_time() + " Mapping not implemented. Reason " +
                         str(code))
 
-def get_last_change(utl, cfg):
+def get_last_change(cfg):
     last_seq = 0
 
-    res, code = utl.curl('GET', cfg.last_seq)
+    res, code = Utils.curl('GET', cfg.last_seq)
     if code == 200:
         last_seq = res['_source']['val']
-        logging.info(utl.get_time() + " Updating since " + str(last_seq))
+        logging.info(Utils.get_time() + " Updating since " + str(last_seq))
     else:
-        logging.warning(utl.get_time() + " Cannot get last sequence. Reason " +
+        logging.warning(Utils.get_time() + " Cannot get last sequence. Reason " +
                         str(code))
-        create_index(utl, cfg)
+        create_index(cfg)
         # create mapping
         if cfg.mapping != '':
-            create_mapping(utl, cfg)
+            create_mapping(cfg)
 
     return last_seq
 
-def get_rereco_configs(utl):
+def get_rereco_configs():
     """Get "fake" rereco index configs and try to ensure they exist"""
-    proc_string_cfg = utils.Config('processing_strings')
-    rereco_request_cfg = utils.Config('rereco_requests')
+    proc_string_cfg = Config('processing_strings')
+    rereco_request_cfg = Config('rereco_requests')
 
     # ensure that they exist - we don't actually need the last change
-    get_last_change(utl, proc_string_cfg)
-    get_last_change(utl, rereco_request_cfg)
+    get_last_change(proc_string_cfg)
+    get_last_change(rereco_request_cfg)
 
     return proc_string_cfg, rereco_request_cfg
 
-def get_changes(utl, cfg):
+def get_changes(cfg):
     """Changes since last update Generator"""
 
     # get pointer to last change
-    last_seq = get_last_change(utl, cfg)
+    last_seq = get_last_change(cfg)
 
     # get list of documents to fetch
     if last_seq:
-        res, code = utl.curl('GET', '%s=%s' % (cfg.url_db_changes, last_seq), \
+        res, code = Utils.curl('GET', '%s=%s' % (cfg.url_db_changes, last_seq), \
                                  cookie=cfg.cookie)
         last_seq = res['last_seq']
         string = 'results'
     else:
         # operate on all filds rather than updated (compressed)
-        res, code = utl.curl('GET', '%s' % cfg.url_db_all, cookie=cfg.cookie)
-        last_seq, _ = utl.curl('GET', cfg.url_db_first, cookie=cfg.cookie)
+        res, code = Utils.curl('GET', '%s' % cfg.url_db_all, cookie=cfg.cookie)
+        last_seq, _ = Utils.curl('GET', cfg.url_db_first, cookie=cfg.cookie)
         last_seq = last_seq['last_seq']
         string = 'rows'
 
@@ -157,24 +157,24 @@ def get_changes(utl, cfg):
             for record in res[string]:
                 yield record['id'], ('deleted' in record)
         else:
-            logging.info(utl.get_time() + " No changes since last update")
+            logging.info(Utils.get_time() + " No changes since last update")
 
-        _, code = utl.curl('PUT', cfg.last_seq, json.loads( \
+        _, code = Utils.curl('PUT', cfg.last_seq, json.loads( \
                 '{"val":%s, "time":%s}' % (last_seq,
                                            int(round(time.time() * 1000)))))
 
         if code not in [200, 201]:
-            logging.error(utl.get_time() + " Cannot update last sequence")
+            logging.error(Utils.get_time() + " Cannot update last sequence")
     else:
-        logging.error(utl.get_time() + " Status " + status +
+        logging.error(Utils.get_time() + " Status " + status +
                       " while getting list of documents")
 
-def save(r, data, utl, cfg):
-    re, s = utl.curl('PUT', '%s%s' % (cfg.pmp_db, r), data)
+def save(r, data, cfg):
+    re, s = Utils.curl('PUT', '%s%s' % (cfg.pmp_db, r), data)
     if s in [200, 201]:
-        logging.info(UTL.get_time() + " New record " + r)
+        logging.info(Utils.get_time() + " New record " + r)
     else:
-        logging.error(UTL.get_time() +
+        logging.error(Utils.get_time() +
                       " Failed to update record at " + r +
                       ". Reason: " + json.dumps(re))
 
@@ -183,12 +183,12 @@ def get_processing_string(reqmgr_name, proc_string_provider):
     processing_string = proc_string_provider.get(reqmgr_name)
 
     # Log the processing string in the processing_strings ES index
-    logging.info(UTL.get_time() + ' Logging processing string at '
+    logging.info(Utils.get_time() + ' Logging processing string at '
             + proc_string)
-    save(proc_string, { 'prepid': proc_string }, UTL, proc_string_cfg)
+    save(proc_string, { 'prepid': proc_string }, proc_string_cfg)
     return processing_string
 
-def create_rereco_request(data, cfg):
+def create_rereco_request(data, cfg, processing_string_provider):
     """Creates a request-like object from a given stats object"""
     fake_request = {}
 
@@ -235,12 +235,13 @@ def create_rereco_request(data, cfg):
             Utils.get_time(), prepid))
     else:
         try:
-            fake_request['processing_string'] = get_processing_string(reqmgr_name)
+            fake_request['processing_string'] = get_processing_string(reqmgr_name,
+                processing_string_provider)
         except NoProcessingString as err:
             logging.warning(Utils.get_time() + ' ' + str(err))
 
     # Aaaaand save.
-    save(fake_request['prepid'], fake_request, utl, cfg)
+    save(fake_request['prepid'], fake_request, cfg)
 
 def is_excluded_rereco(data):
     """Returns true if the given object is to be excluded from the ReReco requests index"""
@@ -256,17 +257,16 @@ def is_excluded_rereco(data):
 if __name__ == "__main__":
 
     setlog()
-    UTL = utils.Utils()
 
     index = sys.argv[1]
-    CFG = utils.Config(index)
+    CFG = Config(index)
 
-    logging.info(UTL.get_time() + " Getting SSO Cookie")
-    UTL.get_cookie(CFG.url_mcm, CFG.cookie)
+    logging.info(Utils.get_time() + " Getting SSO Cookie")
+    Utils.get_cookie(CFG.url_mcm, CFG.cookie)
 
     # Ensure that the rereco wrapper indices are ready
     if index == 'stats':
-        proc_string_cfg, rereco_request_cfg = get_rereco_configs(UTL)
+        proc_string_cfg, rereco_request_cfg = get_rereco_configs()
 
         if CFG.reqmgr_domain_backup == '': # config allows us to check a different reqmgr
             proc_string_provider = ProcessingStringProvider(CFG.reqmgr_domain, CFG.reqmgr_path)
@@ -274,31 +274,31 @@ if __name__ == "__main__":
             proc_string_provider = ProcessingStringProvider(CFG.reqmgr_domain, CFG.reqmgr_path,
                 CFG.reqmgr_domain_backup)
 
-    for r, deleted in get_changes(UTL, CFG):
+    for r, deleted in get_changes(CFG):
 
         if r not in CFG.exclude_list:
             if deleted:
-                _, s = UTL.curl('DELETE', '%s%s' % (CFG.pmp_db, r))
+                _, s = Utils.curl('DELETE', '%s%s' % (CFG.pmp_db, r))
                 if s == 200:
-                    logging.info(UTL.get_time() + " Deleted record indexed at "
+                    logging.info(Utils.get_time() + " Deleted record indexed at "
                                  + r)
                 else:
-                    logging.warning(UTL.get_time() + " Request indexed at " +
+                    logging.warning(Utils.get_time() + " Request indexed at " +
                                     r + " was not deleted")
             else:
                 url = str(CFG.url_db + r)
 
                 retries = 0
                 while True: # a nice and messy way of retrying for a cookie
-                    data, status = UTL.curl('GET', url, cookie=CFG.cookie, return_error=True)
+                    data, status = Utils.curl('GET', url, cookie=CFG.cookie, return_error=True)
                     
                     if status == 302:
                         if retries < 2:
-                            logging.warning(UTL.get_time() + ' Retrying for new cookie')
-                            UTL.get_cookie(CFG.url_mcm, CFG.cookie)
+                            logging.warning(Utils.get_time() + ' Retrying for new cookie')
+                            Utils.get_cookie(CFG.url_mcm, CFG.cookie)
                             retries += 1
                         else:
-                            logging.error(UTL.get_time() + ' Failed to get valid cookie after two '
+                            logging.error(Utils.get_time() + ' Failed to get valid cookie after two '
                                     + 'retries')
                             sys.exit(1)
                     else:
@@ -347,23 +347,23 @@ if __name__ == "__main__":
 
                         # Is it a ReReco request created in Oct 2015 or later?
                         if pdmv_type.lower() == 'rereco' and not is_excluded_rereco(data):
-                            logging.info(UTL.get_time() + ' Creating mock ReReco request at '
+                            logging.info(Utils.get_time() + ' Creating mock ReReco request at '
                                 + data['pdmv_prep_id'])
-                            create_rereco_request(data, UTL, rereco_request_cfg)
+                            create_rereco_request(data, rereco_request_cfg, proc_string_provider)
 
                     # Trim fields we don't want
                     data = parse(data, CFG.fetch_fields)
 
                     # Save to local stats ES index
-                    re, s = UTL.curl('PUT', '%s%s' % (CFG.pmp_db, r), data)
+                    re, s = Utils.curl('PUT', '%s%s' % (CFG.pmp_db, r), data)
                     if s in [200, 201]:
-                        logging.info(UTL.get_time() + " New record " + r)
+                        logging.info(Utils.get_time() + " New record " + r)
                     else:
-                        logging.error(UTL.get_time() + " Failed to update record at " + r
+                        logging.error(Utils.get_time() + " Failed to update record at " + r
                             + ". Reason: " + json.dumps(re))
                 else:
-                    logging.error(UTL.get_time() +
+                    logging.error(Utils.get_time() +
                                   " Failed to receive information about " + r)
 
-    logging.info(UTL.get_time() + " Removing SSO Cookie")
-    UTL.rm_file(CFG.cookie)
+    logging.info(Utils.get_time() + " Removing SSO Cookie")
+    Utils.rm_file(CFG.cookie)
