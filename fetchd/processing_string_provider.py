@@ -40,7 +40,7 @@ class ProcessingStringProvider(object):
             # leave the connection object in an invalid state
             self._connection = Utils.init_connection(self._reqmgr_host)
 
-        if error = True or status != 200:
+        if error or status != 200:
             if self._use_backup:
                 response, status = self.get_from_backup(reqmgr_name)
             else:
