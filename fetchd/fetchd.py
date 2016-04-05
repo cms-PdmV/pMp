@@ -5,6 +5,7 @@ import time
 import utils
 import sys
 from datetime import datetime
+from processing_string_provider import *
 
 def setlog():
     """Set loggging level"""
@@ -177,7 +178,17 @@ def save(r, data, utl, cfg):
                       " Failed to update record at " + r +
                       ". Reason: " + json.dumps(re))
 
-def create_fake_request(data, utl, cfg):
+def get_processing_string(reqmgr_name, proc_string_provider):
+    """Get that processing string!"""
+    processing_string = proc_string_provider.get(reqmgr_name)
+
+    # Log the processing string in the processing_strings ES index
+    logging.info(UTL.get_time() + ' Logging processing string at '
+            + proc_string)
+    save(proc_string, { 'prepid': proc_string }, UTL, proc_string_cfg)
+    return processing_string
+
+def create_rereco_request(data, cfg):
     """Creates a request-like object from a given stats object"""
     fake_request = {}
 
@@ -216,38 +227,20 @@ def create_fake_request(data, utl, cfg):
     except KeyError:
         fake_request['completed_events'] = 0
 
-    save(fake_request['prepid'], fake_request, utl, cfg)
-
-def get_processing_string(reqmgr_name, utl, cfg, conn1, conn2):
-    """Tries to get the processing string for a request from Request Manager"""
-    response1 = ''
-    status1 = 0
-
+    # Try getting a processing string
     try:
-        response1, status1 = utl.httpget(conn1, "{0}{1}".format(cfg.reqmgr_path, reqmgr_name))
-    except UserWarning as ex:
-        logging.warning(utl.get_time() + ' Warning when getting processing string from reqmgr: '
-            + str(ex))
-
-    # TODO: I hate myself
-    if status1 != 200 and conn2 is not None:
-        logging.warning(utl.get_time() + ' Processing string not found - trying backup ReqMgr')
-
+        reqmgr_name = data.get('reqmgr_name', data['pdmv_request_name'])
+    except:
+        logging.warning('{0} Record {1} has no reqmgr_name'.format(
+            Utils.get_time(), prepid))
+    else:
         try:
-            response, _ = utl.httpget(conn2, "{0}{1}".format(cfg.reqmgr_path, reqmgr_name))
-        except UserWarning as ex:
-            logging.warning(utl.get_time() + ' Warning when getting processing string from reqmgr: '
-                + str(ex))
-            return ''
-    else:
-        response = response1
+            fake_request['processing_string'] = get_processing_string(reqmgr_name)
+        except NoProcessingString as err:
+            logging.warning(Utils.get_time() + ' ' + str(err))
 
-    try:
-        processing_string = json.loads(response)['ProcessingString']
-    except KeyError, ValueError:
-        return ''
-    else:
-        return processing_string
+    # Aaaaand save.
+    save(fake_request['prepid'], fake_request, utl, cfg)
 
 def is_excluded_rereco(data):
     """Returns true if the given object is to be excluded from the ReReco requests index"""
@@ -274,11 +267,12 @@ if __name__ == "__main__":
     # Ensure that the rereco wrapper indices are ready
     if index == 'stats':
         proc_string_cfg, rereco_request_cfg = get_rereco_configs(UTL)
-        reqmgr_conn1 = UTL.init_connection(CFG.reqmgr_domain)
-        reqmgr_conn2 = None
 
-        if CFG.reqmgr_domain_backup != '': # config allows us to check a different reqmgr
-            reqmgr_conn2 = UTL.init_connection(CFG.reqmgr_domain_backup)
+        if CFG.reqmgr_domain_backup == '': # config allows us to check a different reqmgr
+            proc_string_provider = ProcessingStringProvider(CFG.reqmgr_domain, CFG.reqmgr_path)
+        else:
+            proc_string_provider = ProcessingStringProvider(CFG.reqmgr_domain, CFG.reqmgr_path,
+                CFG.reqmgr_domain_backup)
 
     for r, deleted in get_changes(UTL, CFG):
 
@@ -310,90 +304,63 @@ if __name__ == "__main__":
                     else:
                         break
 
-                pdmv_type = data.get('pdmv_type', '')
-
-                # parsing requests
-                if 'reqmgr_name' in data:
-                    data['reqmgr_name'] = parse_reqmgr(data['reqmgr_name'])
-
-                if 'history' in data:
-                    data['history'] = parse_history(data['history'])
-
-                if 'generator_parameters' in data:
-                    data['efficiency'] = parse_efficiency(
-                        data['generator_parameters'])
-
-                # parsing stats documents
-                if index == "stats":
-                    if 'pdmv_monitor_history' not in data\
-                            and 'pdvm_monitor_history' not in data:
-                        current_time = datetime.now().strftime('%c') # Locale-dependent
-                        data['pdmv_monitor_history'] = [{"pdmv_evts_in_DAS": 0,
-                                "pdmv_monitor_time": current_time,
-                                "pdmv_open_evts_in_DAS": 0}]
-                    else:
-                        for misspelled in ['pdmv_monitor_history',
-                                           'pdvm_monitor_history']:
-                            try:
-                                if len(data['pdmv_dataset_list']) > 0:
-                                    tc = parse_datasets(data[misspelled])
-                                    if len(tc):
-                                        data['pdmv_monitor_datasets'] = tc
-                                if len(data[misspelled]):
-                                    for i, _ in enumerate(data[misspelled]):
-                                        data[misspelled][i] = \
-                                            parse(data[misspelled][i],
-                                                  ['pdmv_evts_in_DAS',
-                                                   'pdmv_monitor_time',
-                                                   'pdmv_open_evts_in_DAS'])
-                                    data['pdmv_monitor_history'] = data[misspelled]
-                            except KeyError:
-                                pass
-
-                    # Is it a ReReco request created in Oct 2015 or later?
-                    if pdmv_type.lower() == 'rereco' and not is_excluded_rereco(data):
-                        prepid = data['pdmv_prep_id']
-                        proc_string = ''
-
-                        # Check if request exists to avoid fetching processing string again
-                        ps_response, _ = UTL.curl('GET', '%s%s' % (CFG.pmp_db, prepid))
-
-                        try:
-                            proc_string = json.loads(ps_response)['_source']['processing_string']
-                        except KeyError, ValueError:
-                            logging.info(UTL.get_time() + ' Record has no processing string yet: '
-                                + r)
-                            
-                            try:
-                                reqmgr_name = data.get('reqmgr_name', data['pdmv_request_name'])
-                                proc_string = get_processing_string(reqmgr_name, UTL, CFG,
-                                    reqmgr_conn1, reqmgr_conn2)
-                            except KeyError:
-                                logging.warning('{0} Record {1} has no reqmgr_name'.format(
-                                    UTL.get_time(), prepid))
-                                proc_string = ''
-
-                        if len(proc_string) > 0:
-                            data['processing_string'] = proc_string
-
-                            logging.info(UTL.get_time() + ' Logging processing string at '
-                                    + proc_string)
-                            save(proc_string, { 'prepid': proc_string }, UTL, proc_string_cfg)
-
-                        logging.info(UTL.get_time() + ' Creating mock ReReco request at ' + prepid)
-                        create_fake_request(data, UTL, rereco_request_cfg)
-
-                # Trim fields we don't want
-                data = parse(data, CFG.fetch_fields)
-
                 if status == 200:
+                    pdmv_type = data.get('pdmv_type', '')
+
+                    # parsing requests
+                    if 'reqmgr_name' in data:
+                        data['reqmgr_name'] = parse_reqmgr(data['reqmgr_name'])
+
+                    if 'history' in data:
+                        data['history'] = parse_history(data['history'])
+
+                    if 'generator_parameters' in data:
+                        data['efficiency'] = parse_efficiency(
+                            data['generator_parameters'])
+
+                    # parsing stats documents
+                    if index == "stats":
+                        if 'pdmv_monitor_history' not in data\
+                                and 'pdvm_monitor_history' not in data:
+                            current_time = datetime.now().strftime('%c') # Locale-dependent
+                            data['pdmv_monitor_history'] = [{"pdmv_evts_in_DAS": 0,
+                                    "pdmv_monitor_time": current_time,
+                                    "pdmv_open_evts_in_DAS": 0}]
+                        else:
+                            for misspelled in ['pdmv_monitor_history',
+                                               'pdvm_monitor_history']:
+                                try:
+                                    if len(data['pdmv_dataset_list']) > 0:
+                                        tc = parse_datasets(data[misspelled])
+                                        if len(tc):
+                                            data['pdmv_monitor_datasets'] = tc
+                                    if len(data[misspelled]):
+                                        for i, _ in enumerate(data[misspelled]):
+                                            data[misspelled][i] = \
+                                                parse(data[misspelled][i],
+                                                      ['pdmv_evts_in_DAS',
+                                                       'pdmv_monitor_time',
+                                                       'pdmv_open_evts_in_DAS'])
+                                        data['pdmv_monitor_history'] = data[misspelled]
+                                except KeyError:
+                                    pass
+
+                        # Is it a ReReco request created in Oct 2015 or later?
+                        if pdmv_type.lower() == 'rereco' and not is_excluded_rereco(data):
+                            logging.info(UTL.get_time() + ' Creating mock ReReco request at '
+                                + data['pdmv_prep_id'])
+                            create_rereco_request(data, UTL, rereco_request_cfg)
+
+                    # Trim fields we don't want
+                    data = parse(data, CFG.fetch_fields)
+
+                    # Save to local stats ES index
                     re, s = UTL.curl('PUT', '%s%s' % (CFG.pmp_db, r), data)
                     if s in [200, 201]:
                         logging.info(UTL.get_time() + " New record " + r)
                     else:
-                        logging.error(UTL.get_time() +
-                                      " Failed to update record at " + r +
-                                      ". Reason: " + json.dumps(re))
+                        logging.error(UTL.get_time() + " Failed to update record at " + r
+                            + ". Reason: " + json.dumps(re))
                 else:
                     logging.error(UTL.get_time() +
                                   " Failed to receive information about " + r)
