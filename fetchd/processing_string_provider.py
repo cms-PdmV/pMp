@@ -27,45 +27,52 @@ class ProcessingStringProvider(object):
     def get(self, reqmgr_name):
         """Try getting a processing string and handle some of the common errors - raises
         NoProcessingString with a meaningful message if an error occurs"""
+        exception = None
+        status = 0 # in case an exception is thrown
+
         try:
             response, status = Utils.httpget(self._connection,
                 self._reqmgr_host + self._reqmgr_path + reqmgr_name)
         except httplib.HTTPException as ex1:
-            logging.exception(Utils.get_time() + ' HTTP error while contacting Request Manager')
+            exception = ex1
 
             # Need to renew the connection for next time because an error in httplib can sometimes
             # leave the connection object in an invalid state
             self._connection = Utils.init_connection(self._reqmgr_host)
 
+        if error = True or status != 200:
             if self._use_backup:
-                logging.info(Utils.get_time() + ' Contacting given backup Request Manager')
-
-                try:
-                    response, status = Utils.httpget(self._backup_connection,
-                        self._reqmgr_host_backup + self._reqmgr_path + reqmgr_name)
-                except httplib.HTTPException as ex2:
-                    logging.exception(Utils.get_time() + ' HTTP error while contacting given'
-                        + ' backup Request Manager')
-
-                    # Renewing the backup connection
-                    self._backup_connection = Utils.init_connection(self._reqmgr_host_backup)
-
-                    raise NoProcessingString('Errors occurred when fetching processing string'
-                        + ' from Request Manager')
+                response, status = self.get_from_backup(reqmgr_name)
             else:
-                raise NoProcessingString('An error occurred when fetching processing string'
-                    + ' from Request Manager')
-
+                if exception is not None:
+                    raise NoProcessingString('A ' + type(exception).__name__ + ' exception'
+                        + ' occurred when fetching ' + reqmgr_name + ' from Request Manager')
+                else:
+                    raise NoProcessingString('An HTTP error ' + str(status) + ' was returned when'
+                        + ' fetching ' + reqmgr_name + ' from Request Manager')
+        
         # By this point, errors should have been raised - assume we have some kind of result
-        if status == 200:
-            try:
-                return json.loads(response)['ProcessingString']
-            except ValueError:
-                raise NoProcessingString('Error parsing response from Request Manager')
-            except KeyError:
-                raise NoProcessingString('Response from Request Manager did not contain a'
-                    + ' processing string')
-        else:
-            raise NoProcessingString('Whoops - got HTTP status ' + str(status)
-                + ' from Request Manager')
+        try:
+            return json.loads(response)['ProcessingString']
+        except ValueError:
+            raise NoProcessingString('Error parsing response from Request Manager')
+        except KeyError:
+            raise NoProcessingString('Response from Request Manager did not contain a'
+                + ' processing string')
 
+    def get_from_backup(self, reqmgr_name):
+        """Use the backup connection to contact Request Manager""" 
+        logging.info(Utils.get_time() + ' Contacting given backup Request Manager')
+
+        try:
+            return Utils.httpget(self._backup_connection, self._reqmgr_host_backup +
+                self._reqmgr_path + reqmgr_name)
+        except httplib.HTTPException as ex2:
+            logging.exception(Utils.get_time() + ' HTTP error while getting ' + reqmgr_name
+                + ' from backup Request Manager')
+
+            # Renewing the backup connection
+            self._backup_connection = Utils.init_connection(self._reqmgr_host_backup)
+
+            raise NoProcessingString('Errors occurred when fetching ' + reqmgr_name
+                + ' from both given Request Managers')
