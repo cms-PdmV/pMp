@@ -43,12 +43,6 @@ class Config(object):
 
 class Utils(object):
     """Utils for pMp scripts"""
-
-    @staticmethod
-    def is_file(m_file):
-        """Retrun true if file exists and accessible"""
-        return os.path.isfile(m_file) and os.access(m_file, os.R_OK)
-
     @staticmethod
     def init_connection(url):
         return httplib.HTTPSConnection(url, port=443,
@@ -61,9 +55,10 @@ class Utils(object):
         response = conn.getresponse()
         return response.read(), response.status
 
-    def get_cookie(self, url, path):
+    @staticmethod
+    def get_cookie(url, path):
         """Execute CERN's get SSO cookie"""
-        self.rm_file(path)
+        Utils.rm_file(path)
         call(["cern-get-sso-cookie", "--krb", "--nocertverify", "-u", url,
               "-o", path])
 
@@ -72,9 +67,10 @@ class Utils(object):
         """Return current time string"""
         return str(datetime.now())
 
-    def rm_file(self, m_file):
+    @staticmethod
+    def rm_file(m_file):
         """Remove file"""
-        if self.is_file(m_file):
+        if os.path.isfile(m_file) and os.access(m_file, os.R_OK):
             os.remove(m_file)
 
     @staticmethod
