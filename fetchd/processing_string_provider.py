@@ -52,7 +52,7 @@ class ProcessingStringProvider(object):
         """Go and get the processing string from url, or the empty string if it goes west"""
         try:
             response = session.get(url)
-        except requests.exception.RequestException as ex:
+        except requests.exceptions.RequestException as ex:
             logging.exception(Utils.get_time() + ' Error occurred in request to ' + url)
         else:
             if response.status_code != 200:
