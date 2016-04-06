@@ -18,12 +18,12 @@ class ProcessingStringProvider(object):
     def __init__(self, reqmgr_url, reqmgr_backup_url=None):
         self.reqmgr_url = reqmgr_url
         self.reqmgr_backup_url = reqmgr_backup_url
-        self.session = requests.Session
+        self.session = requests.Session()
         self.session.cert = os.getenv('X509_USER_PROXY')
 
         if reqmgr_backup_url is not None:
             self.use_backup = True # for dev
-            self.session_backup = requests.Session
+            self.session_backup = requests.Session()
             self.session_backup.cert = os.getenv('X509_USER_PROXY')
         else:
             self.use_backup = False
@@ -52,7 +52,7 @@ class ProcessingStringProvider(object):
         """Go and get the processing string from url, or the empty string if it goes west"""
         try:
             response = session.get(url)
-        except response.exception.RequestException as ex:
+        except requests.exception.RequestException as ex:
             logging.exception(Utils.get_time() + ' Error occurred in request to ' + url)
         else:
             if response.status_code != 200:
