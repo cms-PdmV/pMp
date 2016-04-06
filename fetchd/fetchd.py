@@ -268,11 +268,10 @@ if __name__ == "__main__":
     if index == 'stats':
         proc_string_cfg, rereco_request_cfg = get_rereco_configs()
 
-        if CFG.reqmgr_domain_backup == '': # config allows us to check a different reqmgr
-            proc_string_provider = ProcessingStringProvider(CFG.reqmgr_domain, CFG.reqmgr_path)
+        if CFG.reqmgr_backup_url == '': # config allows us to check a different reqmgr
+            proc_string_provider = ProcessingStringProvider(CFG.reqmgr_url)
         else:
-            proc_string_provider = ProcessingStringProvider(CFG.reqmgr_domain, CFG.reqmgr_path,
-                CFG.reqmgr_domain_backup)
+            proc_string_provider = ProcessingStringProvider(CFG.reqmgr_url CFG.reqmgr_backup_url)
 
     for r, deleted in get_changes(CFG):
 

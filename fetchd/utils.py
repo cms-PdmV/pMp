@@ -4,6 +4,7 @@ import os
 import pycurl
 import re
 import httplib
+import requests
 from ConfigParser import SafeConfigParser
 from cStringIO import StringIO
 from datetime import datetime
@@ -21,8 +22,8 @@ class Config(object):
         database = parser.get(typeof, 'db')
         url_pmp = parser.get('general', 'pmp')
 
-        self.reqmgr_domain = parser.get('reqmgr', 'domain')
-        self.reqmgr_domain_backup = parser.get('reqmgr', 'domain_backup')
+        self.reqmgr_url = parser.get('reqmgr', 'url')
+        self.reqmgr_backup_url = parser.get('reqmgr', 'backup_url')
         self.reqmgr_path = parser.get('reqmgr', 'path')
         self.cookie = os.environ['HOME'] + parser.get('cookie', 'path')
         self.exclude_list = re.split(", ", parser.get('exclude', 'list'))

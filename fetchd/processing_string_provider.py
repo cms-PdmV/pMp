@@ -6,6 +6,8 @@ import httplib
 import logging
 from utils import Utils
 import json
+import requests
+import os
 
 class NoProcessingString(Exception):
     pass
@@ -13,58 +15,57 @@ class NoProcessingString(Exception):
 class ProcessingStringProvider(object):
     """Provides an interface for getting processing strings from Request Manager and handles errors
     and other intricacies of http requests"""
-    def __init__(self, reqmgr_host, reqmgr_path, reqmgr_host_backup=None):
-        self._reqmgr_host = reqmgr_host
-        self._reqmgr_host_backup = reqmgr_host_backup
-        self._reqmgr_path = reqmgr_path
-        self._connection = Utils.init_connection(reqmgr_host)
+    def __init__(self, reqmgr_url, reqmgr_backup_url=None):
+        self.reqmgr_url = reqmgr_url
+        self.reqmgr_backup_url = reqmgr_backup_url
+        self.session = requests.Session
+        self.session.cert = os.getenv('X509_USER_PROXY')
 
-        if reqmgr_host_backup is not None:
-            self._use_backup = True # for dev
-            self._backup_connection = Utils.init_connection(reqmgr_host_backup)
+        if reqmgr_backup_url is not None:
+            self.use_backup = True # for dev
+            self.session_backup = requests.Session
+            self.session_backup.cert = os.getenv('X509_USER_PROXY')
         else:
-            self._use_backup = False
+            self.use_backup = False
 
     def get(self, reqmgr_name):
         """Try getting a processing string and handle some of the common errors - raises
-        NoProcessingString with a meaningful message if an error occurs"""
+        NoProcessingString if an error occurs"""
+        url = self.reqmgr_url + reqmgr_name
+
+        processing_string = self._fetch(self.session, self.reqmgr_url + reqmgr_name)
+
+        if len(processing_string) == 0
+            if self.use_backup:
+                processing_string = self._fetch(self.session_backup, self.reqmgr_backup_url
+                    + reqmgr_name)
+
+                if len(processing_string) == 0:
+                    raise NoProcessingString(Utils.get_time + ' No processing string found in '
+                        + ' Request Manager or backup')
+            else:
+                raise NoProcessingString(Utils.get_time() + ' No processing string found')
+
+        return processing_string
+
+    def _fetch(session, url):
+        """Go and get the processing string from url, or the empty string if it goes west"""
         try:
-            response, status = Utils.httpget(self._connection,
-                self._reqmgr_host + self._reqmgr_path + reqmgr_name)
-        except httplib.HTTPException as ex1:
-            logging.exception(Utils.get_time() + ' HTTP exception while getting ' + reqmgr_name
-                + ' from Request Manager')
-
-            # Need to renew the connection for next time because an error in httplib can sometimes
-            # leave the connection object in an invalid state
-            self._connection = Utils.init_connection(self._reqmgr_host)
-
-            if self._use_backup:
-                logging.warning(Utils.get_time() + ' Contacting given backup Request Manager')
-
+            response = session.get(url)
+        except response.exception.RequestException as ex:
+            logging.exception(Utils.get_time() + ' Error occurred in request to ' + url)
+        else:
+            if response.status_code != 200:
+                logging.error(Utils.get_time() + ' Got HTTP status ' + str(response.status_code)
+                    + ' from ' + url)
+            else:
                 try:
-                    response, status = Utils.httpget(self._backup_connection,
-                        self._reqmgr_host_backup + self._reqmgr_path + reqmgr_name)
-                except httplib.HTTPException as ex2:
-                    logging.exception(Utils.get_time() + ' HTTP error while getting ' + reqmgr_name
-                        + ' from backup Request Manager')
+                    return response.json()['ProcessingString']
+                except KeyError:
+                    logging.warning(Utils.get_time() + ' No processing string in response from '
+                        + url)
+                except ValueError:
+                    logging.error(Utils.get_time() + ' Malformed response from ' + url)
 
-                    # Renewing the backup connection
-                    self._backup_connection = Utils.init_connection(self._reqmgr_host_backup)
-
-                    raise NoProcessingString('Errors occurred when fetching ' + reqmgr_name
-                        + ' from both given Request Managers')
-
-        if status > 0 and status != 200:
-            raise NoProcessingString('An HTTP error ' + str(status) + ' was returned when'
-                + ' fetching ' + reqmgr_name + ' from Request Manager')
-        
-        # By this point, errors should have been raised - assume we have some kind of result
-        try:
-            return json.loads(response)['ProcessingString']
-        except ValueError:
-            raise NoProcessingString('Error parsing response from Request Manager')
-        except KeyError:
-            raise NoProcessingString('Response from Request Manager did not contain a'
-                + ' processing string')
-
+        # Default to returning the empty string
+        return ''
