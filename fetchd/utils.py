@@ -24,7 +24,6 @@ class Config(object):
 
         self.reqmgr_url = parser.get('reqmgr', 'url')
         self.reqmgr_backup_url = parser.get('reqmgr', 'backup_url')
-        self.reqmgr_path = parser.get('reqmgr', 'path')
         self.cookie = os.environ['HOME'] + parser.get('cookie', 'path')
         self.exclude_list = re.split(", ", parser.get('exclude', 'list'))
         self.fetch_fields = re.split(", ", parser.get(typeof, 'fetch_fields'))
