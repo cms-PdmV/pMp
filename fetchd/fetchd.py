@@ -178,17 +178,17 @@ def save(r, data, cfg):
                       " Failed to update record at " + r +
                       ". Reason: " + json.dumps(re))
 
-def get_processing_string(reqmgr_name, proc_string_provider):
+def get_processing_string(reqmgr_name, proc_string_provider, proc_string_config):
     """Get that processing string!"""
     processing_string = proc_string_provider.get(reqmgr_name)
 
     # Log the processing string in the processing_strings ES index
     logging.info(Utils.get_time() + ' Logging processing string at '
-            + proc_string)
-    save(proc_string, { 'prepid': proc_string }, proc_string_cfg)
+            + processing_string)
+    save(processing_string, { 'prepid': processing_string }, proc_string_cfg)
     return processing_string
 
-def create_rereco_request(data, cfg, processing_string_provider):
+def create_rereco_request(data, rereco_config, proc_string_config, processing_string_provider):
     """Creates a request-like object from a given stats object"""
     fake_request = {}
 
@@ -236,12 +236,12 @@ def create_rereco_request(data, cfg, processing_string_provider):
     else:
         try:
             fake_request['processing_string'] = get_processing_string(reqmgr_name,
-                processing_string_provider)
+                processing_string_provider, proc_string_config)
         except NoProcessingString as err:
             logging.warning(Utils.get_time() + ' ' + str(err))
 
     # Aaaaand save.
-    save(fake_request['prepid'], fake_request, cfg)
+    save(fake_request['prepid'], fake_request, rereco_config)
 
 def is_excluded_rereco(data):
     """Returns true if the given object is to be excluded from the ReReco requests index"""
@@ -266,7 +266,7 @@ if __name__ == "__main__":
 
     # Ensure that the rereco wrapper indices are ready
     if index == 'stats':
-        proc_string_cfg, rereco_request_cfg = get_rereco_configs()
+        proc_string_cfg, rereco_cfg = get_rereco_configs()
 
         if CFG.reqmgr_backup_url == '': # config allows us to check a different reqmgr
             proc_string_provider = ProcessingStringProvider(CFG.reqmgr_url)
@@ -348,7 +348,8 @@ if __name__ == "__main__":
                         if pdmv_type.lower() == 'rereco' and not is_excluded_rereco(data):
                             logging.info(Utils.get_time() + ' Creating mock ReReco request at '
                                 + data['pdmv_prep_id'])
-                            create_rereco_request(data, rereco_request_cfg, proc_string_provider)
+                            create_rereco_request(data, rereco_config, proc_string_cfg,
+                                proc_string_provider)
 
                     # Trim fields we don't want
                     data = parse(data, CFG.fetch_fields)
