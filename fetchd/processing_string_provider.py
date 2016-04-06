@@ -35,7 +35,7 @@ class ProcessingStringProvider(object):
 
         processing_string = self._fetch(self.session, self.reqmgr_url + reqmgr_name)
 
-        if len(processing_string) == 0
+        if len(processing_string) == 0:
             if self.use_backup:
                 processing_string = self._fetch(self.session_backup, self.reqmgr_backup_url
                     + reqmgr_name)

@@ -271,7 +271,7 @@ if __name__ == "__main__":
         if CFG.reqmgr_backup_url == '': # config allows us to check a different reqmgr
             proc_string_provider = ProcessingStringProvider(CFG.reqmgr_url)
         else:
-            proc_string_provider = ProcessingStringProvider(CFG.reqmgr_url CFG.reqmgr_backup_url)
+            proc_string_provider = ProcessingStringProvider(CFG.reqmgr_url, CFG.reqmgr_backup_url)
 
     for r, deleted in get_changes(CFG):
 
