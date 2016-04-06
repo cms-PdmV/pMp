@@ -34,6 +34,7 @@ class ProcessingStringProvider(object):
 
         if len(processing_string) == 0:
             if self.use_backup:
+                logging.warning(Utils.get_time() + ' Trying Request Manager backup')
                 processing_string = self._fetch(self.reqmgr_backup_url
                     + reqmgr_name)
 
