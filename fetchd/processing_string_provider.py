@@ -48,7 +48,7 @@ class ProcessingStringProvider(object):
 
         return processing_string
 
-    def _fetch(session, url):
+    def _fetch(self, session, url):
         """Go and get the processing string from url, or the empty string if it goes west"""
         try:
             response = session.get(url)
