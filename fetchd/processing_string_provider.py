@@ -19,39 +19,36 @@ class ProcessingStringProvider(object):
         self.reqmgr_url = reqmgr_url
         self.reqmgr_backup_url = reqmgr_backup_url
         self.session = requests.Session()
+        self.session.verify = False
         self.session.cert = os.getenv('X509_USER_PROXY')
 
-        if reqmgr_backup_url is not None:
-            self.use_backup = True # for dev
-            self.session_backup = requests.Session()
-            self.session_backup.cert = os.getenv('X509_USER_PROXY')
-        else:
-            self.use_backup = False
+        # Set use_backup - if we have the url, use it
+        self.use_backup = reqmgr_backup_url is not None
 
     def get(self, reqmgr_name):
         """Try getting a processing string and handle some of the common errors - raises
         NoProcessingString if an error occurs"""
         url = self.reqmgr_url + reqmgr_name
 
-        processing_string = self._fetch(self.session, self.reqmgr_url + reqmgr_name)
+        processing_string = self._fetch(self.reqmgr_url + reqmgr_name)
 
         if len(processing_string) == 0:
             if self.use_backup:
-                processing_string = self._fetch(self.session_backup, self.reqmgr_backup_url
+                processing_string = self._fetch(self.reqmgr_backup_url
                     + reqmgr_name)
 
                 if len(processing_string) == 0:
-                    raise NoProcessingString(Utils.get_time + ' No processing string found in '
+                    raise NoProcessingString(Utils.get_time() + ' No processing string found in '
                         + ' Request Manager or backup')
             else:
                 raise NoProcessingString(Utils.get_time() + ' No processing string found')
 
         return processing_string
 
-    def _fetch(self, session, url):
+    def _fetch(self, url):
         """Go and get the processing string from url, or the empty string if it goes west"""
         try:
-            response = session.get(url)
+            response = self.session.get(url)
         except requests.exceptions.RequestException as ex:
             logging.exception(Utils.get_time() + ' Error occurred in request to ' + url)
         else:
@@ -69,3 +66,4 @@ class ProcessingStringProvider(object):
 
         # Default to returning the empty string
         return ''
+
