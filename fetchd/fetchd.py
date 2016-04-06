@@ -198,7 +198,6 @@ def create_rereco_request(data, rereco_cfg, proc_string_cfg, processing_string_p
         'total_events': 'pdmv_expected_events',
         'priority': 'pdmv_priority',
         'rereco_campaign': 'member_of_campaign',
-        'member_of_campaign': 'processing_string',
         'output_dataset': 'pdmv_dataset_name',
         'reqmgr_name': 'pdmv_request_name',
         'status_from_reqmngr': 'pdmv_status_from_reqmngr',
@@ -235,7 +234,7 @@ def create_rereco_request(data, rereco_cfg, proc_string_cfg, processing_string_p
             Utils.get_time(), prepid))
     else:
         try:
-            fake_request['processing_string'] = get_processing_string(reqmgr_name,
+            fake_request['member_of_campaign'] = get_processing_string(reqmgr_name,
                 processing_string_provider, proc_string_cfg)
         except NoProcessingString as err:
             logging.warning(Utils.get_time() + ' ' + str(err))
