@@ -178,7 +178,7 @@ def save(r, data, cfg):
                       " Failed to update record at " + r +
                       ". Reason: " + json.dumps(re))
 
-def get_processing_string(reqmgr_name, proc_string_provider, proc_string_config):
+def get_processing_string(reqmgr_name, proc_string_provider, proc_string_cfg):
     """Get that processing string!"""
     processing_string = proc_string_provider.get(reqmgr_name)
 
@@ -188,7 +188,7 @@ def get_processing_string(reqmgr_name, proc_string_provider, proc_string_config)
     save(processing_string, { 'prepid': processing_string }, proc_string_cfg)
     return processing_string
 
-def create_rereco_request(data, rereco_config, proc_string_config, processing_string_provider):
+def create_rereco_request(data, rereco_cfg, proc_string_cfg, processing_string_provider):
     """Creates a request-like object from a given stats object"""
     fake_request = {}
 
@@ -236,12 +236,12 @@ def create_rereco_request(data, rereco_config, proc_string_config, processing_st
     else:
         try:
             fake_request['processing_string'] = get_processing_string(reqmgr_name,
-                processing_string_provider, proc_string_config)
+                processing_string_provider, proc_string_cfg)
         except NoProcessingString as err:
             logging.warning(Utils.get_time() + ' ' + str(err))
 
     # Aaaaand save.
-    save(fake_request['prepid'], fake_request, rereco_config)
+    save(fake_request['prepid'], fake_request, rereco_cfg)
 
 def is_excluded_rereco(data):
     """Returns true if the given object is to be excluded from the ReReco requests index"""
@@ -348,7 +348,7 @@ if __name__ == "__main__":
                         if pdmv_type.lower() == 'rereco' and not is_excluded_rereco(data):
                             logging.info(Utils.get_time() + ' Creating mock ReReco request at '
                                 + data['pdmv_prep_id'])
-                            create_rereco_request(data, rereco_config, proc_string_cfg,
+                            create_rereco_request(data, rereco_cfg, proc_string_cfg,
                                 proc_string_provider)
 
                     # Trim fields we don't want
