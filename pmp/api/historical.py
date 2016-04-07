@@ -85,15 +85,19 @@ class HistoricalAPI(esadapter.InitConnection):
     def db_query(self, query):
         """Query DB and return array of raw documents"""
         iterable = []
+        index = 'requests' # default
 
         if self.is_instance(query, 'flow', 'flows'):
             field = 'flown_with'
+        elif self.is_instance(query, 'processing_string', 'processing_strings'):
+            field = 'member_of_campaign'
+            index = 'rereco_requests'
         else:
             field = 'member_of_campaign'
 
         # try to query for campaign and get list of requests
         req_arr = [s['_source'] for s in
-                   self.es.search(('%s:%s' % (field, query)), index='requests',
+                   self.es.search(('%s:%s' % (field, query)), index=index,
                                   size=self.overflow)['hits']['hits']]
 
         # if empty, assume query is a request
