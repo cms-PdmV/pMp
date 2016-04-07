@@ -82,32 +82,39 @@ class HistoricalAPI(esadapter.InitConnection):
             return False
         return True
 
+    def parse_query(self, query):
+        """Returns parsed query and correct field"""
+        if self.is_instance(query, 'flow', 'flows'):
+            return 'flown_with', query, False
+        elif self.is_instance(query, 'campaign', 'campaigns'):
+            return 'member_of_campaign', query, False
+        elif self.is_instance(query, 'processing_string', 'processing_strings'):
+            return 'member_of_campaign', query, True
+        elif self.is_instance(query, 'request', 'requests'):
+            return None, query, False
+        elif self.is_instance(query, 'rereco_request', 'rereco_requests'):
+            return None, query, True
+        return None, query, False
+
     def db_query(self, query):
         """Query DB and return array of raw documents"""
         iterable = []
-        index = 'requests' # default
+        req_arr = []
+        field, query, is_rereco = self.parse_query(query)
+        doctype, index = ('rereco_request', 'rereco_requests') if is_rereco \
+            else ('request', 'requests')
 
-        if self.is_instance(query, 'flow', 'flows'):
-            field = 'flown_with'
-        elif self.is_instance(query, 'processing_string', 'processing_strings'):
-            field = 'member_of_campaign'
-            index = 'rereco_requests'
+        if field is not None:
+            # try to query for campaign and get list of requests
+            req_arr = [s['_source'] for s in
+                self.es.search(('%s:%s' % (field, query)), index=index,
+                    size=self.overflow)['hits']['hits']]
         else:
-            field = 'member_of_campaign'
-
-        # try to query for campaign and get list of requests
-        req_arr = [s['_source'] for s in
-                   self.es.search(('%s:%s' % (field, query)), index=index,
-                                  size=self.overflow)['hits']['hits']]
-
-        # if empty, assume query is a request
-        if not len(req_arr):
+            # could be a request or a workflow
             self.campaign = False
             try:
-                req_arr = [self.es.get('requests',
-                                       'request', query)['_source']]
-            except esadapter.pyelasticsearch.exceptions\
-                    .ElasticHttpNotFoundError:
+                req_arr = [self.es.get(index, doctype, query)['_source']]
+            except esadapter.pyelasticsearch.exceptions.ElasticHttpNotFoundError:
                 # if exception thrown this may be a workflow
                 iterable = [query]
 
