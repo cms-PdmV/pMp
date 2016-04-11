@@ -199,7 +199,9 @@ def create_rereco_request(data, rereco_cfg, proc_string_cfg, processing_string_p
         'priority': 'pdmv_priority',
         'rereco_campaign': 'member_of_campaign',
         'output_dataset': 'pdmv_dataset_name',
-        'reqmgr_name': 'pdmv_request_name',
+        'reqmgr_name': 'reqmgr_name',
+        'history': 'history',
+        'efficiency': 'efficiency',
         'status_from_reqmngr': 'pdmv_status_from_reqmngr',
         'status_in_DAS': 'pdmv_status_in_DAS',
         'pdmv_status': 'pdmv_status' # Keep this in case it's useful in the future
@@ -228,13 +230,13 @@ def create_rereco_request(data, rereco_cfg, proc_string_cfg, processing_string_p
 
     # Try getting a processing string
     try:
-        reqmgr_name = data.get('reqmgr_name', data['pdmv_request_name'])
-    except:
-        logging.warning('{0} Record {1} has no reqmgr_name'.format(
+        request_name = data['pdmv_request_name']
+    except KeyError:
+        logging.warning('{0} Record {1} has no request name'.format(
             Utils.get_time(), prepid))
     else:
         try:
-            fake_request['member_of_campaign'] = get_processing_string(reqmgr_name,
+            fake_request['member_of_campaign'] = get_processing_string(request_name,
                 processing_string_provider, proc_string_cfg)
         except NoProcessingString as err:
             logging.warning(Utils.get_time() + ' ' + str(err))
