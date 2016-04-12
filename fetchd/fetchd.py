@@ -199,7 +199,6 @@ def create_rereco_request(data, rereco_cfg, proc_string_cfg, processing_string_p
         'priority': 'pdmv_priority',
         'rereco_campaign': 'member_of_campaign',
         'output_dataset': 'pdmv_dataset_list',
-        'reqmgr_name': 'pdmv_request_name',
         'history': 'history',
         'efficiency': 'efficiency',
         'status_from_reqmngr': 'pdmv_status_from_reqmngr',
@@ -220,6 +219,10 @@ def create_rereco_request(data, rereco_cfg, proc_string_cfg, processing_string_p
         fake_request['status'] = 'submitted'
     else:
         fake_request['status'] = das_status
+
+    # Format the reqmgr_name field as a list to mirror MC requests (even though there will only
+    # ever be only one, because we're getting this from stats)
+    fake_request['reqmgr_name'] = [data.get('pdmv_request_name', '')]
 
     # Find the completed events
     try:
