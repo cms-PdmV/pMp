@@ -133,7 +133,7 @@ class HistoricalAPI(esadapter.InitConnection):
                     i['name'] = reqmgr
                     i['output_dataset'] = dataset
                     i['priority'] = req['priority']
-                    i['pwg'] = req['pwg']
+                    i['pwg'] = req.get('pwg', 'None') # for ReReco support
                     i['request'] = True
                     i['status'] = req['status']
                     iterable.append(i)
