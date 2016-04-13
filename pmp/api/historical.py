@@ -451,7 +451,7 @@ class SubmittedStatusAPI(esadapter.InitConnection):
         response = []
 
         for campaign in query.split(','):
-            if self.is_instance(campaign, processing_string, processing_strings):
+            if self.is_instance(campaign, 'processing_string', 'processing_strings'):
                 index = 'rereco_requests'
                 fields = ['member_of_campaign']
             else: # assume it's Monte Carlo (original functionality)
