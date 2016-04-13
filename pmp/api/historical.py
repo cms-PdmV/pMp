@@ -449,16 +449,24 @@ class SubmittedStatusAPI(esadapter.InitConnection):
         pwg = apiutils.APIUtils().parse_csv(pwg)
         submitted = {}
         response = []
+
         for campaign in query.split(','):
-            for field in ['member_of_campaign', 'flown_with']:
+            if self.is_instance(campaign, processing_string, processing_strings):
+                index = 'rereco_requests'
+                fields = ['member_of_campaign']
+            else: # assume it's Monte Carlo (original functionality)
+                index = 'requests'
+                fields = ['member_of_campaign', 'flown_with']
+
+            for field in fields:
                 response += [s['_source'] for s in
                              self.es.search(('%s:%s' % (field, campaign)),
-                                            index='requests',
+                                            index=index,
                                             size=self.overflow)
                              ['hits']['hits']]
         for request in response:
             if (request['status'] == 'submitted') \
-                    and (pwg is None or request['pwg'] in pwg) \
+                    and (pwg is None or request.get('pwg', 'None') in pwg) \
                     and (request['priority'] > priority[0] \
                              and (request['priority'] < priority[1] or \
                                       priority[1] == -1)):
@@ -467,6 +475,14 @@ class SubmittedStatusAPI(esadapter.InitConnection):
                     submitted[request['prepid']] = (100 * completed /
                                                     request['total_events'])
         return json.dumps({"results": submitted})
+
+    def is_instance(self, prepid, typeof, index):
+        """Checks if prepid matches any typeof in the index"""
+        try:
+            self.es.get(index, typeof, prepid)['_source']
+        except esadapter.pyelasticsearch.exceptions.ElasticHttpNotFoundError:
+            return False
+        return True
 
     @staticmethod
     def stats_maximum(data, previous):
