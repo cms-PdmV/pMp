@@ -116,8 +116,10 @@ class AnnouncedAPI(esadapter.InitConnection):
             return None, query, True
         return None, query, False
 
-    def get(self, query, flip_to_done):
-        """Execute announced API"""
+    def get_results(self, query, flip_to_done):
+        """Execute announced API - for compatibility with chained API, which uses this for
+        ReReco campaigns
+        """
         response = []
 
         field, query, is_rereco = self.parse_query(query)
@@ -178,7 +180,11 @@ class AnnouncedAPI(esadapter.InitConnection):
             response.remove(rr)
         response += dump_requests
 
-        return json.dumps({"results": response})
+        return response
+
+    def get(self, query, flip_to_done):
+        """Execute announced API"""
+        return json.dumps({'results': self.get_results(query, flip_to_done)})
 
     @staticmethod
     def stats_maximum(data, previous):
@@ -387,12 +393,25 @@ class GrowingAPI(esadapter.InitConnection):
 
     def get(self, query, flip_to_done):
         """Execute growing API"""
-        if self.is_instance(query, "request", "requests"):
-            # Get requests instead and return (FIXME: Feels like a dirty hack)
-            return json.dumps({'results': self.get_requests_in_same_chain(query, flip_to_done)})
+        #if self.is_instance(query, "request", "requests"):
+        #    # Get requests instead and return (FIXME: Feels like a dirty hack)
+        #    return json.dumps({'results': self.get_requests_in_same_chain(query, flip_to_done)})
+
+        # Take out the ReReco campaigns so we can add them in later (otherwise they'd just be
+        # excluded, because they're not chained to anything)
+        query_parts = query.split(',')
+        rereco_parts = []
+        other_parts = []
+
+        # Include ReReco campaigns in the results
+        for part in query_parts:
+            if self.is_instance(part, 'processing_string', 'processing_strings'):
+                rereco_parts.append(part)
+            else:
+                other_parts.append(part)
 
         all_requests, all_cr, all_cc = self.get_chained_requests(
-            list(set(self.get_chained_campaigns(query.split(',')))))
+            list(set(self.get_chained_campaigns(other_parts))))
         req_copy = dict(all_requests)
 
         # avoid double counting
@@ -436,10 +455,11 @@ class GrowingAPI(esadapter.InitConnection):
         # add req that does not belong to chain (from org campaign)
         for req in req_copy:
             req = req_copy[req]
-            if req['member_of_campaign'] == query:
+            if req['member_of_campaign'] in query_parts:
                 req['total_events'] = self.get_total_events(req)
                 dump_requests.append(self.pop(req))
 
+        dump_requests += AnnouncedAPI().get_results(','.join(rereco_parts), flip_to_done)
         return json.dumps({"results": dump_requests})
 
     @staticmethod
