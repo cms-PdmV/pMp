@@ -13,11 +13,15 @@ class PerformanceAPI(esadapter.InitConnection):
         if campaign == 'all':
             campaign = '*'
 
+        search = self.es.search(('member_of_campaign:%s' % campaign), index='requests',
+            size=self.overflow)
+
+        if search['hits']['total'] == 0:
+            search = self.es.search(('member_of_campaign:%s' % campaign), index='rereco_requests',
+                size=self.overflow)
+
         # get the list of requests
-        response = [s['_source'] for s in
-                    self.es.search(('member_of_campaign:%s' % campaign),
-                                   index='requests', size=self.overflow)
-                    ['hits']['hits']]
+        response = [s['_source'] for s in search['hits']['hits']]
 
         # loop over and remove documents' fields
         for request in response:
