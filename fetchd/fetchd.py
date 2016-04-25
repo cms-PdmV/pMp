@@ -5,7 +5,7 @@ import time
 import sys
 from datetime import datetime
 from utils import *
-from processing_string_provider import *
+from request_manager_provider import *
 
 def setlog():
     """Set loggging level"""
@@ -178,15 +178,46 @@ def save(r, data, cfg):
                       " Failed to update record at " + r +
                       ". Reason: " + json.dumps(re))
 
-def get_processing_string(reqmgr_name, proc_string_provider, proc_string_cfg):
-    """Get that processing string!"""
-    processing_string = proc_string_provider.get(reqmgr_name)
+def convert_reqmgr_timestamp(timestamp):
+    """Get a YYYY-mm-DD-HH-MM timestamp from a unix one"""
+    return datetime.utcfromtimestamp(timestamp).strftime('%Y-%m-%d-%H-%M')
 
-    # Log the processing string in the processing_strings ES index
-    logging.info(Utils.get_time() + ' Logging processing string at '
-            + processing_string)
-    save(processing_string, { 'prepid': processing_string }, proc_string_cfg)
-    return processing_string
+def parse_rereco_history(transitions):
+    statuses = {
+        'running-open': 'submitted',
+        'announced': 'done'
+    }
+    history = []
+
+    for transition in transitions:
+        if transition['Status'] in statuses:
+            history.append({
+                'action': statuses[transition['Status']],
+                'time': 
+                    datetime.utcfromtimestamp(transition['UpdateTime']).strftime('%Y-%m-%d-%H-%M')
+            })
+
+    return history
+            
+def get_reqmgr_info(reqmgr_name, reqmgr_provider, proc_string_cfg):
+    """Get relevant info from Request Manager and prepare it for use"""
+    info = {}
+
+    try:
+        reqmgr_info = reqmgr_provider.get(reqmgr_name, ['ProcessingString', 'RequestTransition'])
+
+        if 'ProcessingString' in reqmgr_info:
+            processing_string = reqmgr_info['ProcessingString']
+            info['member_of_campaign'] = processing_string
+            logging.info(Utils.get_time() + ' Saving processing string ' + processing_string)
+            save(processing_string, {'prepid': processing_string}, proc_string_cfg)
+
+        if 'RequestTransition' in reqmgr_info:
+            info['history'] = parse_rereco_history(reqmgr_info['RequestTransition'])
+    except NoDataFromRequestManager as err:
+        logging.error(Utils.get_time() + ' ' + str(err))
+
+    return info
 
 def create_rereco_request(data, rereco_cfg, proc_string_cfg, processing_string_provider):
     """Creates a request-like object from a given stats object"""
@@ -199,7 +230,6 @@ def create_rereco_request(data, rereco_cfg, proc_string_cfg, processing_string_p
         'priority': 'pdmv_priority',
         'rereco_campaign': 'member_of_campaign',
         'output_dataset': 'pdmv_dataset_list',
-        'history': 'history',
         'efficiency': 'efficiency',
         'status_from_reqmngr': 'pdmv_status_from_reqmngr',
         'status_in_DAS': 'pdmv_status_in_DAS',
@@ -231,7 +261,7 @@ def create_rereco_request(data, rereco_cfg, proc_string_cfg, processing_string_p
     except KeyError:
         fake_request['completed_events'] = 0
 
-    # Try getting a processing string
+    # Get ReReco-specific fields from Request Manager
     try:
         request_name = data['pdmv_request_name']
     except KeyError:
@@ -239,10 +269,9 @@ def create_rereco_request(data, rereco_cfg, proc_string_cfg, processing_string_p
             Utils.get_time(), prepid))
     else:
         try:
-            fake_request['member_of_campaign'] = get_processing_string(request_name,
-                processing_string_provider, proc_string_cfg)
-        except NoProcessingString as err:
-            logging.warning(Utils.get_time() + ' ' + str(err))
+            fake_request.update(get_reqmgr_info(request_name, reqmgr_provider, proc_string_cfg))
+        except NoDataFromRequestManager as err:
+            logging.error(Utils.get_time() + ' ' + str(err))
 
     # Aaaaand save.
     save(fake_request['prepid'], fake_request, rereco_cfg)
@@ -273,9 +302,9 @@ if __name__ == "__main__":
         proc_string_cfg, rereco_cfg = get_rereco_configs()
 
         if CFG.reqmgr_backup_url == '': # config allows us to check a different reqmgr
-            proc_string_provider = ProcessingStringProvider(CFG.reqmgr_url)
+            reqmgr_provider = RequestManagerProvider(CFG.reqmgr_url)
         else:
-            proc_string_provider = ProcessingStringProvider(CFG.reqmgr_url, CFG.reqmgr_backup_url)
+            reqmgr_provider = RequestManagerProvider(CFG.reqmgr_url, CFG.reqmgr_backup_url)
 
     for r, deleted in get_changes(CFG):
 
@@ -353,7 +382,7 @@ if __name__ == "__main__":
                             logging.info(Utils.get_time() + ' Creating mock ReReco request at '
                                 + data['pdmv_prep_id'])
                             create_rereco_request(data, rereco_cfg, proc_string_cfg,
-                                proc_string_provider)
+                                reqmgr_provider)
 
                     # Trim fields we don't want
                     data = parse(data, CFG.fetch_fields)
