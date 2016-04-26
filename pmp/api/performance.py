@@ -7,21 +7,25 @@ import time
 class PerformanceAPI(esadapter.InitConnection):
     """Return list of requests with history points"""
 
+    def es_search(self, campaign, index):
+        return self.es.search('member_of_campaign:{0}'.format(campaign), index=index,
+            size=self.overflow)['hits']
+
     def get(self, campaign):
         """Retruning historical points for each request in given campaign"""
         # change 'all' to wildcard
         if campaign == 'all':
-            campaign = '*'
+            search = self.es_search('*', 'requests') + self.es_search('*', 'rereco_requests')
+        else:
+            # get the list of requests
+            search = self.es_search(campaign, 'requests')
 
-        search = self.es.search(('member_of_campaign:%s' % campaign), index='requests',
-            size=self.overflow)
+            if search['total'] == 0:
+                # Try ReReco index
+                search = self.es_search(campaign, 'rereco_requests')
 
-        if search['hits']['total'] == 0:
-            search = self.es.search(('member_of_campaign:%s' % campaign), index='rereco_requests',
-                size=self.overflow)
-
-        # get the list of requests
-        response = [s['_source'] for s in search['hits']['hits']]
+        response = [s['_source'] for s in search['hits']]
+        print(str(len(response)))
 
         # loop over and remove documents' fields
         for request in response:
@@ -58,17 +62,24 @@ class PriorityAPI(esadapter.InitConnection):
             else:
                 yield str(priority)
 
+    def es_search(self, campaign, index):
+        return self.es.search('member_of_campaign:{0}'.format(campaign), index=index,
+            size=self.overflow)['hits']
+
     def get(self, campaign):
         """Execute"""
         # change 'all' to wildcard
         if campaign == 'all':
-            campaign = '*'
+            search = self.es_search('*', 'requests') + self.es_search('*', 'rereco_requests')
+        else:
+            # get the list of requests
+            search = self.es_search(campaign, 'requests')
 
-        # get the list of requests
-        response = [s['_source'] for s in
-                    self.es.search(('member_of_campaign:%s' % campaign),
-                                   index='requests', size=self.overflow)
-                    ['hits']['hits']]
+            if search['total'] == 0:
+                # Try ReReco index
+                search = self.es_search(campaign, 'rereco_requests')
+
+        response = [s['_source'] for s in search['hits']]
 
         com = {}
         for request in response:
