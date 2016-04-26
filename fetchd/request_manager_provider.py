@@ -1,4 +1,4 @@
-"""Fetches processing strings from Request Manager. It felt important to extract this functionality
+"""Fetches  from Request Manager. It felt important to extract this functionality
 because it's something quite new to pMp - that is, fetching information directly from Request
 manager, instead of through 
 """
@@ -9,10 +9,10 @@ import json
 import requests
 import os
 
-class NoProcessingString(Exception):
+class NoDataFromRequestManager(Exception):
     pass
 
-class ProcessingStringProvider(object):
+class RequestManagerProvider(object):
     """Provides an interface for getting processing strings from Request Manager and handles errors
     and other intricacies of http requests"""
     def __init__(self, reqmgr_url, reqmgr_backup_url=None):
@@ -25,26 +25,28 @@ class ProcessingStringProvider(object):
         # Set use_backup - if we have the url, use it
         self.use_backup = reqmgr_backup_url is not None
 
-    def get(self, reqmgr_name):
+    def get(self, reqmgr_name, fields):
         """Try getting a processing string and handle some of the common errors - raises
-        NoProcessingString if an error occurs"""
-        url = self.reqmgr_url + reqmgr_name
-
-        processing_string = self._fetch(self.reqmgr_url + reqmgr_name)
-
-        if len(processing_string) == 0:
+        NoProcessingString if an error occurs. `fields` is a list of string keys to be retrieved
+        from Request Manager
+        """
+        try:
+            reqmgr_info = self._fetch(self.reqmgr_url + reqmgr_name)
+        except NoDataFromRequestManager:
             if self.use_backup:
                 logging.warning(Utils.get_time() + ' Trying Request Manager backup')
-                processing_string = self._fetch(self.reqmgr_backup_url
-                    + reqmgr_name)
-
-                if len(processing_string) == 0:
-                    raise NoProcessingString(Utils.get_time() + ' No processing string found in '
-                        + ' Request Manager or backup')
+                reqmgr_info = self._fetch(self.reqmgr_backup_url + reqmgr_name)
             else:
-                raise NoProcessingString(Utils.get_time() + ' No processing string found')
+                raise
 
-        return processing_string
+        # No exceptions by this point!
+        info = {}
+
+        for field in fields:
+            if field in reqmgr_info:
+                info[field] = reqmgr_info[field]
+
+        return info
 
     def _fetch(self, url):
         """Go and get the processing string from url, or the empty string if it goes west"""
@@ -58,13 +60,10 @@ class ProcessingStringProvider(object):
                     + ' from ' + url)
             else:
                 try:
-                    return response.json()['ProcessingString']
-                except KeyError:
-                    logging.warning(Utils.get_time() + ' No processing string in response from '
-                        + url)
+                    return response.json()
                 except ValueError:
                     logging.error(Utils.get_time() + ' Malformed response from ' + url)
 
-        # Default to returning the empty string
-        return ''
+        # If we haven't returned by now, there was a problem :((((((((((
+        raise NoDataFromRequestManager(Utils.get_time() + ' Problem with ' + url)
 
