@@ -125,6 +125,15 @@ class HistoricalAPI(esadapter.InitConnection):
                     i['pwg'] = req['pwg']
                     i['request'] = True
                     i['status'] = req['status']
+                    i['done_time'] = 0 # default, see next step
+
+                    if req['status'] == 'done':
+                        # Get the time of the transition to status "done"
+                        for item in req['history']:
+                            if item['action'] == 'done':
+                                i['done_time'] = self.parse_request_history_time(item['time'])
+                                break
+
                     iterable.append(i)
             except KeyError:
                 pass
@@ -148,22 +157,27 @@ class HistoricalAPI(esadapter.InitConnection):
                         .ElasticHttpNotFoundError:
                     yield [False, None, None]
 
-    def get_data_points(self, request, monitor, details, expected):
+    def parse_probe(self, request, monitor, details, expected):
         """Parse input and return fixed data points"""
         data = dict()
 
+        # If there is an output dataset...
         if ((details is None or 
             (details['output_dataset'] is not None
              and len(details['output_dataset']))) and
             'pdmv_evts_in_DAS' in monitor):
             data['e'] = (monitor['pdmv_evts_in_DAS'] +
                          monitor['pdmv_open_evts_in_DAS'])
-        else:
+        else: # no dataset
             data['e'] = 0
-        if details is None or details['status'] == 'done':
-            data['d'] = data['e']
-        else:
-            data['d'] = 0
+
+        # if the request is done and this monitor happened after the request finished
+        #if details is None or (details['status'] == 'done' and monitor_time > details['done_time']):
+        #    data['d'] = data['e']
+        #else: # request not done or monitor happened before it finished
+        #    data['d'] = 0
+        data['d'] = 0 # default - fixed later if conditions apply
+
         # get timestamp, if field is empty set 1/1/2013
         if len(monitor['pdmv_monitor_time']):
             if monitor['pdmv_monitor_time'] == "FLAG":
@@ -176,6 +190,30 @@ class HistoricalAPI(esadapter.InitConnection):
             data['x'] = details['expected']
         else:
             data['x'] = expected
+        return data
+
+    def get_data_points(self, monitor_history, is_request, details, expected):
+        """Parse a monitor history and return data points, accounting for done requests with no
+        probes after their final transition
+        """
+        data = []
+        probe_after_done = False
+        for record in monitor_history:
+            probe = self.parse_probe(is_request, record, details, expected)
+
+            if details is None or (details['status'] == 'done' and
+                probe['t'] > details['done_time']):
+                probe_after_done = True
+                probe['d'] = probe['e']
+
+            data.append(probe)
+
+        # Check that the most recent probe is after transition (if request is done) and fix if not
+        if not probe_after_done and details['status'] == 'done':
+            done_probe = {'e': data[0]['e'], 'd': data[0]['e'], 't': details['done_time'],
+                'x': data[0]['x']}
+            data.insert(0, done_probe)
+
         return data
 
     @staticmethod
@@ -214,6 +252,11 @@ class HistoricalAPI(esadapter.InitConnection):
     def parse_time(string_time):
         """Parse time in a "Tue Jan 1 00:00:00 2013" format to integer"""
         return time.mktime(time.strptime(string_time))*1000
+
+    @staticmethod
+    def parse_request_history_time(string_time):
+        """Parse time in a "2013-12-01-00-00" format to an integer as above"""
+        return time.mktime(time.strptime(string_time, '%Y-%m-%d-%H-%M'))*1000
 
     def prepare_response(self, query, priority, status_i, pwg_i):
         """Loop through all the workflow data, generate response"""
@@ -268,10 +311,8 @@ class HistoricalAPI(esadapter.InitConnection):
                           and 'pdmv_monitor_history' in document:
                     # usually pdmv_monitor_history has more information than
                     # pdmv_datasets
-                    for record in document['pdmv_monitor_history']:
-                        response['data'].append(self.get_data_points( \
-                                is_request, record, details,
-                                document['pdmv_expected_events']))
+                    response['data'] += self.get_data_points(document['pdmv_monitor_history'],
+                        is_request, details, document['pdmv_expected_events'])
 
                 elif (document['pdmv_dataset_name'] == "None Yet" or
                       (details is not None and
@@ -290,9 +331,8 @@ class HistoricalAPI(esadapter.InitConnection):
                     else:
                         record['pdmv_monitor_time'] = "FLAG"
 
-                    response['data'].append(self.get_data_points( \
-                            is_request, record,
-                            details, document['pdmv_expected_events']))
+                    response['data'] += self.get_data_points([record], is_request, details,
+                        document['pdmv_expected_events'])
 
                 elif ('pdmv_monitor_datasets' in document
                       and (document['pdmv_type'] == 'TaskChain'
@@ -301,10 +341,8 @@ class HistoricalAPI(esadapter.InitConnection):
                     # is not the main one
                     for record in document['pdmv_monitor_datasets']:
                         if record['dataset'] == details['output_dataset']:
-                            for monitor in record['monitor']:
-                                response['data'].append(self.get_data_points( \
-                                        is_request, monitor, details,
-                                        document['pdmv_expected_events']))
+                            response['data'] += self.get_data_points(record['monitor'], is_request,
+                                details, document['pdmv_expected_events'])
                 response_list.append(response)
             error = ''
             if incorrect:
@@ -338,10 +376,12 @@ class HistoricalAPI(esadapter.InitConnection):
         compressed = []
         prev = {'e': -1, 'x': -1}
         for (expected, probe) in enumerate(arr):
-            if (probe['e'] != prev['e'] or probe['x'] != prev['x']) \
-                    and (probe['e'] != 0 or expected == 0):
+            if (probe['e'] != prev['e'] or probe['x'] != prev['x']
+                    or probe['d'] != prev['d']) and (probe['e'] != 0 or expected == 0):
+
                 compressed.append(probe)
                 prev = probe
+
         return compressed
 
     @staticmethod
