@@ -28,7 +28,13 @@ class PerformanceAPI(esadapter.InitConnection):
         print(str(len(response)))
 
         # loop over and remove documents' fields
+        remove = []
         for request in response:
+            # Remove new and unchained to clean up output plots
+            if request['status'] == 'new' and not request.get('member_of_chain', []):
+                remove.append(request)
+                continue
+
             for field in ['time_event', 'total_events', 'completed_events',
                           'reqmgr_name', 'efficiency', 'output_dataset',
                           'flown_with', 'member_of_chain']:
@@ -41,6 +47,10 @@ class PerformanceAPI(esadapter.InitConnection):
                 patch_history[history['action']] = history['time']
             request['history'] = patch_history
             request['input'] = request['member_of_campaign']
+
+
+        for to_remove in remove:
+            response.remove(to_remove)
 
         return json.dumps({"results": response})
 
@@ -83,6 +93,10 @@ class PriorityAPI(esadapter.InitConnection):
 
         com = {}
         for request in response:
+            # Remove new and unchained to clean up output plots (just don't add them)
+            if request['status'] == 'new' and not request.get('member_of_chain', []):
+                continue
+
             history = request['history']
             last = len(history)-1
             if (history[last]['action'] == 'done' and 
