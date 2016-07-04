@@ -4,7 +4,6 @@ from pmp.api.models import esadapter
 import simplejson as json
 import time
 
-
 class HistoricalAPI(esadapter.InitConnection):
     """Used to return list of points for historical plots"""
 
@@ -64,15 +63,15 @@ class HistoricalAPI(esadapter.InitConnection):
 
     @staticmethod
     def check_dataset(output_dataset, doc):
-        """Check for secondary datasets"""
+        """Check for secondary datasets - True if they exist, False otherwise"""
         if doc is None:
-            return True
+            return False
         if doc['pdmv_dataset_name'] != output_dataset and \
                 'pdmv_monitor_datasets' in doc:
             if output_dataset in [i['dataset'] for i \
                                       in doc['pdmv_monitor_datasets']]:
-                return False
-        return True
+                return True
+        return False
 
     def is_instance(self, prepid, typeof, index):
         """Checks if prepid matches any typeof in the index"""
@@ -116,10 +115,15 @@ class HistoricalAPI(esadapter.InitConnection):
                 else:
                     dataset = None
 
+                # Include a blank one in case there are no workflows. We still want expected events
+                if not len(req['reqmgr_name']):
+                    req['reqmgr_name'] = [None]
+
                 for reqmgr in req['reqmgr_name']:
                     i = {}
                     i['expected'] = req['total_events']
                     i['name'] = reqmgr
+                    i['prepid'] = req['prepid']
                     i['output_dataset'] = dataset
                     i['priority'] = req['priority']
                     i['pwg'] = req['pwg']
@@ -127,12 +131,17 @@ class HistoricalAPI(esadapter.InitConnection):
                     i['status'] = req['status']
                     i['done_time'] = 0 # default, see next step
 
-                    if req['status'] == 'done':
-                        # Get the time of the transition to status "done"
-                        for item in req['history']:
-                            if item['action'] == 'done':
-                                i['done_time'] = self.parse_request_history_time(item['time'])
-                                break
+                    # Get time of first transition to "submitted"
+                    for item in req['history']:
+                        if item['action'] == 'submitted':
+                            i['submitted_time'] = self.parse_request_history_time(item['time'])
+                            break
+
+                    # Get the time of the *last* transition to status "done"
+                    for item in reversed(req['history']):
+                        if item['action'] == 'done':
+                            i['done_time'] = self.parse_request_history_time(item['time'])
+                            break
 
                     iterable.append(i)
             except KeyError:
@@ -141,13 +150,16 @@ class HistoricalAPI(esadapter.InitConnection):
         # iterate over workflows and yield documents
         for i in iterable:
             if 'request' in i:
-                try:
-                    yield [i['request'],
-                           self.es.get('stats', 'stats', i['name'])
-                           ['_source'], i]
-                except esadapter.pyelasticsearch.exceptions\
-                        .ElasticHttpNotFoundError:
+                if i['name'] is None:
                     yield [True, None, i]
+                else:
+                    try:
+                        yield [i['request'],
+                               self.es.get('stats', 'stats', i['name'])
+                               ['_source'], i]
+                    except esadapter.pyelasticsearch.exceptions\
+                            .ElasticHttpNotFoundError:
+                        yield [True, None, i]
             else:
                 try:
                     yield [False,
@@ -171,11 +183,6 @@ class HistoricalAPI(esadapter.InitConnection):
         else: # no dataset
             data['e'] = 0
 
-        # if the request is done and this monitor happened after the request finished
-        #if details is None or (details['status'] == 'done' and monitor_time > details['done_time']):
-        #    data['d'] = data['e']
-        #else: # request not done or monitor happened before it finished
-        #    data['d'] = 0
         data['d'] = 0 # default - fixed later if conditions apply
 
         # get timestamp, if field is empty set 1/1/2013
@@ -197,6 +204,7 @@ class HistoricalAPI(esadapter.InitConnection):
         probes after their final transition
         """
         data = []
+
         probe_after_done = False
         for record in monitor_history:
             probe = self.parse_probe(is_request, record, details, expected)
@@ -209,10 +217,10 @@ class HistoricalAPI(esadapter.InitConnection):
             data.append(probe)
 
         # Check that the most recent probe is after transition (if request is done) and fix if not
+        # Gets 'done' value from the most recent evts_in_DAS value, as it did before this change
         if not probe_after_done and details['status'] == 'done':
-            done_probe = {'e': data[0]['e'], 'd': data[0]['e'], 't': details['done_time'],
-                'x': data[0]['x']}
-            data.insert(0, done_probe)
+            data.insert(0, {'e': data[0]['e'], 'd': data[0]['e'], 't': details['done_time'],
+                'x': data[0]['x']})
 
         return data
 
@@ -267,82 +275,100 @@ class HistoricalAPI(esadapter.InitConnection):
         incorrect = True
         for one in query:
 
+            # Keep track of the prepids we've seen, so that we only add submission probes once
+            seen_prepids = []
+
             # Process the db documents
             for (is_request, document, details) in self.db_query(one):
 
                 if incorrect and document is not None:
                     incorrect = False
 
-                # skip empty documents and legacy request with no prep_id
-                if (document is None or document['pdmv_prep_id'] == ''):# and details['status'] != 'submitted':
+                # skip legacy request with no prep_id
+                if details.get('prepid', '') == '':
                     continue
-                
+
                 # filter out requests
                 if is_request:
 
-                    filters['status'].update(self.get_filter_dict( \
-                            details['status'], filters['status'], status_i))
-                    filters['pwg'].update(self.get_filter_dict( \
-                            details['pwg'], filters['pwg'], pwg_i))
+                    filters['status'].update(self.get_filter_dict(details['status'],
+                        filters['status'], status_i))
+                    filters['pwg'].update(self.get_filter_dict(details['pwg'], filters['pwg'],
+                        pwg_i))
 
-                    no_secondary_datasets = self.check_dataset(
-                        details['output_dataset'], document)
+                    secondary_datasets = self.check_dataset(details['output_dataset'], document)
 
-                    if self.filtering(details, pwg_i, status_i, priority) or \
-                            self.skip_request( \
-                        details['output_dataset'],
-                        document['pdmv_dataset_name'],
-                        document['pdmv_type'], no_secondary_datasets):
+                    # Only check self.skip_request if we have a document from stats
+                    if (self.filtering(details, pwg_i, status_i, priority) or
+                        (document is not None and self.skip_request(details['output_dataset'],
+                        document['pdmv_dataset_name'], document['pdmv_type'],
+                        secondary_datasets))):
                         continue
 
                 # create an array of requests to be processed
                 response = {}
                 response['data'] = []
-                response['request'] = document['pdmv_prep_id']
+                response['request'] = details['prepid']
 
-                if not is_request and (document['pdmv_type'] == 'TaskChain'):
-                    response_list = self.process_taskchain(document)
-                    return response_list, dict(), dict(), True, ''
+                # Check there is a document from stats (i.e. the workflow was found)
+                # If not, we may still want to create a submission probe
+                if document is not None:
+                    # A TaskChain and not a request (only when the query is a workflow afaik)
+                    if not is_request and (document['pdmv_type'] == 'TaskChain'):
+                        response_list = self.process_taskchain(document)
+                        return response_list, dict(), dict(), True, ''
 
-                elif (details is None or
-                      document['pdmv_dataset_name'] == \
-                          details['output_dataset']) \
-                          and document['pdmv_type'] != 'TaskChain' \
-                          and 'pdmv_monitor_history' in document:
-                    # usually pdmv_monitor_history has more information than
-                    # pdmv_datasets
-                    response['data'] += self.get_data_points(document['pdmv_monitor_history'],
-                        is_request, details, document['pdmv_expected_events'])
+                    # There are no details (so not in the requests index or no workflows assigned)
+                    # OR
+                    # dataset_name == output_dataset, it's not a TaskChain and it has a monitor history
+                    elif (details is None or
+                          document['pdmv_dataset_name'] == \
+                              details['output_dataset']) \
+                              and document['pdmv_type'] != 'TaskChain' \
+                              and 'pdmv_monitor_history' in document:
+                        # usually pdmv_monitor_history has more information than pdmv_datasets
+                        response['data'] += self.get_data_points(document['pdmv_monitor_history'],
+                            is_request, details, document['pdmv_expected_events'])
 
-                elif (document['pdmv_dataset_name'] == "None Yet" or
-                      (details is not None and
-                       details['status'] == 'submitted' and
-                       (details['output_dataset'] is None or
-                        len(details['output_dataset']) == 0))):
-                    """
-                    Fix for submitted requests that have no output dataset
-                    specified. Ensures present == historical(expected).
-                    if query is workflow pdmv_dataset_name is None Yet
-                    if query is request/above details not none and array len 0
-                    """
-                    record = dict()
-                    if 'pdmv_monitor_history' in document:
-                        record = document['pdmv_monitor_history'][0]
-                    else:
-                        record['pdmv_monitor_time'] = "FLAG"
+                    # No dataset assigned yet OR it's submitted, has details and
+                    elif (document['pdmv_dataset_name'] == "None Yet" or
+                          (details is not None and
+                           details['status'] == 'submitted' and
+                           (details['output_dataset'] is None or
+                            len(details['output_dataset']) == 0))):
+                        """
+                        Fix for submitted requests that have no output dataset
+                        specified. Ensures present == historical(expected).
+                        if query is workflow pdmv_dataset_name is None Yet
+                        if query is request/above details not none and array len 0
+                        """
+                        record = dict()
+                        if 'pdmv_monitor_history' in document:
+                            record = document['pdmv_monitor_history'][0]
+                        else:
+                            record['pdmv_monitor_time'] = "FLAG"
 
-                    response['data'] += self.get_data_points([record], is_request, details,
-                        document['pdmv_expected_events'])
+                        response['data'] += self.get_data_points([record], is_request, details,
+                            document['pdmv_expected_events'])
 
-                elif ('pdmv_monitor_datasets' in document
-                      and (document['pdmv_type'] == 'TaskChain'
-                           or not no_secondary_datasets)):
-                    # handling taskchain requests where output dataset
-                    # is not the main one
-                    for record in document['pdmv_monitor_datasets']:
-                        if record['dataset'] == details['output_dataset']:
-                            response['data'] += self.get_data_points(record['monitor'], is_request,
-                                details, document['pdmv_expected_events'])
+                    # document contains 'pdmv_monitor_datasets' and is either a TaskChain or has
+                    # secondary datasets
+                    elif ('pdmv_monitor_datasets' in document
+                        and (document['pdmv_type'] == 'TaskChain' or secondary_datasets)):
+                        # handling taskchain requests where output dataset
+                        # is not the main one
+                        for record in document['pdmv_monitor_datasets']:
+                            if record['dataset'] == details['output_dataset']:
+                                response['data'] += self.get_data_points(record['monitor'], is_request,
+                                    details, document['pdmv_expected_events'])
+
+                if (details is not None and 'submitted_time' in details
+                    and details['prepid'] not in seen_prepids):
+                    response['data'].append({'e': 0, 'd': 0, 'x': details['expected'],
+                        't': details['submitted_time']})
+
+                    seen_prepids.append(details['prepid'])
+
                 response_list.append(response)
             error = ''
             if incorrect:
@@ -385,10 +411,10 @@ class HistoricalAPI(esadapter.InitConnection):
         return compressed
 
     @staticmethod
-    def skip_request(output_dataset, dataset, ttype, nsd):
+    def skip_request(output_dataset, dataset, ttype, sd):
         """Check if skip request"""
         return dataset != output_dataset and output_dataset is not None \
-            and dataset != 'None Yet' and ttype != 'TaskChain' and nsd
+            and dataset != 'None Yet' and ttype != 'TaskChain' and not sd
 
     @staticmethod
     def sort_timestamps(data, probe):
