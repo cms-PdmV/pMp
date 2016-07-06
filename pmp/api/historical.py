@@ -281,11 +281,16 @@ class HistoricalAPI(esadapter.InitConnection):
             # Process the db documents
             for (is_request, document, details) in self.db_query(one):
 
+                if details is None and document is None:
+                    # Well, there's nothing to do, is there?
+                    continue
+
                 if incorrect and document is not None:
                     incorrect = False
 
-                # skip legacy request with no prep_id
-                if details.get('prepid', '') == '':
+                # skip legacy request with no prep_id - check both details and document
+                if ((document is None and details.get('prepid', '') == '')
+                    or (details is None and document.get('pdmv_prep_id', '') == '')):
                     continue
 
                 # filter out requests
