@@ -219,6 +219,39 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
         };
 
         /**
+         * @decription Get a percentage value for the submitted request progress
+         */
+        $scope.getSubmittedProgressWidth = function (value) {
+            if (value == 'NO_EXP_EVTS' || value > 100) {
+                return 100;
+            } else {
+                return value;
+            }
+        }
+
+        /**
+         * Get a label for a submitted request progress bar
+         */
+        $scope.getSubmittedProgressLabel = function (value) {
+            if (value == 'NO_EXP_EVTS') {
+                return 'No expected events for this request';
+            } else {
+                return $scope.getSubmittedProgressWidth(value) + '%';
+            }
+        }
+
+        /**
+         * Get the class for a submitted request's progress bar
+         */
+        $scope.getSubmittedProgressClass = function (value) {
+            if (value == 'NO_EXP_EVTS') {
+                return 'progress-bar progress-bar-warning';
+            } else {
+                return 'progress-bar';
+            }
+        }
+
+        /**
          * @description Core: Change URL when data or filter changes
          */
         $scope.setURL = function () {

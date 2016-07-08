@@ -200,22 +200,42 @@ def parse_rereco_history(transitions):
     return history
             
 def get_reqmgr_info(reqmgr_name, reqmgr_provider, proc_string_cfg):
-    """Get relevant info from Request Manager and prepare it for use"""
+    """Returns info from Request Manager in a dict with keys corresponding to the equivalent
+    McM values
+    """
     info = {}
 
     try:
-        reqmgr_info = reqmgr_provider.get(reqmgr_name, ['ProcessingString', 'RequestTransition'])
+        reqmgr_info = reqmgr_provider.get(reqmgr_name, ['ProcessingString', 'RequestTransition',
+            'RequestStatus'])
 
-        if 'ProcessingString' in reqmgr_info:
-            processing_string = reqmgr_info['ProcessingString']
-            info['member_of_campaign'] = processing_string
-            logging.info(Utils.get_time() + ' Saving processing string ' + processing_string)
-            save(processing_string, {'prepid': processing_string}, proc_string_cfg)
+        # Processing string
+        processing_string = reqmgr_info['ProcessingString']
+        info['member_of_campaign'] = processing_string
+        logging.info(Utils.get_time() + ' Saving processing string ' + processing_string)
+        save(processing_string, {'prepid': processing_string}, proc_string_cfg)
 
-        if 'RequestTransition' in reqmgr_info:
-            info['history'] = parse_rereco_history(reqmgr_info['RequestTransition'])
+        # History
+        info['history'] = parse_rereco_history(reqmgr_info['RequestTransition'])
+
+        # Status
+        done_statuses = [
+            'announced',
+            'normal-archived',
+        ]
+
+        if reqmgr_info['RequestStatus'] in done_statuses:
+            info['status'] = 'done'
+        else:
+            info['status'] = 'submitted'
+
     except NoDataFromRequestManager as err:
         logging.error(Utils.get_time() + ' ' + str(err))
+        raise
+    except KeyError as err:
+        logging.error(Utils.get_time() + ' Response from Request Manager only contains '
+            + str(reqmgr_info.keys()))
+        raise
 
     return info
 
@@ -240,16 +260,6 @@ def create_rereco_request(data, rereco_cfg, proc_string_cfg, processing_string_p
         if rereco_name in data:
             fake_request[mc_name] = data[rereco_name]
 
-    # Get a useful status (using the DAS status)
-    das_status = fake_request.get('status_in_DAS', 'unknown')
-
-    if das_status == 'VALID':
-        fake_request['status'] = 'done'
-    elif das_status == 'PRODUCTION':
-        fake_request['status'] = 'submitted'
-    else:
-        fake_request['status'] = das_status
-
     # Format the reqmgr_name field as a list to mirror MC requests (even though there will only
     # ever be only one, because we're getting this from stats)
     fake_request['reqmgr_name'] = [data.get('pdmv_request_name', '')]
@@ -261,17 +271,14 @@ def create_rereco_request(data, rereco_cfg, proc_string_cfg, processing_string_p
     except KeyError:
         fake_request['completed_events'] = 0
 
-    # Get ReReco-specific fields from Request Manager
+    # Get ReReco-specific fields from Request Manager (processing string, history, status)
     try:
         request_name = data['pdmv_request_name']
     except KeyError:
         logging.warning('{0} Record {1} has no request name'.format(
             Utils.get_time(), prepid))
     else:
-        try:
-            fake_request.update(get_reqmgr_info(request_name, reqmgr_provider, proc_string_cfg))
-        except NoDataFromRequestManager as err:
-            logging.error(Utils.get_time() + ' ' + str(err))
+        fake_request.update(get_reqmgr_info(request_name, reqmgr_provider, proc_string_cfg))
 
     # Aaaaand save.
     save(fake_request['prepid'], fake_request, rereco_cfg)

@@ -543,8 +543,11 @@ class SubmittedStatusAPI(esadapter.InitConnection):
                                       priority[1] == -1)):
                 completed = self.completed_deep(request)
                 if completed >= 0:
-                    submitted[request['prepid']] = (100 * completed /
-                                                    request['total_events'])
+                    if request['total_events'] == 0:
+                        submitted[request['prepid']] = 'NO_EXP_EVTS'
+                    else:
+                        submitted[request['prepid']] = (100 * completed /
+                            request['total_events'])
         return json.dumps({"results": submitted})
 
     def is_instance(self, prepid, typeof, index):
