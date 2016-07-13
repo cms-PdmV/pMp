@@ -108,6 +108,7 @@ def create_mapping(cfg):
 def get_last_change(cfg):
     last_seq = 0
 
+    print cfg.last_seq
     res, code = Utils.curl('GET', cfg.last_seq)
     if code == 200:
         last_seq = res['_source']['val']
@@ -209,25 +210,34 @@ def get_reqmgr_info(reqmgr_name, reqmgr_provider, proc_string_cfg):
         reqmgr_info = reqmgr_provider.get(reqmgr_name, ['ProcessingString', 'RequestTransition',
             'RequestStatus'])
 
-        # Processing string
-        processing_string = reqmgr_info['ProcessingString']
-        info['member_of_campaign'] = processing_string
-        logging.info(Utils.get_time() + ' Saving processing string ' + processing_string)
-        save(processing_string, {'prepid': processing_string}, proc_string_cfg)
-
-        # History
-        info['history'] = parse_rereco_history(reqmgr_info['RequestTransition'])
-
-        # Status
-        done_statuses = [
-            'announced',
-            'normal-archived',
-        ]
-
-        if reqmgr_info['RequestStatus'] in done_statuses:
-            info['status'] = 'done'
+        if 'ProcessingString' in reqmgr_info:
+            processing_string = reqmgr_info['ProcessingString']
+            info['member_of_campaign'] = processing_string
+            logging.info(Utils.get_time() + ' Saving processing string ' + processing_string)
+            save(processing_string, {'prepid': processing_string}, proc_string_cfg)
         else:
-            info['status'] = 'submitted'
+            logging.error(Utils.get_time() + ' Response for ' + reqmgr_name +
+                ' does not contain processing string')
+
+        if 'RequestTransition' in reqmgr_info:
+            info['history'] = parse_rereco_history(reqmgr_info['RequestTransition'])
+        else:
+            logging.error(Utils.get_time() + ' Response for ' + reqmgr_name +
+                ' does not contain request transitions')
+
+        if 'RequestStatus' in reqmgr_info:
+            done_statuses = [
+                'announced',
+                'normal-archived',
+            ]
+
+            if reqmgr_info['RequestStatus'] in done_statuses:
+                info['status'] = 'done'
+            else:
+                info['status'] = 'submitted'
+        else:
+            logging.error(Utils.get_time() + ' Response for ' + reqmgr_name +
+                ' does not contain request status')
 
     except NoDataFromRequestManager as err:
         logging.error(Utils.get_time() + ' ' + str(err))
