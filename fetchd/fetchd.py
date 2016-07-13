@@ -108,7 +108,6 @@ def create_mapping(cfg):
 def get_last_change(cfg):
     last_seq = 0
 
-    print cfg.last_seq
     res, code = Utils.curl('GET', cfg.last_seq)
     if code == 200:
         last_seq = res['_source']['val']
