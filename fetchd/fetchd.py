@@ -184,7 +184,7 @@ def convert_reqmgr_timestamp(timestamp):
 
 def parse_rereco_history(transitions):
     statuses = {
-        'running-open': 'submitted',
+        'new': 'submitted',
         'announced': 'done'
     }
     history = []
