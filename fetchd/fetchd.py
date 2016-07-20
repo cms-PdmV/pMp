@@ -326,6 +326,21 @@ if __name__ == "__main__":
 
         if r not in CFG.exclude_list:
             if deleted:
+                if index == 'stats':
+                    # Check if this record is a rereco_request and delete as appropriate
+                    stats_obj, stats_status = Utils.curl('GET', CFG.pmp_db + r)
+
+                    if status == 200 and 'pdmv_prep_id' in stats_obj.get('_source', {}):
+                        prepid = stats_obj['_source']['pdmv_prep_id']
+                        rereco_obj, rereco_status = Utils.curl('DELETE',
+                            rereco_cfg.pmp_db + prepid)
+
+                        if rereco_status == 200:
+                            logging.info(Utils.get_time() + ' Deleted ReReco request at ' + prepid)
+                        elif rereco_status != 404: # 404 just means it's not a ReReco request
+                            logging.warning(Utils.get_time() + ' Status ' + str(rereco_status) +
+                                ' when attempting to delete ' + prepid + ' from rereco_requests')
+
                 _, s = Utils.curl('DELETE', '%s%s' % (CFG.pmp_db, r))
                 if s == 200:
                     logging.info(Utils.get_time() + " Deleted record indexed at "
