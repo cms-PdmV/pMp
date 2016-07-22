@@ -433,26 +433,26 @@ class HistoricalAPI(esadapter.InitConnection):
             and dataset != 'None Yet' and ttype != 'TaskChain' and not sd
 
     @staticmethod
-    def sort_timestamps(data, probe):
-        """Get valid timestamps. Remove duplicates and apply probing limit"""
-        times = []
+    def sort_timestamps(data, limit):
+        """Reduce the number of timestamps to limit"""
+        times = set()
         for details in data:
-            times += (i['t'] for i in data[details]['data'])
-        times = sorted(set(times))
+            times += set(i['t'] for i in data[details]['data'])
 
-        if len(times) > (probe-1):
-            skiper = len(times) / (probe-1)
-        else:
-            skiper = -1
+        if limit >= len(times):
+            # No point making more probes than we have the data for
+            return sorted(times)
 
-        probes = []
-        counter = 0
-        for (index, probe) in enumerate(times):
-            if counter < skiper and index < len(times) - 1 and index != 0:
-                counter += 1
-            else:
-                probes.append(probe)
-                counter = 0
+        # Get a list of times evenly distributed between the first probe and the last
+        latest = int(max(times))
+        earliest = int(min(times))
+
+        probes = range(earliest, latest, int(round((latest - earliest) / limit)))
+
+        # Ensure that the most recent probe is always included
+        if probes[-1] != latest:
+            probes.append(latest)
+
         return probes
 
     def get(self, query, probe=100, priority=",", filters=None):
