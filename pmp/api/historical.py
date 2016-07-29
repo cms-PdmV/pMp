@@ -324,7 +324,11 @@ class HistoricalAPI(esadapter.InitConnection):
                 # create an array of requests to be processed
                 response = {}
                 response['data'] = []
-                response['request'] = details['prepid']
+
+                if details is not None:
+                    response['request'] = details['prepid']
+                else:
+                    response['request'] = document['pdmv_prep_id']
 
                 # Check there is a document from stats (i.e. the workflow was found)
                 # If not, we may still want to create a submission probe
