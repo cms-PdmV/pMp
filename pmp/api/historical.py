@@ -435,9 +435,11 @@ class HistoricalAPI(esadapter.InitConnection):
     @staticmethod
     def sort_timestamps(data, limit):
         """Reduce the number of timestamps to limit"""
-        times = set()
+        times = []
         for details in data:
-            times += set(i['t'] for i in data[details]['data'])
+            times += [i['t'] for i in data[details]['data']]
+
+        times = set(times)
 
         if limit >= len(times):
             # No point making more probes than we have the data for
