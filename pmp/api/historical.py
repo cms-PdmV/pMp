@@ -333,8 +333,18 @@ class HistoricalAPI(esadapter.InitConnection):
                 # Check there is a document from stats (i.e. the workflow was found)
                 # If not, we may still want to create a submission probe
                 if document is not None:
+                    # A ReReco request with ALCARECO output datasets - stats does not differentiate
+                    # between these, so we choose the one with the most events
+                    # If there's a "real" output dataset like RECO/AOD/MINIAOD, this will not apply
+                    if ('rereco_preferred_dataset' in document
+                        and 'pdmv_monitor_datasets' in document):
+                        for dataset in document['pdmv_monitor_datasets']:
+                            if dataset['dataset'] == document['rereco_preferred_dataset']:
+                                response['data'] += self.get_data_points(dataset['monitor'],
+                                    is_request, details, document['pdmv_expected_events'])
+
                     # A TaskChain and not a request (only when the query is a workflow afaik)
-                    if not is_request and (document['pdmv_type'] == 'TaskChain'):
+                    elif not is_request and (document['pdmv_type'] == 'TaskChain'):
                         response_list = self.process_taskchain(document)
                         return response_list, dict(), dict(), True, ''
 

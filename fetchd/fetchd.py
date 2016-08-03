@@ -248,6 +248,21 @@ def get_reqmgr_info(reqmgr_name, reqmgr_provider, proc_string_cfg):
 
     return info
 
+def find_largest_dataset(statuses):
+    """Gets the dataset from stats pdmv_dataset_statuses with the most events"""
+    best_dataset = ''
+    greatest_total = 0
+
+    for dataset, info in statuses.iteritems():
+        # Completed events only
+        total = info['pdmv_evts_in_DAS']
+
+        if total > greatest_total:
+            best_dataset = dataset
+            greatest_total = total
+
+    return best_dataset, greatest_total
+
 def create_rereco_request(data, rereco_cfg, proc_string_cfg, processing_string_provider):
     """Creates a request-like object from a given stats object"""
     fake_request = {}
@@ -275,8 +290,14 @@ def create_rereco_request(data, rereco_cfg, proc_string_cfg, processing_string_p
 
     # Find the completed events
     try:
-        fake_request['completed_events'] =\
-                data['pdmv_monitor_history'][0]['pdmv_evts_in_DAS']
+        # If stats chooses an ALCARECO dataset, there may be more than one and we want the ALCARECO
+        # dataset with the most events
+        if data.get('pdmv_dataset_name', '').endswith('ALCARECO'):
+            data['rereco_preferred_dataset'], fake_request['completed_events'] = \
+                find_largest_dataset(data['pdmv_dataset_statuses'])
+        else:
+            fake_request['completed_events'] =\
+                    data['pdmv_monitor_history'][0]['pdmv_evts_in_DAS']
     except KeyError:
         fake_request['completed_events'] = 0
 
