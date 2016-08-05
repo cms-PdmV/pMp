@@ -69,7 +69,7 @@ angular.module('pmpApp').service('Data', ['$rootScope', function ($rootScope) {
          * @params {Array} i the Array of loaded data objects.
          * @params {Boolean} append the array is supposed to be added instead of overwrite.
          */
-            setLoadedData: function (i, append, sort, more) {
+        setLoadedData: function (i, append, sort, more) {
             if (append) Array.prototype.push.apply(i, this.loadedData);
             this.loadedData = i;
             if (sort) this.sortDataByStatus();

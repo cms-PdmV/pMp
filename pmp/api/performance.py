@@ -24,8 +24,17 @@ class PerformanceAPI(esadapter.InitConnection):
                 # Try ReReco index
                 search = self.es_search(campaign, 'rereco_requests')
 
+        # Enum provides ordering for comparison between statuses (in history, hence 'created')
+        status_order = {
+            'created': 0,
+            'validation': 1,
+            'approved': 2,
+            'submitted': 3,
+            'done': 4
+        }
+        earliest_status = 'done'
+
         response = [s['_source'] for s in search['hits']]
-        print(str(len(response)))
 
         # loop over and remove documents' fields
         remove = []
@@ -45,6 +54,12 @@ class PerformanceAPI(esadapter.InitConnection):
             patch_history = {}
             for history in request['history']:
                 patch_history[history['action']] = history['time']
+
+                # Keep a log of the "earliest" status found. Fixes ReReco request display
+                # given that they start directly at "submitted"
+                if status_order[history['action']] < status_order[earliest_status]:
+                    earliest_status = history['action']
+
             request['history'] = patch_history
             request['input'] = request['member_of_campaign']
 
@@ -52,7 +67,7 @@ class PerformanceAPI(esadapter.InitConnection):
         for to_remove in remove:
             response.remove(to_remove)
 
-        return json.dumps({"results": response})
+        return json.dumps({'results': {"data": response, 'first_status': earliest_status}})
 
 
 class PriorityAPI(esadapter.InitConnection):

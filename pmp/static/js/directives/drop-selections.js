@@ -65,7 +65,8 @@
                 // hack to add sortable options after ng-repeat
                 setTimeout(function () {
                     $("ul.nav.dnd", element).sortable({
-                        group: Math.random(), // so it's not possible to move to other groups
+                        // creates a new "group" for each box, allowing dragging between them
+                        group: Math.random(),
                         nested: false,
                         vertical: false,
                         exclude: 'nav-header',
@@ -96,3 +97,4 @@
         }
     };
 }])
+

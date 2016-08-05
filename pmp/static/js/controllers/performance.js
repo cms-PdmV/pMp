@@ -119,7 +119,7 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
                 var promise = $http.get("api/" + input +
                     "/performance/_");
                 promise.then(function (data) {
-                    if (!data.data.results.length) {
+                    if (!data.data.results.data.length) {
                         $scope.showPopUp(
                             PageDetailsProvider.messages
                             .W2.type,
@@ -128,13 +128,13 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
                         $rootScope.loadingData = false;
                     } else {
                         if (add) {
-                            Data.changeFilter(data.data.results,
+                            Data.changeFilter(data.data.results.data,
                                 false, defaultStatus,
                                 true);
-                            Data.changeFilter(data.data.results,
+                            Data.changeFilter(data.data.results.data,
                                 false, defaultPWG,
                                 false);
-                            Data.setLoadedData(data.data.results,
+                            Data.setLoadedData(data.data.results.data,
                                 true);
                             $scope.showPopUp(
                                 PageDetailsProvider.messages
@@ -143,11 +143,11 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
                                 .S1.message);
                         } else {
                             Data.reset(false);
-                            Data.changeFilter(data.data.results,
+                            Data.changeFilter(data.data.results.data,
                                 true, true, true);
-                            Data.changeFilter(data.data.results,
+                            Data.changeFilter(data.data.results.data,
                                 true, true, false);
-                            Data.setLoadedData(data.data.results,
+                            Data.setLoadedData(data.data.results.data,
                                 false);
                             $scope.showPopUp(
                                 PageDetailsProvider.messages
@@ -155,6 +155,7 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
                                 PageDetailsProvider.messages
                                 .S0.message);
                         }
+                        $scope.first_status = data.data.results.first_status;
                         Data.setInputTags(input, true,
                             false);
                         $scope.setURL();
@@ -270,12 +271,16 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
             $scope.setURL();
         };
 
-
         // Broadcast receiver, change filtered data on loaded data change
         $scope.$on('onChangeNotification:FilteredData', function () {
             $rootScope.loadingData = false;
             $scope.setURL();
             $scope.data = Data.getFilteredData();
+
+            $scope.applyDifference({
+                minuend: $scope.difference.minuend,
+                subtrahend: $scope.first_status,
+            });
         });
 
         // Set interval update of time variables
