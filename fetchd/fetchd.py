@@ -351,7 +351,7 @@ if __name__ == "__main__":
                     # Check if this record is a rereco_request and delete as appropriate
                     stats_obj, stats_status = Utils.curl('GET', CFG.pmp_db + r)
 
-                    if status == 200 and 'pdmv_prep_id' in stats_obj.get('_source', {}):
+                    if stats_status == 200 and 'pdmv_prep_id' in stats_obj.get('_source', {}):
                         prepid = stats_obj['_source']['pdmv_prep_id']
                         rereco_obj, rereco_status = Utils.curl('DELETE',
                             rereco_cfg.pmp_db + prepid)
