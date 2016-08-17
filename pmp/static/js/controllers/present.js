@@ -19,6 +19,20 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
             // reset data and filters
             Data.reset(true);
 
+            // collect URL parameters and fill in defaults where necessary
+            var urlParameters = {};
+
+            ['r', 'p', 'm', 'c', 't', 'x', 'w', 's'].forEach(function (param, index, array) {
+                var urlValue = $location.search()[param];
+
+                if (urlValue === undefined || urlValue === '') {
+                    urlParameters[param] = $scope.defaults[param];
+                }
+                else {
+                    urlParameters[param] = urlValue;
+                }
+            });
+
             // define piecharts options
             $scope.piecharts = {
                 compactTerms: ["done", "to do"],
@@ -34,15 +48,10 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
                 sum: "total_events"
             };
 
-            // get graph parameters or set defaults
-            if ($location.search().p !== undefined) {
-                var toLoad = $location.search().p.split(',');
-                $scope.parameters = toLoad.slice(0, 6);
-                $scope.radio = toLoad.slice(6, 8);
-            } else {
-                $scope.parameters = ['1', '0', '3', '0', '0', '0'];
-                $scope.radio = ['0', '0'];
-            }
+            // Plot parameters - defining how the plot is displayed
+            var plot_params = urlParameters.p.split(',');
+            $scope.parameters = plot_params.slice(0, 6);
+            $scope.radio = plot_params.slice(6, 8);
 
             // set requests globals
             $scope.requests = {
@@ -69,17 +78,13 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
             ];
             for (var i = 0; i < $scope.parameters.length; i++) {
                 if ($scope.parameters[i] === '0') {
-                    $scope.requests.selections.push($scope.selections[
-                        i]);
+                    $scope.requests.selections.push($scope.selections[i]);
                 } else if ($scope.parameters[i] === '1') {
-                    $scope.requests.options.grouping.push($scope.selections[
-                        i]);
+                    $scope.requests.options.grouping.push($scope.selections[i]);
                 } else if ($scope.parameters[i] === '2') {
-                    $scope.requests.options.stacking.push($scope.selections[
-                        i]);
+                    $scope.requests.options.stacking.push($scope.selections[i]);
                 } else if ($scope.parameters[i] === '3') {
-                    $scope.requests.options.coloring = $scope.selections[
-                        i];
+                    $scope.requests.options.coloring = $scope.selections[i];
                 }
             }
 
@@ -98,32 +103,33 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
                 $scope.modeType = "events";
             }
 
-            // if show time label
-            $scope.showDate = $location.search().t === 'true';
+            // show "last updated" time?
+            $scope.showDate = urlParameters.t === 'true';
 
-            // if in growing mode
-            $scope.growingMode = $location.search().m === 'true';
+            // enable growing mode?
+            $scope.growingMode = urlParameters.m === 'true';
 
-            // if in display mode
-            $scope.displayChains = $location.search().c === 'true';
+            // enable chained mode?
+            $scope.displayChains = urlParameters.c === 'true';
 
             // update mode
             $scope.modeUpdate(true);
 
             // initiate filters
-            if ($location.search().x !== undefined && $location.search()
-                .x !== '') Data.setPriorityFilter($location.search()
-                .x.split(','));
-            if ($location.search().s !== undefined && $location.search()
-                .s !== '') Data.initializeFilter($location.search()
-                .s.split(','), true);
-            if ($location.search().w !== undefined && $location.search()
-                .w !== '') Data.initializeFilter($location.search()
-                .w.split(','), false);
+            if (urlParameters.x !== undefined) {
+                Data.setPriorityFilter(urlParameters.x.split(','));
+            }
+
+            if (urlParameters.s !== undefined) {
+                Data.initializeFilter(urlParameters.s.split(','), true);
+            }
+
+            if (urlParameters.w !== undefined) {
+                Data.initializeFilter(urlParameters.w.split(','), false);
+            }
 
             // load graph data
-            if ($location.search().r !== undefined && $location.search()
-                .r !== '') {
+            if (urlParameters.r !== undefined) {
                 var tmp = $location.search().r.split(',');
                 // if filter is empty, assume all true
                 var empty = [$scope.isEmpty(Data.getPWGFilter()),
@@ -219,6 +225,20 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
                     $rootScope.loadingData = false;
                 });
             }
+        };
+
+        /**
+         * @description stores defaults for URL parameters
+         */
+        $scope.defaults = {
+            r: undefined, // query value (from search box)
+            p: '1,0,3,0,0,0,0,0', // the options above the graph affecting the plot
+            m: 'false', // growing mode (boolean)
+            c: 'false', // chained mode (boolean)
+            t: 'false', // show last update time (boolean)
+            x: undefined, // priority filter (list - null equivalent to all)
+            w: undefined, // PWG filter (list - null equivalent to all)
+            s: undefined, // status filter (list - null equivalent to all)
         };
 
         /**
