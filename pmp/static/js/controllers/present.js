@@ -25,7 +25,7 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
             ['r', 'p', 'm', 'c', 't', 'x', 'w', 's'].forEach(function (param, index, array) {
                 var urlValue = $location.search()[param];
 
-                if (urlValue === undefined || urlValue === '') {
+                if (urlValue === undefined) {
                     urlParameters[param] = $scope.defaults[param];
                 }
                 else {
@@ -49,9 +49,9 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
             };
 
             // Plot parameters - defining how the plot is displayed
-            var plot_params = urlParameters.p.split(',');
-            $scope.parameters = plot_params.slice(0, 6);
-            $scope.radio = plot_params.slice(6, 8);
+            var plotParams = urlParameters.p.split(',');
+            $scope.parameters = plotParams.slice(0, 6);
+            $scope.radio = plotParams.slice(6, 8);
 
             // set requests globals
             $scope.requests = {
@@ -236,9 +236,9 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
             m: 'false', // growing mode (boolean)
             c: 'false', // chained mode (boolean)
             t: 'false', // show last update time (boolean)
-            x: undefined, // priority filter (list - null equivalent to all)
-            w: undefined, // PWG filter (list - null equivalent to all)
-            s: undefined, // status filter (list - null equivalent to all)
+            x: ',', // priority filter
+            w: undefined, // PWG filter
+            s: undefined, // status filter
         };
 
         /**
@@ -254,39 +254,83 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
             }
 
             $location.path($location.path(), false);
-            var params = {};
+            var params = {}, r, p, m, c, t, x, w, s;
 
             // collect user inputs
-            var r = Data.getInputTags();
+            r = Data.getInputTags();
             if (r.length) params.r = r.join(',');
 
             // graph parameters
-            params.p = $scope.parameters.join(',') + ',' +
-                $scope.radio.join(',');
+            p = $scope.parameters.join(',') + ',' + $scope.radio.join(',');
+
+            if (p !== $scope.defaults.p) {
+                params.p = p;
+            }
 
             // is in growing mode
-            params.m = $scope.growingMode + "";
+            m = $scope.growingMode + "";
+
+            if (m !== $scope.defaults.m) {
+                params.m = m;
+            }
 
             // is in chain mode
-            params.c = $scope.displayChains + "";
+            c = $scope.displayChains + "";
+
+            if (c !== $scope.defaults.c) {
+                params.c = c;
+            }
 
             // show time label
-            params.t = $scope.showDate + "";
+            t = $scope.showDate + "";
+
+            if (t !== $scope.defaults.t) {
+                params.t = t;
+            }
 
             // set priority filter
-            params.x = Data.getPriorityFilter().join(',');
+            x = Data.getPriorityFilter().join(',');
+
+            if (x !== $scope.defaults.x) {
+                params.x = x;
+            }
 
             // init loads differently for no param (all true) and empty param (all false)
             // hence the isEmpty check
 
             // set pwg filter
-            if (!$scope.isEmpty(Data.getPWGFilter())) {
-                params.w = $scope.getCSVPerFilter(Data.getPWGFilter());
+            var pwgFilter = Data.getPWGFilter();
+            console.log(pwgFilter);
+            if (!$scope.isEmpty(pwgFilter)) {
+                // An undefined parameter is taken to mean all PWGs should be included
+                var allTrue = true;
+                for (var pwg in pwgFilter) {
+                    if (!pwgFilter[pwg]) {
+                        allTrue = false;
+                        break;
+                    }
+                }
+
+                if (!allTrue) {
+                    params.w = $scope.getCSVPerFilter(pwgFilter);
+                }
             }
 
             // set status filter
-            if (!$scope.isEmpty(Data.getStatusFilter())) {
-                params.s = $scope.getCSVPerFilter(Data.getStatusFilter());
+            var statusFilter = Data.getStatusFilter();
+            if (!$scope.isEmpty(statusFilter)) {
+                // An undefined parameter is taken to mean all statuses should be included
+                var allTrue = true;
+                for (var status in statusFilter) {
+                    if (!statusFilter[status]) {
+                        allTrue = false;
+                        break;
+                    }
+                }
+
+                if (!allTrue) {
+                    params.s = $scope.getCSVPerFilter(statusFilter);
+                }
             }
 
             // reload url
