@@ -129,7 +129,7 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
             }
 
             // load graph data
-            if (urlParameters.r !== undefined) {
+            if (urlParameters.r !== undefined && urlParameters.r !== '') {
                 var tmp = $location.search().r.split(',');
                 // if filter is empty, assume all true
                 var empty = [$scope.isEmpty(Data.getPWGFilter()),
