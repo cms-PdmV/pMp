@@ -13,7 +13,7 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
          * @description Holds information about parameter defaults
          */
         $scope.defaults = {
-            r: undefined, // search term
+            r: '', // search term
             t: 'false', // last update date
             y: 'false', // zoom on Y axis
             p: 100, // probing value
@@ -72,9 +72,8 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
             }
 
             // load graph data
-            if ($location.search().r !== undefined && $location.search()
-                .r !== '') {
-                var tmp = $location.search().r.split(',');
+            if (urlParameters.r !== '') {
+                var tmp = urlParameters.r.split(',');
                 for (var i = 0; i < tmp.length; i++) {
                     Data.setInputTags(tmp[i], true, false);
                 }
