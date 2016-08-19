@@ -10,6 +10,19 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
         'use strict';
 
         /**
+         * @description Holds information about parameter defaults
+         */
+        $scope.defaults = {
+            r: undefined, // search term
+            t: 'false', // last update date
+            y: 'false', // zoom on Y axis
+            p: 100, // probing value
+            x: ',', // priority filter
+            s: undefined, // status filter
+            w: undefined, // PWG filter
+        };
+
+        /**
          * @description Core: Init method for the page. Init scope variables from url.
          */
         $scope.init = function () {
@@ -19,30 +32,44 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
             // reset data and filters
             Data.reset(true);
 
+            // collect URL parameters together
+            // TODO: investigate extracting this functionality to common scope
+            var urlParameters = {};
+
+            ['r', 't', 'y', 'p', 'x', 's', 'w'].forEach(function (param, index, array) {
+                var urlValue = $location.search()[param];
+
+                // if the default is a number, expect a numerical parameter
+                if (urlValue === undefined
+                    || (angular.isNumber($scope.defaults[param]) && !angular.isNumber(urlValue))) {
+                    urlParameters[param] = $scope.defaults[param];
+                }
+                else {
+                    urlParameters[param] = urlValue;
+                }
+            });
+
             // if show time label
-            $scope.showDate = ($location.search().t == 'true');
+            $scope.showDate = (urlParameters.t == 'true');
 
             // if zoom on y label
-            $scope.zoomOnY = ($location.search().y === 'true');
+            $scope.zoomOnY = (urlParameters.y === 'true');
 
-            // set default probing
-            if ($location.search().p !== '' && !isNaN($location.search()
-                    .p)) {
-                $scope.probing = parseInt($location.search().p, 10);
-            } else {
-                $scope.probing = 100;
+            // probing
+            $scope.probing = parseInt(urlParameters.p, 10);
+
+            // initialise filters
+            if (urlParameters.x !== undefined) {
+                Data.setPriorityFilter(urlParameters.x.split(','));
             }
 
-            // initiate filters
-            if ($location.search().x !== undefined && $location.search()
-                .x !== '') Data.setPriorityFilter($location.search()
-                .x.split(','));
-            if ($location.search().s !== undefined && $location.search()
-                .s !== '') Data.initializeFilter($location.search()
-                .s.split(','), true);
-            if ($location.search().w !== undefined && $location.search()
-                .w !== '') Data.initializeFilter($location.search()
-                .w.split(','), false);
+            if (urlParameters.s !== undefined) {
+                Data.initializeFilter(urlParameters.s.split(','), true);
+            }
+
+            if (urlParameters.w !== undefined) {
+                Data.initializeFilter(urlParameters.w.split(','), false);
+            }
 
             // load graph data
             if ($location.search().r !== undefined && $location.search()
