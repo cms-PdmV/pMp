@@ -300,7 +300,6 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
 
             // set pwg filter
             var pwgFilter = Data.getPWGFilter();
-            console.log(pwgFilter);
             if (!$scope.isEmpty(pwgFilter)) {
                 // An undefined parameter is taken to mean all PWGs should be included
                 var allTrue = true;
