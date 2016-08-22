@@ -282,32 +282,72 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
          */
         $scope.setURL = function () {
             $location.path($location.path(), false);
-            var params = {};
+            var params = {}, r, p, t, y, x, w, s;
 
             // collect user inputs
-            var r = Data.getInputTags();
+            r = Data.getInputTags();
             if (r.length) params.r = r.join(',');
 
             // set probing
-            params.p = $scope.probing;
+            p = $scope.probing;
+
+            if (p !== $scope.defaults.p) {
+                params.p = p;
+            }
 
             // show time label
-            params.t = $scope.showDate + "";
+            t = $scope.showDate + "";
+
+            if (t !== $scope.defaults.t) {
+                params.t = t;
+            }
 
             // set zoom
-            params.y = $scope.zoomOnY + "";
+            y = $scope.zoomOnY + "";
+
+            if (y !== $scope.defaults.y) {
+                params.y = y;
+            }
 
             // set priority filter
-            params.x = Data.getPriorityFilter().join(',');
+            x = Data.getPriorityFilter().join(',');
+
+            if (x !== $scope.defaults.x) {
+                params.x = x;
+            }
 
             // set pwg filter
-            if (!$scope.isEmpty(Data.getPWGFilter())) {
-                params.w = $scope.getCSVPerFilter(Data.getPWGFilter());
+            var pwgFilter = Data.getPWGFilter();
+            if (!$scope.isEmpty(pwgFilter)) {
+                // An undefined parameter is taken to mean all PWGs should be included
+                var allTrue = true;
+                for (var pwg in pwgFilter) {
+                    if (!pwgFilter[pwg]) {
+                        allTrue = false;
+                        break;
+                    }
+                }
+
+                if (!allTrue) {
+                    params.w = $scope.getCSVPerFilter(pwgFilter);
+                }
             }
 
             // set status filter
-            if (!$scope.isEmpty(Data.getStatusFilter())) {
-                params.s = $scope.getCSVPerFilter(Data.getStatusFilter());
+            var statusFilter = Data.getStatusFilter();
+            if (!$scope.isEmpty(statusFilter)) {
+                // An undefined parameter is taken to mean all statuses should be included
+                var allTrue = true;
+                for (var status in statusFilter) {
+                    if (!statusFilter[status]) {
+                        allTrue = false;
+                        break;
+                    }
+                }
+
+                if (!allTrue) {
+                    params.s = $scope.getCSVPerFilter(statusFilter);
+                }
             }
 
             // reload url
