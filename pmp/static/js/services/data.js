@@ -9,6 +9,24 @@ angular.module('pmpApp').service('Data', ['$rootScope', function ($rootScope) {
         loadedData = [], // currently loaded data (before filtering)
         inputTags = [], // input tags management
         priorityFilter, statusFilter, pwgFilter; // filter details
+
+    /**
+     * @description Tests whether all items in a {key:boolean} object are true
+     * @params {Object} An object of string:boolean pairs
+     * @return {Boolean} True iff all items are set to true
+     */
+    var allEnabled = function (filter) {
+        if (!angular.equals({}, filter)) {
+            for (var item in filter) {
+                if (!filter[item]) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    };
+
     return {
         /**
          * @description Filtered data getter.
@@ -118,6 +136,20 @@ angular.module('pmpApp').service('Data', ['$rootScope', function ($rootScope) {
          */
         setStatusFilter: function (i) {
             this.statusFilter = i;
+        },
+        /**
+         * @description Test whether all PWGs are enabled
+         * @return {Boolean} True if all PWGs are enabled, false otherwise
+         */
+        allPWGsEnabled: function () {
+            return allEnabled(this.pwgFilter);
+        },
+        /**
+         * @description Test whether all statuses are enabled
+         * @return {Boolean} True iff all statuses are enabled
+         */
+        allStatusesEnabled: function () {
+            return allEnabled(this.statusFilter);
         },
         /**
          * @description Change filter object, status or pwg.

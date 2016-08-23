@@ -317,37 +317,13 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
             }
 
             // set pwg filter
-            var pwgFilter = Data.getPWGFilter();
-            if (!$scope.isEmpty(pwgFilter)) {
-                // An undefined parameter is taken to mean all PWGs should be included
-                var allTrue = true;
-                for (var pwg in pwgFilter) {
-                    if (!pwgFilter[pwg]) {
-                        allTrue = false;
-                        break;
-                    }
-                }
-
-                if (!allTrue) {
-                    params.w = $scope.getCSVPerFilter(pwgFilter);
-                }
+            if (!Data.allPWGsEnabled()) {
+                params.w = $scope.getCSVPerFilter(Data.getPWGFilter());
             }
 
             // set status filter
-            var statusFilter = Data.getStatusFilter();
-            if (!$scope.isEmpty(statusFilter)) {
-                // An undefined parameter is taken to mean all statuses should be included
-                var allTrue = true;
-                for (var status in statusFilter) {
-                    if (!statusFilter[status]) {
-                        allTrue = false;
-                        break;
-                    }
-                }
-
-                if (!allTrue) {
-                    params.s = $scope.getCSVPerFilter(statusFilter);
-                }
+            if (!Data.allStatusesEnabled()) {
+                params.s = $scope.getCSVPerFilter(Data.getStatusFilter());
             }
 
             // reload url
