@@ -15,6 +15,7 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
         $scope.init = function () {
             // get information about page
             $scope.page = PageDetailsProvider.present;
+            $scope.loadingAll = false; // updated when $scope.load is called
 
             // reset data and filters
             Data.reset(true);
@@ -214,8 +215,9 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
                                 PageDetailsProvider.messages
                                 .S0.message);
                         }
-                        Data.setInputTags(campaign, true,
-                            false);
+
+                        $scope.loadingAll = (campaign === 'all');
+                        Data.setInputTags(campaign, true, false);
                         $scope.setURL();
                     }
                 }, function () {
@@ -246,19 +248,17 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
          * @param {String} name the name of parameter that has changed
          * @param {Integer} value the position of parameter that has changed
          */
-        $scope.setURL = function (name, value) {
-            if (name !== undefined && value !== undefined) {
-                var i = $scope.options.indexOf(name);
-                if (i < 0) i = 0;
-                $scope.parameters[$scope.selections.indexOf(value)] = i;
-            }
-
+        $scope.setURL = function () {
             $location.path($location.path(), false);
             var params = {}, r, p, m, c, t, x, w, s;
 
             // collect user inputs
-            r = Data.getInputTags();
-            if (r.length) params.r = r.join(',');
+            if ($scope.loadingAll) {
+                params.r = 'all';
+            } else {
+                r = Data.getInputTags();
+                if (r.length) params.r = r.join(',');
+            }
 
             // graph parameters
             p = $scope.parameters.join(',') + ',' + $scope.radio.join(',');
