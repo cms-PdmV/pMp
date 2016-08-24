@@ -346,16 +346,17 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
             } else {
                 $scope.mode = ': Announced Mode';
             }
+
             if (onlyTitle) {
                 return null;
             }
-            Data.reloadFilters([]);
+
             var tmp = Data.getInputTags();
             Data.setInputTags([], false, false);
             if (tmp.length < 2 || !$scope.displayChains) {
                 for (var i = 0; i < tmp.length; i++) {
-                    $scope.load(tmp[i], true, tmp.length, true,
-                        true);
+                    $scope.load(tmp[i], true, tmp.length, Data.getPWGFilter(),
+                        Data.getStatusFilter());
                 }
             } else {
                 Data.reset(false);

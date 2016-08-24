@@ -166,16 +166,34 @@ angular.module('pmpApp').service('Data', ['$rootScope', function ($rootScope) {
                     this.pwgFilter = {};
                 }
             }
-            var key;
+            var key, field, filter, defaultsAsObject = false;
+
+            if (angular.isObject(value)) {
+                defaultsAsObject = true;
+            }
+
+            if (isStatusFilter) {
+                filter = this.statusFilter;
+                field = 'status';
+            } else {
+                filter = this.pwgFilter;
+                field = 'pwg';
+            }
+
+            // Populate the PWG filter from the PWGs available in the data
             for (var i = 0; i < data.length; i++) {
-                if (isStatusFilter) {
-                    key = data[i].status;
-                    if (this.statusFilter[key] === undefined)
-                        this.statusFilter[key] = value;
-                } else {
-                    key = data[i].pwg;
-                    if (this.pwgFilter[key] === undefined) this
-                        .pwgFilter[key] = value;
+                key = data[i][field];
+                if (filter[key] === undefined) { // only for PWGs not yet in filter
+                    if (defaultsAsObject) {
+                        if (value[key] === undefined) {
+                            // don't leave out new PWGs
+                            filter[key] = true;
+                        } else {
+                            filter[key] = value[key];
+                        }
+                    } else {
+                        filter[key] = value;
+                    }
                 }
             }
         },
