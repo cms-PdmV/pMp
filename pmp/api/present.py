@@ -464,7 +464,9 @@ class GrowingAPI(esadapter.InitConnection):
                 req['total_events'] = self.get_total_events(req)
                 dump_requests.append(self.pop(req))
 
-        dump_requests += AnnouncedAPI().get_results(','.join(rereco_parts), flip_to_done)
+        if len(rereco_parts):
+            dump_requests += AnnouncedAPI().get_results(','.join(rereco_parts), flip_to_done)
+
         return json.dumps({"results": dump_requests})
 
     @staticmethod
