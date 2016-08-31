@@ -11,7 +11,7 @@
     </label>
     <br ng-show="page.id == 1"/>
     <label class="checkbox-inline col-lg-12 col-md-12 col-sm-12" ng-hide="page.id == 3">
-      <input type="checkbox" ng-model="$parent.humanReadableNumbers" ng-init="$parent.humanReadableNumbers=true" ng-disabled="loadingData">
+      <input type="checkbox" ng-model="$parent.humanReadableNumbers" ng-disabled="loadingData" ng-change="setURL()">
       <small>Human Readable Numbers</small>
     </label>
     <br ng-hide="page.id == 3"/>
