@@ -17,6 +17,7 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
             t: 'false', // last update date
             y: 'false', // zoom on Y axis
             p: 100, // probing value
+            h: 'true', // human-readable numbers
             x: ',', // priority filter
             s: undefined, // status filter
             w: undefined, // PWG filter
@@ -36,7 +37,7 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
             // TODO: investigate extracting this functionality to common scope
             var urlParameters = {};
 
-            ['r', 't', 'y', 'p', 'x', 's', 'w'].forEach(function (param, index, array) {
+            ['r', 't', 'y', 'p', 'h', 'x', 's', 'w'].forEach(function (param, index, array) {
                 var urlValue = $location.search()[param];
 
                 // if the default is a number, expect a numerical parameter
@@ -50,13 +51,15 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
             });
 
             // if show time label
-            $scope.showDate = (urlParameters.t == 'true');
+            $scope.showDate = urlParameters.t === 'true';
 
             // if zoom on y label
-            $scope.zoomOnY = (urlParameters.y === 'true');
+            $scope.zoomOnY = urlParameters.y === 'true';
 
             // probing
             $scope.probing = parseInt(urlParameters.p, 10);
+
+            $scope.humanReadableNumbers = urlParameters.h === 'true';
 
             // initialise filters
             if (urlParameters.x !== undefined) {
@@ -282,7 +285,7 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
          */
         $scope.setURL = function () {
             $location.path($location.path(), false);
-            var params = {}, r, p, t, y, x, w, s;
+            var params = {}, r, p, t, y, h, x, w, s;
 
             // collect user inputs
             r = Data.getInputTags();
@@ -307,6 +310,13 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
 
             if (y !== $scope.defaults.y) {
                 params.y = y;
+            }
+
+            // show human-readable numbers
+            h = $scope.humanReadableNumbers + '';
+
+            if (h !== $scope.defaults.h) {
+                params.h = h;
             }
 
             // set priority filter

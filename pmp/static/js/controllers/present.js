@@ -10,6 +10,21 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
         'use strict';
 
         /**
+         * @description stores defaults for URL parameters
+         */
+        $scope.defaults = {
+            r: undefined, // query value (from search box)
+            p: '1,0,3,0,0,0,0,0', // the options above the graph affecting the plot
+            m: 'false', // growing mode (boolean)
+            c: 'false', // chained mode (boolean)
+            t: 'false', // show last update time (boolean)
+            h: 'true', // show human-readable numbers (boolean)
+            x: ',', // priority filter
+            w: undefined, // PWG filter
+            s: undefined, // status filter
+        };
+
+        /**
          * @description Core: Init method for the page. Init scope variables from url.
          */
         $scope.init = function () {
@@ -23,7 +38,7 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
             // collect URL parameters and fill in defaults where necessary
             var urlParameters = {};
 
-            ['r', 'p', 'm', 'c', 't', 'x', 'w', 's'].forEach(function (param, index, array) {
+            ['r', 'p', 'm', 'c', 't', 'h', 'x', 'w', 's'].forEach(function (param, index, array) {
                 var urlValue = $location.search()[param];
 
                 if (urlValue === undefined) {
@@ -112,6 +127,9 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
 
             // enable chained mode?
             $scope.displayChains = urlParameters.c === 'true';
+
+            // show human-readable numbers?
+            $scope.humanReadableNumbers = urlParameters.h === 'true';
 
             // update mode
             $scope.modeUpdate(true);
@@ -230,27 +248,13 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
         };
 
         /**
-         * @description stores defaults for URL parameters
-         */
-        $scope.defaults = {
-            r: undefined, // query value (from search box)
-            p: '1,0,3,0,0,0,0,0', // the options above the graph affecting the plot
-            m: 'false', // growing mode (boolean)
-            c: 'false', // chained mode (boolean)
-            t: 'false', // show last update time (boolean)
-            x: ',', // priority filter
-            w: undefined, // PWG filter
-            s: undefined, // status filter
-        };
-
-        /**
          * @description Core: Change URL when data or filter changes
          * @param {String} name the name of parameter that has changed
          * @param {Integer} value the position of parameter that has changed
          */
         $scope.setURL = function () {
             $location.path($location.path(), false);
-            var params = {}, r, p, m, c, t, x, w, s;
+            var params = {}, r, p, m, c, t, h, x, w, s;
 
             // collect user inputs
             if ($scope.loadingAll) {
@@ -268,24 +272,31 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
             }
 
             // is in growing mode
-            m = $scope.growingMode + "";
+            m = $scope.growingMode + '';
 
             if (m !== $scope.defaults.m) {
                 params.m = m;
             }
 
             // is in chain mode
-            c = $scope.displayChains + "";
+            c = $scope.displayChains + '';
 
             if (c !== $scope.defaults.c) {
                 params.c = c;
             }
 
             // show time label
-            t = $scope.showDate + "";
+            t = $scope.showDate + '';
 
             if (t !== $scope.defaults.t) {
                 params.t = t;
+            }
+
+            // show human-readable numbers
+            h = $scope.humanReadableNumbers + '';
+
+            if (h !== $scope.defaults.h) {
+                params.h = h;
             }
 
             // set priority filter
