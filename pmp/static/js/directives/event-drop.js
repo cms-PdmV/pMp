@@ -65,18 +65,6 @@
                     .top + ')')
                 .attr('style', 'fill: none');
 
-            // Croping graph
-            var defs = svg.append('defs');
-            var clipPath = defs.append('svg:clipPath')
-                .attr('id', 'clip')
-                .append('svg:rect')
-                .attr('id', 'clip-rect')
-                .attr('x', '0')
-                .attr('y', '0')
-                .attr('transform', 'translate(-10, 0)')
-                .attr('width', graphWidth)
-                .attr('height', graphHeight);
-
             // x Axis
             var x = d3.time.scale();
             var xAxis = d3.svg.axis().scale(x).ticks(4).tickSubdivide(1).orient('top');
@@ -142,7 +130,6 @@
                     .call(zoom);
                 graphBody = svg.append('g')
                     .classed('graph-body', true)
-                    .attr('clip-path', 'url(#clip)')
                     .attr('transform', 'translate(' + config.margin.left + ', ' + (config.margin.top -
                         15) + ')');
 
