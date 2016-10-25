@@ -28,7 +28,7 @@
             // General attributes
             var width = config.customWidth - config.margin.left - config.margin.right;
             var height = config.customHeight - config.margin.top - config.margin.bottom;
-            var l1, l2, l3, svg, containerBox, hoverLineGroup, clipPath, rectLifetime,
+            var l1, l2, l3, svg, containerBox, hoverLineGroup, rectLifetime,
                 rectTaskChain;
             var fiveShadesOfGrey = ['#c5cae9', '#7986cb', '#3f51b5', '#303f9f', '#1a237e'];
             // add data label
@@ -47,16 +47,6 @@
                 .attr("transform", "translate(" + config.margin.left + "," + config.margin.top +
                     ")")
                 .attr('style', 'fill: none');
-
-            // Prevent hover over axis while moving
-            clipPath = svg.append("svg:clipPath")
-                .attr("id", "clip")
-                .append("svg:rect")
-                .attr("id", "clip-rect")
-                .attr("x", "0")
-                .attr("y", "0")
-                .attr("width", width)
-                .attr("height", height);
 
             // axes
             var x = d3.time.scale();
@@ -177,10 +167,7 @@
                     l1 = undefined;
                     l2 = undefined;
                     l3 = undefined;
-                    if (clipPath !== undefined) {
-                        clipPath.remove();
-                        clipPath = undefined;
-                    }
+
                     if (rectLifetime !== undefined) {
                         rectLifetime.remove();
                         rectLifetime = undefined;
@@ -222,16 +209,6 @@
                     zoom.x(x);
                     if (scope.zoomY) zoom.y(y);
 
-                    // Prevent hover over axis while moving
-                    clipPath = svg.append("svg:clipPath")
-                    .attr("id", "clip")
-                    .append("svg:rect")
-                    .attr("id", "clip-rect")
-                    .attr("x", "0")
-                    .attr("y", "0")
-                    .attr("width", width)
-                    .attr("height", height);
-
                     // Draw lines
                     scope.taskChainData.time = "."
                     for (i = 0; i < a.length; i++) {
@@ -246,7 +223,6 @@
                             .style("stroke", c)
                             .style("stroke-width", 10)
                             .style("opacity", "0.8")
-                            .attr("clip-path", "url(#clip)");
                     }
 
                     // Hover-over functionality
@@ -270,10 +246,7 @@
                         l1 = undefined;
                         l2 = undefined;
                         l3 = undefined;
-                        if (clipPath !== undefined) {
-                            clipPath.remove();
-                            clipPath = undefined;
-                        }
+
                         if (rectTaskChain !== undefined) {
                             rectTaskChain.remove();
                             rectTaskChain = undefined;
@@ -333,7 +306,6 @@
                         l3 = svg.append("svg:path")
                             .attr("d", pathTargetEvents(a))
                             .attr("class", "data3")
-                            .attr('clip-path', 'url(#clip)')
                             .style('stroke-width', 1)
                             .style('stroke', '#263238')
                             .style('opacity', '0.4')
@@ -343,7 +315,6 @@
                         l2 = svg.append("svg:path")
                             .attr("d", pathNotOpenEvents(a))
                             .attr("class", "data2")
-                            .attr('clip-path', 'url(#clip)')
                             .style('stroke-width', 1)
                             .style('stroke', '#ff6f00')
                             .style('opacity', '0.4')
@@ -353,7 +324,6 @@
                         l1 = svg.append("svg:path")
                             .attr("d", pathOnlyDoneEvents(a))
                             .attr("class", "data1")
-                            .attr('clip-path', 'url(#clip)')
                             .style('stroke-width', 1)
                             .style('stroke', '#01579b')
                             .style('opacity', '0.4')
