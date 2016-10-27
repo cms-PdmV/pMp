@@ -361,7 +361,8 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
             if (onlyTitle) {
                 return null;
             }
-
+	    // flush requests before reloading them with growing-toggled mode
+	    Data.setLoadedData([]);
             var tmp = Data.getInputTags();
             Data.setInputTags([], false, false);
             if (tmp.length < 2 || !$scope.displayChains) {
