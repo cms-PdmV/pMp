@@ -559,10 +559,12 @@ class SubmittedStatusAPI(esadapter.InitConnection):
                                       priority[1] == -1)):
                 completed = self.completed_deep(request)
                 if completed >= 0:
+                    submitted[request['prepid']] = {}
+                    submitted[request['prepid']]['datasets'] = request['output_dataset']
                     if request['total_events'] == 0:
-                        submitted[request['prepid']] = 'NO_EXP_EVTS'
+                        submitted[request['prepid']]['completion'] = 'NO_EXP_EVTS'
                     else:
-                        submitted[request['prepid']] = (100 * completed /
+                        submitted[request['prepid']]['completion'] = (100 * completed /
                             request['total_events'])
         return json.dumps({"results": submitted})
 

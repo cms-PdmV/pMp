@@ -13,9 +13,17 @@
       </div>
       <div class="col-lg-9 col-md-9 col-sm-9">
         <div class="progress">
-          <div class="{{getSubmittedProgressClass(value)}}" role="progressbar" aria-valuenow="{{getSubmittedProgressWidth(value)}}" aria-valuemin="0" aria-valuemax="100" style="width: {{getSubmittedProgressWidth(value)}}%;">
-            {{getSubmittedProgressLabel(value)}}
+          <div class="{{getSubmittedProgressClass(value['completion'])}}" role="progressbar" aria-valuenow="{{getSubmittedProgressWidth(value['completion'])}}" aria-valuemin="0" aria-valuemax="100" style="width: {{getSubmittedProgressWidth(value['completion'])}}%;">
+            {{getSubmittedProgressLabel(value['completion'])}}
           </div>
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          {{value['datasets'][0].substring(0, value['datasets'][0].lastIndexOf("/")+1)}}
+          <a ng-repeat="dataset in value['datasets']" ng-href="https://cmsweb.cern.ch/das/request?view=list&limit=50&instance=prod/global&input=dataset={{dataset}}" target="_blank">
+            {{dataset.split("/")[dataset.split("/").length-1]}};
+          </a>
         </div>
       </div>
     </div>
