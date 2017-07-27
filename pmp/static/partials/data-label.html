@@ -1,4 +1,4 @@
-<div ng-if="!taskChain" class="historical-drilldown">
+<div ng-if="!taskChain" class="historical-drilldown" id="historical-drilldown">
   <div ng-repeat="d in labelData" style="{{d.style}}">{{d.label}}
     <span ng-if="humanReadableNumbers && d.label != 'Time: '">{{d.data | readableNumbers}}</span>
     <span ng-if="!humanReadableNumbers || d.label == 'Time: '">{{d.data}}</span>
