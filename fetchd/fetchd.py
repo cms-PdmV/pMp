@@ -271,7 +271,7 @@ def create_rereco_request(data, rereco_cfg, proc_string_cfg, processing_string_p
     mc_rereco_equivalents = {
         'prepid': 'pdmv_prep_id',
         'total_events': 'pdmv_expected_events',
-        'priority': 'pdmv_priority',
+        'priority': 'pdmv_present_priority',
         'rereco_campaign': 'member_of_campaign',
         'output_dataset': 'pdmv_dataset_list',
         'efficiency': 'efficiency',
