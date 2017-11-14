@@ -158,6 +158,18 @@ rect.pane {
 	display: inline-block;
 }
 
+.small-padding {
+    padding: 10px;
+}
+
+.zebra-lines:nth-child(2n) {
+    background: #e0e7ed;
+}
+
+.zebra-lines:hover {
+    background: #d4d7d8;
+}
+
 /*
  *Chains
  *Currently not available from frontend
