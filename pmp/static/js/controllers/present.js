@@ -85,7 +85,7 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
             };
 
             // assign selections to options
-            $scope.options = ['selections', 'grouping', 'stacking',
+            $scope.options = ['possible-selections', 'grouping', 'stacking',
                 'coloring'
             ];
             $scope.selections = ['member_of_campaign',
@@ -392,6 +392,17 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
         };
 
         $scope.applyDifference = function(values, optionName, optionValue) {
+
+            // Selections: 'member_of_campaign', 'total_events', 'status', 'prepid', 'priority', 'pwg'
+            var selectionIndex = $scope.selections.indexOf(optionValue);
+
+            // Options: 'selections', 'grouping', 'stacking', 'coloring'
+            var optionIndex = $scope.options.indexOf(optionName);
+
+            if (selectionIndex !== -1 && optionIndex !== -1) {
+                $scope.parameters[selectionIndex] = optionIndex;
+            }
+
             $scope.requests.options = values;
             $scope.setURL(optionName, optionValue);
         };
