@@ -3,6 +3,7 @@ from pmp.api.utils import utils as apiutils
 from pmp.api.models import esadapter
 import simplejson as json
 import time
+import re
 
 class HistoricalAPI(esadapter.InitConnection):
     """Used to return list of points for historical plots"""
@@ -538,19 +539,29 @@ class SubmittedStatusAPI(esadapter.InitConnection):
         response = []
 
         for campaign in query.split(','):
-            if self.is_instance(campaign, 'processing_string', 'processing_strings'):
-                index = 'rereco_requests'
-                fields = ['member_of_campaign']
-            else: # assume it's Monte Carlo (original functionality)
-                index = 'requests'
-                fields = ['member_of_campaign', 'flown_with']
 
-            for field in fields:
-                response += [s['_source'] for s in
-                             self.es.search(('%s:%s' % (field, campaign)),
-                                            index=index,
-                                            size=self.overflow)
-                             ['hits']['hits']]
+            single_request = self.is_single_simple_request(campaign) or self.is_single_rereco_request(campaign)
+
+            if single_request:
+                doctype, index = ('rereco_request', 'rereco_requests') \
+                    if self.is_single_rereco_request(campaign) else ('request', 'requests')
+
+                response.append(self.es.get(index, doctype, campaign)['_source'])
+            else:
+                if self.is_instance(campaign, 'processing_string', 'processing_strings'):
+                    index = 'rereco_requests'
+                    fields = ['member_of_campaign']
+                else: # assume it's Monte Carlo (original functionality)
+                    index = 'requests'
+                    fields = ['flown_with'] if campaign.startswith("flow") else ['member_of_campaign']
+
+                for field in fields:
+                    response += [s['_source'] for s in
+                                 self.es.search(('%s:%s' % (field, campaign)),
+                                                index=index,
+                                                size=self.overflow)
+                                 ['hits']['hits']]
+
         for request in response:
             if (request['status'] == 'submitted') \
                     and (pwg is None or request.get('pwg', 'None') in pwg) \
@@ -575,6 +586,16 @@ class SubmittedStatusAPI(esadapter.InitConnection):
         except esadapter.pyelasticsearch.exceptions.ElasticHttpNotFoundError:
             return False
         return True
+
+    def is_single_simple_request(self, prepid):
+        """Checks if given prepid matches XXX-...-00000"""
+        regex = r"((.{3})-.*-\d{5})"
+        return re.search(regex, prepid) != None
+
+    def is_single_rereco_request(self, prepid):
+        """Checks if given prepid matches ReReco-...-0000"""
+        regex = r"(ReReco-.*-\d{4})"
+        return re.search(regex, prepid) != None
 
     @staticmethod
     def stats_maximum(data, previous):
