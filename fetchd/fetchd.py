@@ -41,6 +41,16 @@ def parse_reqmgr(details):
             res.append(detail['pdmv_request_name'])
     return res
 
+def parse_reqmgr_status_history(details):
+    """Parse status history of reqmgr"""
+    res = {}
+    for detail in details:
+        try:
+            res[detail['name']] = detail['content']['pdmv_status_history_from_reqmngr']
+        except KeyError:
+            continue
+    return res
+
 def parse_history(details):
     """Parse history field"""
     res = []
@@ -392,6 +402,9 @@ if __name__ == "__main__":
                     pdmv_type = data.get('pdmv_type', '')
 
                     # parsing requests
+                    if 'reqmgr_name' in data:
+                        data['reqmgr_status_history'] = parse_reqmgr_status_history(data['reqmgr_name'])
+
                     if 'reqmgr_name' in data:
                         data['reqmgr_name'] = parse_reqmgr(data['reqmgr_name'])
 

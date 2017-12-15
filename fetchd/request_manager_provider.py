@@ -31,7 +31,11 @@ class RequestManagerProvider(object):
         from Request Manager
         """
         try:
-            reqmgr_info = self._fetch(self.reqmgr_url + reqmgr_name)
+            fetched_data = self._fetch(self.reqmgr_url + reqmgr_name)
+            if 'result' in fetched_data:
+                reqmgr_info = fetched_data['result'][0][reqmgr_name]
+            else:
+                reqmgr_info = fetched_data
         except NoDataFromRequestManager:
             if self.use_backup:
                 logging.warning(Utils.get_time() + ' Trying Request Manager backup')
