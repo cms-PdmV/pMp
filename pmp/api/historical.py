@@ -57,7 +57,9 @@ class HistoricalAPI(esadapter.InitConnection):
     @staticmethod
     def adjust_for_force_complete(data):
         for key in data:
-            if 'force_completed' in data[key] and data[key]['force_completed'] and len(data[key]['data']) > 0:
+            if 'force_completed' in data[key] and \
+                    data[key]['force_completed'] and \
+                    len(data[key]['data']) > 0:
                 newest_details = data[key]['data'][0]
                 for details in data[key]['data']:
                     if details['t'] > newest_details['t']:
@@ -65,6 +67,8 @@ class HistoricalAPI(esadapter.InitConnection):
 
                 # for details in data[key]['data']:
                 #     details['x'] = newest_details['d']
+                # Comment-out the above for loop and uncomment the line below
+                # to adjust only last detail (graph will show a decline)
                 newest_details['x'] = newest_details['d']
 
     @staticmethod
