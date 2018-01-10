@@ -32,6 +32,12 @@ then
     fi
 fi
 
+if [[ $1 == "restart" ]]
+then
+    (cd $DIR && ./pmp.sh stop)
+    (cd $DIR && ./pmp.sh start)
+fi
+
 if [[ $1 == "update" ]]
 then
     (cd $DIR && ./pmp.sh stop)
