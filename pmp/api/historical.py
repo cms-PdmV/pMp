@@ -25,6 +25,8 @@ class HistoricalAPI(esadapter.InitConnection):
                                                  key=lambda i: i['t'])
             accumulate[request]['data'] = self.rm_useless(
                 accumulate[request]['data'])
+            accumulate[request]['force_completed'] = request_details['force_completed']
+
         return accumulate
 
     @staticmethod
@@ -51,6 +53,23 @@ class HistoricalAPI(esadapter.InitConnection):
                         prevx = details
             points.append(point)
         return points
+
+    @staticmethod
+    def adjust_for_force_complete(data):
+        for key in data:
+            if 'force_completed' in data[key] and \
+                    data[key]['force_completed'] and \
+                    len(data[key]['data']) > 0:
+                newest_details = data[key]['data'][0]
+                for details in data[key]['data']:
+                    if details['t'] > newest_details['t']:
+                        newest_details = details
+
+                for details in data[key]['data']:
+                    details['x'] = newest_details['d']
+                # Comment-out the above for loop and uncomment the line below
+                # to adjust only last detail (graph will show a decline)
+                # newest_details['x'] = newest_details['d']
 
     @staticmethod
     def append_data_point(data):
@@ -131,6 +150,13 @@ class HistoricalAPI(esadapter.InitConnection):
                 if not len(req['reqmgr_name']):
                     req['reqmgr_name'] = [None]
 
+                force_completed_request = False
+                if 'reqmgr_status_history' in req:
+                    for reqmgr_name in req['reqmgr_status_history']:
+                        if 'force-complete' in req['reqmgr_status_history'][reqmgr_name]:
+                            force_completed_request = True
+                            break
+
                 for reqmgr in req['reqmgr_name']:
                     i = {}
                     i['expected'] = req['total_events']
@@ -142,6 +168,7 @@ class HistoricalAPI(esadapter.InitConnection):
                     i['request'] = True
                     i['status'] = req['status']
                     i['done_time'] = 0 # default, see next step
+                    i['force_completed'] = force_completed_request
 
                     # Get time of first transition to "submitted"
                     for item in req['history']:
@@ -328,8 +355,13 @@ class HistoricalAPI(esadapter.InitConnection):
 
                 if details is not None:
                     response['request'] = details['prepid']
+                    if 'force_completed' in details:
+                        response['force_completed'] = details['force_completed']
+                    else:
+                        response['force_completed'] = False
                 else:
                     response['request'] = document['pdmv_prep_id']
+                    response['force_completed'] = False
 
                 # Check there is a document from stats (i.e. the workflow was found)
                 # If not, we may still want to create a submission probe
@@ -490,6 +522,8 @@ class HistoricalAPI(esadapter.InitConnection):
         else:
             # get accumulated requests
             accumulated = self.accumulate_requests(response)
+            # Adjust 'Expected' count to current done count if request is prematurely done
+            self.adjust_for_force_complete(accumulated)
             # add data points
             data = self.add_data_points(accumulated,
                                         self.sort_timestamps(accumulated,
