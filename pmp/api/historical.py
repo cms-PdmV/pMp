@@ -65,11 +65,11 @@ class HistoricalAPI(esadapter.InitConnection):
                     if details['t'] > newest_details['t']:
                         newest_details = details
 
-                # for details in data[key]['data']:
-                #     details['x'] = newest_details['d']
+                for details in data[key]['data']:
+                    details['x'] = newest_details['d']
                 # Comment-out the above for loop and uncomment the line below
                 # to adjust only last detail (graph will show a decline)
-                newest_details['x'] = newest_details['d']
+                # newest_details['x'] = newest_details['d']
 
     @staticmethod
     def append_data_point(data):
