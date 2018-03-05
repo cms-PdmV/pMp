@@ -3,10 +3,11 @@ from cStringIO import StringIO
 from datetime import datetime
 from pmp.api.models import esadapter
 from subprocess import call
-from pyelasticsearch import exceptions
+import elasticsearch
 import pycurl
 import simplejson as json
 import os
+
 
 class SuggestionsAPI(esadapter.InitConnection):
     """Used to search in elastic for simmilar prepid as given"""
@@ -32,31 +33,38 @@ class SuggestionsAPI(esadapter.InitConnection):
         if self.historical or self.present or self.performance:
             # campaigns are expected in all modes
             results += [s['_id'] for s in
-                        self.es.search(search, index='campaigns',
+                        self.es.search(q=search,
+                                       index='campaigns',
                                        size=self.overflow)['hits']['hits']]
             results += [s['_id'] for s in
-                        self.es.search(search, index='processing_strings',
+                        self.es.search(q=search,
+                                       index='processing_strings',
                                        size=self.overflow)['hits']['hits']]
 
             if self.historical or self.present:
                 results += [s['_id'] for s in
-                            self.es.search(search, index='flows',
+                            self.es.search(q=search,
+                                           index='flows',
                                            size=self.overflow)['hits']['hits']]
                 results += [s['_id'] for s in
-                            self.es.search(search, index='requests',
+                            self.es.search(q=search,
+                                           index='requests',
                                            size=self.overflow)['hits']['hits']]
                 results += [s['_id'] for s in
-                            self.es.search(search, index='rereco_requests',
+                            self.es.search(q=search,
+                                           index='rereco_requests',
                                            size=self.overflow)['hits']['hits']]
 
             if self.historical:
                 results += [s['_id'] for s in
-                            self.es.search(search_stats, index='stats',
+                            self.es.search(q=search_stats,
+                                           index='stats',
                                            size=self.overflow)['hits']['hits']]
 
             if self.present:
                 results += [s['_id'] for s in
-                            self.es.search(search, index="chained_campaigns",
+                            self.es.search(q=search,
+                                           index="chained_campaigns",
                                            size=self.overflow)['hits']['hits']]
 
         # order of ext does matter because of the typeahead in bootstrap
@@ -73,20 +81,25 @@ class LastUpdateAPI(esadapter.InitConnection):
         response = {}
 
         try:
-            response['last_update'] = self.es.get('meta', 'meta',
-                    'last_completed_update')['_source']['datetime']
+            response['last_update'] = self.es.get(index='meta',
+                                                  doc_type='meta',
+                                                  id='last_completed_update')['_source']['datetime']
             response['source'] = 'last completed update'
-        except exceptions.ElasticHttpError:
+        except elasticsearch.TransportError:
             # there's no last_completed_update document!
             for collection in query.split(','):
                 # loop and select lowest
-                details = self.es.get(collection, 'seq', 'last_seq')['_source']
+                details = self.es.get(index='last_sequences',
+                                      doc_type='last_seq',
+                                      id=collection)['_source']
                 if last_update == 0 or details['time'] < last_update:
                     last_update = details['time']
+
             response['last_update'] = last_update
             response['source'] = 'last sequence'
 
         return json.dumps({"results": response})
+
 
 class ShortenAPI(object):
     """Shorten URL with tinyurl api"""
@@ -108,6 +121,7 @@ class ShortenAPI(object):
         curl.setopt(pycurl.WRITEFUNCTION, out.write)
         curl.perform()
         return out.getvalue()
+
 
 class TakeScreenshotAPI(object):
     """Generate screenshot/report api"""
@@ -158,10 +172,12 @@ class OverallAPI(esadapter.InitConnection):
         results = {}
         for c in collections:
             if c != 'stats':
-                results[c] = self.es.search(
-                    'prepid:*', index=c, size=self.overflow)["hits"]["total"]
+                results[c] = self.es.search(q='prepid:*',
+                                            index=c,
+                                            size=self.overflow)["hits"]["total"]
             else:
-                results['workflows'] = self.es.search(
-                    'pdmv_prep_id:*', index=c,
-                    size=self.overflow)["hits"]["total"]
+                results['workflows'] = self.es.search(q='pdmv_prep_id:*',
+                                                      index=c,
+                                                      size=self.overflow)["hits"]["total"]
+
         return json.dumps({"results": results})
