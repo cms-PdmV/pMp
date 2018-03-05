@@ -21,6 +21,7 @@ class Config(object):
 
         database = parser.get(typeof, 'db')
         url_pmp = parser.get('general', 'pmp')
+        last_sequences_index = parser.get('general', 'last_sequences')
 
         self.reqmgr_url = parser.get('reqmgr', 'url')
         self.reqmgr_backup_url = parser.get('reqmgr', 'backup_url')
@@ -37,7 +38,7 @@ class Config(object):
             parser.get('general', 'db_query_all_doc')
         self.pmp_db_index = url_pmp + parser.get(typeof, 'pmp_db_index')
         self.pmp_db = self.pmp_db_index + parser.get(typeof, 'pmp_db')
-        self.last_seq = self.pmp_db_index + parser.get(typeof, 'last_seq')
+        self.last_seq = url_pmp + last_sequences_index + parser.get(typeof, 'last_seq')
         self.mapping = parser.get(typeof, 'mapping')
 
 
@@ -90,7 +91,22 @@ class Utils(object):
         elif request == "PUT":
             curl.setopt(pycurl.CUSTOMREQUEST, "PUT")
             curl.setopt(pycurl.POST, 1)
-            curl.setopt(pycurl.POSTFIELDS, '%s' % json.dumps(data))
+            if data:
+                curl.setopt(pycurl.POSTFIELDS, '%s' % json.dumps(data))
+            else:
+                curl.setopt(pycurl.POSTFIELDS, '{}')
+
+            curl.setopt(pycurl.HTTPHEADER, ['Content-Type:application/json'])
+        elif request == "POST":
+            curl.setopt(pycurl.CUSTOMREQUEST, "POST")
+            curl.setopt(pycurl.POST, 1)
+            if data:
+                curl.setopt(pycurl.POSTFIELDS, '%s' % json.dumps(data))
+            else:
+                curl.setopt(pycurl.POSTFIELDS, '{}')
+
+            curl.setopt(pycurl.HTTPHEADER, ['Content-Type:application/json'])
+
         curl.perform()
         try:
             return (json.loads(out.getvalue()),
@@ -100,4 +116,3 @@ class Utils(object):
                                       out.getvalue())
             if return_error:
                 return None, curl.getinfo(curl.RESPONSE_CODE)
-
