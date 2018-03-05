@@ -8,11 +8,6 @@ from utils import *
 from request_manager_provider import *
 
 
-def setlog():
-    """Set loggging level"""
-    logging.basicConfig(level=logging.INFO)
-
-
 def parse(details, fields):
     """Remove all indexes that are not in fields array"""
     parsed = {}
@@ -102,8 +97,7 @@ def parse_datasets(details):
                     monitor = detail['pdmv_dataset_statuses'][dataset]
                     mon = {}
                     mon['pdmv_evts_in_DAS'] = monitor['pdmv_evts_in_DAS']
-                    mon['pdmv_open_evts_in_DAS'] = \
-                        monitor['pdmv_open_evts_in_DAS']
+                    mon['pdmv_open_evts_in_DAS'] = monitor['pdmv_open_evts_in_DAS']
                     mon['pdmv_monitor_time'] = detail['pdmv_monitor_time']
                     field['monitor'].append(mon)
                 except KeyError:
@@ -119,15 +113,15 @@ def parse_datasets(details):
 def create_index(cfg):
     """Create index"""
     index_url = cfg.pmp_db_index
+    # Remove last / if it exists as the last character
     if index_url[-1:] == '/':
         index_url = index_url[:-1]
 
     _, code = Utils.curl('PUT', index_url)
     if code == 200:
-        logging.info(Utils.get_time() + " Index created")
+        logging.info("Index created")
     else:
-        logging.warning(Utils.get_time() + " Index not created. Reason " +
-                        str(code))
+        logging.warning("Index not created. Reason " + str(code))
 
 
 def create_mapping(cfg):
@@ -135,13 +129,13 @@ def create_mapping(cfg):
     _, code = Utils.curl('PUT', (cfg.pmp_db + '_mapping'),
                          json.loads(cfg.mapping))
     if code == 200:
-        logging.info(Utils.get_time() + " Pushed mapping")
+        logging.info("Pushed mapping for " + cfg.pmp_db)
     else:
-        logging.warning(Utils.get_time() + " Mapping not implemented. Reason " +
-                        str(code))
+        logging.warning("Mapping not implemented. Reason " + str(code))
 
 
 def create_last_change_index():
+    """Create mapping for last sequences"""
     last_seq_config = Config('last_seq')
     create_mapping(last_seq_config)
 
@@ -151,10 +145,9 @@ def get_last_change(cfg):
     res, code = Utils.curl('GET', cfg.last_seq)
     if code == 200:
         last_seq = res['_source']['val']
-        logging.info(Utils.get_time() + " Updating since " + str(last_seq))
+        logging.info("Updating " + cfg.pmp_db + " since " + str(last_seq))
     else:
-        logging.warning(Utils.get_time() + " Cannot get last sequence. Reason " +
-                        str(code))
+        logging.warning("Cannot get last sequence. Reason %d" % (code))
         create_index(cfg)
         # create mapping
         if cfg.mapping != '':
@@ -199,25 +192,26 @@ def get_changes(cfg):
                 yield record['id'], ('deleted' in record)
 
         else:
-            logging.info(Utils.get_time() + " No changes since last update")
+            logging.info("No changes since last update")
 
         _, code = Utils.curl('PUT', cfg.last_seq, json.loads(
                              '{"val":"%s", "time":%s}' % (last_seq, int(round(time.time() * 1000)))))
 
         if code not in [200, 201]:
-            logging.error(Utils.get_time() + " Cannot update last sequence")
+            logging.error("Cannot update last sequence")
+        else:
+            logging.info("Updated last sequence to " + str(last_seq))
+
     else:
-        logging.error(Utils.get_time() + " Status " + status +
-                      " while getting list of documents")
+        logging.error("Status code %d while getting list of documents" % (code))
 
 
 def save(r, data, cfg):
     re, s = Utils.curl('POST', '%s%s' % (cfg.pmp_db, r), data)
     if s in [200, 201]:
-        logging.info(Utils.get_time() + " New record " + r)
+        logging.info("New record " + r)
     else:
-        logging.error(Utils.get_time() +
-                      " Failed to update record at " + r +
+        logging.error(" Failed to update record at " + r +
                       ". Reason: " + json.dumps(re))
 
 
@@ -256,17 +250,15 @@ def get_reqmgr_info(reqmgr_name, reqmgr_provider, proc_string_cfg):
         if 'ProcessingString' in reqmgr_info:
             processing_string = reqmgr_info['ProcessingString']
             info['member_of_campaign'] = processing_string
-            logging.info(Utils.get_time() + ' Saving processing string ' + processing_string)
+            logging.info('Saving processing string ' + processing_string)
             save(processing_string, {'prepid': processing_string}, proc_string_cfg)
         else:
-            logging.error(Utils.get_time() + ' Response for ' + reqmgr_name +
-                          ' does not contain processing string')
+            logging.error('Response for ' + reqmgr_name + ' does not contain processing string')
 
         if 'RequestTransition' in reqmgr_info:
             info['history'] = parse_rereco_history(reqmgr_info['RequestTransition'])
         else:
-            logging.error(Utils.get_time() + ' Response for ' + reqmgr_name +
-                          ' does not contain request transitions')
+            logging.error('Response for ' + reqmgr_name + ' does not contain request transitions')
 
         if 'RequestStatus' in reqmgr_info:
             done_statuses = [
@@ -279,15 +271,14 @@ def get_reqmgr_info(reqmgr_name, reqmgr_provider, proc_string_cfg):
             else:
                 info['status'] = 'submitted'
         else:
-            logging.error(Utils.get_time() + ' Response for ' + reqmgr_name +
-                          ' does not contain request status')
+            logging.error('Response for ' + reqmgr_name + ' does not contain request status')
 
     except NoDataFromRequestManager as err:
-        logging.error(Utils.get_time() + ' ' + str(err))
+        logging.error('No data from request manager. ' + str(err) +
+                      '\nHINT: maybe voms proxy certificate is expired?')
         raise
     except KeyError as err:
-        logging.error(Utils.get_time() + ' Response from Request Manager only contains ' +
-                      str(reqmgr_info.keys()))
+        logging.error('Response from Request Manager only contains ' + str(reqmgr_info.keys()))
         raise
 
     return info
@@ -351,8 +342,7 @@ def create_rereco_request(data, rereco_cfg, proc_string_cfg, processing_string_p
     try:
         request_name = data['pdmv_request_name']
     except KeyError:
-        logging.warning('{0} Record {1} has no request name'.format(
-            Utils.get_time(), prepid))
+        logging.warning('Record {0} has no request name'.format(prepid))
     else:
         fake_request.update(get_reqmgr_info(request_name, reqmgr_provider, proc_string_cfg))
 
@@ -375,11 +365,9 @@ def is_excluded_rereco(data):
 if __name__ == "__main__":
     setlog()
     index = sys.argv[1]
+    logging.info('Starting ' + index)
     CFG = Config(index)
-
-    logging.info(Utils.get_time() + " Getting SSO Cookie")
     Utils.get_cookie(CFG.url_mcm, CFG.cookie)
-
     # Ensure that the rereco wrapper indices are ready
     if index == 'stats':
         proc_string_cfg, rereco_cfg = get_rereco_configs()
@@ -399,20 +387,19 @@ if __name__ == "__main__":
 
                     if stats_status == 200 and 'pdmv_prep_id' in stats_obj.get('_source', {}):
                         prepid = stats_obj['_source']['pdmv_prep_id']
-                        rereco_obj, rereco_status = Utils.curl('DELETE',
-                                                               rereco_cfg.pmp_db + prepid)
+                        rereco_obj, rereco_status = Utils.curl('DELETE', rereco_cfg.pmp_db + prepid)
 
                         if rereco_status == 200:
-                            logging.info(Utils.get_time() + ' Deleted ReReco request at ' + prepid)
+                            logging.info('Deleted ReReco request at ' + prepid)
                         elif rereco_status != 404:  # 404 just means it's not a ReReco request
-                            logging.warning(Utils.get_time() + ' Status ' + str(rereco_status) +
+                            logging.warning('Status ' + str(rereco_status) +
                                             ' when attempting to delete ' + prepid + ' from rereco_requests')
 
                 _, s = Utils.curl('DELETE', '%s%s' % (CFG.pmp_db, r))
                 if s == 200:
-                    logging.info(Utils.get_time() + " Deleted record indexed at " + r)
+                    logging.info("Deleted record indexed at " + r)
                 else:
-                    logging.warning(Utils.get_time() + " Request indexed at " + r + " was not deleted")
+                    logging.warning("Request indexed at " + r + " was not deleted")
             else:
                 url = str(CFG.url_db + r)
                 retries = 0
@@ -420,12 +407,11 @@ if __name__ == "__main__":
                     data, status = Utils.curl('GET', url, cookie=CFG.cookie, return_error=True)
                     if status == 302:
                         if retries < 2:
-                            logging.warning(Utils.get_time() + ' Retrying for new cookie')
+                            logging.warning('Retrying for new cookie')
                             Utils.get_cookie(CFG.url_mcm, CFG.cookie)
                             retries += 1
                         else:
-                            logging.error(Utils.get_time() + ' Failed to get valid cookie after two ' +
-                                          'retries')
+                            logging.error('Failed to get valid cookie after ' + str(retries) + ' retries')
                             sys.exit(1)
 
                     else:
@@ -445,8 +431,7 @@ if __name__ == "__main__":
                         data['history'] = parse_history(data['history'])
 
                     if 'generator_parameters' in data:
-                        data['efficiency'] = parse_efficiency(
-                            data['generator_parameters'])
+                        data['efficiency'] = parse_efficiency(data['generator_parameters'])
 
                     # parsing stats documents
                     if index == "stats":
@@ -477,8 +462,7 @@ if __name__ == "__main__":
 
                         # Is it a ReReco request created in Oct 2015 or later?
                         if pdmv_type.lower() == 'rereco' and not is_excluded_rereco(data):
-                            logging.info(Utils.get_time() + ' Creating mock ReReco request at ' +
-                                         data['pdmv_prep_id'])
+                            logging.info('Creating mock ReReco request at ' + data['pdmv_prep_id'])
                             create_rereco_request(data, rereco_cfg, proc_string_cfg, reqmgr_provider)
 
                     # Trim fields we don't want
@@ -487,13 +471,13 @@ if __name__ == "__main__":
                     # Save to local stats ES index
                     re, s = Utils.curl('POST', '%s%s' % (CFG.pmp_db, r), data)
                     if s in [200, 201]:
-                        logging.info(Utils.get_time() + " New record " + r)
+                        logging.info("New record " + r)
                     else:
-                        logging.error(Utils.get_time() + " Failed to update record at " + r +
+                        logging.error("Failed to update record at " + r +
                                       ". Reason: " + json.dumps(re))
                 else:
-                    logging.error(Utils.get_time() +
-                                  " Failed to receive information about " + r)
+                    logging.error("Failed to receive information about " + r)
 
-    logging.info(Utils.get_time() + " Removing SSO Cookie")
+    logging.info("Removing SSO Cookie")
     Utils.rm_file(CFG.cookie)
+    logging.info('Finished ' + index)

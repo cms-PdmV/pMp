@@ -4,11 +4,17 @@ import os
 import pycurl
 import re
 import httplib
-import requests
 from ConfigParser import SafeConfigParser
 from cStringIO import StringIO
 from datetime import datetime
 from subprocess import call
+import logging
+
+
+def setlog():
+    """Set loggging level"""
+    FORMAT = "%(asctime)s:::%(levelname)s:::%(message)s"
+    logging.basicConfig(level=logging.INFO, format=FORMAT)
 
 
 class Config(object):
@@ -30,12 +36,9 @@ class Config(object):
         self.fetch_fields = re.split(", ", parser.get(typeof, 'fetch_fields'))
         self.url_mcm = parser.get(typeof, 'db_source')
         self.url_db = self.url_mcm + database
-        self.url_db_changes = self.url_db + \
-            parser.get('general', 'db_query_changes')
-        self.url_db_first = self.url_db + \
-            parser.get('general', 'db_query_first')
-        self.url_db_all = self.url_db + \
-            parser.get('general', 'db_query_all_doc')
+        self.url_db_changes = self.url_db + parser.get('general', 'db_query_changes')
+        self.url_db_first = self.url_db + parser.get('general', 'db_query_first')
+        self.url_db_all = self.url_db + parser.get('general', 'db_query_all_doc')
         self.pmp_db_index = url_pmp + parser.get(typeof, 'pmp_db_index')
         self.pmp_db = self.pmp_db_index + parser.get(typeof, 'pmp_db')
         self.last_seq = url_pmp + last_sequences_index + parser.get(typeof, 'last_seq')
@@ -46,9 +49,10 @@ class Utils(object):
     """Utils for pMp scripts"""
     @staticmethod
     def init_connection(url):
-        return httplib.HTTPSConnection(url, port=443,
-                cert_file=os.getenv('X509_USER_PROXY'),
-                key_file=os.getenv('X509_USER_PROXY'))
+        return httplib.HTTPSConnection(url,
+                                       port=443,
+                                       cert_file=os.getenv('X509_USER_PROXY'),
+                                       key_file=os.getenv('X509_USER_PROXY'))
 
     @staticmethod
     def httpget(conn, query):
@@ -59,9 +63,9 @@ class Utils(object):
     @staticmethod
     def get_cookie(url, path):
         """Execute CERN's get SSO cookie"""
+        logging.info("Getting SSO Cookie")
         Utils.rm_file(path)
-        call(["cern-get-sso-cookie", "--krb", "--nocertverify", "-u", url,
-              "-o", path])
+        call(["cern-get-sso-cookie", "--krb", "--nocertverify", "-u", url, "-o", path])
 
     @staticmethod
     def get_time():

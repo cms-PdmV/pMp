@@ -5,8 +5,9 @@ import utils
 import elasticsearch
 from elasticsearch import Elasticsearch
 
+
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
+    utils.setlog()
     utils = utils.Utils()
     # by default we connect to localhost:9200
     es = Elasticsearch()
