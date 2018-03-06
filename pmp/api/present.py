@@ -2,6 +2,8 @@
 from pmp.api.models import esadapter
 import copy
 import simplejson as json
+import elasticsearch
+
 
 class AnnouncedAPI(esadapter.InitConnection):
     """Used to return list of requests in a given campaign"""
@@ -25,9 +27,8 @@ class AnnouncedAPI(esadapter.InitConnection):
         output_dataset = request['output_dataset'][0]
         for workflow in request['reqmgr_name']:
             try:
-                stats = self.es.get('stats', 'stats', workflow)['_source']
-            except esadapter.pyelasticsearch.exceptions\
-                    .ElasticHttpNotFoundError:
+                stats = self.es.get(index='stats', doc_type='stats', id=workflow)['_source']
+            except elasticsearch.NotFoundError:
                 continue
 
             if stats['pdmv_dataset_name'] == output_dataset:
@@ -51,11 +52,11 @@ class AnnouncedAPI(esadapter.InitConnection):
         """
         for workflow in req_mgr:
             try:
-                stats = self.es.get('stats', 'stats', workflow)['_source']
+                stats = self.es.get(index='stats', doc_type='stats', id=workflow)['_source']
                 return False
-            except esadapter.pyelasticsearch.exceptions\
-                    .ElasticHttpNotFoundError:
+            except elasticsearch.NotFoundError:
                 continue
+
         return True
 
     def get_fakes_from_submitted(self, mcm_r):
@@ -72,8 +73,9 @@ class AnnouncedAPI(esadapter.InitConnection):
     def query_database(self, field, query, index='requests'):
         """Get list of requests - field has to be not analyzed by es"""
         return [s['_source'] for s in
-                self.es.search(('%s:%s' % (field, query)),
-                               index=index, size=self.overflow)
+                self.es.search(q=('%s:%s' % (field, query)),
+                               index=index,
+                               size=self.overflow)
                 ['hits']['hits']]
 
     @staticmethod
@@ -96,9 +98,10 @@ class AnnouncedAPI(esadapter.InitConnection):
     def is_instance(self, prepid, typeof, index):
         """Checks if prepid matches any typeof in the index"""
         try:
-            self.es.get(index, typeof, prepid)['_source']
-        except esadapter.pyelasticsearch.exceptions.ElasticHttpNotFoundError:
+            self.es.get(index=index, doc_type=typeof, id=prepid)['_source']
+        except elasticsearch.NotFoundError:
             return False
+
         return True
 
     def parse_query(self, query):
@@ -114,6 +117,7 @@ class AnnouncedAPI(esadapter.InitConnection):
             return 'member_of_campaign', query, True
         elif self.is_instance(query, 'rereco_request', 'rereco_requests'):
             return None, query, True
+
         return None, query, False
 
     def get_results(self, query, flip_to_done):
@@ -132,13 +136,13 @@ class AnnouncedAPI(esadapter.InitConnection):
             # is probably a rereco_request
             try:
                 response = [self.es.get('rereco_requests', 'rereco_request', query)['_source']]
-            except esadapter.pyelasticsearch.exceptions.ElasticHttpNotFoundError:
+            except elasticsearch.NotFoundError:
                 pass
         else:
             # probably an MC request
             try:
                 response = [self.es.get('requests', 'request', query)['_source']]
-            except esadapter.pyelasticsearch.exceptions.ElasticHttpNotFoundError:
+            except elasticsearch.NotFoundError:
                 pass
 
         dump_requests = []
@@ -183,8 +187,8 @@ class AnnouncedAPI(esadapter.InitConnection):
 
         for rr in remove_requests:
             response.remove(rr)
-        response += dump_requests
 
+        response += dump_requests
         return response
 
     def get(self, query, flip_to_done):
@@ -194,8 +198,7 @@ class AnnouncedAPI(esadapter.InitConnection):
     @staticmethod
     def stats_maximum(data, previous):
         """Return maximum number of completed events"""
-        return max(previous,
-                   data['pdmv_evts_in_DAS'] + data['pdmv_open_evts_in_DAS'])
+        return max(previous, data['pdmv_evts_in_DAS'] + data['pdmv_open_evts_in_DAS'])
 
 
 class GrowingAPI(esadapter.InitConnection):
@@ -205,12 +208,12 @@ class GrowingAPI(esadapter.InitConnection):
         esadapter.InitConnection.__init__(self)
         self.count_fake = 0
 
-
     def completed_deep(self, request):
         """Return number of completed events from based on stats not McM"""
         completed_events = 0
         if not len(request['output_dataset']):
             return 0
+
         output_dataset = request['output_dataset'][0]
         for workflow in request['reqmgr_name']:
             try:
@@ -225,17 +228,19 @@ class GrowingAPI(esadapter.InitConnection):
                         stats['pdmv_monitor_history'][0], completed_events)
                 except KeyError:
                     continue
+
             elif 'pdmv_monitor_datasets' in stats:
                 for monitor in stats['pdmv_monitor_datasets']:
                     if monitor['dataset'] == output_dataset:
                         completed_events = self.stats_maximum(
                             monitor['monitor'][0], completed_events)
+
         return completed_events
 
     def fake_suffix(self):
         """Create suffix for the fake requests"""
         self.count_fake += 1
-        return 'X'*(5-min(len(str(self.count_fake)), 4))+str(self.count_fake)
+        return 'X' * (5 - min(len(str(self.count_fake)), 4)) + str(self.count_fake)
 
     def create_fake_request(self, original_request, member_of_campaign,
                             status='upcoming', total=None):
@@ -266,15 +271,17 @@ class GrowingAPI(esadapter.InitConnection):
                 if not arg.startswith('chain'):
                     # this is a flow, or a campaign: not matter for the query
                     ccs = [s['_source'] for s in
-                           self.es.search(('campaigns:%s' % arg),
+                           self.es.search(q=('campaigns:%s' % arg),
                                           index='chained_campaigns',
                                           size=self.overflow)['hits']['hits']]
                     query.extend([item['prepid'] for item in ccs])
                     query.remove(arg)
                     again = True
                     break
+
             if not again:
                 break
+
         return query
 
     def get_chained_requests(self, arg_list):
@@ -284,16 +291,16 @@ class GrowingAPI(esadapter.InitConnection):
         all_cc = {}
         for a_cc in arg_list:
             try:
-                mcm_cc = self.es.get('chained_campaigns',
-                                     'chained_campaign', a_cc)['_source']
-            except esadapter.pyelasticsearch.exceptions\
-                    .ElasticHttpNotFoundError:
+                mcm_cc = self.es.get(index='chained_campaigns',
+                                     doc_type='chained_campaign',
+                                     id=a_cc)['_source']
+            except elasticsearch.NotFoundError:
                 # ask for forgivness
                 continue
 
             all_cc[a_cc] = mcm_cc  # keep it in mind
             all_cr.extend([s['_source'] for s in
-                           self.es.search(('member_of_campaign:%s' % a_cc),
+                           self.es.search(q=('member_of_campaign:%s' % a_cc),
                                           index='chained_requests',
                                           size=self.overflow)['hits']['hits']])
             these_steps = [item[0] for item in mcm_cc['campaigns']]
@@ -334,11 +341,14 @@ class GrowingAPI(esadapter.InitConnection):
             mcm_r['total_events'] = mcm_r['completed_events']
             if mcm_r['total_events'] == -1 or not len(mcm_r['output_dataset']):
                 return 0
+
         if mcm_r['status'] == 'submitted':
             if 'reqmgr_name' in mcm_r and not len(mcm_r['reqmgr_name']):
                 return 0
+
         if mcm_r['total_events'] == -1:
             mcm_r['total_events'] = 0
+
         return mcm_r['total_events']
 
     def get_all_requests(self, steps):
@@ -346,25 +356,32 @@ class GrowingAPI(esadapter.InitConnection):
         all_requests = {}
         for step in steps:
             for response in [s['_source'] for s in
-                             self.es.search(('member_of_campaign:%s' % step),
+                             self.es.search(q=('member_of_campaign:%s' % step),
                                             index='requests',
                                             size=self.overflow)
                              ['hits']['hits']]:
                 all_requests[response['prepid']] = response
+
         return all_requests
 
     def get_requests_in_same_chain(self, query, flip_to_done):
-        parent_chains = self.es.get('requests', 'request', query,
-                fields='member_of_chain')['fields']['member_of_chain']
+        parent_chains = self.es.get(index='requests',
+                                    doc_type='request',
+                                    id=query,
+                                    fields='member_of_chain')['fields']['member_of_chain']
         common_requests = []
-        common_request_prepids = set() # To avoid duplicates
+        common_request_prepids = set()  # To avoid duplicates
 
         for chain in parent_chains:
-            requests = self.es.get('chained_requests', 'chained_request', chain,
-                    fields='chain')['fields']['chain']
+            requests = self.es.get(index='chained_requests',
+                                   doc_type='chained_request',
+                                   id=chain,
+                                   fields='chain')['fields']['chain']
 
             for request in requests:
-                request_object = self.es.get('requests', 'request', request)['_source']
+                request_object = self.es.get(index='requests',
+                                             doc_type='request',
+                                             id=request)['_source']
                 if request_object['prepid'] not in common_request_prepids:
                     request_object['total_events'] = self.get_total_events(request_object)
 
@@ -398,9 +415,9 @@ class GrowingAPI(esadapter.InitConnection):
 
     def get(self, query, flip_to_done):
         """Execute growing API"""
-        #if self.is_instance(query, "request", "requests"):
-        #    # Get requests instead and return (FIXME: Feels like a dirty hack)
-        #    return json.dumps({'results': self.get_requests_in_same_chain(query, flip_to_done)})
+        # if self.is_instance(query, "request", "requests"):
+        #     # Get requests instead and return (FIXME: Feels like a dirty hack)
+        #     return json.dumps({'results': self.get_requests_in_same_chain(query, flip_to_done)})
 
         # Take out the ReReco campaigns so we can add them in later (otherwise they'd just be
         # excluded, because they're not chained to anything)
@@ -428,7 +445,7 @@ class GrowingAPI(esadapter.InitConnection):
             if len(chain_request['chain']) == 0:
                 continue
             for (r_i, request) in enumerate(chain_request['chain']):
-                if r_i > (len(chain_request['chain'])-1) or \
+                if r_i > (len(chain_request['chain']) - 1) or \
                         request in already_counted:
                     # this is a reserved request, will count as upcoming later
                     continue
@@ -439,21 +456,18 @@ class GrowingAPI(esadapter.InitConnection):
                     del req_copy[request]
 
                 mcm_r['total_events'] = self.get_total_events(mcm_r)
-                
-                upcoming = int(mcm_r['total_events']*abs(mcm_r['efficiency']))
-
+                upcoming = int(mcm_r['total_events'] * abs(mcm_r['efficiency']))
                 if mcm_r['status'] == 'submitted' and flip_to_done:
                     dump_requests += self.get_fakes_from_submitted(mcm_r)
                 else:
                     dump_requests.append(self.pop(mcm_r))
-            for noyet in all_cc[chain_request['member_of_campaign']]\
-                    ['campaigns'][len(chain_request['chain']):]:
+
+            for noyet in all_cc[chain_request['member_of_campaign']]['campaigns'][len(chain_request['chain']):]:
                 try:
                     # create a fake request with the proper member of campaign
-                    dump_requests.append(self.create_fake_request( \
-                            all_requests[chain_request['chain'] \
-                                             [len(chain_request['chain'])-1]],
-                            noyet[0], total=upcoming))
+                    dump_requests.append(self.create_fake_request(all_requests[chain_request['chain'][len(chain_request['chain']) - 1]],
+                                                                  noyet[0],
+                                                                  total=upcoming))
                 except KeyError:
                     pass
 
