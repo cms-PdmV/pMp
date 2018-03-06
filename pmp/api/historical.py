@@ -157,8 +157,8 @@ class HistoricalAPI(esadapter.InitConnection):
 
                 force_completed_request = False
                 if 'reqmgr_status_history' in req:
-                    for reqmgr_name in req['reqmgr_status_history']:
-                        if 'force-complete' in req['reqmgr_status_history'][reqmgr_name]:
+                    for reqmgr_dict in req['reqmgr_status_history']:
+                        if 'force-complete' in reqmgr_dict['history']:
                             force_completed_request = True
                             break
 
