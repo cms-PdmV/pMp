@@ -31,7 +31,11 @@ class Config(object):
 
         self.reqmgr_url = parser.get('reqmgr', 'url')
         self.reqmgr_backup_url = parser.get('reqmgr', 'backup_url')
-        self.cookie = parser.get('cookie', 'path')
+        if parser.has_option(typeof, 'cookie'):
+            self.cookie = parser.get(typeof, 'cookie')
+        else:
+            self.cookie = parser.get('cookie', 'path')
+
         self.exclude_list = re.split(", ", parser.get('exclude', 'list'))
         self.fetch_fields = re.split(", ", parser.get(typeof, 'fetch_fields'))
         self.url_mcm = parser.get(typeof, 'db_source')
