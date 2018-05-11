@@ -6,31 +6,19 @@ from tornado.wsgi import WSGIContainer
 from tornado.httpserver import HTTPServer
 from tornado.ioloop import IOLoop
 from pmp import app
+from log import setup_access_logging, setup_email_logging
 import config
 import sys
+
 
 if __name__ == '__main__':
     if len(sys.argv) > 1 and sys.argv[1] == 'dev':
         app.debug = True
         app.run(host='0.0.0.0', port=80)
     else:
+        setup_access_logging(app)
         if not app.debug:
-            import logging
-            from logging import Formatter
-            from logging.handlers import SMTPHandler
-            MAIL_HANDLER = SMTPHandler(config.HOST, config.HOSTMAIL,
-                                       config.ADMINS,
-                                       'Production Monitoring Platform')
-            MAIL_HANDLER.setLevel(logging.ERROR)
-            MAIL_HANDLER.setFormatter(Formatter('''
-            Message type: %(levelname)s
-            Location: %(pathname)s:%(lineno)d
-            Module: %(module)s
-            Function: %(funcName)s
-            Time: %(asctime)s
-            Message: %(message)s
-            '''))
-            app.logger.addHandler(MAIL_HANDLER)
+            setup_email_logging(app)
 
         SETTINGS = dict(ssl_options={'certfile': config.CERTFILE,
                                      'keyfile': config.KEYFILE})
