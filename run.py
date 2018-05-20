@@ -6,7 +6,7 @@ from tornado.wsgi import WSGIContainer
 from tornado.httpserver import HTTPServer
 from tornado.ioloop import IOLoop
 from pmp import app
-from log import setup_access_logging, setup_email_logging
+from logger import setup_access_logging, setup_email_logging
 import config
 import sys
 

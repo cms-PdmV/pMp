@@ -603,7 +603,12 @@ class SubmittedStatusAPI(esadapter.InitConnection):
                 doctype, index = ('rereco_request', 'rereco_requests') \
                     if self.is_single_rereco_request(campaign) else ('request', 'requests')
 
-                response.append(self.es.get(index=index, doc_type=doctype, id=campaign)['_source'])
+                try:
+                    response.append(self.es.get(index=index, doc_type=doctype, id=campaign)['_source'])
+                except elasticsearch.NotFoundError:
+                    # Pass on 404
+                    pass
+
             else:
                 if self.is_instance(campaign, 'processing_string', 'processing_strings'):
                     index = 'rereco_requests'

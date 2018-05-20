@@ -84,9 +84,6 @@ def call_after_request_callbacks(response):
 def log_access():
     query = "?" + request.query_string if request.query_string else ""
     full_url = request.path + unquote(query).decode('utf-8').encode('ascii', 'ignore')
-    if full_url.startswith(('/img/', '/build/', '/bower_components/', '/partials/')):
-        return
-
     message = "%s %s %s %s" % (request.method, full_url, "%s", request.headers['User-Agent'])
 
     @after_this_request
@@ -101,7 +98,7 @@ def setup_access_logging(app):
     # Max log file size - 5Mb
     max_log_file_size = 1024 * 1024 * 10
     max_log_file_count = 100
-    log_file_name = 'pmp_log.log'
+    log_file_name = 'logs/access_log.log'
     logger = logging.getLogger('access_logger')
     logger.setLevel(logging.INFO)
     handler = handlers.RotatingFileHandler(log_file_name,
