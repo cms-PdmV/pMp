@@ -92,3 +92,9 @@ class APICall(object):
         """Take screenshot call"""
         from pmp.api import common as call
         return call.TakeScreenshotAPI().get(svg, extension)
+
+    @staticmethod
+    def make_image(data):
+        """Take screenshot call"""
+        from pmp.api import common as call
+        return call.MakeImage().get(data)

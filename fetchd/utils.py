@@ -4,11 +4,17 @@ import os
 import pycurl
 import re
 import httplib
-import requests
 from ConfigParser import SafeConfigParser
 from cStringIO import StringIO
 from datetime import datetime
 from subprocess import call
+import logging
+
+
+def setlog():
+    """Set loggging level"""
+    FORMAT = "%(asctime)s:::%(levelname)s:::%(message)s"
+    logging.basicConfig(level=logging.INFO, format=FORMAT)
 
 
 class Config(object):
@@ -21,23 +27,25 @@ class Config(object):
 
         database = parser.get(typeof, 'db')
         url_pmp = parser.get('general', 'pmp')
+        last_sequences_index = parser.get('general', 'last_sequences')
 
         self.reqmgr_url = parser.get('reqmgr', 'url')
         self.reqmgr_backup_url = parser.get('reqmgr', 'backup_url')
-        self.cookie = os.environ['HOME'] + parser.get('cookie', 'path')
+        if parser.has_option(typeof, 'cookie'):
+            self.cookie = parser.get(typeof, 'cookie')
+        else:
+            self.cookie = parser.get('cookie', 'path')
+
         self.exclude_list = re.split(", ", parser.get('exclude', 'list'))
         self.fetch_fields = re.split(", ", parser.get(typeof, 'fetch_fields'))
         self.url_mcm = parser.get(typeof, 'db_source')
         self.url_db = self.url_mcm + database
-        self.url_db_changes = self.url_db + \
-            parser.get('general', 'db_query_changes')
-        self.url_db_first = self.url_db + \
-            parser.get('general', 'db_query_first')
-        self.url_db_all = self.url_db + \
-            parser.get('general', 'db_query_all_doc')
+        self.url_db_changes = self.url_db + parser.get('general', 'db_query_changes')
+        self.url_db_first = self.url_db + parser.get('general', 'db_query_first')
+        self.url_db_all = self.url_db + parser.get('general', 'db_query_all_doc')
         self.pmp_db_index = url_pmp + parser.get(typeof, 'pmp_db_index')
         self.pmp_db = self.pmp_db_index + parser.get(typeof, 'pmp_db')
-        self.last_seq = self.pmp_db_index + parser.get(typeof, 'last_seq')
+        self.last_seq = url_pmp + last_sequences_index + parser.get(typeof, 'last_seq')
         self.mapping = parser.get(typeof, 'mapping')
 
 
@@ -45,9 +53,10 @@ class Utils(object):
     """Utils for pMp scripts"""
     @staticmethod
     def init_connection(url):
-        return httplib.HTTPSConnection(url, port=443,
-                cert_file=os.getenv('X509_USER_PROXY'),
-                key_file=os.getenv('X509_USER_PROXY'))
+        return httplib.HTTPSConnection(url,
+                                       port=443,
+                                       cert_file=os.getenv('X509_USER_PROXY'),
+                                       key_file=os.getenv('X509_USER_PROXY'))
 
     @staticmethod
     def httpget(conn, query):
@@ -58,9 +67,9 @@ class Utils(object):
     @staticmethod
     def get_cookie(url, path):
         """Execute CERN's get SSO cookie"""
+        logging.info("Getting SSO Cookie")
         Utils.rm_file(path)
-        call(["cern-get-sso-cookie", "--krb", "--nocertverify", "-u", url,
-              "-o", path])
+        call(["cern-get-sso-cookie", "--krb", "--nocertverify", "-u", url, "-o", path])
 
     @staticmethod
     def get_time():
@@ -90,7 +99,22 @@ class Utils(object):
         elif request == "PUT":
             curl.setopt(pycurl.CUSTOMREQUEST, "PUT")
             curl.setopt(pycurl.POST, 1)
-            curl.setopt(pycurl.POSTFIELDS, '%s' % json.dumps(data))
+            if data:
+                curl.setopt(pycurl.POSTFIELDS, '%s' % json.dumps(data))
+            else:
+                curl.setopt(pycurl.POSTFIELDS, '{}')
+
+            curl.setopt(pycurl.HTTPHEADER, ['Content-Type:application/json'])
+        elif request == "POST":
+            curl.setopt(pycurl.CUSTOMREQUEST, "POST")
+            curl.setopt(pycurl.POST, 1)
+            if data:
+                curl.setopt(pycurl.POSTFIELDS, '%s' % json.dumps(data))
+            else:
+                curl.setopt(pycurl.POSTFIELDS, '{}')
+
+            curl.setopt(pycurl.HTTPHEADER, ['Content-Type:application/json'])
+
         curl.perform()
         try:
             return (json.loads(out.getvalue()),
@@ -100,4 +124,3 @@ class Utils(object):
                                       out.getvalue())
             if return_error:
                 return None, curl.getinfo(curl.RESPONSE_CODE)
-

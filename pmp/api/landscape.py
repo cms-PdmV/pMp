@@ -9,6 +9,7 @@ class ChainAPI(esadapter.InitConnection):
     def get(self):
         """Returning links data between campaigns"""
         response = [s['_source'] for s in
-                    self.es.search('prepid:*', index='chained_campaigns',
+                    self.es.search(q='prepid:*',
+                                   index='chained_campaigns',
                                    size=self.overflow)['hits']['hits']]
         return json.dumps({"results": response})
