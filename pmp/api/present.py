@@ -218,8 +218,7 @@ class GrowingAPI(esadapter.InitConnection):
         for workflow in request['reqmgr_name']:
             try:
                 stats = self.es.get('stats', 'stats', workflow)['_source']
-            except esadapter.pyelasticsearch.exceptions\
-                    .ElasticHttpNotFoundError:
+            except elasticsearch.NotFoundError:
                 continue
 
             if stats['pdmv_dataset_name'] == output_dataset:
@@ -409,7 +408,7 @@ class GrowingAPI(esadapter.InitConnection):
         """Checks if prepid matches any typeof in the index"""
         try:
             self.es.get(index, typeof, prepid)['_source']
-        except esadapter.pyelasticsearch.exceptions.ElasticHttpNotFoundError:
+        except elasticsearch.NotFoundError:
             return False
         return True
 
