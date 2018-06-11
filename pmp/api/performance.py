@@ -8,8 +8,9 @@ class PerformanceAPI(esadapter.InitConnection):
     """Return list of requests with history points"""
 
     def es_search(self, campaign, index):
-        return self.es.search('member_of_campaign:{0}'.format(campaign), index=index,
-            size=self.overflow)['hits']
+        return self.es.search(q='member_of_campaign:{0}'.format(campaign),
+                              index=index,
+                              size=self.overflow)['hits']
 
     def get(self, campaign):
         """Retruning historical points for each request in given campaign"""
@@ -63,7 +64,6 @@ class PerformanceAPI(esadapter.InitConnection):
             request['history'] = patch_history
             request['input'] = request['member_of_campaign']
 
-
         for to_remove in remove:
             response.remove(to_remove)
 
@@ -76,20 +76,20 @@ class PriorityAPI(esadapter.InitConnection):
     @staticmethod
     def parse_time(string_time):
         """Parse time in a "2013-1-01-01-01-01" format to integer"""
-        return time.mktime(time.strptime(string_time , "%Y-%m-%d-%H-%M"))*1000
+        return time.mktime(time.strptime(string_time, "%Y-%m-%d-%H-%M")) * 1000
 
     @staticmethod
     def fixed_priority_blocks(with_block):
-        for block, priority in enumerate([110000, 90000, 85000, 80000, 70000,
-                                          63000]):
+        for block, priority in enumerate([110000, 90000, 85000, 80000, 70000, 63000]):
             if with_block:
                 yield str(block + 1), str(priority)
             else:
                 yield str(priority)
 
     def es_search(self, campaign, index):
-        return self.es.search('member_of_campaign:{0}'.format(campaign), index=index,
-            size=self.overflow)['hits']
+        return self.es.search(q='member_of_campaign:{0}'.format(campaign),
+                              index=index,
+                              size=self.overflow)['hits']
 
     def get(self, campaign):
         """Execute"""
@@ -113,17 +113,16 @@ class PriorityAPI(esadapter.InitConnection):
                 continue
 
             history = request['history']
-            last = len(history)-1
-            if (history[last]['action'] == 'done' and 
-                history[last-1]['action'] == 'submitted'):
+            last = len(history) - 1
+            if (history[last]['action'] == 'done' and
+                    history[last - 1]['action'] == 'submitted'):
                 request['stats'] = (self.parse_time(history[last]['time']) -
-                                    self.parse_time(history[last-1]['time']))
+                                    self.parse_time(history[last - 1]['time']))
 
-            if not 'stats' in request:
+            if 'stats' not in request:
                 continue
 
             req_prio = str(request['priority'])
-
             if req_prio in self.fixed_priority_blocks(False):
                 try:
                     com[req_prio]['stats'] += request['stats']
@@ -136,10 +135,8 @@ class PriorityAPI(esadapter.InitConnection):
         response = dict()
         for block, prio in self.fixed_priority_blocks(True):
             try:
-                response["B" + block] = int(com[prio]['stats']/
-                                            com[prio]['completed'])
+                response["B" + block] = int(com[prio]['stats'] / com[prio]['completed'])
             except:
                 pass
-            
 
         return json.dumps({"results": response})

@@ -1,4 +1,6 @@
 """Utils for pMp API"""
+import time
+
 
 class APIUtils(object):
     """Utils for pMp API"""
@@ -21,9 +23,8 @@ class APIUtils(object):
                 arr[index] = int(value)
         return arr
 
-class Timer(object):
-    import time
 
+class Timer(object):
     """Context manager for timing stuff - from huyng.com"""
     def __init__(self, description, verbose=True):
         self.description = description
@@ -38,4 +39,3 @@ class Timer(object):
         self.secs = self.end - self.start
         self.msecs = self.secs * 1000
         print('[Timer] => "' + self.description + '" took ' + str(self.secs) + ' seconds')
-

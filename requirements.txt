@@ -1,0 +1,8 @@
+# Used to install correct version of elasticsearch lib for python
+# Use pip for installation
+# Elasticsearch 6.x
+elasticsearch>=6.0.0,<7.0.0
+
+tornado
+flask
+

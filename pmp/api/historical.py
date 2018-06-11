@@ -1,9 +1,11 @@
 """A list of classes supporting historical statistics API"""
 from pmp.api.utils import utils as apiutils
 from pmp.api.models import esadapter
+import elasticsearch
 import simplejson as json
 import time
 import re
+
 
 class HistoricalAPI(esadapter.InitConnection):
     """Used to return list of points for historical plots"""
@@ -20,6 +22,7 @@ class HistoricalAPI(esadapter.InitConnection):
             if request not in accumulate:
                 accumulate[request] = dict()
                 accumulate[request]['data'] = []
+
             accumulate[request]['data'] += request_details['data']
             accumulate[request]['data'] = sorted(accumulate[request]['data'],
                                                  key=lambda i: i['t'])
@@ -44,7 +47,7 @@ class HistoricalAPI(esadapter.InitConnection):
                         point['x'] += prevx['x']
                         break
                     elif details['t'] == ftime or \
-                            i == len(data[key]['data'])-1:
+                            i == len(data[key]['data']) - 1:
                         point['d'] += details['d']
                         point['e'] += details['e']
                         point['x'] += details['x']
@@ -57,9 +60,7 @@ class HistoricalAPI(esadapter.InitConnection):
     @staticmethod
     def adjust_for_force_complete(data):
         for key in data:
-            if 'force_completed' in data[key] and \
-                    data[key]['force_completed'] and \
-                    len(data[key]['data']) > 0:
+            if data[key].get('force_completed', False) and len(data[key]['data']) > 0:
                 newest_details = data[key]['data'][0]
                 for details in data[key]['data']:
                     if details['t'] > newest_details['t']:
@@ -75,7 +76,8 @@ class HistoricalAPI(esadapter.InitConnection):
     def append_data_point(data):
         """Duplicate last probe with current timestamp"""
         if len(data):
-            duplicated = {'d': data[-1]['d'], 'e': data[-1]['e'],
+            duplicated = {'d': data[-1]['d'],
+                          'e': data[-1]['e'],
                           'x': data[-1]['x'],
                           't': int(round(time.time() * 1000))}
             data.append(duplicated)
@@ -86,19 +88,21 @@ class HistoricalAPI(esadapter.InitConnection):
         """Check for secondary datasets - True if they exist, False otherwise"""
         if doc is None:
             return False
+
         if doc['pdmv_dataset_name'] != output_dataset and \
                 'pdmv_monitor_datasets' in doc:
-            if output_dataset in [i['dataset'] for i \
-                                      in doc['pdmv_monitor_datasets']]:
+            if output_dataset in [i['dataset'] for i in doc['pdmv_monitor_datasets']]:
                 return True
+
         return False
 
     def is_instance(self, prepid, typeof, index):
         """Checks if prepid matches any typeof in the index"""
         try:
-            self.es.get(index, typeof, prepid)['_source']
-        except esadapter.pyelasticsearch.exceptions.ElasticHttpNotFoundError:
+            self.es.get(index=index, doc_type=typeof, id=prepid)['_source']
+        except elasticsearch.NotFoundError:
             return False
+
         return True
 
     def parse_query(self, query):
@@ -126,14 +130,15 @@ class HistoricalAPI(esadapter.InitConnection):
         if field is not None:
             # try to query for campaign and get list of requests
             req_arr = [s['_source'] for s in
-                self.es.search(('%s:%s' % (field, query)), index=index,
-                    size=self.overflow)['hits']['hits']]
+                       self.es.search(q=('%s:%s' % (field, query)),
+                                      index=index,
+                                      size=self.overflow)['hits']['hits']]
         else:
             # could be a request or a workflow
             self.campaign = False
             try:
-                req_arr = [self.es.get(index, doctype, query)['_source']]
-            except esadapter.pyelasticsearch.exceptions.ElasticHttpNotFoundError:
+                req_arr = [self.es.get(index=index, doc_type=doctype, id=query)['_source']]
+            except elasticsearch.NotFoundError:
                 # if exception thrown this may be a workflow
                 iterable = [query]
 
@@ -152,8 +157,8 @@ class HistoricalAPI(esadapter.InitConnection):
 
                 force_completed_request = False
                 if 'reqmgr_status_history' in req:
-                    for reqmgr_name in req['reqmgr_status_history']:
-                        if 'force-complete' in req['reqmgr_status_history'][reqmgr_name]:
+                    for reqmgr_dict in req['reqmgr_status_history']:
+                        if 'force-complete' in reqmgr_dict['history']:
                             force_completed_request = True
                             break
 
@@ -164,10 +169,10 @@ class HistoricalAPI(esadapter.InitConnection):
                     i['prepid'] = req['prepid']
                     i['output_dataset'] = dataset
                     i['priority'] = req['priority']
-                    i['pwg'] = req.get('pwg', 'None') # for ReReco support
+                    i['pwg'] = req.get('pwg', 'None')  # for ReReco support
                     i['request'] = True
                     i['status'] = req['status']
-                    i['done_time'] = 0 # default, see next step
+                    i['done_time'] = 0  # default, see next step
                     i['force_completed'] = force_completed_request
 
                     # Get time of first transition to "submitted"
@@ -194,18 +199,16 @@ class HistoricalAPI(esadapter.InitConnection):
                 else:
                     try:
                         yield [i['request'],
-                               self.es.get('stats', 'stats', i['name'])
+                               self.es.get(index='stats', doc_type='stats', id=i['name'])
                                ['_source'], i]
-                    except esadapter.pyelasticsearch.exceptions\
-                            .ElasticHttpNotFoundError:
+                    except elasticsearch.NotFoundError:
                         yield [True, None, i]
             else:
                 try:
                     yield [False,
-                           self.es.get('stats', 'stats', i)
+                           self.es.get(index='stats', doc_type='stats', id=i)
                            ['_source'], None]
-                except esadapter.pyelasticsearch.exceptions\
-                        .ElasticHttpNotFoundError:
+                except elasticsearch.NotFoundError:
                     yield [False, None, None]
 
     def parse_probe(self, request, monitor, details, expected):
@@ -213,29 +216,31 @@ class HistoricalAPI(esadapter.InitConnection):
         data = dict()
 
         # If there is an output dataset...
-        if ((details is None or 
-            (details['output_dataset'] is not None
-             and len(details['output_dataset']))) and
-            'pdmv_evts_in_DAS' in monitor):
-            data['e'] = (monitor['pdmv_evts_in_DAS'] +
-                         monitor['pdmv_open_evts_in_DAS'])
-        else: # no dataset
+        if ((details is None or
+                (details['output_dataset'] is not None and
+                 len(details['output_dataset']))) and
+                'pdmv_evts_in_DAS' in monitor):
+            data['e'] = (monitor['pdmv_evts_in_DAS'] + monitor['pdmv_open_evts_in_DAS'])
+        else:  # no dataset
             data['e'] = 0
 
-        data['d'] = 0 # default - fixed later if conditions apply
+        data['d'] = 0  # default - fixed later if conditions apply
 
         # get timestamp, if field is empty set 1/1/2013
-        if len(monitor['pdmv_monitor_time']):
+        if len(monitor.get('pdmv_monitor_time', '')):
             if monitor['pdmv_monitor_time'] == "FLAG":
                 data['t'] = int(round(time.time() * 1000))
             else:
                 data['t'] = self.parse_time(monitor['pdmv_monitor_time'])
+
         else:
             data['t'] = self.parse_time("Tue Jan 1 00:00:00 2013")
+
         if request:
             data['x'] = details['expected']
         else:
             data['x'] = expected
+
         return data
 
     def get_data_points(self, monitor_history, is_request, details, expected):
@@ -248,8 +253,7 @@ class HistoricalAPI(esadapter.InitConnection):
         for record in monitor_history:
             probe = self.parse_probe(is_request, record, details, expected)
 
-            if details is None or (details['status'] == 'done' and
-                probe['t'] > details['done_time']):
+            if details is None or (details['status'] == 'done' and probe['t'] > details['done_time']):
                 probe_after_done = True
                 probe['d'] = probe['e']
 
@@ -258,8 +262,10 @@ class HistoricalAPI(esadapter.InitConnection):
         # Check that the most recent probe is after transition (if request is done) and fix if not
         # Gets 'done' value from the most recent evts_in_DAS value, as it did before this change
         if not probe_after_done and details['status'] == 'done':
-            data.insert(0, {'e': data[0]['e'], 'd': data[0]['e'], 't': details['done_time'],
-                'x': data[0]['x']})
+            data.insert(0, {'e': data[0]['e'],
+                            'd': data[0]['e'],
+                            't': details['done_time'],
+                            'x': data[0]['x']})
 
         return data
 
@@ -275,6 +281,7 @@ class HistoricalAPI(esadapter.InitConnection):
                     if i == doc:
                         arr[doc] = True
                         break
+
         return arr
 
     @staticmethod
@@ -298,12 +305,12 @@ class HistoricalAPI(esadapter.InitConnection):
     @staticmethod
     def parse_time(string_time):
         """Parse time in a "Tue Jan 1 00:00:00 2013" format to integer"""
-        return time.mktime(time.strptime(string_time))*1000
+        return time.mktime(time.strptime(string_time)) * 1000
 
     @staticmethod
     def parse_request_history_time(string_time):
         """Parse time in a "2013-12-01-00-00" format to an integer as above"""
-        return time.mktime(time.strptime(string_time, '%Y-%m-%d-%H-%M'))*1000
+        return time.mktime(time.strptime(string_time, '%Y-%m-%d-%H-%M')) * 1000
 
     def prepare_response(self, query, priority, status_i, pwg_i):
         """Loop through all the workflow data, generate response"""
@@ -328,25 +335,28 @@ class HistoricalAPI(esadapter.InitConnection):
                     incorrect = False
 
                 # skip legacy request with no prep_id - check both details and document
-                if ((document is None and details.get('prepid', '') == '')
-                    or (details is None and document.get('pdmv_prep_id', '') == '')):
+                if ((document is None and details.get('prepid', '') == '') or
+                        (details is None and document.get('pdmv_prep_id', '') == '')):
                     continue
 
                 # filter out requests
                 if is_request:
 
                     filters['status'].update(self.get_filter_dict(details['status'],
-                        filters['status'], status_i))
-                    filters['pwg'].update(self.get_filter_dict(details['pwg'], filters['pwg'],
-                        pwg_i))
+                                                                  filters['status'],
+                                                                  status_i))
+                    filters['pwg'].update(self.get_filter_dict(details['pwg'],
+                                                               filters['pwg'],
+                                                               pwg_i))
 
                     secondary_datasets = self.check_dataset(details['output_dataset'], document)
 
                     # Only check self.skip_request if we have a document from stats
                     if (self.filtering(details, pwg_i, status_i, priority) or
-                        (document is not None and self.skip_request(details['output_dataset'],
-                        document['pdmv_dataset_name'], document['pdmv_type'],
-                        secondary_datasets))):
+                            (document is not None and self.skip_request(details['output_dataset'],
+                                                                        document['pdmv_dataset_name'],
+                                                                        document['pdmv_type'],
+                                                                        secondary_datasets))):
                         continue
 
                 # create an array of requests to be processed
@@ -369,12 +379,14 @@ class HistoricalAPI(esadapter.InitConnection):
                     # A ReReco request with ALCARECO output datasets - stats does not differentiate
                     # between these, so we choose the one with the most events
                     # If there's a "real" output dataset like RECO/AOD/MINIAOD, this will not apply
-                    if ('rereco_preferred_dataset' in document
-                        and 'pdmv_monitor_datasets' in document):
+                    if ('rereco_preferred_dataset' in document and
+                            'pdmv_monitor_datasets' in document):
                         for dataset in document['pdmv_monitor_datasets']:
                             if dataset['dataset'] == document['rereco_preferred_dataset']:
                                 response['data'] += self.get_data_points(dataset['monitor'],
-                                    is_request, details, document['pdmv_expected_events'])
+                                                                         is_request,
+                                                                         details,
+                                                                         document['pdmv_expected_events'])
 
                     # A TaskChain and not a request (only when the query is a workflow afaik)
                     elif not is_request and (document['pdmv_type'] == 'TaskChain'):
@@ -385,13 +397,15 @@ class HistoricalAPI(esadapter.InitConnection):
                     # OR
                     # dataset_name == output_dataset, it's not a TaskChain and it has a monitor history
                     elif (details is None or
-                          document['pdmv_dataset_name'] == \
-                              details['output_dataset']) \
-                              and document['pdmv_type'] != 'TaskChain' \
-                              and 'pdmv_monitor_history' in document:
+                          document['pdmv_dataset_name'] ==
+                          details['output_dataset']) and\
+                            document['pdmv_type'] != 'TaskChain' and\
+                            'pdmv_monitor_history' in document:
                         # usually pdmv_monitor_history has more information than pdmv_datasets
                         response['data'] += self.get_data_points(document['pdmv_monitor_history'],
-                            is_request, details, document['pdmv_expected_events'])
+                                                                 is_request,
+                                                                 details,
+                                                                 document['pdmv_expected_events'])
 
                     # No dataset assigned yet OR it's submitted, has details and
                     elif (document['pdmv_dataset_name'] == "None Yet" or
@@ -465,8 +479,8 @@ class HistoricalAPI(esadapter.InitConnection):
         compressed = []
         prev = {'e': -1, 'x': -1}
         for (expected, probe) in enumerate(arr):
-            if (probe['e'] != prev['e'] or probe['x'] != prev['x']
-                    or probe['d'] != prev['d']) and (probe['e'] != 0 or expected == 0):
+            if (probe['e'] != prev['e'] or probe['x'] != prev['x'] or
+                probe['d'] != prev['d']) and (probe['e'] != 0 or expected == 0):
 
                 compressed.append(probe)
                 prev = probe
@@ -476,8 +490,8 @@ class HistoricalAPI(esadapter.InitConnection):
     @staticmethod
     def skip_request(output_dataset, dataset, ttype, sd):
         """Check if skip request"""
-        return dataset != output_dataset and output_dataset is not None \
-            and dataset != 'None Yet' and ttype != 'TaskChain' and not sd
+        return dataset != output_dataset and output_dataset is not None and\
+            dataset != 'None Yet' and ttype != 'TaskChain' and not sd
 
     @staticmethod
     def sort_timestamps(data, limit):
@@ -510,15 +524,23 @@ class HistoricalAPI(esadapter.InitConnection):
             filters = dict()
             filters['status'] = None
             filters['pwg'] = None
-        priority = apiutils.APIUtils().parse_priority_csv(priority.split(','))
+
+        api_utils = apiutils.APIUtils()
+        filters_status_csv = api_utils.parse_csv(filters['status'])
+        filters_pwg_csv = api_utils.parse_csv(filters['pwg'])
+        priority = api_utils.parse_priority_csv(priority.split(','))
         response, pwg, status, taskchain, error = \
-            self.prepare_response(query.split(','), priority,
-                                  apiutils.APIUtils().parse_csv( \
-                    filters['status']), apiutils.APIUtils().parse_csv( \
-                                          filters['pwg']))
+            self.prepare_response(query.split(','),
+                                  priority,
+                                  filters_status_csv,
+                                  filters_pwg_csv)
+
         if taskchain:
-            res = {'data': response, 'pwg': dict(), 'status': dict(),
-                   'taskchain': True, 'error': ''}
+            res = {'data': response,
+                   'pwg': dict(),
+                   'status': dict(),
+                   'taskchain': True,
+                   'error': ''}
         else:
             # get accumulated requests
             accumulated = self.accumulate_requests(response)
@@ -532,6 +554,7 @@ class HistoricalAPI(esadapter.InitConnection):
             data = self.append_data_point(data)
             res = {'data': data, 'pwg': pwg, 'status': status,
                    'taskchain': False, 'error': error}
+
         return json.dumps({"results": res})
 
 
@@ -547,9 +570,8 @@ class SubmittedStatusAPI(esadapter.InitConnection):
         output_dataset = request['output_dataset'][0]
         for workflow in request['reqmgr_name']:
             try:
-                stats = self.es.get('stats', 'stats', workflow)['_source']
-            except esadapter.pyelasticsearch.exceptions\
-                    .ElasticHttpNotFoundError:
+                stats = self.es.get(index='stats', doc_type='stats', id=workflow)['_source']
+            except elasticsearch.NotFoundError:
                 continue
 
             if stats['pdmv_dataset_name'] == output_dataset:
@@ -567,8 +589,9 @@ class SubmittedStatusAPI(esadapter.InitConnection):
 
     def get(self, query, priority=",", pwg=None):
         """Get submitted requests with current progress"""
-        priority = apiutils.APIUtils().parse_priority_csv(priority.split(','))
-        pwg = apiutils.APIUtils().parse_csv(pwg)
+        api_utils = apiutils.APIUtils()
+        priority = api_utils.parse_priority_csv(priority.split(','))
+        pwg = api_utils.parse_csv(pwg)
         submitted = {}
         response = []
 
@@ -580,28 +603,33 @@ class SubmittedStatusAPI(esadapter.InitConnection):
                 doctype, index = ('rereco_request', 'rereco_requests') \
                     if self.is_single_rereco_request(campaign) else ('request', 'requests')
 
-                response.append(self.es.get(index, doctype, campaign)['_source'])
+                try:
+                    response.append(self.es.get(index=index, doc_type=doctype, id=campaign)['_source'])
+                except elasticsearch.NotFoundError:
+                    # Pass on 404
+                    pass
+
             else:
                 if self.is_instance(campaign, 'processing_string', 'processing_strings'):
                     index = 'rereco_requests'
                     fields = ['member_of_campaign']
-                else: # assume it's Monte Carlo (original functionality)
+                else:  # assume it's Monte Carlo (original functionality)
                     index = 'requests'
                     fields = ['flown_with'] if campaign.startswith("flow") else ['member_of_campaign']
 
                 for field in fields:
                     response += [s['_source'] for s in
-                                 self.es.search(('%s:%s' % (field, campaign)),
+                                 self.es.search(q=('%s:%s' % (field, campaign)),
                                                 index=index,
                                                 size=self.overflow)
                                  ['hits']['hits']]
 
         for request in response:
-            if (request['status'] == 'submitted') \
-                    and (pwg is None or request.get('pwg', 'None') in pwg) \
-                    and (request['priority'] > priority[0] \
-                             and (request['priority'] < priority[1] or \
-                                      priority[1] == -1)):
+            if (request['status'] == 'submitted') and\
+                    (pwg is None or request.get('pwg', 'None') in pwg) and\
+                    (request['priority'] > priority[0] and
+                     (request['priority'] < priority[1] or
+                     priority[1] == -1)):
                 completed = self.completed_deep(request)
                 if completed >= 0:
                     submitted[request['prepid']] = {}
@@ -610,26 +638,28 @@ class SubmittedStatusAPI(esadapter.InitConnection):
                         submitted[request['prepid']]['completion'] = 'NO_EXP_EVTS'
                     else:
                         submitted[request['prepid']]['completion'] = (100 * completed /
-                            request['total_events'])
+                                                                      request['total_events'])
+
         return json.dumps({"results": submitted})
 
     def is_instance(self, prepid, typeof, index):
         """Checks if prepid matches any typeof in the index"""
         try:
-            self.es.get(index, typeof, prepid)['_source']
-        except esadapter.pyelasticsearch.exceptions.ElasticHttpNotFoundError:
+            self.es.get(index=index, doc_type=typeof, id=prepid)['_source']
+        except elasticsearch.NotFoundError:
             return False
+
         return True
 
     def is_single_simple_request(self, prepid):
         """Checks if given prepid matches XXX-...-00000"""
         regex = r"((.{3})-.*-\d{5})"
-        return re.search(regex, prepid) != None
+        return re.search(regex, prepid) is not None
 
     def is_single_rereco_request(self, prepid):
         """Checks if given prepid matches ReReco-...-0000"""
         regex = r"(ReReco-.*-\d{4})"
-        return re.search(regex, prepid) != None
+        return re.search(regex, prepid) is not None
 
     @staticmethod
     def stats_maximum(data, previous):

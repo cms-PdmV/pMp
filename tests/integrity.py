@@ -4,7 +4,7 @@ from cStringIO import StringIO
 import logging
 import simplejson as json
 import pycurl
-import pyelasticsearch
+import elasticsearch
 import sys
 
 
@@ -13,8 +13,8 @@ class TestIntegrityEventsInDAS(object):
 
     def __init__(self, arg):
         self.db_url = 'http://127.0.0.1:9200'
-        self.pmp_api = 'http://127.0.0.1/api/'
-        self.elastic_search = pyelasticsearch.ElasticSearch(self.db_url)
+        self.pmp_api = 'https://127.0.0.1/api/'
+        self.elastic_search = elasticsearch.Elasticsearch(self.db_url)
         self.overflow = 100000
         self.setlog()
         self.announced = arg
@@ -81,9 +81,10 @@ class TestIntegrityEventsInDAS(object):
         output_dataset = request['output_dataset'][0]
         for reqmgr in request['reqmgr_name']:
             try:
-                stats = self.elastic_search.get('stats', 'stats',
-                                                reqmgr)['_source']
-            except pyelasticsearch.exceptions.ElasticHttpNotFoundError:
+                stats = self.elastic_search.get(index='stats',
+                                                doc_type='stats',
+                                                id=reqmgr)['_source']
+            except elasticsearch.NotFoundError:
                 continue
 
             if stats['pdmv_dataset_name'] == output_dataset:
@@ -102,10 +103,9 @@ class TestIntegrityEventsInDAS(object):
 
     def get_requests_grow(self, campaign):
         """Get completed events for submitted requests"""
-        requests = [s['_source'] for s in \
-                        self.elastic_search.search( \
-                ('member_of_campaign:%s' % campaign), index='requests', \
-                    size=self.overflow)['hits']['hits']]
+        requests = [s['_source'] for s in self.elastic_search.search(q=('member_of_campaign:%s' % campaign),
+                                                                     index='requests',
+                                                                     size=self.overflow)['hits']['hits']]
         for request in requests:
             if request['status'] == 'submitted':
                 request['completed_events'] = self.completed_deep(request)
@@ -114,19 +114,18 @@ class TestIntegrityEventsInDAS(object):
     def run(self, deep_check=False):
         """Run tests"""
         # get list of campaigns
-        campaigns = [s['_source'] for s in \
-                         self.elastic_search.search( \
-                'prepid:*', index='campaigns', size=self.overflow)
-                     ['hits']['hits']]
+        campaigns = [s['_source'] for s in self.elastic_search.search(q='prepid:*',
+                                                                      index='campaigns',
+                                                                      size=self.overflow)['hits']['hits']]
         for campaign in campaigns:
             logging.info(str(datetime.now()) + " Checking " +
                          campaign['prepid'])
 
             if self.get_historical(campaign['prepid']) != \
                     self.get_announced(campaign['prepid']):
-                logging.error(str(datetime.now()) + ' Inconsistency "events in'
-                              + ' DAS" (historical) and status "done" (present'
-                              + ') for ' + campaign['prepid'])
+                logging.error(str(datetime.now()) + ' Inconsistency "events in' +
+                              ' DAS" (historical) and status "done" (present' +
+                              ') for ' + campaign['prepid'])
                 if not deep_check:
                     continue
                 logging.info(str(datetime.now()) + ' Checking requests')
@@ -146,13 +145,14 @@ class TestIntegrityEventsInDAS(object):
                                           ' Inconsistency for ' +
                                           request['prepid'])
 
+
 class TestIntegrityExpectedEvents(object):
     """Check if present has same numbers as historical"""
 
     def __init__(self):
         self.db_url = 'http://127.0.0.1:9200'
-        self.pmp_api = 'http://127.0.0.1/api/'
-        self.elastic_search = pyelasticsearch.ElasticSearch(self.db_url)
+        self.pmp_api = 'https://127.0.0.1/api/'
+        self.elastic_search = elasticsearch.Elasticsearch(self.db_url)
         self.overflow = 100000
         self.setlog()
         logging.info(str(datetime.now()) + ' Lauching check for expected events')
@@ -207,19 +207,18 @@ class TestIntegrityExpectedEvents(object):
     def run(self, deep_check=False):
         """Run tests"""
         # get list of campaigns
-        campaigns = [s['_source'] for s in \
-                         self.elastic_search.search( \
-                'prepid:*', index='campaigns', size=self.overflow)
-                     ['hits']['hits']]
+        campaigns = [s['_source'] for s in self.elastic_search.search(q='prepid:*',
+                                                                      index='campaigns',
+                                                                      size=self.overflow)['hits']['hits']]
         for campaign in campaigns:
             logging.info(str(datetime.now()) + " Checking " +
                          campaign['prepid'])
 
             if self.get_historical(campaign['prepid']) != \
                     self.get_announced(campaign['prepid']):
-                logging.error(str(datetime.now()) + ' Inconsistency "expected '
-                              + 'events" (historical) and status "submitted" '
-                              + '(present) for ' + campaign['prepid'])
+                logging.error(str(datetime.now()) + ' Inconsistency "expected ' +
+                              'events" (historical) and status "submitted" ' +
+                              '(present) for ' + campaign['prepid'])
                 if not deep_check:
                     continue
                 logging.info(str(datetime.now()) + ' Checking requests')
