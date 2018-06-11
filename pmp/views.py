@@ -1,9 +1,10 @@
 """pMp views"""
-from flask import make_response, redirect, render_template
+from flask import make_response, redirect, render_template, redirect
 from pmp import app, models, cache
 from flask import request
 import config
 import simplejson as json
+
 
 def sanitize(string):
     return string.replace("\\", "")
@@ -96,6 +97,34 @@ def api_historical_extended(i, probes, priority, status, pwg):
     result = models.APICall().historical_complex(i, probes, priority, filters)
     cache.add(request.path, result, timeout=config.CACHE_TIMEOUT)
     return result
+
+
+# def api_historical_image_extended(i, probes, priority, status, pwg):
+@app.route('/api/historical_image/<i>')
+@app.route('/api/<i>/historical_image/<probes>/<priority>/<status>/<pwg>')
+def api_historical_image_extended(i, probes=100, priority=',', status='all', pwg='all'):
+    """API call for complex historical queries
+    i - list of inputs (csv)
+    probes - int number of probes
+    priority - in a form of string <min_pririty,max_priority>
+    status - list of statuses to include (csv)
+    pwg - list of pwg to include (csv)
+    """
+    i = sanitize(i)
+    if status is "":
+        status = None
+    if pwg is "":
+        pwg = None
+    filters = dict()
+    filters['status'] = status
+    filters['pwg'] = pwg
+
+    result = models.APICall().historical_complex(i, probes, priority, filters)
+    data = json.loads(result)['results']
+    data['path_hash'] = hash(request.path)
+    url = models.APICall().make_image(data)
+
+    return redirect(url, code=302)
 
 
 @app.route('/api/<i>/submitted/<priority>/<pwg>')

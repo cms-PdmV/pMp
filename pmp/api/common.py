@@ -7,6 +7,11 @@ import elasticsearch
 import pycurl
 import simplejson as json
 import os
+import matplotlib as mpl
+mpl.use('Agg')
+from matplotlib.ticker import Formatter
+import matplotlib.pyplot as plt
+import time
 
 
 class SuggestionsAPI(esadapter.InitConnection):
@@ -181,3 +186,100 @@ class OverallAPI(esadapter.InitConnection):
                                                       size=self.overflow)["hits"]["total"]
 
         return json.dumps({"results": results})
+
+
+class MakeImage(object):
+
+    class CustomMajorFormatter(Formatter):
+        def __init__(self):
+            self.suffixes = ['', 'k', 'M', 'G', 'T', 'P']
+
+        def __call__(self, x, pos=None):
+            if x == 0:
+                return ''
+
+            suffix = ''
+            for exp in xrange(0, 4):
+                if x / (1000 ** exp) < 1000:
+                    suffix = self.suffixes[exp]
+                    x = x / (1000 ** exp)
+                    break
+
+            return ('%.1f' % (x)).replace('.0', '') + suffix
+
+    class CustomTimestampFormatter(Formatter):
+        def __call__(self, x, pos=None):
+            return time.strftime('%Hh, %b %m, %Y', time.localtime(x / 1000))
+
+    def __init__(self):
+        self.labels = ['Done events in DAS', 'Events in DAS', 'Expected events']
+        self.colors = ['#01579B', '#FF6F00', '#263238']
+
+    def make_file_path(self, path_hash):
+        return 'pmp/static/tmp/pmp_%s.png' % (path_hash)
+
+    def trim_dataset_name(self, dataset_name):
+        return '.../%s' % ('/'.join(dataset_name.split('/')[2:]))
+
+    def split_total_open_done(self, data):
+        total_events = []
+        open_events = []
+        done_events = []
+        timestamps = []
+        data = sorted(data, key=lambda x: x['t'])
+        for d in data:
+            if len(total_events) > 0:
+                total_events.append(total_events[-1])
+                open_events.append(open_events[-1])
+                done_events.append(done_events[-1])
+                timestamps.append(d['t'])
+
+            total_events.append(d['x'] - max(d['e'], d['d']))
+            open_events.append(d['e'] - d['d'])
+            done_events.append(d['d'])
+            timestamps.append(d['t'])
+
+        return total_events, open_events, done_events, timestamps
+
+    def make_taskchain_image(self, data, path_hash):
+        max_total = 0
+        for dataset in data:
+            total_events, _, done_events, timestamps = self.split_total_open_done(dataset['data'])
+            plt.plot(timestamps, done_events, label=self.trim_dataset_name(dataset['request']))
+            if max(total_events + done_events) > max_total:
+                max_total = max(total_events + done_events)
+
+        plt.gca().get_yaxis().set_major_formatter(self.CustomMajorFormatter())
+        plt.gca().get_xaxis().set_major_formatter(self.CustomTimestampFormatter())
+        plt.xticks(rotation=15)
+        plt.ylim(ymax=max_total * 1.2)
+        plt.legend(loc='upper left')
+        plt.gcf().set_size_inches(10, 6)
+        filename = self.make_file_path(path_hash)
+        plt.savefig(filename, dpi=100, bbox_inches='tight', pad_inches=0.1)
+        plt.close()
+        return filename.replace('/static', '')
+
+    def make_image(self, data, path_hash):
+        total_events, open_events, done_events, timestamps = self.split_total_open_done(data)
+
+        plt.stackplot(timestamps,
+                      [done_events, open_events, total_events],
+                      labels=self.labels,
+                      colors=self.colors,
+                      alpha=0.4)
+        plt.gca().get_yaxis().set_major_formatter(self.CustomMajorFormatter())
+        plt.gca().get_xaxis().set_major_formatter(self.CustomTimestampFormatter())
+        plt.xticks(rotation=15)
+        plt.legend(loc='upper left')
+        plt.gcf().set_size_inches(10, 6)
+        filename = self.make_file_path(path_hash)
+        plt.savefig(filename, dpi=100, bbox_inches='tight', pad_inches=0.1)
+        plt.close()
+        return filename.replace('/static', '')
+
+    def get(self, data):
+        if data['taskchain']:
+            return self.make_taskchain_image(data['data'], data['path_hash'])
+        else:
+            return self.make_image(data['data'], data['path_hash'])
