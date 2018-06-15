@@ -26,8 +26,6 @@
             var fullTerms = scope.fullTerms || [];
             var compactTerms = scope.compactTerms || [];
             var foundNonExistant = false;
-            // Copy of whole data that was not yet changed by dataChanged function
-            var copyOfData = null;
             for (var i = 0; i < compactTerms.length; i++) {
                 var temp = compactTerms[i];
                 if (fullTerms.indexOf(temp) == -1) {
@@ -64,35 +62,11 @@
                 });
             });
             nested.rollup(function (leaves) {
-                if (sumBy == '_requests') {
-                    // Return number of requests
-                    return leaves.length;
-                } else if (sumBy == '_seconds') {
-                    // Return sum of time events multiplied by total_events of each request
-                    return d3.sum(leaves, function (d) {
-                        return d['total_events'] * d['time_event'].reduce(function(acc, val) { return acc + val; });
-                    });
-                } else {
-                    // Sum by given key
-                    return d3.sum(leaves, function (d) {
-                        return d[sumBy];
-                    });
-                }
+                return d3.sum(leaves, function (d) {
+                    return d[sumBy];
+                });
             });
-
-            scope.$watch('sumBy', function (s) {
-                if (s != sumBy) {
-                    sumBy = s;
-                    scope.dataChanged(copyOfData);
-                }
-            });
-
             scope.$watch('data', function (dat) {
-                copyOfData = dat;
-                scope.dataChanged(dat);
-            });
-
-            scope.dataChanged = function (dat) {
                 scope.piechart_data = {};
                 scope.piechart_data_full = {};
                 scope.current_data = {};
@@ -158,7 +132,7 @@
                     scope.piechart_data[key] = piechart_data;
                     scope.piechart_data_full[key] = piechart_data_full;
                 }
-            };
+            });
 
             scope.changeChart = function (name, term, state) {
                 if (state.state) {

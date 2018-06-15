@@ -19,10 +19,10 @@
         {{key}}
       </td>
       <td class="text-right" ng-show="element.term !== 'upcoming' || showUpcoming" ng-repeat="element in terms.terms">
-        <span ng-show="sumBy != '_requests' && humanReadableNumbers">
+        <span ng-show="humanReadableNumbers">
           {{element.count | readableNumbers}}
         </span>
-        <span ng-hide="sumBy != '_requests' || !humanReadableNumbers">
+        <span ng-hide="humanReadableNumbers">
           {{element.count}}
         </span>
       </td>
@@ -51,10 +51,10 @@
               </small>
             </td>
             <td class="text-right">
-              <span ng-show="sumBy != '_requests' && humanReadableNumbers">
+              <span ng-show="humanReadableNumbers">
                 {{element.count | readableNumbers}}
               </span>
-              <span ng-hide="sumBy != '_requests' || !humanReadableNumbers">
+              <span ng-hide="humanReadableNumbers">
                 {{element.count}}
               </span>
             </td>

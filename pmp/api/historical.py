@@ -2,7 +2,7 @@
 from pmp.api.utils import utils as apiutils
 from pmp.api.models import esadapter
 import elasticsearch
-import simplejson as json
+import json
 import time
 import re
 

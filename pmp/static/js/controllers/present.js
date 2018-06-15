@@ -31,6 +31,7 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
             // get information about page
             $scope.page = PageDetailsProvider.present;
             $scope.loadingAll = false; // updated when $scope.load is called
+
             // reset data and filters
             Data.reset(true);
 
@@ -111,11 +112,11 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
             }
 
             if ($scope.radio[0] === "1") {
-                $scope.changeMode("requests")
+                $scope.modeType = "requests";
             } else if ($scope.radio[0] === "2") {
-                $scope.changeMode("seconds")
+                $scope.modeType = "seconds";
             } else {
-                $scope.changeMode("events")
+                $scope.modeType = "events";
             }
 
             // show "last updated" time?
@@ -387,18 +388,6 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
          */
         $scope.changeMode = function (type) {
             $scope.modeType = type;
-            if (type == "requests") {
-                // sumBy special case: _requests
-                // Number of requests
-                $scope.piecharts.sum = "_requests";
-            } else if (type == "seconds") {
-                // sumBy special case: _seconds
-                // Sum of time event multiplied by total events
-                $scope.piecharts.sum = "_seconds";
-            } else {
-                // sumBy key "total_events"
-                $scope.piecharts.sum = "total_events";
-            }
             $scope.setScaleAndOperation(0, ['events', 'requests', 'seconds'].indexOf(type));
         };
 

@@ -1,75 +1,46 @@
 """Utils classes for pMp scripts"""
-import simplejson as json
+import json
 import os
-import pycurl
 import re
-import httplib
-from ConfigParser import SafeConfigParser
-from cStringIO import StringIO
-from datetime import datetime
-from subprocess import call
+import pycurl
 import logging
-
-
-def setlog():
-    """Set loggging level"""
-    FORMAT = "%(asctime)s:::%(levelname)s:::%(message)s"
-    logging.basicConfig(level=logging.INFO, format=FORMAT)
+from configparser import ConfigParser
+from datetime import datetime
+from io import BytesIO
 
 
 class Config(object):
-    """Load cofiguration from file"""
-
-    def __init__(self, typeof):
+    """
+    Load cofiguration from file
+    """
+    def __init__(self, index):
         self.dir = os.path.dirname(os.path.realpath(__file__))
-        parser = SafeConfigParser()
-        parser.read(self.dir + '/dev.conf')
+        parser = ConfigParser()
+        parser.read(self.dir + '/default.conf')
 
-        database = parser.get(typeof, 'db')
-        url_pmp = parser.get('general', 'pmp')
-        last_sequences_index = parser.get('general', 'last_sequences')
-
-        self.reqmgr_url = parser.get('reqmgr', 'url')
-        self.reqmgr_backup_url = parser.get('reqmgr', 'backup_url')
-        if parser.has_option(typeof, 'cookie'):
-            self.cookie = parser.get(typeof, 'cookie')
-        else:
-            self.cookie = parser.get('cookie', 'path')
-
+        # Universal fields
         self.exclude_list = re.split(", ", parser.get('exclude', 'list'))
-        self.fetch_fields = re.split(", ", parser.get(typeof, 'fetch_fields'))
-        self.url_mcm = parser.get(typeof, 'db_source')
-        self.url_db = self.url_mcm + database
-        self.url_db_changes = self.url_db + parser.get('general', 'db_query_changes')
-        self.url_db_first = self.url_db + parser.get('general', 'db_query_first')
-        self.url_db_all = self.url_db + parser.get('general', 'db_query_all_doc')
-        self.pmp_db_index = url_pmp + parser.get(typeof, 'pmp_db_index')
-        self.pmp_db = self.pmp_db_index + parser.get(typeof, 'pmp_db')
-        self.last_seq = url_pmp + last_sequences_index + parser.get(typeof, 'last_seq')
-        self.mapping = parser.get(typeof, 'mapping')
+        self.reqmgr_url = parser.get('reqmgr', 'url')
+        self.reqmgr_url = parser.get('pmp', 'last_seq_mapping')
+
+        # Index specific fields
+        self.source_db = parser.get(index, 'source_db')
+        self.source_db_changes = parser.get(index, 'source_db_changes')
+        self.fetch_fields = re.split(", ", parser.get(index, 'fetch_fields'))
+        self.mapping = parser.get(index, 'mapping')
+        self.pmp_index = parser.get('pmp', 'db') + parser.get(index, 'pmp_index')
+        self.pmp_type = self.pmp_index + parser.get(index, 'pmp_type')
+        self.last_seq = parser.get('pmp', 'last_seq') + index
+
+        # Cookie
+        if parser.has_option(index, 'cookie'):
+            self.cookie = parser.get(index, 'cookie')
+        else:
+            self.cookie = parser.get('credentials', 'cookie')
 
 
 class Utils(object):
     """Utils for pMp scripts"""
-    @staticmethod
-    def init_connection(url):
-        return httplib.HTTPSConnection(url,
-                                       port=443,
-                                       cert_file=os.getenv('X509_USER_PROXY'),
-                                       key_file=os.getenv('X509_USER_PROXY'))
-
-    @staticmethod
-    def httpget(conn, query):
-        conn.request("GET", query.replace('#', '%23'))
-        response = conn.getresponse()
-        return response.read(), response.status
-
-    @staticmethod
-    def get_cookie(url, path):
-        """Execute CERN's get SSO cookie"""
-        logging.info("Getting SSO Cookie")
-        Utils.rm_file(path)
-        call(["cern-get-sso-cookie", "--krb", "--nocertverify", "-u", url, "-o", path])
 
     @staticmethod
     def get_time():
@@ -77,36 +48,31 @@ class Utils(object):
         return str(datetime.now())
 
     @staticmethod
-    def rm_file(m_file):
-        """Remove file"""
-        if os.path.isfile(m_file) and os.access(m_file, os.R_OK):
-            os.remove(m_file)
+    def setup_console_logging():
+        CONSOLE_LOG_FORMAT = '[%(asctime)s][%(filename)s:%(lineno)d][%(levelname)s] %(message)s'
+        logging.basicConfig(format=CONSOLE_LOG_FORMAT, level=logging.DEBUG)
 
     @staticmethod
-    def curl(request, url, data=None, cookie=None, return_error=False):
-        """Perform CURL - return_error kwarg returns status after failure - defaults to None"""
-        out = StringIO()
+    def curl(method, url, data=None, cookie=None, return_error=False):
+        """
+        Perform CURL - return_error kwarg returns status after failure - defaults to None
+        To install pycurl:
+        sudo pip3 install --no-cache-dir --compile --ignore-installed --install-option="--with-nss" pycurl
+        """
+        out = BytesIO()
         curl = pycurl.Curl()
         curl.setopt(pycurl.URL, str(url))
         curl.setopt(pycurl.WRITEFUNCTION, out.write)
         curl.setopt(pycurl.SSL_VERIFYPEER, 0)
         curl.setopt(pycurl.SSL_VERIFYHOST, 0)
-        if request == "GET" and cookie is not None:
+        if cookie is not None:
             curl.setopt(pycurl.COOKIEFILE, cookie)
             curl.setopt(pycurl.COOKIEJAR, cookie)
-        elif request == "DELETE":
-            curl.setopt(pycurl.CUSTOMREQUEST, "DELETE")
-        elif request == "PUT":
-            curl.setopt(pycurl.CUSTOMREQUEST, "PUT")
-            curl.setopt(pycurl.POST, 1)
-            if data:
-                curl.setopt(pycurl.POSTFIELDS, '%s' % json.dumps(data))
-            else:
-                curl.setopt(pycurl.POSTFIELDS, '{}')
 
-            curl.setopt(pycurl.HTTPHEADER, ['Content-Type:application/json'])
-        elif request == "POST":
-            curl.setopt(pycurl.CUSTOMREQUEST, "POST")
+        if method == "GET" or method == "DELETE":
+            curl.setopt(pycurl.CUSTOMREQUEST, method)
+        elif method == "PUT" or method == "POST":
+            curl.setopt(pycurl.CUSTOMREQUEST, method)
             curl.setopt(pycurl.POST, 1)
             if data:
                 curl.setopt(pycurl.POSTFIELDS, '%s' % json.dumps(data))
@@ -115,12 +81,13 @@ class Utils(object):
 
             curl.setopt(pycurl.HTTPHEADER, ['Content-Type:application/json'])
 
+        # logging.info('Will %s %s. Data %s. Cookie %s' % (method, url, data, cookie))
         curl.perform()
         try:
-            return (json.loads(out.getvalue()),
+            return (json.loads(out.getvalue().decode('UTF-8')),
                     curl.getinfo(curl.RESPONSE_CODE))
         except ValueError:
-            print "Status: %s/n%s" % (curl.getinfo(curl.RESPONSE_CODE),
-                                      out.getvalue())
+            logging.error("Status: %s/n%s" % (curl.getinfo(curl.RESPONSE_CODE),
+                                              out.getvalue().decode('UTF-8')))
             if return_error:
                 return None, curl.getinfo(curl.RESPONSE_CODE)

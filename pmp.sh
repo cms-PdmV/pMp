@@ -4,19 +4,21 @@ DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 
 if [[ $1 == "start" ]]
 then
-    echo "Starting pMp..."
+    echo "Starting pMp"
 
     if [[ $2 == "dev" ]]
     then
-        cd $DIR && python run.py dev&
+        cd $DIR && python3 run.py dev&
     else
-        cd $DIR && python run.py &
+        cd $DIR && python3 run.py &
     fi
+
+    echo "Started pMp"
 fi
 
 if [[ $1 == "stop" ]]
 then
-    echo "Stopping pMp..."
+    echo "Stopping pMp"
     NUMBER=`ps aux | grep 'run.py' | grep python | awk '{print $2}'`
 
     if [[ $NUMBER != "" ]]
@@ -34,6 +36,7 @@ fi
 
 if [[ $1 == "restart" ]]
 then
+    echo "Restarting pMp"
     (cd $DIR && ./pmp.sh stop)
     (cd $DIR && ./pmp.sh start)
 fi
