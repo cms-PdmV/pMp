@@ -10,7 +10,7 @@ class PerformanceAPI(esadapter.InitConnection):
     def es_search(self, campaign, index):
         return self.es.search(q='member_of_campaign:{0}'.format(campaign),
                               index=index,
-                              size=self.overflow)['hits']
+                              size=self.results_window_size)['hits']
 
     def get(self, campaign):
         """Retruning historical points for each request in given campaign"""
@@ -89,7 +89,7 @@ class PriorityAPI(esadapter.InitConnection):
     def es_search(self, campaign, index):
         return self.es.search(q='member_of_campaign:{0}'.format(campaign),
                               index=index,
-                              size=self.overflow)['hits']
+                              size=self.results_window_size)['hits']
 
     def get(self, campaign):
         """Execute"""

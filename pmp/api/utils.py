@@ -16,11 +16,13 @@ class APIUtils(object):
     @staticmethod
     def parse_priority_csv(arr):
         """Generate array from priority csv"""
+        arr = arr.split(',')
         for index, value in enumerate(arr):
-            if arr[index] == "":
+            if arr[index] == '':
                 arr[index] = int(-index)
             else:
                 arr[index] = int(value)
+
         return arr
 
 

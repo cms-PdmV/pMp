@@ -11,5 +11,5 @@ class ChainAPI(esadapter.InitConnection):
         response = [s['_source'] for s in
                     self.es.search(q='prepid:*',
                                    index='chained_campaigns',
-                                   size=self.overflow)['hits']['hits']]
+                                   size=self.results_window_size)['hits']['hits']]
         return json.dumps({"results": response})

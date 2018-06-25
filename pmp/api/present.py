@@ -75,7 +75,7 @@ class AnnouncedAPI(esadapter.InitConnection):
         return [s['_source'] for s in
                 self.es.search(q=('%s:%s' % (field, query)),
                                index=index,
-                               size=self.overflow)
+                               size=self.results_window_size)
                 ['hits']['hits']]
 
     @staticmethod
@@ -273,7 +273,7 @@ class GrowingAPI(esadapter.InitConnection):
                     ccs = [s['_source'] for s in
                            self.es.search(q=('campaigns:%s' % arg),
                                           index='chained_campaigns',
-                                          size=self.overflow)['hits']['hits']]
+                                          size=self.results_window_size)['hits']['hits']]
                     query.extend([item['prepid'] for item in ccs])
                     query.remove(arg)
                     again = True
@@ -302,7 +302,7 @@ class GrowingAPI(esadapter.InitConnection):
             all_cr.extend([s['_source'] for s in
                            self.es.search(q=('member_of_campaign:%s' % a_cc),
                                           index='chained_requests',
-                                          size=self.overflow)['hits']['hits']])
+                                          size=self.results_window_size)['hits']['hits']])
             these_steps = [item[0] for item in mcm_cc['campaigns']]
             if len(steps) == 0:
                 steps = these_steps
@@ -358,7 +358,7 @@ class GrowingAPI(esadapter.InitConnection):
             for response in [s['_source'] for s in
                              self.es.search(q=('member_of_campaign:%s' % step),
                                             index='requests',
-                                            size=self.overflow)
+                                            size=self.results_window_size)
                              ['hits']['hits']]:
                 all_requests[response['prepid']] = response
 

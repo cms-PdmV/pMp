@@ -15,7 +15,7 @@ class TestIntegrityEventsInDAS(object):
         self.db_url = 'http://127.0.0.1:9200'
         self.pmp_api = 'https://127.0.0.1/api/'
         self.elastic_search = elasticsearch.Elasticsearch(self.db_url)
-        self.overflow = 100000
+        self.results_window_size = 100000
         self.setlog()
         self.announced = arg
         if self.announced:
@@ -105,7 +105,7 @@ class TestIntegrityEventsInDAS(object):
         """Get completed events for submitted requests"""
         requests = [s['_source'] for s in self.elastic_search.search(q=('member_of_campaign:%s' % campaign),
                                                                      index='requests',
-                                                                     size=self.overflow)['hits']['hits']]
+                                                                     size=self.results_window_size)['hits']['hits']]
         for request in requests:
             if request['status'] == 'submitted':
                 request['completed_events'] = self.completed_deep(request)
@@ -116,7 +116,7 @@ class TestIntegrityEventsInDAS(object):
         # get list of campaigns
         campaigns = [s['_source'] for s in self.elastic_search.search(q='prepid:*',
                                                                       index='campaigns',
-                                                                      size=self.overflow)['hits']['hits']]
+                                                                      size=self.results_window_size)['hits']['hits']]
         for campaign in campaigns:
             logging.info(str(datetime.now()) + " Checking " +
                          campaign['prepid'])
@@ -153,7 +153,7 @@ class TestIntegrityExpectedEvents(object):
         self.db_url = 'http://127.0.0.1:9200'
         self.pmp_api = 'https://127.0.0.1/api/'
         self.elastic_search = elasticsearch.Elasticsearch(self.db_url)
-        self.overflow = 100000
+        self.results_window_size = 100000
         self.setlog()
         logging.info(str(datetime.now()) + ' Lauching check for expected events')
         self.present_url = '/announced/false'
@@ -209,7 +209,7 @@ class TestIntegrityExpectedEvents(object):
         # get list of campaigns
         campaigns = [s['_source'] for s in self.elastic_search.search(q='prepid:*',
                                                                       index='campaigns',
-                                                                      size=self.overflow)['hits']['hits']]
+                                                                      size=self.results_window_size)['hits']['hits']]
         for campaign in campaigns:
             logging.info(str(datetime.now()) + " Checking " +
                          campaign['prepid'])

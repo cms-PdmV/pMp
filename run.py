@@ -70,51 +70,50 @@ def dashboard():
 def api(i, typeof, extra):
     """Simple API call"""
     i = sanitize(i)
-    call = models.APICall()
     res = make_response('{}')
 
     if typeof == 'announced':
-        res = make_response(call.present_announced_mode(i, extra == 'true'))
+        res = make_response(models.APICall.present_announced_mode(i, extra == 'true'))
     elif typeof == 'chain':
-        res = make_response(call.chain_landscape())
-    elif typeof == 'crazy':
-        res = make_response(call.crazy(i))
+        res = make_response(models.APICall.chain_landscape())
     elif typeof == 'growing':
-        res = make_response(call.present_growing_mode(i, extra == 'true'))
+        res = make_response(models.APICall.present_growing_mode(i, extra == 'true'))
     elif typeof == 'historical':
-        res = make_response(call.historical_simple(i))
+        res = make_response(models.APICall.historical_simple(i))
     elif typeof == 'performance':
-        res = make_response(call.performance(i))
+        res = make_response(models.APICall.performance(i))
     elif typeof == 'priority':
-        res = make_response(call.priority(i))
+        res = make_response(models.APICall.priority(i))
     elif typeof == 'lastupdate':
-        res = make_response(call.last_update(i))
+        res = make_response(models.APICall.last_update(i))
     elif typeof == 'overall':
-        res = make_response(call.overall(i))
+        res = make_response(models.APICall.overall(i))
 
     cache.add(request.path, res, timeout=config.CACHE_TIMEOUT)
     return res
 
 
-@app.route('/api/<i>/historical/<probes>/<priority>/<status>/<pwg>')
-def api_historical_extended(i, probes, priority, status, pwg):
+@app.route('/api/<i>/historical/<granularity>/<priority>/<status>/<pwg>')
+def api_historical_extended(i, granularity, priority, status, pwg):
     """API call for complex historical queries
     i - list of inputs (csv)
-    probes - int number of probes
+    granularity - int number of x datapoints
     priority - in a form of string <min_pririty,max_priority>
     status - list of statuses to include (csv)
     pwg - list of pwg to include (csv)
     """
     i = sanitize(i)
-    if status is "":
+    if status == '':
         status = None
-    if pwg is "":
+
+    if pwg == '':
         pwg = None
+
     filters = dict()
     filters['status'] = status
     filters['pwg'] = pwg
 
-    result = models.APICall().historical_complex(i, probes, priority, filters)
+    result = models.APICall.historical_complex(i, granularity, priority, filters)
     cache.add(request.path, result, timeout=config.CACHE_TIMEOUT)
     return result
 
@@ -128,7 +127,7 @@ def api_submitted(i, priority, pwg):
     """
     i = sanitize(i)
 
-    result = models.APICall().submitted_stats(i, priority, pwg)
+    result = models.APICall.submitted_stats(i, priority, pwg)
     cache.add(request.path, result, timeout=config.CACHE_TIMEOUT)
     return result
 
@@ -141,7 +140,7 @@ def suggest(fragment, typeof):
     """
     fragment = sanitize(fragment)
 
-    result = make_response(models.APICall().suggestions(typeof, fragment))
+    result = make_response(models.APICall.suggestions(typeof, fragment))
     cache.add(request.path, result, timeout=config.CACHE_TIMEOUT)
     return result
 
@@ -149,15 +148,15 @@ def suggest(fragment, typeof):
 @app.route('/shorten/<path:url>')
 def shorten(url):
     """Shorten URL"""
-    return make_response(models.APICall().shorten_url(url,
-                                                      request.query_string))
+    return make_response(models.APICall.shorten_url(url,
+                                                    request.query_string))
 
 
 @app.route('/ts', methods=['POST'])
 def take_screenshot():
     """Take screenshot"""
     data = json.loads(request.data)
-    return models.APICall().take_screenshot(data['data'], data['ext'])
+    return models.APICall.take_screenshot(data['data'], data['ext'])
 
 
 if __name__ == '__main__':

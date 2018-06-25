@@ -192,8 +192,9 @@ def create_rereco_request(data, rereco_cfg):
     Creates a request-like object from a given stats object
     """
     fake_request = data
-
-    save(fake_request['_id'], fake_request, rereco_cfg)
+    request_id = fake_request['_id']
+    del fake_request['_id']
+    save(request_id, fake_request, rereco_cfg)
 
 
 def is_excluded_rereco(data):
@@ -242,12 +243,13 @@ if __name__ == "__main__":
                 data, status = Utils.curl('GET', workflows_url, cookie=cfg.cookie, return_error=True)
                 if status == 200:
                     if index == 'workflows':
-                        data['history'] = parse_workflows_history(data['EventNumberHistory'])
+                        data['EventNumberHistory'] = parse_workflows_history(data['EventNumberHistory'])
                         request_type = data.get('RequestType', '')
                         # Is it a ReReco request created in Oct 2015 or later?
                         if request_type.lower() == 'rereco' and not is_excluded_rereco(data):
                             logging.info('Creating mock ReReco request for %s' % (thing_name))
                             create_rereco_request(data, rereco_cfg)
+
                     elif index == 'requests':
                         if 'reqmgr_name' in data:
                             data['reqmgr_status_history'] = parse_request_status_history(data['reqmgr_name'])

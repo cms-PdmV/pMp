@@ -1,8 +1,9 @@
 """A list of classes for utils api"""
 from io import StringIO
 from datetime import datetime
-from pmp.api.models import esadapter
 from subprocess import call
+from fetchd.utils import Utils
+import pmp.api.esadapter as esadapter
 import elasticsearch
 import pycurl
 import json
@@ -15,7 +16,7 @@ class SuggestionsAPI(esadapter.InitConnection):
     """
     def __init__(self, typeof):
         esadapter.InitConnection.__init__(self)
-        self.overflow = 10
+        self.results_window_size = 10
         self.max_suggestions = 20
         self.present = (typeof == 'present')
         self.historical = (typeof == 'historical')
@@ -38,38 +39,38 @@ class SuggestionsAPI(esadapter.InitConnection):
             results += [s['_id'] for s in
                         self.es.search(q=search,
                                        index='campaigns',
-                                       size=self.overflow)['hits']['hits']]
+                                       size=self.results_window_size)['hits']['hits']]
 
             if self.historical or self.present:
                 if len(results) < self.max_suggestions:
                     results += [s['_id'] for s in
                                 self.es.search(q=search,
                                                index='flows',
-                                               size=self.overflow)['hits']['hits']]
+                                               size=self.results_window_size)['hits']['hits']]
 
                 if len(results) < self.max_suggestions:
                     results += [s['_id'] for s in
                                 self.es.search(q=search,
                                                index='requests',
-                                               size=self.overflow)['hits']['hits']]
+                                               size=self.results_window_size)['hits']['hits']]
 
                 if len(results) < self.max_suggestions:
                     results += [s['_id'] for s in
                                 self.es.search(q=search,
                                                index='rereco_requests',
-                                               size=self.overflow)['hits']['hits']]
+                                               size=self.results_window_size)['hits']['hits']]
 
             if self.historical and len(results) < self.max_suggestions:
                 results += [s['_id'] for s in
                             self.es.search(q=search_stats,
-                                           index='stats',
-                                           size=self.overflow)['hits']['hits']]
+                                           index='workflows',
+                                           size=self.results_window_size)['hits']['hits']]
 
             if self.present and len(results) < self.max_suggestions:
                 results += [s['_id'] for s in
                             self.es.search(q=search,
                                            index="chained_campaigns",
-                                           size=self.overflow)['hits']['hits']]
+                                           size=self.results_window_size)['hits']['hits']]
 
         # order of ext does matter because of the typeahead in bootstrap
         return json.dumps({"results": results})
@@ -184,3 +185,20 @@ class OverallAPI(object):
             results[collection_name] = count
 
         return json.dumps({"results": results})
+
+
+class APIBase(esadapter.InitConnection):
+    def __init__(self):
+        esadapter.InitConnection.__init__(self)
+        Utils.setup_console_logging()
+
+    def is_instance(self, prepid, typeof, index):
+        """
+        Checks if prepid matches any typeof in the index
+        """
+        try:
+            self.es.get(index=index, doc_type=typeof, id=prepid)['_source']
+        except elasticsearch.NotFoundError:
+            return False
+
+        return True
