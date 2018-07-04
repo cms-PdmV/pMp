@@ -16,8 +16,6 @@ def pick_attributes(dictionary, fields):
     for field in fields:
         if field in dictionary:
             parsed[field] = dictionary[field]
-        else:
-            logging.info('Could not find %s' % (field))
 
     return parsed
 
@@ -187,28 +185,49 @@ def save(object_id, data, cfg):
         logging.error('Failed to update %s. Reason %s.' % (object_id, response))
 
 
-def create_rereco_request(data, rereco_cfg):
+def create_rereco_request(stats_doc, rereco_cfg, process_string_cfg):
     """
     Creates a request-like object from a given stats object
     """
-    fake_request = data
-    request_id = fake_request['_id']
-    del fake_request['_id']
-    save(request_id, fake_request, rereco_cfg)
+    fake_request = {}
+    fake_request['prepid'] = stats_doc['PrepID']
+    fake_request['total_events'] = stats_doc['TotalEvents']
+    fake_request['priority'] = stats_doc['RequestPriority']
+    if len(stats_doc['Campaigns']) > 0:
+        fake_request['member_of_campaign'] = stats_doc['Campaigns'][0]
+
+    fake_request['output_dataset'] = stats_doc['OutputDatasets']
+    if len(stats_doc.get('RequestTransition', [])) > 0:
+        fake_request['status'] = stats_doc['RequestTransition'][-1]['Status']
+    else:
+        fake_request['status'] = 'unknown'
+
+    fake_request['reqmgr_name'] = [stats_doc['_id']]
+    processing_string = stats_doc.get('ProcessingString', None)
+    if processing_string is not None and type(processing_string) is str:
+        fake_request['processing_string'] = processing_string
+        save(processing_string, {'prepid': processing_string}, process_string_cfg)
+
+    save(fake_request['prepid'], fake_request, rereco_cfg)
 
 
-def is_excluded_rereco(data):
+def is_excluded_rereco(stats_doc):
     """
     Returns true if the given object is to be excluded from the ReReco requests index
     """
-    # if int(data.get('pdmv_submission_date', '0')) < 151000:
-    #     return True
+    if stats_doc is None:
+        logging.error('Stats document is None. How?!')
 
-    # if len(data.get('pdmv_prep_id', '')) == 0:
-    #     return True
+    if stats_doc.get('PrepID', '') in ['', 'None']:
+        return True
 
     # Fall through
     return False
+
+
+def process_request_tags(tags, tags_cfg):
+    for tag in tags:
+        save(tag, {'prepid': tag}, tags_cfg)
 
 
 if __name__ == "__main__":
@@ -217,7 +236,13 @@ if __name__ == "__main__":
     logging.info('Starting %s' % (index))
     cfg = Config(index)
 
-    rereco_cfg = Config('rereco_requests')
+    if index == 'workflows':
+        rereco_cfg = Config('rereco_requests')
+        process_string_cfg = Config('processing_strings')
+
+    if index == 'requests':
+        tags_cfg = Config('tags')
+
     done = 0
     for thing_name, deleted in get_changed_things(cfg):
         done += 1
@@ -239,8 +264,8 @@ if __name__ == "__main__":
                 elif status != 404:
                     logging.error('Record %s (%s) was not deleted. Code: %s' % (thing_name, index, status))
             else:
-                workflows_url = str(cfg.source_db + thing_name)
-                data, status = Utils.curl('GET', workflows_url, cookie=cfg.cookie, return_error=True)
+                thing_url = str(cfg.source_db + thing_name)
+                data, status = Utils.curl('GET', thing_url, cookie=cfg.cookie, return_error=True)
                 if status == 200:
                     if index == 'workflows':
                         data['EventNumberHistory'] = parse_workflows_history(data['EventNumberHistory'])
@@ -248,7 +273,7 @@ if __name__ == "__main__":
                         # Is it a ReReco request created in Oct 2015 or later?
                         if request_type.lower() == 'rereco' and not is_excluded_rereco(data):
                             logging.info('Creating mock ReReco request for %s' % (thing_name))
-                            create_rereco_request(data, rereco_cfg)
+                            create_rereco_request(data, rereco_cfg, process_string_cfg)
 
                     elif index == 'requests':
                         if 'reqmgr_name' in data:
@@ -262,6 +287,11 @@ if __name__ == "__main__":
                             data['history'] = parse_request_history(data['history'])
                         else:
                             data['history'] = []
+
+                        if 'tags' in data:
+                            process_request_tags(data['tags'], tags_cfg)
+                        else:
+                            data['tags'] = []
 
                     # Trim fields we don't want
                     data = pick_attributes(data, cfg.fetch_fields)

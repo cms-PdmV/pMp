@@ -22,6 +22,15 @@ class SuggestionsAPI(esadapter.InitConnection):
         self.historical = (typeof == 'historical')
         self.performance = (typeof == 'performance')
 
+    def search(self, query, index):
+        try:
+            return [s['_id'] for s in
+                    self.es.search(q=query,
+                                   index=index,
+                                   size=self.results_window_size)['hits']['hits']]
+        except elasticsearch.NotFoundError:
+            return []
+
     def get(self, query):
         """Get suggestions for the query"""
         searchable = query.replace("-", r"\-")
@@ -34,43 +43,29 @@ class SuggestionsAPI(esadapter.InitConnection):
 
         results = []
 
-        if self.historical or self.present or self.performance:
-            # campaigns are expected in all modes
-            results += [s['_id'] for s in
-                        self.es.search(q=search,
-                                       index='campaigns',
-                                       size=self.results_window_size)['hits']['hits']]
+        results += self.search(search, 'campaigns')
 
-            if self.historical or self.present:
-                if len(results) < self.max_suggestions:
-                    results += [s['_id'] for s in
-                                self.es.search(q=search,
-                                               index='flows',
-                                               size=self.results_window_size)['hits']['hits']]
+        if len(results) < self.max_suggestions:
+            results += self.search(search, 'processing_strings')
 
-                if len(results) < self.max_suggestions:
-                    results += [s['_id'] for s in
-                                self.es.search(q=search,
-                                               index='requests',
-                                               size=self.results_window_size)['hits']['hits']]
+        if len(results) < self.max_suggestions:
+            results += self.search(search, 'tags')
 
-                if len(results) < self.max_suggestions:
-                    results += [s['_id'] for s in
-                                self.es.search(q=search,
-                                               index='rereco_requests',
-                                               size=self.results_window_size)['hits']['hits']]
+        if self.historical or self.present:
+            if len(results) < self.max_suggestions:
+                results += self.search(search, 'flows')
 
-            if self.historical and len(results) < self.max_suggestions:
-                results += [s['_id'] for s in
-                            self.es.search(q=search_stats,
-                                           index='workflows',
-                                           size=self.results_window_size)['hits']['hits']]
+            if len(results) < self.max_suggestions:
+                results += self.search(search, 'requests')
 
-            if self.present and len(results) < self.max_suggestions:
-                results += [s['_id'] for s in
-                            self.es.search(q=search,
-                                           index="chained_campaigns",
-                                           size=self.results_window_size)['hits']['hits']]
+            if len(results) < self.max_suggestions:
+                results += self.search(search, 'rereco_requests')
+
+        if self.historical and len(results) < self.max_suggestions:
+            results += self.search(search_stats, 'workflows')
+
+        if self.present and len(results) < self.max_suggestions:
+            results += self.search(search, 'chained_campaigns')
 
         # order of ext does matter because of the typeahead in bootstrap
         return json.dumps({"results": results})
@@ -192,13 +187,64 @@ class APIBase(esadapter.InitConnection):
         esadapter.InitConnection.__init__(self)
         Utils.setup_console_logging()
 
-    def is_instance(self, prepid, typeof, index):
+    def is_instance(self, prepid, index, doc_type):
         """
         Checks if prepid matches any typeof in the index
         """
         try:
-            self.es.get(index=index, doc_type=typeof, id=prepid)['_source']
+            self.es.get(index=index, doc_type=doc_type, id=prepid)['_source']
         except elasticsearch.NotFoundError:
             return False
 
         return True
+
+    def parse_query(self, query):
+        """
+        Returns correct field, index name and doctype
+        Returns field, index name, doctype and query
+        """
+        if query == 'all':
+            # change all to wildcard or check if chain
+            return 'member_of_campaign', 'requests', 'request', '*'
+
+        elif self.is_instance(query, 'campaigns', 'campaign'):
+            return 'member_of_campaign', 'requests', 'request', query
+
+        elif self.is_instance(query, 'requests', 'request'):
+            return None, 'requests', 'request', query
+
+        elif self.is_instance(query, 'flows', 'flow'):
+            return 'flown_with', 'requests', 'request', query
+
+        elif self.is_instance(query, 'rereco_requests', 'rereco_request'):
+            return None, 'rereco_requests', 'rereco_request', query
+
+        elif self.is_instance(query, 'processing_strings', 'processing_string'):
+            return 'processing_string', 'rereco_requests', 'rereco_request', query
+
+        elif self.is_instance(query, 'tags', 'tag'):
+            return 'tags', 'requests', 'request', query
+
+        return None, None, None
+
+    def completed_deep(self, mcm_document):
+        """
+        Return number of completed events from based on Stats data (not McM)
+        """
+        completed_events = 0
+        if len(mcm_document['output_dataset']) == 0:
+            # output dataset not set, do not add request to the list
+            return -1
+
+        output_dataset = mcm_document['output_dataset'][0]
+        for workflow in mcm_document['reqmgr_name']:
+            try:
+                stats = self.es.get(index='workflows', doc_type='workflow', id=workflow)['_source']
+            except elasticsearch.NotFoundError:
+                continue
+
+            for history_entry in stats.get('EventNumberHistory', []):
+                if history_entry['dataset'] == output_dataset:
+                    completed_events = max(completed_events, history_entry['history'][-1]['Events'])
+
+        return completed_events

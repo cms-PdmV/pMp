@@ -74,16 +74,12 @@ def api(i, typeof, extra):
 
     if typeof == 'announced':
         res = make_response(models.APICall.present_announced_mode(i, extra == 'true'))
-    elif typeof == 'chain':
-        res = make_response(models.APICall.chain_landscape())
     elif typeof == 'growing':
         res = make_response(models.APICall.present_growing_mode(i, extra == 'true'))
     elif typeof == 'historical':
         res = make_response(models.APICall.historical_simple(i))
     elif typeof == 'performance':
         res = make_response(models.APICall.performance(i))
-    elif typeof == 'priority':
-        res = make_response(models.APICall.priority(i))
     elif typeof == 'lastupdate':
         res = make_response(models.APICall.last_update(i))
     elif typeof == 'overall':
@@ -160,10 +156,13 @@ def take_screenshot():
 
 
 if __name__ == '__main__':
-    from logger import setup_access_logging, setup_email_logging
-    setup_access_logging(app)
-    if not app.debug:
-        setup_email_logging(app)
+    # from logger import setup_access_logging, setup_email_logging
+    # setup_access_logging(app)
+    # if not app.debug:
+    #     setup_email_logging(app)
+
+    from fetchd.utils import Utils
+    Utils.setup_console_logging()
 
     settings = dict(ssl_options={'certfile': config.CERTFILE,
                                  'keyfile': config.KEYFILE})
