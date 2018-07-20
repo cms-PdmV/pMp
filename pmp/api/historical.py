@@ -117,6 +117,9 @@ class HistoricalAPI(esadapter.InitConnection):
             return None, query, False
         elif self.is_instance(query, 'rereco_request', 'rereco_requests'):
             return None, query, True
+        elif self.is_instance(query, 'tag', 'tags'):
+            return 'tags', query, False
+
         return None, query, False
 
     def db_query(self, query):
