@@ -117,6 +117,8 @@ class AnnouncedAPI(esadapter.InitConnection):
             return 'member_of_campaign', query, True
         elif self.is_instance(query, 'rereco_request', 'rereco_requests'):
             return None, query, True
+        elif self.is_instance(query, 'tag', 'tags'):
+            return 'tags', query, False
 
         return None, query, False
 
