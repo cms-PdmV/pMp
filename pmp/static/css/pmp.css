@@ -169,35 +169,3 @@ rect.pane {
 .zebra-lines:hover {
     background: #d4d7d8;
 }
-
-/*
- *Chains
- *Currently not available from frontend
- */
-
-/*.node {
-    cursor: pointer;
-}
-
-.node circle {
-    cursor: pointer;
-    stroke-width: 2px;
-}
-
-.node-text {
-    cursor: pointer;
-    fill: #000;
-    stroke: transparent;
-    font: bold 11px sans-serif;
-    text-shadow: 1px 1px #fff;
-    textLength: 20px;
-    display: none;
-}
-
-.node.expanded circle {
-    fill: #fff;
-}
-
-.node.expanded .node-text {
-    display: none;
-}*/
