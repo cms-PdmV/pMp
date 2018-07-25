@@ -16,8 +16,8 @@ class SuggestionsAPI(esadapter.InitConnection):
     """
     def __init__(self, typeof):
         esadapter.InitConnection.__init__(self)
-        self.results_window_size = 10
-        self.max_suggestions = 20
+        self.results_window_size = 5
+        self.max_suggestions = 15
         self.present = (typeof == 'present')
         self.historical = (typeof == 'historical')
         self.performance = (typeof == 'performance')
@@ -43,29 +43,29 @@ class SuggestionsAPI(esadapter.InitConnection):
 
         results = []
 
-        results += self.search(search, 'campaigns')
+        results += [{'type': 'CAMPAIGN', 'label': x} for x in self.search(search, 'campaigns')]
 
         if len(results) < self.max_suggestions:
-            results += self.search(search, 'processing_strings')
+            results += [{'type': 'PROCESSING STRING', 'label': x} for x in self.search(search, 'processing_strings')]
 
         if len(results) < self.max_suggestions:
-            results += self.search(search, 'tags')
+            results += [{'type': 'TAG', 'label': x} for x in self.search(search, 'tags')]
 
         if self.historical or self.present:
             if len(results) < self.max_suggestions:
-                results += self.search(search, 'flows')
+                results += [{'type': 'FLOW', 'label': x} for x in self.search(search, 'flows')]
 
             if len(results) < self.max_suggestions:
-                results += self.search(search, 'requests')
+                results += [{'type': 'REQUEST', 'label': x} for x in self.search(search, 'requests')]
 
             if len(results) < self.max_suggestions:
-                results += self.search(search, 'rereco_requests')
+                results += [{'type': 'RERECO', 'label': x} for x in self.search(search, 'rereco_requests')]
 
         if self.historical and len(results) < self.max_suggestions:
-            results += self.search(search_stats, 'workflows')
+            results += [{'type': 'WORKFLOW', 'label': x} for x in self.search(search_stats, 'workflows')]
 
         if self.present and len(results) < self.max_suggestions:
-            results += self.search(search, 'chained_campaigns')
+            results += [{'type': 'CHAINED CAMPAIGN', 'label': x} for x in self.search(search, 'chained_campaigns')]
 
         # order of ext does matter because of the typeahead in bootstrap
         return json.dumps({"results": results})

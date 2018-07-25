@@ -96,6 +96,7 @@ module.exports = function(grunt) {
         'static/build/share.min.html': 'static/partials/share.html',
         'static/build/stats-table.min.html': 'static/partials/stats-table.html',
         'static/build/table.min.html': 'static/partials/statustable.html',
+        'static/build/search-suggestion.min.html': 'static/partials/search-suggestion.html',
         'static/build/tags.min.html': 'static/partials/tags.html',
         'static/build/valid.min.html': 'static/build/valid.prod.html',
         'static/build/invalid.min.html': 'templates/invalid.html'

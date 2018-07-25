@@ -15,8 +15,13 @@
          <div class="row">
            <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12" ng-controller="TypeaheadController" ng-init="initSuggestions()">
              <div class="input-group spacing">
-               <input type="text" ng-model="campaign" ng-change="getSuggestions(campaign, page.typeahead)" typeahead="s for s in suggestions | filter:$viewValue | limitTo:8"
-                      class="form-control" autocomplete="off"
+               <input type="text"
+                      ng-model="campaign"
+                      ng-change="getSuggestions(campaign, page.typeahead)"
+                      typeahead="s as s.label for s in suggestions | filter:$viewValue"
+                      typeahead-template-url="partials/search-suggestion.html"
+                      class="form-control"
+                      autocomplete="off"
                       placeholder="Start typing to search...">
                <span class="input-group-btn">
                  <button type="button" class="btn btn-danger"
