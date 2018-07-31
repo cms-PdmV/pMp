@@ -499,7 +499,7 @@ class SubmittedStatusAPI(APIBase):
         for one in query.split(','):
             simple_request = self.is_single_simple_request(one)
             rereco_request = self.is_single_rereco_request(one)
-            _, index, doctype = self.parse_query(one)
+            _, index, doctype, _ = self.parse_query(one)
 
             if simple_request or rereco_request:
                 try:

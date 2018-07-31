@@ -56,7 +56,6 @@ def about():
 
 
 @app.route('/')
-@app.route('/chains')
 @app.route('/historical')
 @app.route('/index')
 @app.route('/performance')

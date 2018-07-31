@@ -9,5 +9,5 @@ angular.module('pmpApp').controller('IndexController', ['$location', '$http', '$
     promise = $http.get("api/requests,flows,campaigns,workflows/overall/_");
     promise.then(function (data) {
         $scope.data = data.data.results;
-        });
+    });
 }]);

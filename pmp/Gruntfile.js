@@ -55,14 +55,8 @@ module.exports = function(grunt) {
     dest: 'static/build/depend.build.css'
    },
    html: {
-    src:['templates/valid-head.html',
-         'templates/valid.html'],
+    src:['templates/valid.html'],
     dest: 'static/build/valid.prod.html'
-   },
-   htmldev: {
-    src:['templates/valid-head-dev.html',
-         'templates/valid.html'],
-    dest: 'static/build/valid.dev.html'
    }
   },
   cssmin: {
@@ -84,7 +78,6 @@ module.exports = function(grunt) {
       },
       files: {
         'static/build/advanced.min.html': 'static/partials/advanced.html',
-        'static/build/chains.min.html': 'static/partials/chains.html',
         'static/build/data-label.min.html': 'static/partials/data-label.html',
         'static/build/drop-selections.min.html': 'static/partials/drop-selections.html',
         'static/build/filter.min.html': 'static/partials/filter.html',
@@ -124,7 +117,7 @@ module.exports = function(grunt) {
    },
    htmltemplates: {
     files: ['templates/*.html'],
-    tasks: ['concat:html', 'concat:htmldev', 'htmlmin']
+    tasks: ['concat:html', 'htmlmin']
    }
   }
  });
