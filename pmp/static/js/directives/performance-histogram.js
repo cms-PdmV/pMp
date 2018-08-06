@@ -131,9 +131,6 @@
                                 toCopy.push(scope.chartDataExtended[i].id);
                             }
                         }
-                        new ZeroClipboard(this, {
-                            moviePath: 'lib/zeroclipboard/ZeroClipboard.swf'
-                        });
                         return toCopy.join(', ');
                     })
                     .attr('height', function (d) {
