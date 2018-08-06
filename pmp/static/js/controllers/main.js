@@ -26,7 +26,7 @@ angular.module('pmpApp').controller('MainController', ['$http', '$location',
                         $scope.showView = !$scope.showView;
                         $scope.nav('');
                     }, 100);
-                }, 1100);
+                }, 250);
             }
         };
         $timeout(function () {

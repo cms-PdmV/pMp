@@ -131,8 +131,12 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
             if (!input) {
                 $scope.showPopUp(PageDetailsProvider.messages.W0.type,
                     PageDetailsProvider.messages.W0.message);
-            } else if (add && Data.getInputTags().indexOf(input) !==
-                -1) {
+                return;
+            }
+            if (input.constructor == Object) {
+                input = input.label;
+            }
+            if (add && Data.getInputTags().indexOf(input) !== -1) {
                 $scope.showPopUp(PageDetailsProvider.messages.W1.type,
                     PageDetailsProvider.messages.W1.message);
             } else {

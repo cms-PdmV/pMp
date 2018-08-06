@@ -178,8 +178,12 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
             if (!campaign) {
                 $scope.showPopUp(PageDetailsProvider.messages.W0.type,
                     PageDetailsProvider.messages.W0.message);
-            } else if (add && Data.getInputTags().indexOf(campaign) !==
-                -1) {
+                return;
+            }
+            if (campaign.constructor == Object) {
+                campaign = campaign.label;
+            }
+            if (add && Data.getInputTags().indexOf(campaign) !== -1) {
                 $scope.showPopUp(PageDetailsProvider.messages.W1.type,
                     PageDetailsProvider.messages.W1.message);
             } else {
@@ -361,8 +365,8 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
             if (onlyTitle) {
                 return null;
             }
-	    // flush requests before reloading them with growing-toggled mode
-	    Data.setLoadedData([]);
+        // flush requests before reloading them with growing-toggled mode
+        Data.setLoadedData([]);
             var tmp = Data.getInputTags();
             Data.setInputTags([], false, false);
             if (tmp.length < 2 || !$scope.displayChains) {

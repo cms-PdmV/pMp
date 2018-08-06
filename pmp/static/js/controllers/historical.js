@@ -100,8 +100,12 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
             if (!request) {
                 $scope.showPopUp(PageDetailsProvider.messages.W0.type,
                     PageDetailsProvider.messages.W0.message);
-            } else if (add && Data.getInputTags().indexOf(request) !==
-                -1) {
+                return;
+            }
+            if (request.constructor == Object) {
+                request = request.label;
+            }
+            if (add && Data.getInputTags().indexOf(request) !== -1) {
                 $scope.showPopUp(PageDetailsProvider.messages.W1.type,
                     PageDetailsProvider.messages.W1.message);
             } else {

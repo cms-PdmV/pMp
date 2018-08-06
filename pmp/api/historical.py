@@ -226,8 +226,9 @@ class HistoricalAPI(APIBase):
         if details['status'] not in ['done', 'submitted']:
             return True
 
+        details_priority = int(details['priority'])
         # priority filtering
-        if details['priority'] < priority[0] or (details['priority'] > priority[1] and priority[1] != -1):
+        if details_priority < priority[0] or (details_priority > priority[1] and priority[1] != -1):
             return True
 
         return False

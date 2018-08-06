@@ -25,17 +25,17 @@ body {
 
 .navbar {
     margin-bottom: 10px;
-	border-radius: 0;
+    border-radius: 0;
 }
 
 .ng-hide-remove {
-    -webkit-animation: fadeIn 0.5s;
-    animation: fadeIn 0.5s;
+    -webkit-animation: fadeIn 0.25s;
+    animation: fadeIn 0.25s;
 }
  
 .ng-hide-add {
-    -webkit-animation: fadeOut 1.0s;
-    animation: fadeOut 1.0s;
+    -webkit-animation: fadeOut 0.25s;
+    animation: fadeOut 0.25s;
     display: block !important;
 }
 
@@ -154,8 +154,8 @@ rect.pane {
 }
 
 .historical-drilldown > div {
-	width: 25%;
-	display: inline-block;
+    width: 25%;
+    display: inline-block;
 }
 
 .small-padding {
@@ -168,4 +168,8 @@ rect.pane {
 
 .zebra-lines:hover {
     background: #d4d7d8;
+}
+
+h1.dark-gray,h3.dark-gray {
+    color: #222;
 }
