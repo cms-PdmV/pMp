@@ -20,10 +20,29 @@ angular.module('pmpApp').controller('TypeaheadController', ['$scope', '$http',
          * @param {String} type the type of the query.
          */
         $scope.getSuggestions = function (query, type) {
-            if (query === '') return null;
+            var newSuggestions = [];
+            if (query === '') {
+                $scope.suggestions = newSuggestions;
+                $scope.suggestions_query = null;
+                return;
+            }
+            query = query.split(',').pop().trim();
+            if (query === '') {
+                $scope.suggestions = newSuggestions;
+                $scope.suggestions_query = null;
+                return;
+            }
             $http.get('api/suggest/' + query + type).then(function (
                 response) {
-                $scope.suggestions = response.data.results;
+                var suggestions = response.data.results;
+                var lowercaseQuery = query.toLowerCase();
+                for (var i = 0; i < suggestions.length; i++) {
+                    if (suggestions[i].label.toLowerCase().indexOf(lowercaseQuery) != -1) {
+                        newSuggestions.push(suggestions[i]);
+                    }
+                }
+                $scope.suggestions = newSuggestions;
+                $scope.suggestions_query = query;
             });
         };
     }
