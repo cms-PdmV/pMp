@@ -43,29 +43,29 @@ class SuggestionsAPI(esadapter.InitConnection):
 
         results = []
 
-        results += [{'type': 'CAMPAIGN', 'query': searchable, 'label': x} for x in self.search(search, 'campaigns')]
+        results += [{'type': 'CAMPAIGN', 'label': x} for x in self.search(search, 'campaigns')]
 
         if len(results) < self.max_suggestions:
-            results += [{'type': 'PROCESSING STRING', 'query': searchable, 'label': x} for x in self.search(search, 'processing_strings')]
+            results += [{'type': 'PROCESSING STRING', 'label': x} for x in self.search(search, 'processing_strings')]
 
         if len(results) < self.max_suggestions:
-            results += [{'type': 'TAG', 'query': searchable, 'label': x} for x in self.search(search, 'tags')]
+            results += [{'type': 'TAG', 'label': x} for x in self.search(search, 'tags')]
 
         if self.historical or self.present:
             if len(results) < self.max_suggestions:
-                results += [{'type': 'FLOW', 'query': searchable, 'label': x} for x in self.search(search, 'flows')]
+                results += [{'type': 'FLOW', 'label': x} for x in self.search(search, 'flows')]
 
             if len(results) < self.max_suggestions:
-                results += [{'type': 'REQUEST', 'query': searchable, 'label': x} for x in self.search(search, 'requests')]
+                results += [{'type': 'REQUEST', 'label': x} for x in self.search(search, 'requests')]
 
             if len(results) < self.max_suggestions:
-                results += [{'type': 'RERECO', 'query': searchable, 'label': x} for x in self.search(search, 'rereco_requests')]
+                results += [{'type': 'RERECO', 'label': x} for x in self.search(search, 'rereco_requests')]
 
         if self.historical and len(results) < self.max_suggestions:
-            results += [{'type': 'WORKFLOW', 'query': searchable, 'label': x} for x in self.search(search_stats, 'workflows')]
+            results += [{'type': 'WORKFLOW','label': x} for x in self.search(search_stats, 'workflows')]
 
         if self.present and len(results) < self.max_suggestions:
-            results += [{'type': 'CHAINED CAMPAIGN', 'query': searchable, 'label': x} for x in self.search(search, 'chained_campaigns')]
+            results += [{'type': 'CHAINED CAMPAIGN', 'label': x} for x in self.search(search, 'chained_campaigns')]
 
         # order of ext does matter because of the typeahead in bootstrap
         return json.dumps({'results': results})

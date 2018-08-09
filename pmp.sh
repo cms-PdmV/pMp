@@ -54,6 +54,7 @@ fi
 if [[ $1 == "update_dev" ]]
 then
     echo "Running grunt..."
+    (cd $DIR && rm -rf pmp/static/build)
     (cd $DIR/pmp/ && grunt &)
     cd $DIR && python3 run.py dev
 fi
