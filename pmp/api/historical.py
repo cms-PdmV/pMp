@@ -613,6 +613,9 @@ class SubmittedStatusAPI(esadapter.InitConnection):
                 if self.is_instance(campaign, 'processing_string', 'processing_strings'):
                     index = 'rereco_requests'
                     fields = ['member_of_campaign']
+                elif self.is_instance(campaign, 'tag', 'tags'):
+                    index = 'requests'
+                    fields = ['tags']
                 else:  # assume it's Monte Carlo (original functionality)
                     index = 'requests'
                     fields = ['flown_with'] if campaign.startswith("flow") else ['member_of_campaign']
