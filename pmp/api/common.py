@@ -49,6 +49,10 @@ class SuggestionsAPI(esadapter.InitConnection):
             if self.historical or self.present:
                 results += [s['_id'] for s in
                             self.es.search(q=search,
+                                           index='tags',
+                                           size=self.overflow)['hits']['hits']]
+                results += [s['_id'] for s in
+                            self.es.search(q=search,
                                            index='flows',
                                            size=self.overflow)['hits']['hits']]
                 results += [s['_id'] for s in

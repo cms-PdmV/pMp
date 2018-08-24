@@ -110,6 +110,14 @@ def parse_datasets(details):
     return ret
 
 
+def process_request_tags(tags, tags_cfg):
+    """
+    Save tags to tags index
+    """
+    for tag in tags:
+        save(tag, {'prepid': tag}, tags_cfg)
+
+
 def create_index(cfg):
     """Create index"""
     index_url = cfg.pmp_db_index
@@ -377,6 +385,9 @@ if __name__ == "__main__":
         else:
             reqmgr_provider = RequestManagerProvider(CFG.reqmgr_url, CFG.reqmgr_backup_url)
 
+    if index == 'requests':
+        tags_cfg = Config('tags')
+
     for r, deleted in get_changes(CFG):
 
         if r not in CFG.exclude_list:
@@ -464,6 +475,12 @@ if __name__ == "__main__":
                         if pdmv_type.lower() == 'rereco' and not is_excluded_rereco(data):
                             logging.info('Creating mock ReReco request at ' + data['pdmv_prep_id'])
                             create_rereco_request(data, rereco_cfg, proc_string_cfg, reqmgr_provider)
+
+                    elif index == 'requests':
+                        if 'tags' in data:
+                            process_request_tags(data['tags'], tags_cfg)
+                        else:
+                            data['tags'] = []
 
                     # Trim fields we don't want
                     data = parse(data, CFG.fetch_fields)
