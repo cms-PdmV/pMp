@@ -498,25 +498,23 @@ class SubmittedStatusAPI(APIBase):
         response = []
 
         for one in query.split(','):
-            simple_request = self.is_single_simple_request(one)
-            rereco_request = self.is_single_rereco_request(one)
-            _, index, doctype, _ = self.parse_query(one)
-
-            if simple_request or rereco_request:
+            field, index, doctype, query = self.parse_query(query)
+            print('Field: %s, index: %s, query: %s' % (field, index, query))
+            if field is not None:
+                # If field is present first find all results that have given value in
+                # that field. For example, if query is campaign, find  all requests
+                # that have that campaign in their member_of_campaign field
+                search_results = self.es.search(q='%s:%s' % (field, query),
+                                                index=index,
+                                                size=self.results_window_size)['hits']['hits']
+                response += [s['_source'] for s in search_results]
+            else:
+                # Could be a request or a workflow
                 try:
-                    response.append(self.es.get(index=index, doc_type=doctype, id=one)['_source'])
+                    response += [self.es.get(index=index, doc_type=doctype, id=query)['_source']]
                 except elasticsearch.NotFoundError:
                     logging.info('Not found %s' % (one))
                     pass
-
-            else:
-                field = 'flown_with' if one.startswith("flow") else 'member_of_campaign'
-                response += [s['_source'] for s in
-                             self.es.search(q=('%s:%s' % (field, one)),
-                                            index='requests',
-                                            doc_type='request',
-                                            size=self.results_window_size)
-                             ['hits']['hits']]
 
         for request in response:
             if (request['status'] == 'submitted') and\
@@ -524,6 +522,7 @@ class SubmittedStatusAPI(APIBase):
                     (request['priority'] > priority[0] and
                      (request['priority'] < priority[1] or
                      priority[1] == -1)):
+
                 completed = self.completed_deep(request)
                 if completed >= 0:
                     submitted[request['prepid']] = {}
