@@ -107,6 +107,9 @@ class HistoricalAPI(APIBase):
         req_arr = []
         field, index, doctype, query = self.parse_query(query)
         logging.info('Field: %s, index: %s, query: %s' % (field, index, query))
+        if index is None:
+            return False, None, None
+
         if field is not None:
             # If field is present first find all results that have given value in
             # that field. For example, if query is campaign, find  all requests
@@ -498,7 +501,10 @@ class SubmittedStatusAPI(APIBase):
         response = []
 
         for one in query.split(','):
-            field, index, doctype, query = self.parse_query(query)
+            field, index, doctype, query = self.parse_query(one)
+            if index is None:
+                continue
+
             if field is not None:
                 # If field is present first find all results that have given value in
                 # that field. For example, if query is campaign, find  all requests

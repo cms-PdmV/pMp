@@ -225,7 +225,7 @@ class APIBase(esadapter.InitConnection):
         elif self.is_instance(query, 'tags', 'tag'):
             return 'tags', 'requests', 'request', query
 
-        return None, None, None
+        return None, None, None, None
 
     def completed_deep(self, mcm_document):
         """
