@@ -375,7 +375,7 @@ if __name__ == "__main__":
     index = sys.argv[1]
     logging.info('Starting ' + index)
     CFG = Config(index)
-    Utils.get_cookie(CFG.url_mcm, CFG.cookie)
+    # Utils.get_cookie(CFG.url_mcm, CFG.cookie)
     # Ensure that the rereco wrapper indices are ready
     if index == 'stats':
         proc_string_cfg, rereco_cfg = get_rereco_configs()
@@ -495,6 +495,6 @@ if __name__ == "__main__":
                 else:
                     logging.error("Failed to receive information about " + r)
 
-    logging.info("Removing SSO Cookie")
-    Utils.rm_file(CFG.cookie)
+    # logging.info("Removing SSO Cookie")
+    # Utils.rm_file(CFG.cookie)
     logging.info('Finished ' + index)
