@@ -12,4 +12,4 @@ class InitConnection(object):
         Default cropping is 20, set overflow that will not crop results
         """
         self.es = Elasticsearch(config.DATABASE_URL)
-        self.results_window_size = 10000
+        self.results_window_size = 1000000

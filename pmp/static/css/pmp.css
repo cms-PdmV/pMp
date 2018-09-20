@@ -173,3 +173,7 @@ rect.pane {
 h1.dark-gray,h3.dark-gray {
     color: #222;
 }
+
+.font-shadow {
+    text-shadow: 1px 1px 1px #000;
+}

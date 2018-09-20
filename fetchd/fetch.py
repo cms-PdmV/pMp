@@ -180,7 +180,7 @@ def get_changed_things(cfg):
 def save(object_id, data, cfg):
     response, status = Utils.curl('POST', '%s%s' % (cfg.pmp_type, object_id), data)
     if status in [200, 201]:
-        logging.info('New record %s (%s)' % (object_id, cfg.pmp_type.replace('/', ''))
+        logging.info('New record %s (%s)' % (object_id, cfg.pmp_type.replace('/', '')))
     else:
         logging.error('Failed to update %s. Reason %s.' % (object_id, response))
 
