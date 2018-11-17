@@ -134,7 +134,7 @@ def get_last_sequence(cfg):
     return last_seq
 
 
-def get_changed_things(cfg):
+def get_changed_object_identificators(cfg):
     """
     Changes since last update
     """
@@ -204,7 +204,8 @@ def create_rereco_request(stats_doc, rereco_cfg, process_string_cfg):
 
     fake_request['reqmgr_name'] = [stats_doc['_id']]
     processing_string = stats_doc.get('ProcessingString', None)
-    if processing_string is not None and type(processing_string) is str:
+    if processing_string is not None:
+        logging.info('Found processing string %s (type %s) for %s' % (processing_string, type(processing_string), fake_request['prepid']))
         fake_request['processing_string'] = processing_string
         save(processing_string, {'prepid': processing_string}, process_string_cfg)
 
@@ -244,35 +245,35 @@ if __name__ == "__main__":
         tags_cfg = Config('tags')
 
     done = 0
-    for thing_name, deleted in get_changed_things(cfg):
+    for object_identificator, deleted in get_changed_object_identificators(cfg):
+        time.sleep(0.05)
         done += 1
-        logging.info('(%s) Processing %s. Deleted %s' % (done, thing_name, 'YES' if deleted else 'NO'))
-        if thing_name not in cfg.exclude_list:
+        logging.info('(%s) Processing %s. Deleted %s' % (done, object_identificator, 'YES' if deleted else 'NO'))
+        if object_identificator not in cfg.exclude_list:
             if deleted:
                 if index == 'workflows':
                     # Try to delete it from ReReco index (maybe it's ReReco request?)
-                    _, status = Utils.curl('DELETE', rereco_cfg.pmp_type + thing_name)
+                    _, status = Utils.curl('DELETE', rereco_cfg.pmp_type + object_identificator)
                     if status == 200:
-                        logging.info('Deleted ReReco request %s' % (thing_name))
+                        logging.info('Deleted ReReco request %s' % (object_identificator))
                     elif status != 404:  # 404 just means it's not a ReReco request
-                        logging.warning('Code %s while deleting %s from ReReco index' % (status, thing_name))
+                        logging.warning('Code %s while deleting %s from ReReco index' % (status, object_identificator))
 
                 # Delete it normally
-                _, status = Utils.curl('DELETE', '%s%s' % (cfg.pmp_type, thing_name))
+                _, status = Utils.curl('DELETE', '%s%s' % (cfg.pmp_type, object_identificator))
                 if status == 200:
-                    logging.info('Deleted %s (%s)' % (thing_name, index))
+                    logging.info('Deleted %s (%s)' % (object_identificator, index))
                 elif status != 404:
-                    logging.error('Record %s (%s) was not deleted. Code: %s' % (thing_name, index, status))
+                    logging.error('Record %s (%s) was not deleted. Code: %s' % (object_identificator, index, status))
             else:
-                thing_url = str(cfg.source_db + thing_name)
+                thing_url = str(cfg.source_db + object_identificator)
                 data, status = Utils.curl('GET', thing_url, cookie=cfg.cookie, return_error=True)
                 if status == 200:
                     if index == 'workflows':
                         data['EventNumberHistory'] = parse_workflows_history(data['EventNumberHistory'])
                         request_type = data.get('RequestType', '')
-                        # Is it a ReReco request created in Oct 2015 or later?
                         if request_type.lower() == 'rereco' and not is_excluded_rereco(data):
-                            logging.info('Creating mock ReReco request for %s' % (thing_name))
+                            logging.info('Creating mock ReReco request for %s' % (object_identificator))
                             create_rereco_request(data, rereco_cfg, process_string_cfg)
 
                     elif index == 'requests':
@@ -297,12 +298,12 @@ if __name__ == "__main__":
                     data = pick_attributes(data, cfg.fetch_fields)
 
                     # Save to local stats ES index
-                    re, s = Utils.curl('POST', '%s%s' % (cfg.pmp_type, thing_name), data)
+                    re, s = Utils.curl('POST', '%s%s' % (cfg.pmp_type, object_identificator), data)
                     if s in [200, 201]:
-                        logging.info('New record %s (%s)' % (thing_name, index))
+                        logging.info('New record %s (%s)' % (object_identificator, index))
                     else:
-                        logging.error('Failed to update record %s (%s). Reason: %s' % (thing_name, index, re))
+                        logging.error('Failed to update record %s (%s). Reason: %s' % (object_identificator, index, re))
                 else:
-                    logging.error('Failed to receive information about %s (%s)' % (thing_name, index))
+                    logging.error('Failed to receive information about %s (%s)' % (object_identificator, index))
 
     logging.info('Finished %s' % (index))

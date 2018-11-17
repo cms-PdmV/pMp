@@ -106,7 +106,7 @@ class HistoricalAPI(APIBase):
         iterable = []
         req_arr = []
         field, index, doctype, query = self.parse_query(query)
-        logging.info('Field: %s, index: %s, query: %s' % (field, index, query))
+        logging.info('Field: %s, index: %s, doctype: %s, query: %s' % (field, index, doctype, query))
         if index is None:
             return False, None, None
 
@@ -126,7 +126,11 @@ class HistoricalAPI(APIBase):
                 # If exception thrown this may be a workflow
                 iterable = [query]
 
-        logging.info('Found %d requests for %s' % (len(req_arr), query))
+        if index == 'requests':
+            logging.info('Found %d requests for %s' % (len(req_arr), query))
+        else:
+            logging.info('Found %d ReReco requests for %s' % (len(req_arr), query))
+
         # Iterate over array and collect details (McM documents)
         for req in req_arr:
             try:
@@ -451,6 +455,7 @@ class HistoricalAPI(APIBase):
         """
         Get the historical data based on query, data point count, priority and filter
         """
+        logging.info('Query is %s' % (query))
         if filters is None:
             filters = {'status': None,
                        'pwg': None}
