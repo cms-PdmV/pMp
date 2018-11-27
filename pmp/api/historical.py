@@ -178,8 +178,8 @@ class HistoricalAPI(esadapter.InitConnection):
                     i['done_time'] = 0  # default, see next step
                     i['force_completed'] = force_completed_request
 
-                    # Get time of first transition to "submitted"
-                    for item in req['history']:
+                    # Get time of *last* transition to "submitted"
+                    for item in reversed(req['history']):
                         if item['action'] == 'submitted':
                             i['submitted_time'] = self.parse_request_history_time(item['time'])
                             break
