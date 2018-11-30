@@ -8,6 +8,7 @@ import elasticsearch
 import pycurl
 import json
 import os
+import logging
 
 
 class SuggestionsAPI(esadapter.InitConnection):
@@ -227,24 +228,136 @@ class APIBase(esadapter.InitConnection):
 
         return None, None, None, None
 
-    def completed_deep(self, mcm_document):
+    def db_query(self, query, include_stats_document=True):
         """
-        Return number of completed events from based on Stats data (not McM)
+        Query DB and return array of raw documents
+        Tuple of three things is returned: stats document, mcm document
         """
-        completed_events = 0
-        if len(mcm_document['output_dataset']) == 0:
-            # output dataset not set, do not add request to the list
-            return -1
+        req_arr = []
+        field, index, doctype, query = self.parse_query(query)
+        logging.info('Field: %s, index: %s, doctype: %s, query: %s' % (field, index, doctype, query))
+        if index is None:
+            logging.info('Returning nothing')
+            return None, None
 
-        output_dataset = mcm_document['output_dataset'][0]
-        for workflow in mcm_document['reqmgr_name']:
+        if field is not None:
+            # If field is present first find all results that have given value in
+            # that field. For example, if query is campaign, find  all requests
+            # that have that campaign in their member_of_campaign field
+            search_results = self.es.search(q='%s:%s' % (field, query),
+                                            index=index,
+                                            size=self.results_window_size)['hits']['hits']
+            req_arr = [s['_source'] for s in search_results]
+        else:
+            # Could be a request or a workflow
             try:
-                stats = self.es.get(index='workflows', doc_type='workflow', id=workflow)['_source']
+                req_arr = [self.es.get(index=index, doc_type=doctype, id=query)['_source']]
             except elasticsearch.NotFoundError:
-                continue
+                req_arr = []
 
-            for history_entry in stats.get('EventNumberHistory', []):
-                if history_entry['dataset'] == output_dataset:
-                    completed_events = max(completed_events, history_entry['history'][-1]['Events'])
+        if index == 'requests':
+            logging.info('Found %d requests for %s' % (len(req_arr), query))
+        else:
+            logging.info('Found %d ReReco requests for %s' % (len(req_arr), query))
 
-        return completed_events
+        # Iterate over array and collect details (McM documents)
+        for req in req_arr:
+            dataset_list = req['output_dataset']
+            if len(dataset_list) > 0:
+                if index == 'rereco_requests':
+                    dataset = dataset_list[-1]
+                else:
+                    dataset = dataset_list[0]
+            else:
+                dataset = None
+
+            req['force_completed'] = False
+            for reqmgr_dict in req.get('reqmgr_status_history', []):
+                if 'force-complete' in reqmgr_dict['history']:
+                    req['force_completed'] = True
+                    break
+
+            # Get time of last transition to "submitted"
+            for item in reversed(req['history']):
+                if item['action'] == 'submitted':
+                    req['submitted_time'] = item['time'] * 1000
+                    break
+
+            # Get the time of the *last* transition to status "done"
+            for item in reversed(req['history']):
+                if item['action'] == 'done':
+                    req['done_time'] = item['time'] * 1000
+                    break
+
+            if not include_stats_document:
+                req['reqmgr_name'] = []
+
+            # Iterate through all workflow names, starting from the newest one
+            # and stopping once any valid workflow is found
+            req['reqmgr_name'] = sorted(req.get('reqmgr_name', []), key=lambda k: '_'.join(k.split('_')[-3:]), reverse=True)
+            for reqmgr in req['reqmgr_name']:
+                try:
+                    stats_document = self.es.get(index='workflows', doc_type='workflow', id=reqmgr)['_source']
+                except elasticsearch.NotFoundError:
+                    logging.warning('%s is not found' % (reqmgr))
+                    continue
+
+                if stats_document.get('request_type').lower() == 'resubmission':
+                    continue
+
+                # Add reqmgr as name and output dataset to request
+                mcm_document = dict(req)
+                mcm_document.update({'expected': req['total_events'],
+                                     'name': reqmgr,
+                                     'output_dataset': dataset})
+                yield stats_document, mcm_document
+                break
+            else:
+                # Add reqmgr as name and output dataset to request
+                mcm_document = dict(req)
+                mcm_document.update({'expected': req['total_events'],
+                                     'output_dataset': dataset})
+                yield None, mcm_document
+
+    def apply_filters(self, data, priority_filter, pwg_filter, status_filter):
+        """
+        Priority filter is an array of min and max priorities
+        PWG filter is list of strings (pwg) of requests to include
+        Status filter is list of strings (status) of requests to include
+        Return new data and dictionaries of pwgs and status filters that show whether
+        these values were left (True) or filtered out (False)
+        """
+        new_data = []
+        if pwg_filter:
+            pwg_filter = [x.upper() for x in pwg_filter]
+
+        if status_filter:
+            status_filter = [x.lower() for x in status_filter]
+
+        all_pwgs = {}
+        all_statuses = {}
+        for item in data:
+            pwg = item.get('pwg', '').upper()
+            if pwg not in all_pwgs:
+                if pwg_filter:
+                    all_pwgs[pwg] = pwg in pwg_filter
+                else:
+                    all_pwgs[pwg] = True
+
+            status = item.get('status', '').lower()
+            if status not in all_statuses:
+                if status_filter:
+                    all_statuses[status] = status in all_statuses
+                else:
+                    all_statuses[status] = True
+
+            priority = item.get('priority')
+            if priority is not None:
+                if priority_filter is not None:
+                    if priority < priority_filter[0] or priority > priority_filter[1]:
+                        continue
+
+            if all_pwgs[pwg] and all_statuses[status]:
+                new_data.append(item)
+
+        return new_data, all_pwgs, all_statuses

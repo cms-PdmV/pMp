@@ -131,6 +131,41 @@ angular.module('pmpApp').service('Data', ['$rootScope', function ($rootScope) {
         allStatusesEnabled: function () {
             return allEnabled(this.statusFilter);
         },
+        getPriorityQuery: function () {
+            var x = [];
+            var dataPriorityFilter = this.getPriorityFilter();
+            if (dataPriorityFilter === undefined) {
+                return undefined;
+            }
+            return dataPriorityFilter[0] + ',' + dataPriorityFilter[1];
+        },
+        getPWGQuery: function () {
+            if (this.allPWGsEnabled()) {
+                return undefined;
+            }
+            var w = [];
+            var filter = this.getPWGFilter();
+            for (var pwg in filter) {
+                if (filter[pwg]) {
+                    w.push(pwg)
+                }
+            }
+            return w.join(',');
+        },
+        getStatusQuery: function() {
+            // add status filter
+            if (this.allStatusesEnabled()) {
+                return undefined;
+            }
+            var s = [];
+            var filter = this.getStatusFilter();
+            for (var status in filter) {
+                if (filter[status]) {
+                    s.push(status);
+                }
+            }
+            return s.join(',');
+        },
         /**
          * @description Change filter object, status or pwg.
          * @params {Array} data the loaded data array.

@@ -4,22 +4,27 @@
  * @description Performance Graph Controller
  */
 angular.module('pmpApp').controller('PerformanceController', ['$http',
-    '$interval', '$location', '$rootScope', '$scope', 'PageDetailsProvider', 'Data',
-    function ($http, $interval, $location, $rootScope, $scope, PageDetailsProvider,
-        Data) {
+                                                              '$interval',
+                                                              '$location',
+                                                              '$rootScope',
+                                                              '$scope',
+                                                              'PageDetailsProvider',
+                                                              'Data',
+    function ($http, $interval, $location, $rootScope, $scope, PageDetailsProvider, Data) {
         'use strict';
 
-        // Information about default URL parameters
+        /**
+         * @description Holds information about parameter defaults
+         */
         $scope.defaults = {
             r: '', // search term
-            b: 10, // histogram bins
-            min: 'done', // minuend
-            sub: 'created', // subtrahend
-            l: 'true', // linear scale? false = log
-            t: 'false', // show last updated time?
-            x: ',', // priority filter
-            w: undefined, // pwg filter
-            s: undefined, // status filter
+            bins: 10, // histogram bins
+            subtrahend: 'created', // subtrahend
+            minuend: 'done', // minuend
+            scale: 'linear', // linear scale? false = log
+            priority: undefined, // priority filter
+            status: undefined, // status filter
+            pwg: undefined, // PWG filter
         };
 
         /**
@@ -33,30 +38,14 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
             Data.reset(true);
 
             // collect URL parameters together
-            var urlParameters = {};
-
-            ['r', 'b', 'min', 'sub', 'l', 't', 'x', 'w', 's'].forEach(
-                function (param, index, array) {
-                var urlValue = $location.search()[param];
-
-                // if the default is a number, expect a numerical parameter
-                if (urlValue === undefined
-                    || (angular.isNumber($scope.defaults[param]) && !angular.isNumber(urlValue))) {
-                    urlParameters[param] = $scope.defaults[param];
-                }
-                else {
-                    urlParameters[param] = urlValue;
-                }
-            });
-
+            var urlParameters = $scope.fillDefaults($location.search(), $scope.defaults)
+            console.log(urlParameters);
             // define graph difference
             $scope.difference = {
                 minuend: 'done',
                 subtrahend: 'created'
             };
-            $scope.selections = ['validation', 'approved',
-                'submitted'
-            ];
+            $scope.selections = ['validation', 'approved', 'submitted'];
 
             var inx;
             inx = $scope.selections.indexOf(urlParameters.min);
@@ -73,49 +62,36 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
                 $scope.selections.push('created');
             }
 
-            // if show time label
-            $scope.showDate = urlParameters.t === 'true';
-
             // if linear scale
-            if (urlParameters.l === 'false') {
-                $scope.scaleType = 'log';
-            } else {
-                $scope.scaleType = 'linear';
-            }
+            $scope.scale = urlParameters.scale;
 
             // set number of bins
-            $scope.bins = parseInt(urlParameters.b, 10);
+            $scope.bins = parseInt(urlParameters.bins, 10);
 
             // initialise filters
-            if (urlParameters.x !== undefined) {
-                Data.setPriorityFilter(urlParameters.x.split(','));
+            if (urlParameters.priority !== undefined) {
+                Data.setPriorityFilter(urlParameters.priority.split(','));
             }
 
-            if (urlParameters.s !== undefined) {
-                Data.initializeFilter(urlParameters.s.split(','), true);
+            if (urlParameters.status !== undefined) {
+                Data.setStatusFilter(urlParameters.status.split(','));
             }
 
-            if (urlParameters.w !== undefined) {
-                Data.initializeFilter(urlParameters.w.split(','), false);
+            if (urlParameters.pwg !== undefined) {
+                Data.setPWGFilter(urlParameters.pwg.split(','));
             }
 
             // load graph data
             if (urlParameters.r !== '') {
-                $rootScope.loadingData = true;
                 var tmp = urlParameters.r.split(',');
-                // if filter is empty, assume all true
-                var empty = [$scope.isEmpty(Data.getPWGFilter()),
-                    $scope.isEmpty(Data.getStatusFilter())
-                ];
                 for (var i = 0; i < tmp.length; i++) {
-                    $scope.load(tmp[i], true, tmp.length, empty[0],
-                        empty[1]);
+                    Data.addInputTag(tmp[i]);
                 }
-            } else {
-                // if this is empty just change URL as some filters
-                // could have been initiated
-                $scope.setURL();
+                $scope.query();
             }
+            // if this is empty just change URL as some filters
+            // could have been initiated
+            $scope.setURL();
         };
 
         /**
@@ -126,72 +102,78 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
          * @param {Boolean} defaultPWG When new PWG shows up what should be default filter value
          * @param {Boolean} defaultStatus When new status shows up what should be default filter value
          */
-        $scope.load = function (input, add, more, defaultPWG,
-            defaultStatus) {
-            if (!input) {
-                $scope.showPopUp(PageDetailsProvider.messages.W0.type,
-                    PageDetailsProvider.messages.W0.message);
+        $scope.load = function (request, add, more, defaultPWG, defaultStatus) {
+            console.log('request ' + request + ' | add ' + add + ' | more ' + more + ' | defaultPWG ' + defaultPWG + ' | defaultStatus ' + defaultStatus)
+            if (!request) {
+                $scope.showPopUp('warning', 'Empty search field');
                 return;
             }
-            if (input.constructor == Object) {
-                input = input.label;
+            if (request.constructor == Object) {
+                request = request.label;
             }
-            if (add && Data.getInputTags().indexOf(input) !== -1) {
-                $scope.showPopUp(PageDetailsProvider.messages.W1.type,
-                    PageDetailsProvider.messages.W1.message);
+            if (add && Data.getInputTags().indexOf(request) !== -1) {
+                $scope.showPopUp('warning', 'Object is already loaded');
             } else {
                 $rootScope.loadingData = true;
-                var promise = $http.get("api/" + input +
-                    "/performance/_");
-                promise.then(function (data) {
-                    if (!data.data.results.data.length) {
-                        $scope.showPopUp(
-                            PageDetailsProvider.messages
-                            .W2.type,
-                            PageDetailsProvider.messages
-                            .W2.message);
-                        $rootScope.loadingData = false;
-                    } else {
-                        if (add) {
-                            Data.changeFilter(data.data.results.data,
-                                false, defaultStatus,
-                                true);
-                            Data.changeFilter(data.data.results.data,
-                                false, defaultPWG,
-                                false);
-                            Data.setLoadedData(data.data.results.data,
-                                true);
-                            $scope.showPopUp(
-                                PageDetailsProvider.messages
-                                .S1.type,
-                                PageDetailsProvider.messages
-                                .S1.message);
-                        } else {
-                            Data.reset(false);
-                            Data.changeFilter(data.data.results.data,
-                                true, true, true);
-                            Data.changeFilter(data.data.results.data,
-                                true, true, false);
-                            Data.setLoadedData(data.data.results.data,
-                                false);
-                            $scope.showPopUp(
-                                PageDetailsProvider.messages
-                                .S0.type,
-                                PageDetailsProvider.messages
-                                .S0.message);
-                        }
-                        $scope.first_status = data.data.results.first_status;
-                        Data.setInputTags(input, true,
-                            false);
-                        $scope.setURL();
-                    }
-                }, function () {
-                    $scope.showPopUp(PageDetailsProvider.messages
-                        .E1.type, PageDetailsProvider.messages
-                        .E1.message);
-                    $rootScope.loadingData = false;
-                });
+                if (!add) {
+                    // Reset data and filters
+                    Data.reset(true);
+                }
+                Data.addInputTag(request);
+                $scope.query(filter);
             }
+        };
+
+        /**
+         * @description Core: Parse filters to query API
+         * @param {Boolean} filter If filter data is present.
+         */
+        $scope.query = function () {
+            var inputTags = Data.getInputTags();
+            if (inputTags.length === 0) {
+                Data.setLoadedData([]);
+                Data.setStatusFilter({});
+                Data.setPWGFilter({});
+                $scope.$broadcast('onChangeNotification:LoadedData', {
+                    update: false
+                });
+                return null;
+            }
+
+            $rootScope.loadingData = true;
+            var priorityQuery = Data.getPriorityQuery();
+            var statusQuery = Data.getStatusQuery();
+            var pwgQuery = Data.getPWGQuery();
+            var queryUrl = 'api/performance?r=' + inputTags.join(',');
+            if (priorityQuery) {
+                queryUrl += '&priority=' + x.join(',');
+            }
+            if (statusQuery) {
+                queryUrl += '&status=' + s.join(',');
+            }
+            if (pwgQuery) {
+                queryUrl += '&pwg=' + w.join(',');
+            }
+            // query for linear chart data
+            console.log('Query ' + queryUrl);
+            var promise = $http.get(queryUrl);
+            promise.then(function (data) {
+                Data.setLoadedData(data.data.results.data, false);
+                Data.setStatusFilter(data.data.results.status);
+                Data.setPWGFilter(data.data.results.pwg);
+                $scope.$broadcast('onChangeNotification:LoadedData', {
+                    update: false
+                });
+                $rootScope.loadingData = false;
+                $scope.data = Data.getLoadedData(); 
+                $scope.first_status = data.data.results.first_status;
+                $scope.setURL();
+            }, function () {
+                $scope.showPopUp(PageDetailsProvider.messages
+                    .E1.type, PageDetailsProvider.messages
+                    .E1.message);
+                $rootScope.loadingData = false;
+            });
         };
 
         /**
@@ -199,64 +181,7 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
          */
         $scope.setURL = function () {
             $location.path($location.path(), false);
-            var params = {}, r, b, min, sub, l, t, x, w, s;
-
-            // collect user inputs
-            r = Data.getInputTags();
-            if (r.length) params.r = r.join(',');
-
-            // number of bins
-            b = $scope.bins
-
-            if (b !== $scope.defaults.b) {
-                params.b = b;
-            }
-
-            // setting minuend
-            min = $scope.difference.minuend;
-
-            if (min !== $scope.defaults.min) {
-                params.min = min;
-            }
-
-            // setting subtrahend
-            sub = $scope.difference.subtrahend;
-
-            if (sub !== $scope.defaults.sub) {
-                params.sub = sub;
-            }
-
-            // set scale
-            l = ($scope.scaleType === "linear") + "";
-
-            if (l !== $scope.defaults.l) {
-                params.l = l;
-            }
-
-            // if show the time block
-            t = $scope.showDate + '';
-
-            if (t !== $scope.defaults.t) {
-                params.t = t;
-            }
-
-            // set priority filter
-            x = Data.getPriorityFilter().join(',');
-
-            if (x !== $scope.defaults.x) {
-                params.x = x;
-            }
-
-            // set pwg filter
-            if (!Data.allPWGsEnabled()) {
-                params.w = $scope.getCSVPerFilter(Data.getPWGFilter());
-            }
-
-            // set status filter
-            if (!Data.allStatusesEnabled()) {
-                params.s = $scope.getCSVPerFilter(Data.getStatusFilter());
-            }
-
+            var params = $scope.constructURLQuery($scope, Data)
             // reload url
             $location.search(params);
             // broadcast change notification
@@ -311,7 +236,7 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
          * @description On scale change 
          */
         $scope.changeScale = function (type) {
-            $scope.scaleType = type;
+            $scope.scale = type;
             $scope.setURL();
         };
 
@@ -325,17 +250,6 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
                 minuend: $scope.difference.minuend,
                 subtrahend: $scope.first_status,
             });
-        });
-
-        // Set interval update of time variables
-        var intervalUpdate1 = $interval($scope.updateCurrentDate, 1000);
-        var intervalUpdate2 = $interval(function () {
-            $scope.updateLastUpdate('requests');
-        }, 2 * 60 * 1000);
-        $scope.updateLastUpdate('requests');
-        $scope.$on('$destroy', function () {
-            $interval.cancel(intervalUpdate1);
-            $interval.cancel(intervalUpdate2);
         });
     }
 ]);

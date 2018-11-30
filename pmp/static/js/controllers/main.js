@@ -137,5 +137,49 @@ angular.module('pmpApp').controller('MainController', ['$http', '$location',
                     $scope.lastUpdate = data.data.results.last_update;
                 });
         };
+
+        $scope.fillDefaults = function(values, defaults) {
+            var filledValues = {};
+            Object.keys(defaults).forEach(function (param, index, array) {
+                var urlValue = values[param];
+                // if the default is a number, expect a numerical parameter
+                if (urlValue === undefined || (angular.isNumber(defaults[param]) && !angular.isNumber(urlValue))) {
+                    filledValues[param] = defaults[param];
+                } else {
+                    filledValues[param] = urlValue;
+                }
+            });
+            return filledValues;
+        }
+
+        $scope.constructURLQuery = function(scope, data) {
+            var params = {};
+            Object.keys(scope.defaults).forEach(function (param, index, array) {
+                if (param === 'r') {
+                    var r = data.getInputTags();
+                    if (r.length) {
+                        params.r = r.join(',');
+                    }
+                } else if (param === 'priority') {
+                    var priority = data.getPriorityFilter();
+                    if (priority !== scope.defaults.priority) {
+                        params.priority = priority.join(',');
+                    }
+                } else if (param === 'pwg') {
+                    if (!data.allPWGsEnabled()) {
+                        params.pwg = data.getPWGFilter().join(',');
+                    }
+                } else if ( param === 'status') {
+                    if (!data.allStatusesEnabled()) {
+                        params.status = data.getStatusFilter().join(',');
+                    }
+                } else {
+                    if (scope[param] !== scope.defaults[param]) {
+                        params[param] = scope[param]
+                    }
+                }
+            });
+            return params
+        }
     }
 ]);

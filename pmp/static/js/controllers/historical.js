@@ -18,13 +18,12 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
          */
         $scope.defaults = {
             r: '', // search term
-            t: 'false', // last update date
-            y: 'false', // zoom on Y axis
-            p: 100, // probing value
-            h: 'true', // human-readable numbers
-            x: undefined, // priority filter
-            s: undefined, // status filter
-            w: undefined, // PWG filter
+            zoomY: 'false', // zoom on Y axis
+            granularity: 100, // granularity value
+            humanReadable: 'true', // human-readable numbers
+            priority: undefined, // priority filter
+            status: undefined, // status filter
+            pwg: undefined, // PWG filter
         };
 
         /**
@@ -38,43 +37,27 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
             Data.reset(true);
 
             // collect URL parameters together
-            // TODO: investigate extracting this functionality to common scope
-            var urlParameters = {};
-
-            ['r', 't', 'y', 'p', 'h', 'x', 's', 'w'].forEach(function (param, index, array) {
-                var urlValue = $location.search()[param];
-
-                // if the default is a number, expect a numerical parameter
-                if (urlValue === undefined || (angular.isNumber($scope.defaults[param]) && !angular.isNumber(urlValue))) {
-                    urlParameters[param] = $scope.defaults[param];
-                }
-                else {
-                    urlParameters[param] = urlValue;
-                }
-            });
-
-            // if show time label
-            $scope.showDate = urlParameters.t === 'true';
+            var urlParameters = $scope.fillDefaults($location.search(), $scope.defaults)
 
             // if zoom on y label
-            $scope.zoomOnY = urlParameters.y === 'true';
+            $scope.zoomY = urlParameters.zoomY === 'true';
 
-            // probing
-            $scope.probing = parseInt(urlParameters.p, 10);
+            // granularity
+            $scope.granularity = parseInt(urlParameters.granularity, 10);
 
-            $scope.humanReadableNumbers = urlParameters.h === 'true';
+            $scope.humanReadable = urlParameters.humanReadable === 'true';
 
             // initialise filters
-            if (urlParameters.x !== undefined) {
-                Data.setPriorityFilter(urlParameters.x.split(','));
+            if (urlParameters.priority !== undefined) {
+                Data.setPriorityFilter(urlParameters.priority.split(','));
             }
 
-            if (urlParameters.s !== undefined) {
-                Data.setStatusFilter(urlParameters.s.split(','));
+            if (urlParameters.status !== undefined) {
+                Data.setStatusFilter(urlParameters.status.split(','));
             }
 
-            if (urlParameters.w !== undefined) {
-                Data.setPWGFilter(urlParameters.w.split(','));
+            if (urlParameters.pwg !== undefined) {
+                Data.setPWGFilter(urlParameters.pwg.split(','));
             }
 
             // load graph data
@@ -137,50 +120,21 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
             }
 
             $rootScope.loadingData = true;
-
-            // add priority filter
-            var x = [];
-            var dataPriorityFilter = Data.getPriorityFilter();
-            if (dataPriorityFilter !== undefined && dataPriorityFilter.length == 2) {
-                if (dataPriorityFilter[0] !== undefined) {
-                    x.push(dataPriorityFilter[0]);
-                }
-                if (dataPriorityFilter[1] !== undefined) {
-                    x.push(dataPriorityFilter[1]);
-                }
+            var priorityQuery = Data.getPriorityQuery();
+            var statusQuery = Data.getStatusQuery();
+            var pwgQuery = Data.getPWGQuery();
+            var granularity = $scope.granularity;
+            var queryUrl = 'api/historical?r=' + inputTags.join(',');
+            if (granularity) {
+                queryUrl += '&granularity=' + granularity;
             }
-            // add status filter
-            var s = [];
-            if (!Data.allStatusesEnabled()) {
-                var dataStatusFilter = Data.getStatusFilter();
-                for (var status in dataStatusFilter) {
-                    if (dataStatusFilter[status]) {
-                        s.push(status);
-                    }
-                }
-            }
-
-            // add pwg filter
-            var w = [];
-            if (!Data.allPWGsEnabled()) {
-                var dataPWGFilter = Data.getPWGFilter();
-                for (var pwg in dataPWGFilter) {
-                    if (dataPWGFilter[pwg]) {
-                        w.push(pwg)
-                    }
-                }
-            }
-
-            var p = $scope.probing;
-
-            var queryUrl = 'api/historical?r=' + inputTags.join(',') + '&granularity=' + p;
-            if (x.length > 0) {
+            if (priorityQuery) {
                 queryUrl += '&priority=' + x.join(',');
             }
-            if (s.length > 0) {
+            if (statusQuery) {
                 queryUrl += '&status=' + s.join(',');
             }
-            if (w.length > 0) {
+            if (pwgQuery) {
                 queryUrl += '&pwg=' + w.join(',');
             }
             // query for linear chart data
@@ -212,54 +166,7 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
          */
         $scope.setURL = function () {
             $location.path($location.path(), false);
-            var params = {}, r, p, t, y, h, x, w, s;
-
-            // collect user inputs
-            r = Data.getInputTags();
-            if (r.length) {
-                params.r = r.join(',');
-            }
-
-            // set probing
-            p = $scope.probing;
-            if (p !== $scope.defaults.p) {
-                params.p = p;
-            }
-
-            // show time label
-            t = $scope.showDate + "";
-            if (t !== $scope.defaults.t) {
-                params.t = t;
-            }
-
-            // set zoom
-            y = $scope.zoomOnY + "";
-            if (y !== $scope.defaults.y) {
-                params.y = y;
-            }
-
-            // show human-readable numbers
-            h = $scope.humanReadableNumbers + '';
-            if (h !== $scope.defaults.h) {
-                params.h = h;
-            }
-
-            // set priority filter
-            x = Data.getPriorityFilter();
-            if (x !== $scope.defaults.x) {
-                params.x = x.join(',');
-            }
-
-            // set pwg filter
-            if (!Data.allPWGsEnabled()) {
-                params.w = Data.getPWGFilter().join(',');
-            }
-
-            // set status filter
-            if (!Data.allStatusesEnabled()) {
-                params.s = Data.getStatusFilter().join(',');
-            }
-
+            var params = $scope.constructURLQuery($scope, Data)
             // reload url
             $location.search(params);
             // broadcast change notification

@@ -11,6 +11,7 @@ from pmp import models
 from flask import request
 from werkzeug.contrib.cache import SimpleCache
 from pmp.api.historical import HistoricalAPI
+from pmp.api.performance import PerformanceAPI
 
 import json
 import config
@@ -130,6 +131,38 @@ def api_historical():
     i = sanitize(i)
     result = HistoricalAPI().get(i,
                                  data_point_count=granularity,
+                                 priority_filter=priority,
+                                 pwg_filter=pwg,
+                                 status_filter=status)
+    # cache.add(request.path, result, timeout=config.CACHE_TIMEOUT)
+    return result
+
+
+@app.route('/api/performance')
+def api_performance():
+    i = flask.request.args.get('r', '')
+    priority = flask.request.args.get('priority', None)
+    if priority:
+        priority = priority.split(',')
+        if len(priority) < 2:
+            priority = None
+        else:
+            try:
+                priority[0] = int(priority[0])
+                priority[1] = int(priority[1])
+            except:
+                priority = None
+
+    pwg = flask.request.args.get('pwg', None)
+    if pwg:
+        pwg = pwg.split(',')
+
+    status = flask.request.args.get('status', None)
+    if status:
+        status = status.split(',')
+
+    i = sanitize(i)
+    result = PerformanceAPI().get(i,
                                  priority_filter=priority,
                                  pwg_filter=pwg,
                                  status_filter=status)
