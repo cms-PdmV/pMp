@@ -10,9 +10,11 @@ from flask import Flask, make_response, redirect
 from pmp import models
 from flask import request
 from werkzeug.contrib.cache import SimpleCache
+from pmp.api.historical import HistoricalAPI
 
 import json
 import config
+import flask
 
 
 app = Flask(__name__,
@@ -88,8 +90,8 @@ def api(i, typeof, extra):
     return res
 
 
-@app.route('/api/<i>/historical/<granularity>/<priority>/<status>/<pwg>')
-def api_historical_extended(i, granularity, priority, status, pwg):
+@app.route('/api/historical')
+def api_historical():
     """API call for complex historical queries
     i - list of inputs (csv)
     granularity - int number of x datapoints
@@ -97,33 +99,41 @@ def api_historical_extended(i, granularity, priority, status, pwg):
     status - list of statuses to include (csv)
     pwg - list of pwg to include (csv)
     """
+    i = flask.request.args.get('r', '')
+    granularity = flask.request.args.get('granularity', 100)
+    if not isinstance(granularity, int):
+        try:
+            granularity = int(granularity)
+        except:
+            granularity = 100
+
+    priority = flask.request.args.get('priority', None)
+    if priority:
+        priority = priority.split(',')
+        if len(priority) < 2:
+            priority = None
+        else:
+            try:
+                priority[0] = int(priority[0])
+                priority[1] = int(priority[1])
+            except:
+                priority = None
+
+    pwg = flask.request.args.get('pwg', None)
+    if pwg:
+        pwg = pwg.split(',')
+
+    status = flask.request.args.get('status', None)
+    if status:
+        status = status.split(',')
+
     i = sanitize(i)
-    if status == '':
-        status = None
-
-    if pwg == '':
-        pwg = None
-
-    filters = dict()
-    filters['status'] = status
-    filters['pwg'] = pwg
-
-    result = models.APICall.historical_complex(i, granularity, priority, filters)
-    cache.add(request.path, result, timeout=config.CACHE_TIMEOUT)
-    return result
-
-
-@app.route('/api/<i>/submitted/<priority>/<pwg>')
-def api_submitted(i, priority, pwg):
-    """API call for complex historical queries
-    i - list of inputs (csv)
-    priority - in a form of string <min_pririty,max_priority>
-    pwg - list of pwg to include (csv)
-    """
-    i = sanitize(i)
-
-    result = models.APICall.submitted_stats(i, priority, pwg)
-    cache.add(request.path, result, timeout=config.CACHE_TIMEOUT)
+    result = HistoricalAPI().get(i,
+                                 data_point_count=granularity,
+                                 priority_filter=priority,
+                                 pwg_filter=pwg,
+                                 status_filter=status)
+    # cache.add(request.path, result, timeout=config.CACHE_TIMEOUT)
     return result
 
 

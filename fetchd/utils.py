@@ -49,7 +49,7 @@ class Utils(object):
 
     @staticmethod
     def setup_console_logging():
-        CONSOLE_LOG_FORMAT = '[%(asctime)s][%(filename)s:%(lineno)d][%(levelname)s] %(message)s'
+        CONSOLE_LOG_FORMAT = '[%(asctime)s][%(levelname)s] %(message)s'
         logging.basicConfig(format=CONSOLE_LOG_FORMAT, level=logging.INFO)
 
     @staticmethod

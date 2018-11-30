@@ -8,6 +8,29 @@ import sys
 from utils import Config, Utils
 
 
+def rename_attributes(index, data, config):
+    """
+    Rename given attributes of dictionary
+    """
+    if index == 'workflows':
+        replacements = {'EventNumberHistory': 'event_number_history',
+                        'OutputDatasets': 'output_datasets',
+                        'PrepID': 'prepid',
+                        'ProcessingString': 'processing_string',
+                        'RequestName': 'request_name',
+                        'RequestTransition': 'request_transition',
+                        'RequestType': 'request_type',
+                        'TotalEvents': 'total_events'}
+    else:
+        return data
+
+    new_data = {}
+    for key, value in data.items():
+        new_data[replacements.get(key, key)] = value
+
+    return new_data
+
+
 def pick_attributes(dictionary, fields):
     """
     Remove all attributes that are not in fields array
@@ -27,7 +50,11 @@ def parse_workflows_history(history):
         entry_time = history_entry['Time']
         datasets = history_entry['Datasets']
         for dataset_name, dataset_events in datasets.items():
-            dataset_events['Time'] = entry_time
+            dataset_events['time'] = entry_time
+            dataset_events['events'] = dataset_events['Events']
+            dataset_events['type'] = dataset_events['Type']
+            del dataset_events['Events']
+            del dataset_events['Type']
             if dataset_name not in parsed:
                 parsed[dataset_name] = []
 
@@ -85,7 +112,8 @@ def parse_request_history(details):
             monitor['action'] = detail['step']
             monitor['time'] = detail['updater']['submission_date']
 
-        if len(monitor.keys()):
+        if len(monitor):
+            monitor['time'] = int(time.mktime(time.strptime(monitor['time'], '%Y-%m-%d-%H-%M')))
             res.append(monitor)
 
     return res
@@ -134,7 +162,7 @@ def get_last_sequence(cfg):
     return last_seq
 
 
-def get_changed_object_identificators(cfg):
+def get_changed_object_ids(cfg):
     """
     Changes since last update
     """
@@ -180,7 +208,7 @@ def get_changed_object_identificators(cfg):
 def save(object_id, data, cfg):
     response, status = Utils.curl('POST', '%s%s' % (cfg.pmp_type, object_id), data)
     if status in [200, 201]:
-        logging.info('New record %s (%s)' % (object_id, cfg.pmp_type.replace('/', '')))
+        logging.info('New record %s (%s)' % (object_id, cfg.pmp_type.split('/')[-2]))
     else:
         logging.error('Failed to update %s. Reason %s.' % (object_id, response))
 
@@ -197,15 +225,29 @@ def create_rereco_request(stats_doc, rereco_cfg, process_string_cfg):
         fake_request['member_of_campaign'] = stats_doc['Campaigns'][0]
 
     fake_request['output_dataset'] = stats_doc['OutputDatasets']
-    if len(stats_doc.get('RequestTransition', [])) > 0:
-        fake_request['status'] = stats_doc['RequestTransition'][-1]['Status']
+    fake_request['reqmgr_name'] = [stats_doc['_id']]
+    fake_request['reqmgr_status_history'] = [{'name': stats_doc['_id'], 'history':[]}]
+    fake_request['history'] = []
+    workflow_to_mcm_statuses = {
+        'new': 'submitted',
+        'announced': 'done'
+    }
+    for transition in stats_doc.get('RequestTransition', []):
+        fake_request['reqmgr_status_history'][0]['history'].append(transition['status'])
+        if transition['status'] in workflow_to_mcm_statuses:
+            fake_request['history'].append({
+                'action': workflow_to_mcm_statuses[transition['status']],
+                'time': transition['update_time']
+            })
+
+    if len(fake_request.get('history', [])) > 0:
+        fake_request['status'] = fake_request['history'][-1]['action']
     else:
         fake_request['status'] = 'unknown'
-
-    fake_request['reqmgr_name'] = [stats_doc['_id']]
+    fake_request['pwg'] = 'ReReco'
     processing_string = stats_doc.get('ProcessingString', None)
     if processing_string is not None:
-        logging.info('Found processing string %s (type %s) for %s' % (processing_string, type(processing_string), fake_request['prepid']))
+        logging.info('Found processing string %s in %s' % (processing_string, fake_request['prepid']))
         fake_request['processing_string'] = processing_string
         save(processing_string, {'prepid': processing_string}, process_string_cfg)
 
@@ -240,40 +282,63 @@ if __name__ == "__main__":
     if index == 'workflows':
         rereco_cfg = Config('rereco_requests')
         process_string_cfg = Config('processing_strings')
-
-    if index == 'requests':
+        skippable_status = set(['rejected',
+                                'aborted',
+                                'failed',
+                                'rejected-archived',
+                                'aborted-archived',
+                                'failed-archived',
+                                'aborted-completed'])
+    elif index == 'requests':
         tags_cfg = Config('tags')
 
     done = 0
-    for object_identificator, deleted in get_changed_object_identificators(cfg):
-        time.sleep(0.05)
+    for object_id, deleted in get_changed_object_ids(cfg):
+        time.sleep(0.01)
         done += 1
-        logging.info('(%s) Processing %s. Deleted %s' % (done, object_identificator, 'YES' if deleted else 'NO'))
-        if object_identificator not in cfg.exclude_list:
+
+        logging.info('(%s) Processing %s. Deleted %s' % (done, object_id, 'YES' if deleted else 'NO'))
+        if object_id not in cfg.exclude_list:
+            if not deleted:
+                # If it's not deleted, fetch it
+                thing_url = str(cfg.source_db + object_id)
+                data, status = Utils.curl('GET', thing_url, cookie=cfg.cookie, return_error=True)
+
+            if not deleted and index == 'workflows':
+                # Check maybe it was rejected or aborted. If yes, delete it
+                for transition in data.get('RequestTransition', []):
+                    if transition.get('Status') in skippable_status:
+                        logging.info('%s will be deleted because it has %s in it\'s history' % (object_id, transition.get('Status')))
+                        deleted = True
+                        break
+
             if deleted:
                 if index == 'workflows':
-                    # Try to delete it from ReReco index (maybe it's ReReco request?)
-                    _, status = Utils.curl('DELETE', rereco_cfg.pmp_type + object_identificator)
+                    # Try to delete it from ReReco index (maybe it's ReReco request)
+                    data, _ = Utils.curl('GET', cfg.pmp_type + object_id)
+                    logging.info('Trying to delete %s as ReReco' % (data.get('prepid')))
+                    _, status = Utils.curl('DELETE', rereco_cfg.pmp_type + str(data.get('prepid')))
                     if status == 200:
-                        logging.info('Deleted ReReco request %s' % (object_identificator))
+                        logging.info('Deleted ReReco request %s' % (object_id))
                     elif status != 404:  # 404 just means it's not a ReReco request
-                        logging.warning('Code %s while deleting %s from ReReco index' % (status, object_identificator))
+                        logging.warning('Code %s while deleting %s from ReReco index' % (status, data.get('prepid')))
 
                 # Delete it normally
-                _, status = Utils.curl('DELETE', '%s%s' % (cfg.pmp_type, object_identificator))
+                _, status = Utils.curl('DELETE', '%s%s' % (cfg.pmp_type, object_id))
                 if status == 200:
-                    logging.info('Deleted %s (%s)' % (object_identificator, index))
+                    logging.info('Deleted %s (%s)' % (object_id, index))
                 elif status != 404:
-                    logging.error('Record %s (%s) was not deleted. Code: %s' % (object_identificator, index, status))
+                    logging.error('Record %s (%s) was not deleted. Code: %s' % (object_id, index, status))
             else:
-                thing_url = str(cfg.source_db + object_identificator)
-                data, status = Utils.curl('GET', thing_url, cookie=cfg.cookie, return_error=True)
+                # It was not deleted, so it was added or modified
                 if status == 200:
                     if index == 'workflows':
                         data['EventNumberHistory'] = parse_workflows_history(data['EventNumberHistory'])
+                        # Make transition keys lowercase
+                        data['RequestTransition'] = [{'status': x['Status'], 'update_time': x['UpdateTime']} for x in data['RequestTransition']]
                         request_type = data.get('RequestType', '')
                         if request_type.lower() == 'rereco' and not is_excluded_rereco(data):
-                            logging.info('Creating mock ReReco request for %s' % (object_identificator))
+                            logging.info('Creating mock ReReco request for %s' % (object_id))
                             create_rereco_request(data, rereco_cfg, process_string_cfg)
 
                     elif index == 'requests':
@@ -296,14 +361,10 @@ if __name__ == "__main__":
 
                     # Trim fields we don't want
                     data = pick_attributes(data, cfg.fetch_fields)
-
-                    # Save to local stats ES index
-                    re, s = Utils.curl('POST', '%s%s' % (cfg.pmp_type, object_identificator), data)
-                    if s in [200, 201]:
-                        logging.info('New record %s (%s)' % (object_identificator, index))
-                    else:
-                        logging.error('Failed to update record %s (%s). Reason: %s' % (object_identificator, index, re))
+                    data = rename_attributes(index, data, cfg)
+                    # Save to local Elasticsearch index
+                    save(object_id, data, cfg)
                 else:
-                    logging.error('Failed to receive information about %s (%s)' % (object_identificator, index))
+                    logging.error('Failed to receive information about %s (%s)' % (object_id, index))
 
     logging.info('Finished %s' % (index))

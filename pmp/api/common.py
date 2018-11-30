@@ -36,10 +36,10 @@ class SuggestionsAPI(esadapter.InitConnection):
         searchable = query.replace("-", r"\-")
         if '-' in query:
             search = ('prepid:%s' % searchable)
-            search_stats = ('RequestName:%s' % searchable)
+            # search_stats = ('RequestName:%s' % searchable)
         else:
             search = ('prepid:*%s*' % searchable)
-            search_stats = ('RequestName:*%s*' % searchable)
+            # search_stats = ('RequestName:*%s*' % searchable)
 
         results = []
 
@@ -61,8 +61,8 @@ class SuggestionsAPI(esadapter.InitConnection):
             if len(results) < self.max_suggestions:
                 results += [{'type': 'RERECO', 'label': x} for x in self.search(search, 'rereco_requests')]
 
-        if self.historical and len(results) < self.max_suggestions:
-            results += [{'type': 'WORKFLOW','label': x} for x in self.search(search_stats, 'workflows')]
+        # if self.historical and len(results) < self.max_suggestions:
+        #     results += [{'type': 'WORKFLOW', 'label': x} for x in self.search(search_stats, 'workflows')]
 
         if self.present and len(results) < self.max_suggestions:
             results += [{'type': 'CHAINED CAMPAIGN', 'label': x} for x in self.search(search, 'chained_campaigns')]
@@ -177,7 +177,7 @@ class OverallAPI(object):
         for collection_name in collections:
             response, _ = Utils.curl('GET', config.DATABASE_URL + collection_name + '/_count')
             count = response.get('count', 0)
-            results[collection_name] = count
+            results[collection_name.replace('_', ' ')] = count
 
         return json.dumps({"results": results})
 

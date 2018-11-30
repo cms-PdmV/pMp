@@ -44,7 +44,7 @@ body {
 }
 
 .panel-body {
-    padding: 10px;
+    padding: 12px;
 }
 
 .pointer {
@@ -73,6 +73,10 @@ body {
 
 .spacing-r {
     margin-right: 10px;
+}
+
+.margin-20 {
+    margin: 20px;
 }
 
 /*

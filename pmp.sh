@@ -7,7 +7,7 @@ then
     echo "Starting pMp..."
     if [[ $2 == "dev" ]]
     then
-        cd $DIR && python3 run.py dev&
+        cd $DIR && python3 run.py dev &
     else
         cd $DIR && python3 run.py &
     fi

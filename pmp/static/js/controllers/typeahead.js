@@ -20,9 +20,10 @@ angular.module('pmpApp').controller('TypeaheadController', ['$scope', '$http',
          * @param {String} type the type of the query.
          */
         $scope.getSuggestions = function (query, type) {
-            if (query === '') return null;
-            $http.get('api/suggest/' + query + type).then(function (
-                response) {
+            if (query === '') {
+                return null;
+            }
+            $http.get('api/suggest/' + query + type).then(function (response) {
                 $scope.suggestions = response.data.results;
             });
         };

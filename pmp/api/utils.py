@@ -14,7 +14,7 @@ class APIUtils(object):
             return parsable.split(',')
 
     @staticmethod
-    def parse_priority_csv(arr):
+    def parse_priority(arr):
         """Generate array from priority csv"""
         arr = arr.split(',')
         for index, value in enumerate(arr):

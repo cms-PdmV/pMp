@@ -5,18 +5,6 @@ class APICall(object):
     """List of API function calls"""
 
     @staticmethod
-    def historical_complex(query, granularity=100, priority=',', filters=None):
-        """Complex historical call"""
-        from pmp.api import historical as call
-        return call.HistoricalAPI().get(query, int(granularity), priority, filters)
-
-    @staticmethod
-    def historical_simple(query):
-        """Simple historical call"""
-        from pmp.api import historical as call
-        return call.HistoricalAPI().get(query)
-
-    @staticmethod
     def last_update(collections):
         """Last successful DB update call"""
         from pmp.api import common as call
@@ -51,12 +39,6 @@ class APICall(object):
             return call.GrowingAPI().get(query, True)
         else:
             return call.AnnouncedAPI().get(query, True)
-
-    @staticmethod
-    def submitted_stats(query, priority, pwg):
-        """List submitted call"""
-        from pmp.api import historical as call
-        return call.SubmittedStatusAPI().get(query, priority, pwg)
 
     @staticmethod
     def shorten_url(url, params):

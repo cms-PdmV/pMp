@@ -18,7 +18,7 @@ module.exports = function(grunt) {
           'static/js/controllers/share.js',
           'static/js/controllers/tags.js',
           'static/js/controllers/typeahead.js'],
-    dest: 'static/build/pmp.build.js'
+    dest: 'static/build/pmp.build.min.js'
    },
    js2: {
     src: ['static/js/directives/__init__.js',
@@ -96,16 +96,10 @@ module.exports = function(grunt) {
       }
     }
   },
-  uglify: {
-   js: {
-    src: ['static/build/pmp.build.js'],
-    dest: 'static/build/pmp.build.min.js'
-   }
-  },
   watch: {
    js: {
     files: ['static/js/*/*.js', 'static/js/*.js'],
-    tasks: ['concat:js', 'concat:js2', 'uglify:js']
+    tasks: ['concat:js', 'concat:js2']
    },
    css: {
     files: ['static/css/*.css'],
@@ -124,9 +118,8 @@ module.exports = function(grunt) {
  grunt.loadNpmTasks('grunt-contrib-concat');
  grunt.loadNpmTasks('grunt-contrib-cssmin');
  grunt.loadNpmTasks('grunt-contrib-htmlmin');
- grunt.loadNpmTasks('grunt-contrib-uglify');
  grunt.loadNpmTasks('grunt-contrib-watch');
- grunt.registerTask('default', ['concat', 'cssmin', 'htmlmin', 'uglify', 'watch'])
+ grunt.registerTask('default', ['concat', 'cssmin', 'htmlmin', 'watch'])
  /*
   *ToDo: Add charts.js to js watch
   *There are some problems after uglifying

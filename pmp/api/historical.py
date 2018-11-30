@@ -1,10 +1,8 @@
 """A list of classes supporting historical statistics API"""
-from pmp.api.utils import APIUtils
 from pmp.api.common import APIBase
 import elasticsearch
 import json
 import time
-import re
 import logging
 
 
@@ -41,21 +39,19 @@ class HistoricalAPI(APIBase):
         """
         points = []
         for t in timestamps:
-            point = {'d': 0, 'e': 0, 'x': 0, 't': t, 'o': 0}
+            point = {'d': 0, 'e': 0, 'x': 0, 't': t}
             for key in data:
-                previous = {'d': 0, 'e': 0, 'x': 0, 'o': 0}
+                previous = {'d': 0, 'e': 0, 'x': 0}
                 for (i, details) in enumerate(data[key]['data']):
                     if details['t'] > t:
                         point['d'] += previous['d']
                         point['e'] += previous['e']
                         point['x'] += previous['x']
-                        point['o'] += previous['o']
                         break
                     elif details['t'] == t or i == len(data[key]['data']) - 1:
                         point['d'] += details['d']
                         point['e'] += details['e']
                         point['x'] += details['x']
-                        point['o'] += details['o']
                         break
                     else:
                         previous = details
@@ -92,8 +88,7 @@ class HistoricalAPI(APIBase):
             duplicated = {'d': data[-1]['d'],
                           'e': data[-1]['e'],
                           'x': data[-1]['x'],
-                          't': int(round(time.time() * 1000)),
-                          'o': data[-1]['o']}
+                          't': int(round(time.time() * 1000))}
             data.append(duplicated)
 
         return data
@@ -103,12 +98,12 @@ class HistoricalAPI(APIBase):
         Query DB and return array of raw documents
         Tuple of three things is returned: is request, stats document, mcm document
         """
-        iterable = []
         req_arr = []
         field, index, doctype, query = self.parse_query(query)
         logging.info('Field: %s, index: %s, doctype: %s, query: %s' % (field, index, doctype, query))
         if index is None:
-            return False, None, None
+            logging.info('Returning nothing')
+            return None, None
 
         if field is not None:
             # If field is present first find all results that have given value in
@@ -123,8 +118,7 @@ class HistoricalAPI(APIBase):
             try:
                 req_arr = [self.es.get(index=index, doc_type=doctype, id=query)['_source']]
             except elasticsearch.NotFoundError:
-                # If exception thrown this may be a workflow
-                iterable = [query]
+                req_arr = []
 
         if index == 'requests':
             logging.info('Found %d requests for %s' % (len(req_arr), query))
@@ -133,217 +127,135 @@ class HistoricalAPI(APIBase):
 
         # Iterate over array and collect details (McM documents)
         for req in req_arr:
-            try:
-                dataset_list = req['output_dataset']
-                if len(dataset_list) > 0:
+            dataset_list = req['output_dataset']
+            if len(dataset_list) > 0:
+                if index == 'rereco_requests':
+                    dataset = dataset_list[-1]
+                else:
                     dataset = dataset_list[0]
-                else:
-                    dataset = None
-
-                # Include a blank one in case there are no workflows. We still want expected events
-                if len(req['reqmgr_name']) == 0:
-                    req['reqmgr_name'] = [None]
-
-                force_completed_request = False
-                if 'reqmgr_status_history' in req:
-                    for reqmgr_dict in req['reqmgr_status_history']:
-                        if 'force-complete' in reqmgr_dict['history']:
-                            force_completed_request = True
-                            break
-
-                for reqmgr in req['reqmgr_name']:
-                    i = {}
-                    i['expected'] = req['total_events']
-                    i['name'] = reqmgr
-                    i['prepid'] = req['prepid']
-                    i['output_dataset'] = dataset
-                    i['priority'] = req['priority']
-                    i['pwg'] = req.get('pwg', 'None')  # for ReReco support
-                    i['request'] = True
-                    i['status'] = req['status']
-                    i['done_time'] = 0  # default, see next step
-                    i['force_completed'] = force_completed_request
-
-                    # Get time of first transition to "submitted"
-                    for item in req['history']:
-                        if item['action'] == 'submitted':
-                            i['submitted_time'] = self.parse_request_history_time(item['time'])
-                            break
-
-                    # Get the time of the *last* transition to status "done"
-                    for item in reversed(req['history']):
-                        if item['action'] == 'done':
-                            i['done_time'] = self.parse_request_history_time(item['time'])
-                            break
-
-                    iterable.append(i)
-            except KeyError:
-                pass
-
-        # Iterate over workflows and yield documents
-        # yield: is_request, stats_document(s), mcm_document
-        for mcm_document in iterable:
-            if 'request' in mcm_document:
-                if mcm_document['name'] is None:
-                    yield True, None, mcm_document
-                else:
-                    try:
-                        stats_document = self.es.get(index='workflows', doc_type='workflow', id=mcm_document['name'])['_source']
-                        yield True, stats_document, mcm_document
-                    except elasticsearch.NotFoundError:
-                        yield True, None, mcm_document
             else:
+                dataset = None
+
+            req['force_completed'] = False
+            for reqmgr_dict in req.get('reqmgr_status_history', []):
+                if 'force-complete' in reqmgr_dict['history']:
+                    req['force_completed'] = True
+                    break
+
+            # Get time of last transition to "submitted"
+            for item in reversed(req['history']):
+                if item['action'] == 'submitted':
+                    req['submitted_time'] = item['time'] * 1000
+                    break
+
+            # Get the time of the *last* transition to status "done"
+            for item in reversed(req['history']):
+                if item['action'] == 'done':
+                    req['done_time'] = item['time'] * 1000
+                    break
+
+            # Iterate through all workflow names, starting from the newest one
+            # and stopping once any valid workflow is found
+            req['reqmgr_name'] = sorted(req.get('reqmgr_name', []), key=lambda k: '_'.join(k.split('_')[-3:]), reverse=True)
+            for reqmgr in req['reqmgr_name']:
                 try:
-                    stats_document = self.es.get(index='workflows', doc_type='workflow', id=mcm_document)['_source']
-                    yield False, stats_document, None
+                    stats_document = self.es.get(index='workflows', doc_type='workflow', id=reqmgr)['_source']
                 except elasticsearch.NotFoundError:
-                    yield False, None, None
+                    logging.warning('%s is not found' % (reqmgr))
+                    continue
 
-    def get_filter_dict(self, doc, arr, inp):
-        """
-        Generate filter dictionary. Return dictionary where key is given term
-        and value is either true or false. If inp is present, true will only
-        be set if doc is in inp list
-        """
-        if doc not in arr:
-            arr[doc] = False
-            if inp is None:
-                arr[doc] = True
+                if stats_document.get('request_type').lower() == 'resubmission':
+                    continue
+
+                # Add reqmgr as name and output dataset to request
+                mcm_document = dict(req)
+                mcm_document.update({'expected': req['total_events'],
+                                     'name': reqmgr,
+                                     'output_dataset': dataset})
+                yield stats_document, mcm_document
+                break
             else:
-                for i in inp:
-                    if i == doc:
-                        arr[doc] = True
-                        break
+                # Add reqmgr as name and output dataset to request
+                mcm_document = dict(req)
+                mcm_document.update({'expected': req['total_events'],
+                                     'output_dataset': dataset})
+                yield None, mcm_document
 
-        return arr
-
-    def filtering(self, details, pwg_i, status_i, priority):
-        """
-        Returns boolean if request should be filtered (skipped)
-        """
-        # pwg filtering
-        if pwg_i is not None and details['pwg'] not in pwg_i:
-            return True
-
-        # status filtering
-        if status_i is not None and details['status'] not in status_i:
-            return True
-
-        # filter out invalidated 'new'
-        if details['status'] not in ['done', 'submitted']:
-            return True
-
-        details_priority = int(details['priority'])
-        # priority filtering
-        if details_priority < priority[0] or (details_priority > priority[1] and priority[1] != -1):
-            return True
-
-        return False
-
-    def parse_time(self, string_time):
-        """
-        Parse time in a "Tue Jan 1 00:00:00 2013" format to integer
-        """
-        return time.mktime(time.strptime(string_time)) * 1000
-
-    def parse_request_history_time(self, string_time):
-        """
-        Parse time in a "2013-12-01-00-00" format to an integer as above
-        """
-        return time.mktime(time.strptime(string_time, '%Y-%m-%d-%H-%M')) * 1000
-
-    def prepare_response(self, query, priority, status_i, pwg_i):
+    def prepare_response(self, query):
         """
         Loop through all the workflow data, generate response
         """
         response_list = []
-        filters = dict()
-        filters['status'] = dict()
-        filters['pwg'] = dict()
         query = query.split(',')
         for one in query:
             # Keep track of the prepids we've seen, so that we only add submission data points once
             seen_prepids = []
             logging.info('Processing %s' % (one))
+            if not one:
+                # Skip empty values
+                continue
 
             # Process the db documents
-            for is_request, stats_document, mcm_document in self.db_query(one):
+            for stats_document, mcm_document in self.db_query(one):
                 if stats_document is None and mcm_document is None:
                     # Well, there's nothing to do, is there?
                     continue
 
                 # skip legacy request with no prep_id - check both stats and mcm documents
                 if ((stats_document is None and mcm_document.get('prepid', '') == '') or
-                        (mcm_document is None and stats_document.get('PrepID', '') == '')):
+                        (mcm_document is None and stats_document.get('prepid', '') == '')):
                     continue
 
-                if stats_document is not None and len(stats_document.get('OutputDatasets', [])) > 0:
-                    last_stats_dataset = stats_document['OutputDatasets'][-1]
-                else:
-                    last_stats_dataset = None
+                if stats_document and stats_document['request_type'] == 'Resubmission':
+                    logging.info('Skipping %s because it\'s Resubmission' % (stats_document['request_name']))
+                    continue
 
-                # Filter out requests
-                if is_request:
-                    filters['status'].update(self.get_filter_dict(mcm_document['status'],
-                                                                  filters['status'],
-                                                                  status_i))
-                    filters['pwg'].update(self.get_filter_dict(mcm_document['pwg'],
-                                                               filters['pwg'],
-                                                               pwg_i))
+                if mcm_document and mcm_document.get('status') not in ['submitted', 'done']:
+                    logging.info('Skipping %s because it is %s' % (mcm_document['prepid'], mcm_document['status']))
+                    continue
 
-                    should_filter_out = self.filtering(mcm_document, pwg_i, status_i, priority)
-                    # Only check self.skip_request if we have a document from stats
-                    should_skip = stats_document is not None and self.skip_request(mcm_document['output_dataset'],
-                                                                                   last_stats_dataset,
-                                                                                   stats_document['RequestType'])
-                    if should_filter_out or should_skip:
-                        logging.info('%s should filter out %s, should skip %s' % (mcm_document['prepid'],
-                                                                                  should_filter_out,
-                                                                                  should_skip))
-                        continue
+                if mcm_document and 'submitted_time' not in mcm_document:
+                    logging.info('Skipping %s because it was not submitted yet' % (mcm_document['prepid']))
+                    continue
 
                 # create an array of requests to be processed
                 response = {'data': []}
 
                 if mcm_document is not None:
                     response['request'] = mcm_document['prepid']
-                    if 'force_completed' in mcm_document:
-                        response['force_completed'] = mcm_document['force_completed']
-                    else:
-                        response['force_completed'] = False
-
+                    response['pwg'] = mcm_document['pwg']
+                    response['priority'] = mcm_document['priority']
+                    response['status'] = mcm_document['status']
+                    response['force_completed'] = mcm_document['force_completed']
+                    response['dataset'] = mcm_document['output_dataset']
                 else:
-                    response['request'] = stats_document['PrepID']
+                    response['request'] = stats_document['prepid']
+                    response['pwg'] = None
+                    response['priority'] = stats_document['priority']
+                    response['status'] = None
                     response['force_completed'] = False
+                    response['dataset'] = ''
 
                 # Check if there is a document from stats (i.e. the workflow was found)
                 if stats_document is not None:
-                    logging.info('Workflow name %s' % (stats_document['RequestName']))
+                    logging.info('Workflow name %s' % (stats_document['request_name']))
 
-                    # A TaskChain and not a request (only when it's a workflow)
-                    if not is_request and stats_document['RequestType'] == 'TaskChain':
-                        logging.info('Workflow!')
-                        response_list = self.process_workflow(stats_document, mcm_document)
-                        # Return response, no pwg, no status, taskchain=True and no error
-                        return response_list, {}, {}, True, ''
-
-                    elif 'EventNumberHistory' in stats_document:
+                    if 'event_number_history' in stats_document:
                         found_dataset_in_stats = False
-                        for history_record in stats_document['EventNumberHistory']:
+                        for history_record in stats_document['event_number_history']:
                             if history_record['dataset'] != mcm_document['output_dataset']:
                                 continue
 
                             found_dataset_in_stats = True
                             for entry in history_record.get('history', []):
                                 data_point = {
-                                    'e': entry.get('Events', 0),
+                                    'e': entry.get('events', 0),
                                     'd': 0,
                                     'x': mcm_document.get('expected', 0),
-                                    't': entry['Time'] * 1000,
-                                    'o': stats_document.get('TotalEvents', 0)
+                                    't': entry['time'] * 1000
                                 }
-                                if entry['Type'] == 'VALID':
-                                    data_point['d'] = entry.get('Events', 0)
+                                if entry['type'] == 'VALID' or entry['type'] == 'INVALID':
+                                    data_point['d'] = entry.get('events', 0)
 
                                 response['data'].append(data_point)
 
@@ -351,12 +263,12 @@ class HistoricalAPI(APIBase):
 
                         if not found_dataset_in_stats:
                             logging.warning('Didn\'t find any datasets for %s. Workflow: %s' % (mcm_document['prepid'],
-                                                                                                stats_document['RequestName']))
+                                                                                                stats_document['request_name']))
 
                     else:
                         logging.info('Doing nothing for %s' % (mcm_document.get('prepid', '-')))
-                        if 'EventNumberHistory' not in stats_document:
-                            logging.info('EventNumberHistory not in stats_document')
+                        if 'event_number_history' not in stats_document:
+                            logging.info('event_number_history not in stats_document')
 
                 else:
                     logging.info('Stats document for %s is none' % (mcm_document.get('prepid', '--')))
@@ -369,41 +281,15 @@ class HistoricalAPI(APIBase):
                         response['data'].append({
                             'e': 0,
                             'd': 0,
-                            'x': mcm_document['expected'],
-                            't': mcm_document['submitted_time'],
-                            'o': mcm_document['expected']
+                            'x': int(mcm_document['expected']),
+                            't': int(mcm_document['submitted_time'] - 1)
                         })
                         seen_prepids.append(mcm_document['prepid'])
                         response_list.append(response)
 
-            error = ''
-
-        logging.info('Prepare response length is %d' % (len(response_list)))
-        return response_list, filters['pwg'], filters['status'], False, error
-
-    def process_workflow(self, stats_document, mcm_document):
-        """
-        Use when input is workflow and a taskchain
-        """
-        data_points = []
-        for taskchain in stats_document['EventNumberHistory']:
-            res = {
-                'request': taskchain['dataset'],
-                'data': []
-            }
-            for record in taskchain['history']:
-                data = {
-                    'd': record['Events'],
-                    'e': record['Events'],
-                    'x': mcm_document['expected'],
-                    't': record['Time'] * 1000,
-                    'o': stats_document['TotalEvents']
-                }
-                res['data'].append(data)
-
-            data_points.append(res)
-
-        return data_points
+        # logging.info('Prepare response length is %d' % (len(response_list)))
+        # logging.info('Response list is %s' % (json.dumps(response_list, indent=4)))
+        return response_list
 
     def remove_useless_points(self, arr):
         """Compressing data: remove first data point of resubmissions and points
@@ -420,11 +306,6 @@ class HistoricalAPI(APIBase):
                 prev = data_point
 
         return compressed
-
-    def skip_request(self, output_dataset, dataset, ttype):
-        """Check if skip request"""
-        return dataset != output_dataset and output_dataset is not None and\
-            dataset != 'None Yet' and ttype != 'TaskChain'
 
     def sort_timestamps(self, data, limit):
         """Reduce the number of timestamps to limit"""
@@ -451,109 +332,104 @@ class HistoricalAPI(APIBase):
 
         return data_points
 
-    def get(self, query, data_point_count=100, priority=',', filters=None):
+    def apply_filters(self, data, priority_filter, pwg_filter, status_filter):
+        """
+        Priority filter is an array of min and max priorities
+        PWG filter is list of strings (pwg) of requests to include
+        Status filter is list of strings (status) of requests to include
+        Return new data and dictionaries of pwgs and status filters that show whether
+        these values were left (True) or filtered out (False)
+        """
+        new_data = []
+        if pwg_filter:
+            pwg_filter = [x.upper() for x in pwg_filter]
+
+        if status_filter:
+            status_filter = [x.lower() for x in status_filter]
+
+        all_pwgs = {}
+        all_statuses = {}
+        for item in data:
+            pwg = item.get('pwg', '').upper()
+            if pwg not in all_pwgs:
+                if pwg_filter:
+                    all_pwgs[pwg] = pwg in pwg_filter
+                else:
+                    all_pwgs[pwg] = True
+
+            status = item.get('status', '').lower()
+            if status not in all_statuses:
+                if status_filter:
+                    all_statuses[status] = status in all_statuses
+                else:
+                    all_statuses[status] = True
+
+            priority = item.get('priority')
+            if priority is not None:
+                if priority_filter is not None:
+                    if priority < priority_filter[0] or priority > priority_filter[1]:
+                        continue
+
+            if all_pwgs[pwg] and all_statuses[status]:
+                new_data.append(item)
+
+        return new_data, all_pwgs, all_statuses
+
+    def get_with_status(self, data, status):
+        new_data = []
+        for request in data:
+            if request.get('status') != status:
+                continue
+
+            data_points = sorted(request.get('data', []), key=lambda k: k['t'])
+            if not data_points:
+                data_points = [{'d': 0, 'e': 0}]
+
+            new_data.append({'request': request['request'],
+                             'priority': request['priority'],
+                             'dataset': request['dataset'],
+                             'expected': data_points[-1]['x'],
+                             'done': data_points[-1]['e']})
+
+        return new_data
+
+    def get(self, query, data_point_count=100, priority_filter=None, pwg_filter=None, status_filter=None):
         """
         Get the historical data based on query, data point count, priority and filter
         """
-        logging.info('Query is %s' % (query))
-        if filters is None:
-            filters = {'status': None,
-                       'pwg': None}
-
-        filters_status_csv = APIUtils.parse_csv(filters['status'])
-        filters_pwg_csv = APIUtils.parse_csv(filters['pwg'])
-        priority = APIUtils.parse_priority_csv(priority)
-        response, pwg, status, taskchain, error = self.prepare_response(query,
-                                                                        priority,
-                                                                        filters_status_csv,
-                                                                        filters_pwg_csv)
-
-        if taskchain:
-            res = {'data': response,
-                   'pwg': {},
-                   'status': {},
-                   'taskchain': True,
-                   'error': error}
-        else:
-            aggregated = self.aggregate_requests(response)
-            aggregated = self.adjust_for_force_complete(aggregated)
-            data = self.aggregate_data_points(aggregated,
-                                              self.sort_timestamps(aggregated,
-                                                                   data_point_count))
-            data = self.append_last_data_point(data)
-            res = {'data': data,
-                   'pwg': pwg,
-                   'status': status,
-                   'taskchain': False,
-                   'error': error}
-
-        return json.dumps({"results": res})
-
-
-class SubmittedStatusAPI(APIBase):
-    """
-    Is used to return list of submitted requests with current progress
-    """
-
-    def __init__(self):
-        APIBase.__init__(self)
-
-    def get(self, query, priority=',', pwg=None):
-        """Get submitted requests with current progress"""
-        priority = APIUtils.parse_priority_csv(priority)
-        pwg = APIUtils.parse_csv(pwg)
-        submitted = {}
-        response = []
-
-        for one in query.split(','):
-            field, index, doctype, query = self.parse_query(one)
-            if index is None:
-                continue
-
-            if field is not None:
-                # If field is present first find all results that have given value in
-                # that field. For example, if query is campaign, find  all requests
-                # that have that campaign in their member_of_campaign field
-                search_results = self.es.search(q='%s:%s' % (field, query),
-                                                index=index,
-                                                size=self.results_window_size)['hits']['hits']
-                response += [s['_source'] for s in search_results]
-            else:
-                # Could be a request or a workflow
-                try:
-                    response += [self.es.get(index=index, doc_type=doctype, id=query)['_source']]
-                except elasticsearch.NotFoundError:
-                    logging.info('Not found %s' % (one))
-                    pass
-
-        for request in response:
-            if (request['status'] == 'submitted') and\
-                    (pwg is None or request.get('pwg', 'None') in pwg) and\
-                    (request['priority'] > priority[0] and
-                     (request['priority'] < priority[1] or
-                     priority[1] == -1)):
-
-                completed = self.completed_deep(request)
-                if completed >= 0:
-                    submitted[request['prepid']] = {}
-                    submitted[request['prepid']]['datasets'] = request['output_dataset']
-                    if request['total_events'] == 0:
-                        submitted[request['prepid']]['completion'] = 'NO_EXP_EVTS'
-                    else:
-                        submitted[request['prepid']]['completion'] = int(100 * completed / request['total_events'])
-
-        return json.dumps({"results": submitted})
-
-    def is_single_simple_request(self, prepid):
-        """
-        Checks if given prepid matches XXX-...-00000
-        """
-        regex = r"((.{3})-.*-\d{5})"
-        return re.search(regex, prepid) is not None
-
-    def is_single_rereco_request(self, prepid):
-        """
-        Checks if given prepid matches ReReco-...-0000
-        """
-        regex = r"(ReReco-.*-\d{4})"
-        return re.search(regex, prepid) is not None
+        logging.info('%s (%s) | %s (%s) | %s (%s) | %s (%s) | %s (%s)' % (query,
+                                                                         type(query),
+                                                                         data_point_count,
+                                                                         type(data_point_count),
+                                                                         priority_filter,
+                                                                         type(priority_filter),
+                                                                         pwg_filter,
+                                                                         type(pwg_filter),
+                                                                         status_filter,
+                                                                         type(status_filter)))
+        # Construct data by given query
+        response = self.prepare_response(query)
+        logging.info('Requests before filtering %s' % (len(response)))
+        # Apply priority, PWG and status filters
+        response, pwgs, statuses = self.apply_filters(response, priority_filter, pwg_filter, status_filter)
+        logging.info('Requests after filtering %s' % (len(response)))
+        # Get submitted and done requests separately
+        submitted_requests = self.get_with_status(response, 'submitted')
+        done_requests = self.get_with_status(response, 'done')
+        # Continue aggregating data points for response
+        logging.info('Will aggregate requests')
+        response = self.aggregate_requests(response)
+        logging.info('Will adjust for force complete')
+        response = self.adjust_for_force_complete(response)
+        logging.info('Will adjust data points')
+        data = self.aggregate_data_points(response,
+                                          self.sort_timestamps(response,
+                                                               data_point_count))
+        data = self.append_last_data_point(data)
+        res = {'data': data,
+               'pwg': pwgs,
+               'status': statuses,
+               'submitted_requests': submitted_requests,
+               'done_requests': done_requests}
+        logging.info('Will return')
+        return json.dumps({'results': res})

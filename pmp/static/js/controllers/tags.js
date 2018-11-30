@@ -22,7 +22,7 @@ angular.module('pmpApp').controller('TagsController', ['$rootScope', '$scope', '
         $scope.tagRemove = function (tagToRemove, isServerSide) {
             $rootScope.loadingData = true;
             if (isServerSide) {
-                Data.setInputTags(tagToRemove, false, true);
+                Data.removeInputTag(tagToRemove);
                 $scope.query(true);
                 return null;
             }
@@ -35,7 +35,7 @@ angular.module('pmpApp').controller('TagsController', ['$rootScope', '$scope', '
                     }
                 }
                 Data.reloadFilters(data);
-                Data.setInputTags(tagToRemove, false, true);
+                Data.removeInputTag(tagToRemove);
             }, 1000);
         };
 
