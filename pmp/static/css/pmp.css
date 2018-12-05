@@ -18,8 +18,8 @@ body {
 }
 
 .brand-adjust {
-    height: 30px;
-    margin: 10px;
+    height: 40px;
+    margin: 0;
     float: left;
 }
 
@@ -166,6 +166,10 @@ rect.pane {
     padding: 10px;
 }
 
+.zebra-lines {
+    font-size: 0.9rem;
+}
+
 .zebra-lines:nth-child(2n) {
     background: #e0e7ed;
 }
@@ -179,5 +183,49 @@ h1.dark-gray,h3.dark-gray {
 }
 
 .font-shadow {
-    text-shadow: 1px 1px 1px #000;
+    color: black !important;
+    /*text-shadow: 1px 1px 1px #000;*/
+}
+
+.done-graph-data {
+    stroke-width: 1;
+    stroke: rgb(1, 87, 155);
+    opacity: 0.4;
+    fill: rgb(1, 87, 155);
+    vector-effect: non-scaling-stroke;
+}
+
+.produced-graph-data {
+    stroke-width: 1;
+    stroke: rgb(255, 111, 0);
+    opacity: 0.4;
+    fill: rgb(255, 111, 0);
+    vector-effect: non-scaling-stroke;
+}
+
+.expected-graph-data {
+    stroke-width: 1;
+    stroke: rgb(38, 50, 56);
+    opacity: 0.4;
+    fill: rgb(38, 50, 56);
+    vector-effect: non-scaling-stroke;
+}
+
+.pull-right {
+    float: right;
+}
+
+.total-bar {
+    background-color: #9da3a7;
+    width:100%;
+    display: inline-block;
+    margin: 0 4px -5px 4px;
+}
+
+.produced-bar {
+    background-color: #f4bc91;
+}
+
+.done-bar {
+    background-color: #8eb2cf;
 }

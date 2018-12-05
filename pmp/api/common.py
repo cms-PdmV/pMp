@@ -329,10 +329,10 @@ class APIBase(esadapter.InitConnection):
         """
         new_data = []
         if pwg_filter:
-            pwg_filter = [x.upper() for x in pwg_filter]
+            pwg_filter = [x.upper() for x in pwg_filter if x]
 
         if status_filter:
-            status_filter = [x.lower() for x in status_filter]
+            status_filter = [x.lower() for x in status_filter if x]
 
         all_pwgs = {}
         all_statuses = {}
@@ -347,7 +347,7 @@ class APIBase(esadapter.InitConnection):
             status = item.get('status', '').lower()
             if status not in all_statuses:
                 if status_filter:
-                    all_statuses[status] = status in all_statuses
+                    all_statuses[status] = status in status_filter
                 else:
                     all_statuses[status] = True
 

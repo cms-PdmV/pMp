@@ -17,12 +17,6 @@ class APICall(object):
         return call.OverallAPI().get(collections.split(','))
 
     @staticmethod
-    def performance(campaign):
-        """Performance of campaign call"""
-        from pmp.api import performance as call
-        return call.PerformanceAPI().get(campaign)
-
-    @staticmethod
     def present_announced_mode(query, extra):
         """Announced mode call"""
         from pmp.api import present as call

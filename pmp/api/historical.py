@@ -9,6 +9,9 @@ import logging
 class HistoricalAPI(APIBase):
     """Used to return list of points for historical plots"""
 
+    # Temp for development
+    cache = {}
+
     def __init__(self):
         APIBase.__init__(self)
 
@@ -246,6 +249,7 @@ class HistoricalAPI(APIBase):
 
     def get_with_status(self, data, status):
         new_data = []
+        key = 'd' if status == 'done' else 'e'
         for request in data:
             if request.get('status') != status:
                 continue
@@ -254,11 +258,11 @@ class HistoricalAPI(APIBase):
             if not data_points:
                 data_points = [{'d': 0, 'e': 0}]
 
-            new_data.append({'request': request['request'],
-                             'priority': request['priority'],
-                             'dataset': request['dataset'],
-                             'expected': data_points[-1]['x'],
-                             'done': data_points[-1]['e']})
+            new_data.append({'r': request['request'],
+                             'p': request['priority'],
+                             'ds': request['dataset'],
+                             'x': data_points[-1]['x'],
+                             'd': data_points[-1][key]})
 
         return new_data
 
@@ -276,8 +280,16 @@ class HistoricalAPI(APIBase):
                                                                          type(pwg_filter),
                                                                          status_filter,
                                                                          type(status_filter)))
+        cache_key = json.dumps({'q': query, 'g': data_point_count}, sort_keys=True)
+        if cache_key in HistoricalAPI.cache:
+            logging.info('Found %s in cache. DELETE THIS AFTER DEVELOPMENT!' % (cache_key))
+            response = HistoricalAPI.cache[cache_key]
+        else:
+            response = self.prepare_response(query)
+            HistoricalAPI.cache[cache_key] = response
+
         # Construct data by given query
-        response = self.prepare_response(query)
+        # response = self.prepare_response(query)
         logging.info('Requests before filtering %s' % (len(response)))
         # Apply priority, PWG and status filters
         response, pwgs, statuses = self.apply_filters(response, priority_filter, pwg_filter, status_filter)

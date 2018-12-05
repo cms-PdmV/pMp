@@ -42,8 +42,8 @@ if [[ $1 == "update" ]]
 then
     echo "Updating pMp..."
     (cd $DIR && ./pmp.sh stop)
-    echo "Pulling updates..."
-    (cd $DIR && git pull)
+    # echo "Pulling updates..."
+    # (cd $DIR && git pull)
     echo "Running bower..."
     (cd $DIR/pmp/static && bower --allow-root -f install)
     echo "Running grunt..."

@@ -26,6 +26,16 @@ angular.module('pmpApp').service('Data', ['$rootScope', function ($rootScope) {
         return true;
     };
 
+    var allDisabled = function (filter) {
+        for (var item in filter) {
+            if (filter[item]) {
+                return false;
+            }
+        }
+
+        return true;
+    };
+
     return {
         /**
          * @description Input tags getter.
@@ -77,6 +87,9 @@ angular.module('pmpApp').service('Data', ['$rootScope', function ($rootScope) {
          * @return {Array} String array in a form [minimum, maximum].
          */
         getPriorityFilter: function () {
+            if (this.priorityFilter === undefined) {
+                return undefined
+            }
             if (this.priorityFilter.length == 2 && this.priorityFilter[0] !== undefined && this.priorityFilter[1] !== undefined) {
                 return this.priorityFilter;
             }   
@@ -131,6 +144,12 @@ angular.module('pmpApp').service('Data', ['$rootScope', function ($rootScope) {
         allStatusesEnabled: function () {
             return allEnabled(this.statusFilter);
         },
+        allPWGsDisabled: function() {
+            return allDisabled(this.pwgFilter);
+        },
+        allStatusesDisabled: function() {
+            return allDisabled(this.statusFilter);
+        },
         getPriorityQuery: function () {
             var x = [];
             var dataPriorityFilter = this.getPriorityFilter();
@@ -139,8 +158,8 @@ angular.module('pmpApp').service('Data', ['$rootScope', function ($rootScope) {
             }
             return dataPriorityFilter[0] + ',' + dataPriorityFilter[1];
         },
-        getPWGQuery: function () {
-            if (this.allPWGsEnabled()) {
+        getPWGQuery: function (alwaysReturn) {
+            if (!alwaysReturn && this.allPWGsEnabled()) {
                 return undefined;
             }
             var w = [];
@@ -152,9 +171,9 @@ angular.module('pmpApp').service('Data', ['$rootScope', function ($rootScope) {
             }
             return w.join(',');
         },
-        getStatusQuery: function() {
+        getStatusQuery: function(alwaysReturn) {
             // add status filter
-            if (this.allStatusesEnabled()) {
+            if (!alwaysReturn && this.allStatusesEnabled()) {
                 return undefined;
             }
             var s = [];
@@ -173,45 +192,7 @@ angular.module('pmpApp').service('Data', ['$rootScope', function ($rootScope) {
          * @params {Boolean} value the default boolean assigned to new keys.
          * @params {Boolean} isStatusFilter if true change status filter, otherwise change pwg.
          */
-        changeFilter: function (data, reset, value, filterName) {
-            if (reset) {
-                if (isStatusFilter) {
-                    this.statusFilter = {};
-                } else {
-                    this.pwgFilter = {};
-                }
-            }
-            var key, field, filter, defaultsAsObject = false;
 
-            if (angular.isObject(value)) {
-                defaultsAsObject = true;
-            }
-
-            if (isStatusFilter) {
-                filter = this.statusFilter;
-                field = 'status';
-            } else {
-                filter = this.pwgFilter;
-                field = 'pwg';
-            }
-
-            // Populate the PWG filter from the PWGs available in the data
-            for (var i = 0; i < data.length; i++) {
-                key = data[i][field];
-                if (filter[key] === undefined) { // only for PWGs not yet in filter
-                    if (defaultsAsObject) {
-                        if (value[key] === undefined) {
-                            // don't leave out new PWGs
-                            filter[key] = true;
-                        } else {
-                            filter[key] = value[key];
-                        }
-                    } else {
-                        filter[key] = value;
-                    }
-                }
-            }
-        },
         /**
          * @description When removing data, reload filters.
          * @params {Array} data the loaded data array.

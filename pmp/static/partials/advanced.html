@@ -11,7 +11,7 @@
     </label>
     <br ng-show="page.id == 1"/>
     <label class="checkbox-inline col-lg-12 col-md-12 col-sm-12" ng-hide="page.id == 3">
-      <input type="checkbox" ng-model="$parent.humanReadableNumbers" ng-disabled="loadingData" ng-change="setURL()">
+      <input type="checkbox" ng-model="$parent.humanReadable" ng-disabled="loadingData" ng-change="setURL()">
       <small>Human Readable Numbers</small>
     </label>
     <br ng-hide="page.id == 3"/>
@@ -26,12 +26,12 @@
     </label>
     <br/>
     <label class="checkbox-inline col-lg-12 col-md-12 col-sm-12" ng-show="page.id == 2">
-      <input type="checkbox" ng-model="$parent.zoomOnY" ng-change="setURL()" ng-disabled="loadingData">
+      <input type="checkbox" ng-model="$parent.zoomY" ng-change="setURL()" ng-disabled="loadingData">
       <small>y axis zoom</small>
     </label>
   </form>
   
-  <div class="input-group input-group-sm spacing text-uppercase" ng-show="page.id == 2">
+  <div class="input-group spacing text-uppercase" ng-show="page.id == 2">
     <div class="hidden-sm input-group-addon">Probing</div>
     <input type="number" class="form-control" ng-model="$parent.probing" ng-change="setURL()" placeholder="Default: 100">
     <div class="btn btn-primary input-group-addon" ng-click="query(true)">

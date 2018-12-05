@@ -9,13 +9,9 @@ angular.module('pmpApp').controller('MainController', ['$http', '$location',
         isSupportedBrowser) {
         'use strict';
 
-        $scope.showView = false; // controls visibility of page main container
+        $scope.showView = true; // controls visibility of page main container
         if (!isSupportedBrowser) $('#unsupportedModal').modal('show'); // show unsupported modal if the page is not supported
 
-        /**
-         * @description Wait until animation fade out finishes and navigate to differnet page
-         * @param {String} where to navigate to
-         */
         $scope.nav = function (where) {
             $scope.showView = (where === '');
             if (!$scope.showView) {
@@ -26,7 +22,7 @@ angular.module('pmpApp').controller('MainController', ['$http', '$location',
                         $scope.showView = !$scope.showView;
                         $scope.nav('');
                     }, 100);
-                }, 250);
+                }, 1100);
             }
         };
         $timeout(function () {
@@ -50,6 +46,7 @@ angular.module('pmpApp').controller('MainController', ['$http', '$location',
             }
             return original.apply($location, [path]);
         };
+
 
         /**
          * @description Pops up message
@@ -148,6 +145,9 @@ angular.module('pmpApp').controller('MainController', ['$http', '$location',
                 } else {
                     filledValues[param] = urlValue;
                 }
+                if (filledValues[param] && !angular.isNumber(defaults[param])) {
+                    filledValues[param] = filledValues[param].toString()
+                }
             });
             return filledValues;
         }
@@ -161,21 +161,23 @@ angular.module('pmpApp').controller('MainController', ['$http', '$location',
                         params.r = r.join(',');
                     }
                 } else if (param === 'priority') {
-                    var priority = data.getPriorityFilter();
-                    if (priority !== scope.defaults.priority) {
-                        params.priority = priority.join(',');
+                    var priorityQuery = data.getPriorityQuery();
+                    if (priorityQuery !== undefined) {
+                        params.priority = priorityQuery;
                     }
                 } else if (param === 'pwg') {
-                    if (!data.allPWGsEnabled()) {
-                        params.pwg = data.getPWGFilter().join(',');
+                    var pwgQuery = data.getPWGQuery();
+                    if (pwgQuery !== undefined) {
+                        params.pwg = pwgQuery;
                     }
                 } else if ( param === 'status') {
-                    if (!data.allStatusesEnabled()) {
-                        params.status = data.getStatusFilter().join(',');
+                    var statusQuery = data.getStatusQuery();
+                    if (statusQuery !== undefined) {
+                        params.status = statusQuery;
                     }
                 } else {
-                    if (scope[param] !== scope.defaults[param]) {
-                        params[param] = scope[param]
+                    if (scope[param] != scope.defaults[param]) {
+                        params[param] = scope[param].toString()
                     }
                 }
             });

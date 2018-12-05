@@ -18,9 +18,9 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
          */
         $scope.defaults = {
             r: '', // search term
-            zoomY: 'false', // zoom on Y axis
+            zoomY: false, // zoom on Y axis
             granularity: 100, // granularity value
-            humanReadable: 'true', // human-readable numbers
+            humanReadable: true, // human-readable numbers
             priority: undefined, // priority filter
             status: undefined, // status filter
             pwg: undefined, // PWG filter
@@ -30,6 +30,7 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
          * @description Core: Init method for the page. Init scope variables from url.
          */
         $scope.init = function () {
+            console.log('Historical init')
             // get information about page
             $scope.page = PageDetailsProvider.historical;
 
@@ -38,7 +39,6 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
 
             // collect URL parameters together
             var urlParameters = $scope.fillDefaults($location.search(), $scope.defaults)
-
             // if zoom on y label
             $scope.zoomY = urlParameters.zoomY === 'true';
 
@@ -53,7 +53,12 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
             }
 
             if (urlParameters.status !== undefined) {
-                Data.setStatusFilter(urlParameters.status.split(','));
+                var s = {}
+                var tmp = urlParameters.status.split(',');
+                for (var i = 0; i < tmp.length; i++) {
+                    s[tmp] = true;
+                }
+                Data.setStatusFilter(s);
             }
 
             if (urlParameters.pwg !== undefined) {
@@ -70,7 +75,7 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
             }
             // if this is empty just change URL as some filters
             // could have been initiated
-            $scope.setURL();
+            // $scope.setURL();
         };
 
         /**
@@ -99,7 +104,7 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
                     Data.reset(true);
                 }
                 Data.addInputTag(request);
-                $scope.query(filter);
+                $scope.query(true);
             }
         };
 
@@ -107,7 +112,7 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
          * @description Core: Parse filters to query API
          * @param {Boolean} filter If filter data is present.
          */
-        $scope.query = function () {
+        $scope.query = function (ignoreUncheckedFilters) {
             var inputTags = Data.getInputTags();
             if (inputTags.length === 0) {
                 Data.setLoadedData([]);
@@ -118,24 +123,34 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
                 });
                 return null;
             }
+            if (!ignoreUncheckedFilters && $scope.data && (Data.allPWGsDisabled() || Data.allStatusesDisabled())) {
+                console.log('Do not reload')
+                Data.setLoadedData([]);
+                $scope.listSubmitted = [];
+                $scope.listDone = [];
+                $scope.data = Data.getLoadedData();
+                $scope.setURL();
+                $scope.$broadcast('onChangeNotification:LoadedData');
+                return null;
+            }
 
             $rootScope.loadingData = true;
             var priorityQuery = Data.getPriorityQuery();
-            var statusQuery = Data.getStatusQuery();
-            var pwgQuery = Data.getPWGQuery();
+            var statusQuery = Data.getStatusQuery($scope.data === undefined);
+            var pwgQuery = Data.getPWGQuery($scope.data === undefined);
             var granularity = $scope.granularity;
             var queryUrl = 'api/historical?r=' + inputTags.join(',');
             if (granularity) {
                 queryUrl += '&granularity=' + granularity;
             }
             if (priorityQuery) {
-                queryUrl += '&priority=' + x.join(',');
+                queryUrl += '&priority=' + priorityQuery;
             }
             if (statusQuery) {
-                queryUrl += '&status=' + s.join(',');
+                queryUrl += '&status=' + statusQuery;
             }
             if (pwgQuery) {
-                queryUrl += '&pwg=' + w.join(',');
+                queryUrl += '&pwg=' + pwgQuery;
             }
             // query for linear chart data
             console.log('Query ' + queryUrl);
@@ -165,10 +180,12 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
          * @description Core: Change URL when data or filter changes
          */
         $scope.setURL = function () {
-            $location.path($location.path(), false);
+            // $location.path($location.path(), false);
             var params = $scope.constructURLQuery($scope, Data)
             // reload url
-            $location.search(params);
+            console.log($location.search())
+            console.log(params)
+            $location.search(params).replace();
             // broadcast change notification
             $scope.$broadcast('onChangeNotification:URL');
         };

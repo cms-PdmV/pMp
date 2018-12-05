@@ -1,6 +1,6 @@
 {
-  "name": "pmp",
-  "version": "0.0.0",
+  "name": "pMp",
+  "version": "2.0.0",
   "description": "provides monitoring of the workflow Monte Carlo request submission from PdmV/mccm to computing, and the advancement of the workflows in production",
   "main": "index.js",
   "scripts": {

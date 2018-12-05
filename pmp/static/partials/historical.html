@@ -1,35 +1,37 @@
 <div class="row" ng-show="data.length">
-  <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 text-center spacing" id="measure">
-    <linear-lifetime chart-data="data" task-chain="loadTaskChain" zoom-y="zoomOnY"
-                     human-readable-numbers="humanReadableNumbers" class="spacing"></linear-lifetime>
+  <div class="col-sm-12 text-center spacing" id="measure">
+    <linear-lifetime chart-data="data"
+                     zoom-y="zoomY"
+                     human-readable-numbers="humanReadable"
+                     class="spacing"><div class="historical-drilldown" id="historical-drilldown"></div></linear-lifetime>
     <p ng-hide="listSubmitted.length == 0" class="margin-20">
       List of requests (<b>{{listSubmitted.length}}</b>) in status <b>submitted</b>:
     </p>
     <div ng-repeat="submitted in listSubmitted" class="row zebra-lines small-padding">
       <div class="col-sm-4">
-        <a ng-if="submitted.request.indexOf('ReReco') == -1" ng-href="https://cms-pdmv.cern.ch/mcm/requests?prepid={{submitted.request}}" target="_blank">{{submitted.request}}</a>
-        <a ng-if="submitted.request.indexOf('ReReco') != -1" ng-href="https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?prep_id={{submitted.request}}" target="_blank">{{submitted.request}}</a>
+        <a ng-if="submitted.r.indexOf('ReReco') == -1" ng-href="https://cms-pdmv.cern.ch/mcm/requests?prepid={{submitted.r}}" target="_blank">{{submitted.r}}</a>
+        <a ng-if="submitted.r.indexOf('ReReco') != -1" ng-href="https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?prep_id={{submitted.r}}" target="_blank">{{submitted.r}}</a>
       </div>
       <div class="col-sm-2">
-        Expected: <b>{{submitted.expected}}</b>
+        Expected: <b>{{submitted.x | readableNumbers}}</b>
       </div>
       <div class="col-sm-2">
-        Produced: <b>{{submitted.done}}</b>
+        Produced: <b>{{submitted.d | readableNumbers}}</b>
       </div>
       <div class="col-sm-2">
-        <div class="progress" style="width:100%; background-color:rgba(39, 174, 96, 0.2); display: inline-block; margin: 0 4px -5px 4px;">
-          <div class="font-shadow progress-bar"
+        <div class="progress total-bar">
+          <div class="font-shadow progress-bar produced-bar"
                role="progressbar"
                aria-valuemin="0"
                aria-valuemax="100"
                style="max-width: 100%;
-                      width:{{submitted.done / submitted.expected * 100}}%;">
-            {{submitted.done / submitted.expected * 100 | number : 1}}%
+                      width:{{submitted.d / submitted.x * 100}}%;">
+            <b>{{submitted.d / submitted.x * 100 | readableNumbers}}%</b>
           </div>
         </div>
       </div>
       <div class="col-sm-2">
-        <a ng-if="submitted.dataset" ng-href="https://cmsweb.cern.ch/das/request?view=list&limit=50&instance=prod/global&input=dataset={{submitted.dataset}}" target="_blank">Dataset in DAS</a>
+        <a ng-if="submitted.ds" ng-href="https://cmsweb.cern.ch/das/request?view=list&limit=50&instance=prod/global&input=dataset={{submitted.ds}}" target="_blank">Dataset in DAS</a>
       </div>
     </div>
 
@@ -38,29 +40,29 @@
     </p>
     <div ng-repeat="done in listDone" class="row zebra-lines small-padding">
       <div class="col-sm-4">
-        <a ng-if="done.request.indexOf('ReReco') == -1" ng-href="https://cms-pdmv.cern.ch/mcm/requests?prepid={{done.request}}" target="_blank">{{done.request}}</a>
-        <a ng-if="done.request.indexOf('ReReco') != -1" ng-href="https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?prep_id={{done.request}}" target="_blank">{{done.request}}</a>
+        <a ng-if="done.r.indexOf('ReReco') == -1" ng-href="https://cms-pdmv.cern.ch/mcm/requests?prepid={{done.r}}" target="_blank">{{done.r}}</a>
+        <a ng-if="done.r.indexOf('ReReco') != -1" ng-href="https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?prep_id={{done.r}}" target="_blank">{{done.r}}</a>
       </div>
       <div class="col-sm-2">
-        Expected: <b>{{done.expected}}</b>
+        Expected: <b>{{done.x | readableNumbers}}</b>
       </div>
       <div class="col-sm-2">
-        Done: <b>{{done.done}}</b>
+        Done: <b>{{done.d | readableNumbers}}</b>
       </div>
       <div class="col-sm-2">
-        <div class="progress" style="width:100%; background-color:rgba(231, 76, 60, 0.7); display: inline-block; margin: 0 4px -5px 4px;">
-          <div class="font-shadow progress-bar"
+        <div class="progress total-bar">
+          <div class="font-shadow progress-bar done-bar"
                role="progressbar"
                aria-valuemin="0"
                aria-valuemax="100"
                style="max-width: 100%;
-                      width:{{done.done / done.expected * 100}}%;">
-            {{done.done / done.expected * 100 | number : 1}}%
+                      width:{{done.d / done.x * 100}}%;">
+            <b>{{done.d / done.x * 100 | readableNumbers}}%</b>
           </div>
         </div>
       </div>
       <div class="col-sm-2">
-        <a ng-if="done.dataset" ng-href="https://cmsweb.cern.ch/das/request?view=list&limit=50&instance=prod/global&input=dataset={{done.dataset}}" target="_blank">Dataset in DAS</a>
+        <a ng-if="done.ds" ng-href="https://cmsweb.cern.ch/das/request?view=list&limit=50&instance=prod/global&input=dataset={{done.ds}}" target="_blank">Dataset in DAS</a>
       </div>
     </div>
   </div>

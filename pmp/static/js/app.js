@@ -19,23 +19,28 @@ angular.module('pmpApp', ['ngAnimate', 'ngRoute', 'ui.bootstrap', 'pmpCharts',
             $routeProvider
                 .when('/', {
                     templateUrl: 'build/index.min.html',
-                    controller: 'IndexController'
+                    controller: 'IndexController',
+                    reloadOnSearch: false
                 })
                 .when('/index', {
                     templateUrl: 'build/index.min.html',
-                    controller: 'IndexController'
+                    controller: 'IndexController',
+                    reloadOnSearch: false
                 })
                 .when('/historical', {
                     templateUrl: 'build/plot.min.html',
-                    controller: 'HistoricalController'
+                    controller: 'HistoricalController',
+                    reloadOnSearch: false
                 })
                 .when('/performance', {
                     templateUrl: 'build/plot.min.html',
-                    controller: 'PerformanceController'
+                    controller: 'PerformanceController',
+                    reloadOnSearch: false
                 })
                 .when('/present', {
                     templateUrl: 'build/plot.min.html',
-                    controller: 'PresentController'
+                    controller: 'PresentController',
+                    reloadOnSearch: false
                 });
             $locationProvider.html5Mode(true);
         }
