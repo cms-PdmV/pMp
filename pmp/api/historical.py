@@ -633,8 +633,8 @@ class SubmittedStatusAPI(esadapter.InitConnection):
         for request in response:
             if (request['status'] == 'submitted') and\
                     (pwg is None or request.get('pwg', 'None') in pwg) and\
-                    (request['priority'] > priority[0] and
-                     (request['priority'] < priority[1] or
+                    (request['priority'] >= priority[0] and
+                     (request['priority'] <= priority[1] or
                      priority[1] == -1)):
                 completed = self.completed_deep(request)
                 if completed >= 0:
