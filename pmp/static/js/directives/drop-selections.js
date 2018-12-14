@@ -57,10 +57,10 @@
                 scope.$parent.changeMode(scope.radio.mode);
             };
 
-            $http.get('build/drop-selections.min.html').success(function (html) {
+            $http.get('build/drop-selections.min.html').then(function (html) {
 
                 // compile
-                element.append($compile(html)(scope));
+                element.append($compile(html.data)(scope));
 
                 // hack to add sortable options after ng-repeat
                 setTimeout(function () {

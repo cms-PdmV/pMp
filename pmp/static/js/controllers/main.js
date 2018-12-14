@@ -12,22 +12,6 @@ angular.module('pmpApp').controller('MainController', ['$http', '$location',
         $scope.showView = true; // controls visibility of page main container
         if (!isSupportedBrowser) $('#unsupportedModal').modal('show'); // show unsupported modal if the page is not supported
 
-        $scope.nav = function (where) {
-            $scope.showView = (where === '');
-            if (!$scope.showView) {
-                $timeout(function () {
-                    $location.search({});
-                    $location.path(where);
-                    $timeout(function () {
-                        $scope.showView = !$scope.showView;
-                        $scope.nav('');
-                    }, 100);
-                }, 1100);
-            }
-        };
-        $timeout(function () {
-            $scope.nav('');
-        }, 100);
 
         /**
          * @description
@@ -176,7 +160,7 @@ angular.module('pmpApp').controller('MainController', ['$http', '$location',
                         params.status = statusQuery;
                     }
                 } else {
-                    if (scope[param] != scope.defaults[param]) {
+                    if (scope[param] != scope.defaults[param] && scope[param] !== undefined) {
                         params[param] = scope[param].toString()
                     }
                 }

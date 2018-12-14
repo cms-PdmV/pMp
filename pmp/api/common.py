@@ -29,7 +29,8 @@ class SuggestionsAPI(esadapter.InitConnection):
                     self.es.search(q=query,
                                    index=index,
                                    size=self.results_window_size)['hits']['hits']]
-        except elasticsearch.NotFoundError:
+        except elasticsearch.NotFoundError as ex:
+            logging.error(str(ex))
             return []
 
     def get(self, query):

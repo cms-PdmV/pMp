@@ -10,205 +10,148 @@
             chartData: '=',
             chartDataExtended: '=',
             linearScale: '=',
-            numberOfBins: '='
+            numberOfBins: '=',
+            binSelectedCallback: '='
         },
-        link: function (scope, element) {
-            var dataStats = [];
-            var formatCount = d3.format(",.0f");
-            var margin = {
-                top: 10,
-                right: 40,
-                bottom: 80,
-                left: 40
+        link: function(scope, element, compile, http) {
+            // graph configuration
+            config = {
+                customWidth: 1160,
+                customHeight: 500,
+                margin: {
+                    top: 40,
+                    right: 50,
+                    bottom: 50,
+                    left: 50
+                }
             };
-            var width = 1170 - margin.left - margin.right;
-            var height = 300 - margin.top - margin.bottom;
-            var bar, cMax, mMin, mMax;
+            scope.dataCopy = []
+            scope.selectedBin = -1;
+            scope.minDiff = 0;
+            scope.maxDiff = 0;
+            // General attributes
+            var width = config.customWidth - config.margin.left - config.margin.right;
+            var height = config.customHeight - config.margin.top - config.margin.bottom;
+            // add main svg
+            svg = d3.select(element[0])
+                    .append('svg:svg')
+                    .attr("viewBox", "0 -20 " + config.customWidth + " " + config.customHeight)
+                    .attr("xmlns", "http://www.w3.org/2000/svg")
+                    .append("svg:g")
+                    .attr("transform", "translate(" + config.margin.left + "," + config.margin.top + ")")
+                    .attr('style', 'fill: none');
 
-            var x = d3.scale.linear()
-                .domain([0, 1])
-                .range([0, width]);
+            function formatTimestamp(number) {
+                return msToDate(number * scope.range + scope.minDiff)
+            }
 
-            var xAxis = d3.svg.axis()
-                .scale(x)
-                .orient('bottom')
-                .tickFormat(formatXAxis);
+            function msToDate(ms) {
+                var days = Math.floor(ms / 86400)
+                var hours = Math.floor((ms - (days * 86400)) / 3600)
+                var minutes = Math.round((ms - (days * 86400 + hours * 3600)) / 60)
+                var result = ''
+                if (days > 0) {
+                    result += days + 'd '
+                }
+                if (hours > 0) {
+                    result += hours + 'h '
+                }
+                if (minutes > 0) {
+                    result += minutes + 'min'
+                }
+                return result
+            }
 
-            var y = d3.scale.log().clamp(true).range([height, 0]).nice();
-
-            var yAxis = d3.svg.axis()
-                .scale(y);
-
-            var svg = d3.select(element[0])
-                .append('svg:svg')
-                .attr('viewBox', '0 -20 ' + (width + margin.left + margin.right + ' ' + (
-                    height + margin.top + margin.bottom)))
-                .attr('width', '100%')
-                .attr('height', '100%')
-                .append('svg:g')
-                .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')')
-                .attr('style', 'fill: none');
-
-            var gx = svg.append("g")
-                .attr("class", "x axis")
-                .attr('style', 'fill: black')
-                .attr("transform", "translate(0," + (height) + ")")
+            // axes
+            var x = d3.scaleLinear().range([0, width]);
+            var xAxis = d3.axisBottom(x).ticks(10).tickFormat(formatTimestamp);
+            var gx = svg.append("svg:g")
+                .attr("class", "x axis minorx")
+                .attr("font-size", "12")
+                .attr('fill', '#666')
+                .attr("transform", "translate(0," + (height + 10) + ")")
                 .call(xAxis);
 
-            var inputChange = function () {
-                dataStats = [];
-                if (scope.chartData === undefined) {
-                    return null;
+            var y = d3.scaleLinear().range([height, 0]).domain([0, 10]);
+            var yAxis = d3.axisLeft(y).ticks(5);
+            var gy = svg.append("svg:g")
+                .attr("class", "y axis minory")
+                .attr("font-size", "12")
+                .attr('fill', '#666')
+                .call(yAxis)
+
+            var prepareData = function(data) {
+                scope.dataCopy = angular.copy(data);
+                scope.minDiff = d3.min(data, function(d) { return d.diff; })
+                scope.maxDiff = d3.max(data, function(d) { return d.diff; })
+                scope.range = scope.maxDiff - scope.minDiff
+                scope.numberOfBins = Math.min(data.length, scope.numberOfBins)
+                var binWidth = scope.range / scope.numberOfBins;
+                var fullBins = []
+                for (var i = 0; i < scope.numberOfBins; i++) {
+                    fullBins.push({x0: i * 1 / scope.numberOfBins, x1: (i + 1) * 1 / scope.numberOfBins, values: []})
                 }
-                mMin = d3.min(scope.chartData, function (d) {
-                    return d;
-                });
-                mMax = d3.max(scope.chartData, function (d) {
-                    return d;
-                });
-                for (var a = 0; a < scope.chartData.length; a++) {
-                    var val = (scope.chartData[a] - mMin) / (mMax - mMin);
-                    dataStats.push(val);
+                for (var i = 0; i < data.length; i++) {
+                    var binNo = 0;
+                    if (binWidth != 0) {
+                        binNo = Math.min(Math.floor((data[i].diff - scope.minDiff) / binWidth), scope.numberOfBins - 1)
+                    }
+                    data[i].niceDiff = msToDate(data[i].diff)
+                    fullBins[binNo].values.push(data[i])
                 }
-                updateHistogram();
-            };
+                scope.selectedBin = -1;
+                scope.binSelectedCallback([])
+                xAxis.ticks(Math.min(10, scope.numberOfBins))
+                y.domain([0, d3.max(fullBins, function(d) { return d.values.length; }) + 1]).range([height, 0]);
+                yAxis.scale(y);
+                svg.selectAll("rect.bar").remove()
+                svg.selectAll("text.bar-size-label").remove()
+                svg.selectAll("g .x.axis").call(xAxis);
+                svg.selectAll("g .y.axis").call(yAxis);
 
-            var updateHistogram = function () {
-                scope.numberOfBins = scope.numberOfBins || 10;
+                var rect = svg.selectAll("rect")
+                              .data(fullBins)
+                              .enter()
 
-                var data = d3.layout.histogram()
-                    .bins(x.ticks(scope.numberOfBins))(dataStats);
-
-                cMax = d3.max(data, function (d) {
-                    return d.y;
-                });
-
-                if (scope.linearScale === "linear") {
-                    y = d3.scale.linear().range([height, 0]).domain([0, cMax]);
-                    yAxis.scale(y);
-                } else {
-                    y = d3.scale.log().range([height, 0]).domain([1, cMax]);
-                    yAxis.scale(y);
-                }
-
-                svg.selectAll('.x path').style('stroke', '#777777').style('fill', 'none');
-                svg.selectAll('.x line').style('stroke', '#777777').style('fill', 'none');
-
-                bar = svg.selectAll('.bar')
-                    .data(data, function (d) {
-                        return d;
-                    });
-
-                bar.enter().append('g')
-                    .attr('class', 'bar')
-                    .attr('transform', function (d) {
-                        return 'translate(' + x(d.x) + ',' + height + ')';
+                rect.append("rect")
+                    .attr("fill", "#8eb2cf")
+                    .attr("class", "bar")
+                    .attr("x", 1)
+                    .attr("transform", function(d) {
+                        return "translate(" + x(d.x0) + "," + y(d.values.length) + ")";
                     })
-                    .transition()
-                    .duration(1000)
-                    .attr('transform', function (d) {
-                        if (isNaN(y(d.y))) {
-                            return 'translate(' + x(d.x) + ',0)';
+                    .attr("width", function(d) { return x(d.x1) - x(d.x0) -1 ; })
+                    .attr("height", function(d) { return height - y(d.values.length); })
+                    .on('mousedown',function(d){
+                        rect.selectAll('rect').attr("fill", "#8eb2cf")
+                        var newBin = Math.round(d.x1 / (d.x1 - d.x0)) - 1;
+                        if (scope.selectedBin != newBin) {
+                            scope.selectedBin = Math.round(d.x1 / (d.x1 - d.x0)) - 1;
+                            d3.select(d3.event.srcElement).attr('fill', '#f4bc91');
+                            scope.binSelectedCallback(fullBins[scope.selectedBin].values)
+                        } else {
+                            scope.selectedBin = -1;
+                            scope.binSelectedCallback([])
                         }
-                        return 'translate(' + x(d.x) + ',' + y(d.y) + ')';
                     });
 
-                // append columns
-                bar.append('rect')
-                    .attr('class', 'update')
-                    .attr('cursor', 'pointer')
-                    .attr('data-clipboard-text', function (data) {
-                        var toCopy = [];
-                        var min = d3.min(data, function (d) {
-                            return d;
-                        }) * (mMax - mMin) + mMin;
-                        var max = d3.max(data, function (d) {
-                            return d;
-                        }) * (mMax - mMin) + mMin;
-                        for (var i = 0; i < scope.chartDataExtended.length; i++) {
-                            var val = scope.chartDataExtended[i].value;
-                            if (val >= min && val <= max) {
-                                toCopy.push(scope.chartDataExtended[i].id);
-                            }
-                        }
-                        return toCopy.join(', ');
-                    })
-                    .attr('height', function (d) {
-                        if (isNaN(y(d.y))) {
-                            return 0;
-                        }
-                        return height - y(d.y);
-                    })
-                    .attr('width', x(data[0].dx) - 1)
-                    .attr('x', 1)
-                    .style('shape-rendering', 'optimizeSpeed')
-                    .style('fill', '#263238')
-                    .on('mouseover', function (d) {
-                        d3.select(this).style('fill', '#b0bec5');
-                    })
-                    .on('mouseout', function (d) {
-                        d3.select(this).style('fill', '#263238');
-                    })
-                    .on('click', function (data) {
-                        scope.$parent.showPopUp('success', 'List of requests copied');
-                    });
-
-                bar.selectAll('.bar')
-                    .transition()
-                    .duration(1000)
-                    .attr('transform', function (d) {
-                        return 'translate(' + x(d.x) + ',' + y(d.y) + ')';
-                    });
-
-                bar.append('text')
+                rect.append('text')
                     .attr('dy', '.75em')
-                    .attr('y', 6)
-                    .attr('x', x(data[0].dx) / 2)
                     .attr('text-anchor', 'middle')
-                    .style('fill', '#eeeeee')
+                    .attr('class', 'bar-size-label')
+                    .attr('y', function(d) { return y(d.values.length) - 16; })
+                    .attr('x', function(d) { return x(d.x1) - (x(d.x1) - x(d.x0)) / 2 ; })
+                    .style('fill', '#333')
                     .text(function (d) {
-                        return formatCount(d.y);
+                        return d.values.length ? d.values.length : '';
                     });
-
-                bar.exit()
-                    .attr('class', 'update')
-                    .transition()
-                    .duration(1500)
-                    .attr('y', 60)
-                    .style('fill-opacity', 1e-6)
-                    .remove();
-
-                xAxis.tickFormat(formatXAxis);
-                gx.transition().duration(200).ease("linear").call(xAxis);
             };
 
-            var formatXAxis = function (i) {
-                if (i == 0.1) {
-                    return '10% of range';
+            scope.$watch('chartData', function(data) {
+                console.log('Data changed ' + data)
+                if (data !== undefined && data.length) {
+                    prepareData(data);
                 }
-                if (i == 1.0) {
-                    return '100%';
-                }
-                return '';
-            };
-
-            var changed = function () {
-                if (scope.chartData !== undefined) {
-                    updateHistogram();
-                }
-            };
-
-            svg.selectAll('.axis path').style('fill', 'none');
-            scope.$watch('chartData', function (d) {
-                inputChange();
-            });
-            scope.$watch('numberOfBins', function (d) {
-                changed();
-            });
-            scope.$watch('linearScale', function (d) {
-                dataStats = [];
-                changed();
-                inputChange();
             });
         }
     };

@@ -1,27 +1,42 @@
-<div class="row" ng-show="data.length">
+<div class="row">
 
-  <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 text-center">
+  <!-- <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 text-center">
     <drop-selections options="difference" selections="selections" scale="scale" show-scale="true" show-mode="false"></drop-selections>
   </div>
-
-  <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 text-center">
-    <performance-histogram chart-data="histogramData" chart-data-extended="histogramDataExtended" linear-scale="scaleType", number-of-bins="bins"></performance-histogram>
+ -->
+  <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 m-2" >
+    Subtrahend: <radio-selections class="ml-2" options="availableStatuses" selected="subtrahend" on-value-change="subtrahendChange"></radio-selections>
+  </div>
+  <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 m-2" >
+    Minuend: <radio-selections class="ml-2" options="availableStatuses" selected="minuend" on-value-change="minuendChange"></radio-selections>
+  </div>
+  <div ng-show="data.length" class="col-xs-12 col-sm-12 col-md-12 col-lg-12 text-center">
+    <performance-histogram chart-data="data"
+                           chart-data-extended="histogramDataExtended"
+                           linear-scale="scaleType"
+                           number-of-bins="bins"
+                           bin-selected-callback="binSelected"></performance-histogram>
   </div>
 
-  <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 text-center">
+<!--   <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 text-center">
     <stats-table chart-data="data" minuend="difference.minuend" subtrahend="difference.subtrahend"></stats-table>
   </div>
+ -->
 
-  <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 text-center">
-    <a class="btn btn-sm text-uppercase padding-r" data-target="#event-drop" data-toggle="collapse">
-      <small>
-        Requests' lifetime phases
-      </small>
-    </a>  
+  <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 text-center margin-20" ng-show="selectedBin.length">
+    <p>Requests ({{selectedBin.length}}) in selected bar (Time taken from {{subtrahend}} to {{minuend}})</p>
+    <div ng-repeat="binEntry in selectedBin" class="row zebra-lines small-padding">
+      <div class="col-sm-6">
+        <a ng-if="binEntry.prepid.indexOf('ReReco') == -1" ng-href="https://cms-pdmv.cern.ch/mcm/requests?prepid={{binEntry.prepid}}" target="_blank">{{binEntry.prepid}}</a>
+        <a ng-if="binEntry.prepid.indexOf('ReReco') != -1" ng-href="https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?prep_id={{binEntry.prepid}}" target="_blank">{{binEntry.prepid}}</a>
+      </div>
+      <div class="col-sm-6">
+        {{binEntry.niceDiff}}
+      </div>
+    </div>
   </div>
-
-  <div id="event-drop" class="collapse col-xs-12 col-sm-12 col-md-12 col-lg-12 text-center">
+<!--   <div id="event-drop" class="collapse col-xs-12 col-sm-12 col-md-12 col-lg-12 text-center">
     <event-drop chart-data="data"></event-drop>
   </div>
-
+ -->
 </div>

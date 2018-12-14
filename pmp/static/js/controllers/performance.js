@@ -8,9 +8,10 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
                                                               '$location',
                                                               '$rootScope',
                                                               '$scope',
+                                                              '$timeout',
                                                               'PageDetailsProvider',
                                                               'Data',
-    function ($http, $interval, $location, $rootScope, $scope, PageDetailsProvider, Data) {
+    function ($http, $interval, $location, $rootScope, $scope, $timeout, PageDetailsProvider, Data) {
         'use strict';
 
         /**
@@ -18,10 +19,11 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
          */
         $scope.defaults = {
             r: '', // search term
-            bins: 10, // histogram bins
+            bins: 20, // histogram bins
             subtrahend: 'created', // subtrahend
             minuend: 'done', // minuend
             scale: 'linear', // linear scale? false = log
+            availableStatuses: ['created', 'validation', 'approved', 'submitted', 'done'],
             priority: undefined, // priority filter
             status: undefined, // status filter
             pwg: undefined, // PWG filter
@@ -33,7 +35,7 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
         $scope.init = function () {
             // get information about page
             $scope.page = PageDetailsProvider.performance;
-
+            $scope.selectedBin = [];
             // reset data and filters
             Data.reset(true);
 
@@ -41,26 +43,9 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
             var urlParameters = $scope.fillDefaults($location.search(), $scope.defaults)
             console.log(urlParameters);
             // define graph difference
-            $scope.difference = {
-                minuend: 'done',
-                subtrahend: 'created'
-            };
-            $scope.selections = ['validation', 'approved', 'submitted'];
-
-            var inx;
-            inx = $scope.selections.indexOf(urlParameters.min);
-            if (inx != -1) {
-                $scope.difference.minuend = urlParameters.min;
-                $scope.selections.splice(inx, 1);
-                $scope.selections.push('done');
-            }
-
-            inx = $scope.selections.indexOf(urlParameters.sub);
-            if (inx != -1) {
-                $scope.difference.subtrahend = urlParameters.sub;
-                $scope.selections.splice(inx, 1);
-                $scope.selections.push('created');
-            }
+            $scope.minuend = urlParameters.minuend
+            $scope.subtrahend = urlParameters.subtrahend
+            $scope.availableStatuses = $scope.defaults.availableStatuses
 
             // if linear scale
             $scope.scale = urlParameters.scale;
@@ -120,7 +105,7 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
                     Data.reset(true);
                 }
                 Data.addInputTag(request);
-                $scope.query(filter);
+                $scope.query(true);
             }
         };
 
@@ -146,13 +131,13 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
             var pwgQuery = Data.getPWGQuery();
             var queryUrl = 'api/performance?r=' + inputTags.join(',');
             if (priorityQuery) {
-                queryUrl += '&priority=' + x.join(',');
+                queryUrl += '&priority=' + priorityQuery;
             }
             if (statusQuery) {
-                queryUrl += '&status=' + s.join(',');
+                queryUrl += '&status=' + statusQuery;
             }
             if (pwgQuery) {
-                queryUrl += '&pwg=' + w.join(',');
+                queryUrl += '&pwg=' + pwgQuery;
             }
             // query for linear chart data
             console.log('Query ' + queryUrl);
@@ -165,8 +150,9 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
                     update: false
                 });
                 $rootScope.loadingData = false;
-                $scope.data = Data.getLoadedData(); 
                 $scope.first_status = data.data.results.first_status;
+                $scope.subtrahend = $scope.first_status;
+                $scope.data = $scope.filterByMinuendSubtrahend(Data.getLoadedData(), $scope.subtrahend, $scope.minuend);
                 $scope.setURL();
             }, function () {
                 $scope.showPopUp(PageDetailsProvider.messages
@@ -176,6 +162,37 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
             });
         };
 
+        $scope.binSelected = function(selectedBin) {
+            $scope.selectedBin = selectedBin.slice();
+            $timeout(function(){
+                $scope.$apply();
+            });
+        }
+
+        $scope.minuendChange = function(minuend) {
+            $scope.minuend = minuend;
+            console.log('minuend ' + minuend)
+            $scope.data = $scope.filterByMinuendSubtrahend(Data.getLoadedData(), $scope.subtrahend, $scope.minuend);
+        }
+
+        $scope.subtrahendChange = function(subtrahend) {
+            $scope.subtrahend = subtrahend;
+            console.log('subtrahend ' + subtrahend)
+            $scope.data = $scope.filterByMinuendSubtrahend(Data.getLoadedData(), $scope.subtrahend, $scope.minuend);
+        }
+
+        $scope.filterByMinuendSubtrahend = function(data, min, max) {
+            var newData = []
+            for (var i = 0; i < data.length; i++) {
+                if (data[i].history !== undefined && data[i].history[min] !== undefined && data[i].history[max] !== undefined) {
+                    data[i].diff = data[i].history[max] - data[i].history[min]
+                    data[i].min = data[i].history[min]
+                    data[i].max = data[i].history[max]
+                    newData.push(data[i])
+                }
+            }
+            return newData
+        }
         /**
          * @description Core: Change URL when data or filter changes
          */
@@ -215,41 +232,5 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
                 $rootScope.loadingData = false;
             });
         };
-
-        /**
-         * @description Change histogram
-         */
-        $scope.applyHistogram = function (d, e) {
-            $scope.histogramData = d;
-            $scope.histogramDataExtended = e;
-        };
-
-        /**
-         * @description When differences are recalculated in derective
-         */
-        $scope.applyDifference = function (d) {
-            $scope.difference = d;
-            $scope.setURL();
-        };
-
-        /**
-         * @description On scale change 
-         */
-        $scope.changeScale = function (type) {
-            $scope.scale = type;
-            $scope.setURL();
-        };
-
-        // Broadcast receiver, change filtered data on loaded data change
-        $scope.$on('onChangeNotification:FilteredData', function () {
-            $rootScope.loadingData = false;
-            $scope.setURL();
-            $scope.data = Data.getFilteredData();
-
-            $scope.applyDifference({
-                minuend: $scope.difference.minuend,
-                subtrahend: $scope.first_status,
-            });
-        });
     }
 ]);

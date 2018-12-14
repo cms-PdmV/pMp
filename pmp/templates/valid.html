@@ -3,7 +3,7 @@
 
   <head>
     <title>Production Monitoring Platform</title>
-    <base href="/"/>
+    <base href="/pmp2/"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
 
     <!--external CSS-->
@@ -26,10 +26,11 @@
   </head>
   <body ng-controller="MainController">
 
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark" role="navigation">
+    <nav class="navbar navbar-expand-lg navbar-dark" style="background-color:red !important" role="navigation">
       <div class="container-fluid">
         <a href="index" class="navbar-brand" ng-click="nav('/index/')">
           <img src="img/ic_fav.png" class="brand-adjust" alt="PMP"/>
+          <span style="line-height: 40px"><b>Private Development Version</b></span>
         </a>
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
           <span class="navbar-toggler-icon"></span>

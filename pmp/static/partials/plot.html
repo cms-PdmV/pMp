@@ -16,11 +16,9 @@
           <input type="text"
                  ng-model="campaign"
                  ng-change="getSuggestions(campaign, page.typeahead)"
-                 typeahead="s as s.label for s in suggestions | filter:$viewValue"
+                 uib-typeahead="s as s.label for s in suggestions | filter:$viewValue"
                  typeahead-template-url="partials/search-suggestion.html"
-                 typeahead-wait-ms=300
                  class="form-control"
-                 autocomplete="off"
                  placeholder="Start typing to search...">
           <div class="input-group-append">
             <button type="button"

@@ -23,6 +23,7 @@ module.exports = function(grunt) {
    js2: {
     src: ['static/js/directives/__init__.js',
           'static/js/directives/drop-selections.js',
+          'static/js/directives/radio-selections.js',
           'static/js/directives/event-drop.js',
           'static/js/directives/historical-linear.js',
           'static/js/directives/multiple-pie.js',
@@ -79,6 +80,7 @@ module.exports = function(grunt) {
       files: {
         'static/build/advanced.min.html': 'static/partials/advanced.html',
         'static/build/drop-selections.min.html': 'static/partials/drop-selections.html',
+        'static/build/radio-selections.min.html': 'static/partials/radio-selections.html',
         'static/build/filter.min.html': 'static/partials/filter.html',
         'static/build/historical.min.html': 'static/partials/historical.html',
         'static/build/index.min.html': 'static/partials/index.html',

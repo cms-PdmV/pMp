@@ -281,7 +281,8 @@ class HistoricalAPI(APIBase):
                                                                          status_filter,
                                                                          type(status_filter)))
         cache_key = json.dumps({'q': query, 'g': data_point_count}, sort_keys=True)
-        if cache_key in HistoricalAPI.cache:
+        cache_enabled = False
+        if cache_enabled and cache_key in HistoricalAPI.cache:
             logging.info('Found %s in cache. DELETE THIS AFTER DEVELOPMENT!' % (cache_key))
             response = HistoricalAPI.cache[cache_key]
         else:

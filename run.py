@@ -179,7 +179,7 @@ def suggest(fragment, typeof):
     fragment = sanitize(fragment)
 
     result = make_response(models.APICall.suggestions(typeof, fragment))
-    cache.add(request.path, result, timeout=config.CACHE_TIMEOUT)
+    # cache.add(request.path, result, timeout=config.CACHE_TIMEOUT)
     return result
 
 
