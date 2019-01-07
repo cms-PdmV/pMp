@@ -13,17 +13,25 @@
         },
         templateUrl: 'build/radio-selections.min.html',
         link: function (scope, element) {
-            scope.selectionDict = {}
-            for (var i in scope.options) {
-                scope.selectionDict[scope.options[i]] = scope.options[i] == scope.selected
-            }
             scope.selectionChanged = function(selection) {
+                console.log(scope.selectionDict)
                 scope.selectionDict[scope.selected] = false
                 scope.selected = selection
                 if (scope.onValueChange) {
                     scope.onValueChange(selection)
                 }
             }
+            scope.$watch('options', function(options) {
+                console.log('>Options changed')
+                console.log(scope.options)
+                console.log('<Options changed')
+                if (options !== undefined) {
+                    scope.selectionDict = {}
+                    for (var i in options) {
+                        scope.selectionDict[options[i]] = options[i] == scope.selected
+                    }
+                }
+            });
         }
     };
 }])

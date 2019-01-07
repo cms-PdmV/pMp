@@ -23,7 +23,6 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
             subtrahend: 'created', // subtrahend
             minuend: 'done', // minuend
             scale: 'linear', // linear scale? false = log
-            availableStatuses: ['created', 'validation', 'approved', 'submitted', 'done'],
             priority: undefined, // priority filter
             status: undefined, // status filter
             pwg: undefined, // PWG filter
@@ -43,9 +42,9 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
             var urlParameters = $scope.fillDefaults($location.search(), $scope.defaults)
             console.log(urlParameters);
             // define graph difference
-            $scope.minuend = urlParameters.minuend
-            $scope.subtrahend = urlParameters.subtrahend
-            $scope.availableStatuses = $scope.defaults.availableStatuses
+            $scope.minuend = urlParameters.minuend;
+            $scope.subtrahend = urlParameters.subtrahend;
+            $scope.availableStatuses = [];
 
             // if linear scale
             $scope.scale = urlParameters.scale;
@@ -59,11 +58,21 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
             }
 
             if (urlParameters.status !== undefined) {
-                Data.setStatusFilter(urlParameters.status.split(','));
+                var s = {}
+                var tmp = urlParameters.status.split(',');
+                for (var i = 0; i < tmp.length; i++) {
+                    s[tmp] = true;
+                }
+                Data.setStatusFilter(s);
             }
 
             if (urlParameters.pwg !== undefined) {
-                Data.setPWGFilter(urlParameters.pwg.split(','));
+                var w = {}
+                var tmp = urlParameters.pwg.split(',');
+                for (var i = 0; i < tmp.length; i++) {
+                    w[tmp] = true;
+                }
+                Data.setPWGFilter(w);
             }
 
             // load graph data
@@ -150,8 +159,19 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
                     update: false
                 });
                 $rootScope.loadingData = false;
-                $scope.first_status = data.data.results.first_status;
-                $scope.subtrahend = $scope.first_status;
+                $scope.availableStatuses = data.data.results.all_statuses_in_history.slice()
+                console.log($scope.availableStatuses)
+                if ($scope.availableStatuses.length == 0) {
+                    $scope.subtrahend = undefined
+                    $scope.minuend = undefined
+                } else {
+                    if ($scope.availableStatuses.indexOf($scope.subtrahend) == -1) {
+                        $scope.subtrahend = $scope.availableStatuses[0];
+                    }
+                    if ($scope.availableStatuses.indexOf($scope.minuend) == -1) {
+                        $scope.minuend = $scope.availableStatuses[$scope.availableStatuses.length - 1];
+                    }
+                }
                 $scope.data = $scope.filterByMinuendSubtrahend(Data.getLoadedData(), $scope.subtrahend, $scope.minuend);
                 $scope.setURL();
             }, function () {
@@ -172,16 +192,23 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
         $scope.minuendChange = function(minuend) {
             $scope.minuend = minuend;
             console.log('minuend ' + minuend)
+            $scope.setURL();
             $scope.data = $scope.filterByMinuendSubtrahend(Data.getLoadedData(), $scope.subtrahend, $scope.minuend);
+            $scope.binSelected([])
         }
 
         $scope.subtrahendChange = function(subtrahend) {
             $scope.subtrahend = subtrahend;
             console.log('subtrahend ' + subtrahend)
+            $scope.setURL();
             $scope.data = $scope.filterByMinuendSubtrahend(Data.getLoadedData(), $scope.subtrahend, $scope.minuend);
+            $scope.binSelected([])
         }
 
         $scope.filterByMinuendSubtrahend = function(data, min, max) {
+            if (min === undefined || max === undefined || $scope.availableStatuses.indexOf(min) >= $scope.availableStatuses.indexOf(max)) {
+                return []
+            }
             var newData = []
             for (var i = 0; i < data.length; i++) {
                 if (data[i].history !== undefined && data[i].history[min] !== undefined && data[i].history[max] !== undefined) {

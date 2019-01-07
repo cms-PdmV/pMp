@@ -39,26 +39,29 @@
                     .attr('style', 'fill: none');
 
             function formatBigNumbers(number) {
-                var result = ''
-                if (number >= 1e9) {
-                    result = (Math.round(number / 10000000.0) / 100.0).toFixed(2) + "G"
-                } else if (number >= 1e6) {
-                    result = (Math.round(number / 10000.0) / 100.0).toFixed(2) + "M"
-                } else if (number >= 1e3) {
-                    result = (Math.round(number / 10.0) / 100.0).toFixed(2) + "k"
-                } else {
-                    result = number.toString()
-                }
-                return result.replace('.00', '')
-                             .replace('.10', '.1')
-                             .replace('.20', '.2')
-                             .replace('.30', '.3')
-                             .replace('.40', '.4')
-                             .replace('.50', '.5')
-                             .replace('.60', '.6')
-                             .replace('.70', '.7')
-                             .replace('.80', '.8')
-                             .replace('.90', '.9')
+              if (number < 0) {
+                return ''
+              }
+              var result = ''
+              if (number >= 1e9) {
+                  result = (Math.round(number / 10000000.0) / 100.0).toFixed(2) + "G"
+              } else if (number >= 1e6) {
+                  result = (Math.round(number / 10000.0) / 100.0).toFixed(2) + "M"
+              } else if (number >= 1e3) {
+                  result = (Math.round(number / 10.0) / 100.0).toFixed(2) + "k"
+              } else {
+                  result = number.toString()
+              }
+              return result.replace('.00', '')
+                           .replace('.10', '.1')
+                           .replace('.20', '.2')
+                           .replace('.30', '.3')
+                           .replace('.40', '.4')
+                           .replace('.50', '.5')
+                           .replace('.60', '.6')
+                           .replace('.70', '.7')
+                           .replace('.80', '.8')
+                           .replace('.90', '.9')
             }
 
             // axes
@@ -109,6 +112,12 @@
                     svg.select("path.done-graph-data").attr("transform", transformString)
                     svg.select("path.produced-graph-data").attr("transform", transformString)
                 }
+                svg.select(".x.axis")
+                   .selectAll('text')
+                   .style("font-size","14px");
+                svg.select(".y.axis")
+                   .selectAll('text')
+                   .style("font-size","14px");
             }
 
 
@@ -142,6 +151,12 @@
                 yAxis.scale(y);
                 svg.selectAll("g .x.axis").call(xAxis);
                 svg.selectAll("g .y.axis").call(yAxis);
+                svg.select(".x.axis")
+                   .selectAll('text')
+                   .style("font-size","14px");
+                svg.select(".y.axis")
+                   .selectAll('text')
+                   .style("font-size","14px");
                 svg.select("path.expected-graph-data").remove()
                 svg.select("path.done-graph-data").remove()
                 svg.select("path.produced-graph-data").remove()

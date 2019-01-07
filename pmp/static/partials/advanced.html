@@ -19,12 +19,6 @@
       <input type="checkbox" ng-model="$parent.priorityBlockMarkup" ng-init="$parent.priorityBlockMarkup=true" ng-disabled="loadingData">
       <small>Priority blocks markup</small>
     </label>
-    <br ng-show="page.id == 1"/>
-    <label class="checkbox-inline col-lg-12 col-md-12 col-sm-12">
-      <input type="checkbox" ng-model="$parent.showDate" ng-change="setURL()" ng-disabled="loadingData">
-      <small>Show time</small>
-    </label>
-    <br/>
     <label class="checkbox-inline col-lg-12 col-md-12 col-sm-12" ng-show="page.id == 2">
       <input type="checkbox" ng-model="$parent.zoomY" ng-change="setURL()" ng-disabled="loadingData">
       <small>y axis zoom</small>
@@ -41,7 +35,7 @@
   
   <div class="input-group input-group-sm spacing text-uppercase" ng-show="page.id == 3">
     <span class="hidden-sm input-group-addon">Bins</span>
-    <input type="number" class="form-control" ng-model="$parent.bins" ng-change="setURL()" placeholder="Default: 10">
+    <input type="number" class="form-control" ng-model="$parent.bins" ng-change="setURL()" placeholder="Default: 20">
   </div>
   
   <div class="btn-group btn-group-sm pull-left spacing text-uppercase hidden-xs">

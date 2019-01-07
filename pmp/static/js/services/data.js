@@ -7,7 +7,7 @@ angular.module('pmpApp').service('Data', ['$rootScope', function ($rootScope) {
     'use strict';
     var loadedData = [], // currently loaded data
         inputTags = [], // query elements
-        priorityFilter = [], // array of min and max values of priority
+        priorityFilter = [undefined, undefined], // array of min and max values of priority
         statusFilter = [], // array of enabled statuses
         pwgFilter = []; // array of enabled PWGs
 
@@ -90,10 +90,7 @@ angular.module('pmpApp').service('Data', ['$rootScope', function ($rootScope) {
             if (this.priorityFilter === undefined) {
                 return undefined
             }
-            if (this.priorityFilter.length == 2 && this.priorityFilter[0] !== undefined && this.priorityFilter[1] !== undefined) {
-                return this.priorityFilter;
-            }   
-            return undefined;
+            return this.priorityFilter;
         },
         /**
          * @description Priority filter setter.
@@ -107,6 +104,8 @@ angular.module('pmpApp').service('Data', ['$rootScope', function ($rootScope) {
          * @return {Object} PWG filter object in a form {pwg_name:{boolean}}.
          */
         getPWGFilter: function () {
+            console.log('Data returning PWG filter ')
+            console.log(this.pwgFilter)
             return this.pwgFilter;
         },
         /**
@@ -114,6 +113,8 @@ angular.module('pmpApp').service('Data', ['$rootScope', function ($rootScope) {
          * @params {Object} i the PWG filter object in a form {pwg_name:{boolean}}.
          */
         setPWGFilter: function (i) {
+            console.log('Data setting PWG filter ')
+            console.log(i)
             this.pwgFilter = i;
         },
         /**
@@ -151,29 +152,30 @@ angular.module('pmpApp').service('Data', ['$rootScope', function ($rootScope) {
             return allDisabled(this.statusFilter);
         },
         getPriorityQuery: function () {
-            var x = [];
             var dataPriorityFilter = this.getPriorityFilter();
-            if (dataPriorityFilter === undefined) {
+            if (dataPriorityFilter[0] === undefined && dataPriorityFilter[1] === undefined) {
                 return undefined;
             }
-            return dataPriorityFilter[0] + ',' + dataPriorityFilter[1];
+            return (dataPriorityFilter[0] || '') + ',' + (dataPriorityFilter[1] || '');
         },
-        getPWGQuery: function (alwaysReturn) {
-            if (!alwaysReturn && this.allPWGsEnabled()) {
+        getPWGQuery: function () {
+            if (this.allPWGsEnabled()) {
                 return undefined;
             }
             var w = [];
             var filter = this.getPWGFilter();
+            console.log('Data PWG filter')
+            console.log(filter)
             for (var pwg in filter) {
                 if (filter[pwg]) {
-                    w.push(pwg)
+                    w.push(pwg);
                 }
             }
             return w.join(',');
         },
-        getStatusQuery: function(alwaysReturn) {
+        getStatusQuery: function() {
             // add status filter
-            if (!alwaysReturn && this.allStatusesEnabled()) {
+            if (this.allStatusesEnabled()) {
                 return undefined;
             }
             var s = [];

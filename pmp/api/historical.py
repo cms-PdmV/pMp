@@ -291,10 +291,8 @@ class HistoricalAPI(APIBase):
 
         # Construct data by given query
         # response = self.prepare_response(query)
-        logging.info('Requests before filtering %s' % (len(response)))
         # Apply priority, PWG and status filters
         response, pwgs, statuses = self.apply_filters(response, priority_filter, pwg_filter, status_filter)
-        logging.info('Requests after filtering %s' % (len(response)))
         # Get submitted and done requests separately
         submitted_requests = self.get_with_status(response, 'submitted')
         done_requests = self.get_with_status(response, 'done')

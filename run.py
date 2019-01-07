@@ -115,8 +115,8 @@ def api_historical():
             priority = None
         else:
             try:
-                priority[0] = int(priority[0])
-                priority[1] = int(priority[1])
+                priority[0] = int(priority[0]) if priority[0] != '' else None
+                priority[1] = int(priority[1]) if priority[1] != '' else None
             except:
                 priority = None
 
@@ -148,8 +148,8 @@ def api_performance():
             priority = None
         else:
             try:
-                priority[0] = int(priority[0])
-                priority[1] = int(priority[1])
+                priority[0] = int(priority[0]) if priority[0] != '' else None
+                priority[1] = int(priority[1]) if priority[1] != '' else None
             except:
                 priority = None
 

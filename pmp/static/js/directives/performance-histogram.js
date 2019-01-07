@@ -49,6 +49,9 @@
                 var days = Math.floor(ms / 86400)
                 var hours = Math.floor((ms - (days * 86400)) / 3600)
                 var minutes = Math.round((ms - (days * 86400 + hours * 3600)) / 60)
+                if (days == 0 && hours == 0 && minutes == 0) {
+                    return Math.round(ms / 1000) + 's'
+                }
                 var result = ''
                 if (days > 0) {
                     result += days + 'd '
@@ -67,7 +70,6 @@
             var xAxis = d3.axisBottom(x).ticks(10).tickFormat(formatTimestamp);
             var gx = svg.append("svg:g")
                 .attr("class", "x axis minorx")
-                .attr("font-size", "12")
                 .attr('fill', '#666')
                 .attr("transform", "translate(0," + (height + 10) + ")")
                 .call(xAxis);
@@ -76,7 +78,6 @@
             var yAxis = d3.axisLeft(y).ticks(5);
             var gy = svg.append("svg:g")
                 .attr("class", "y axis minory")
-                .attr("font-size", "12")
                 .attr('fill', '#666')
                 .call(yAxis)
 
@@ -108,6 +109,12 @@
                 svg.selectAll("text.bar-size-label").remove()
                 svg.selectAll("g .x.axis").call(xAxis);
                 svg.selectAll("g .y.axis").call(yAxis);
+                svg.select(".x.axis")
+                   .selectAll('text')
+                   .style("font-size","14px");
+                svg.select(".y.axis")
+                   .selectAll('text')
+                   .style("font-size","14px");
 
                 var rect = svg.selectAll("rect")
                               .data(fullBins)
@@ -148,7 +155,7 @@
             };
 
             scope.$watch('chartData', function(data) {
-                console.log('Data changed ' + data)
+                console.log('Data changed')
                 if (data !== undefined && data.length) {
                     prepareData(data);
                 }

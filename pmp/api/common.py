@@ -328,6 +328,7 @@ class APIBase(esadapter.InitConnection):
         Return new data and dictionaries of pwgs and status filters that show whether
         these values were left (True) or filtered out (False)
         """
+        logging.info('Requests before filtering %s' % (len(data)))
         new_data = []
         if pwg_filter:
             pwg_filter = [x.upper() for x in pwg_filter if x]
@@ -355,10 +356,21 @@ class APIBase(esadapter.InitConnection):
             priority = item.get('priority')
             if priority is not None:
                 if priority_filter is not None:
-                    if priority < priority_filter[0] or priority > priority_filter[1]:
+                    lower_priority = priority_filter[0]
+                    upper_priority = priority_filter[1]
+                    if lower_priority is not None and priority < lower_priority:
                         continue
+
+                    if upper_priority is not None and priority > upper_priority:
+                        continue
+
+            if 'prepid' in item:
+                print('%s %s %s %s' % (item['prepid'], priority, pwg, status))
+            elif 'r' in item:
+                print('%s %s %s %s' % (item['r'], priority, pwg, status))
 
             if all_pwgs[pwg] and all_statuses[status]:
                 new_data.append(item)
 
+        logging.info('Requests after filtering %s' % (len(new_data)))
         return new_data, all_pwgs, all_statuses

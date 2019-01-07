@@ -14,6 +14,7 @@ class PerformanceAPI(APIBase):
         'submitted': 3,
         'done': 4
     }
+
     def __init__(self):
         APIBase.__init__(self)
 
@@ -21,7 +22,6 @@ class PerformanceAPI(APIBase):
         response_list = []
         query = query.split(',')
         seen_prepids = set()
-        earliest_status = 'done'
         for one in query:
             # Keep track of the prepids we've seen, so that we only add submission data points once
             logging.info('Processing %s' % (one))
@@ -50,19 +50,35 @@ class PerformanceAPI(APIBase):
                 patch_history = {}
                 for history in mcm_document['history']:
                     patch_history[history['action']] = history['time']
-                    # Keep a log of the "earliest" status found.
-                    # Fixes ReReco request display given that they start directly at "submitted"
-                    if self.status_order[history['action']] < self.status_order[earliest_status]:
-                        earliest_status = history['action']
 
                 mcm_document['history'] = patch_history
                 seen_prepids.add(mcm_document['prepid'])
                 response_list.append({'history': mcm_document['history'],
                                       'prepid': mcm_document['prepid'],
                                       'pwg': mcm_document['pwg'],
-                                      'status': mcm_document['status']})
+                                      'status': mcm_document['status'],
+                                      'priority': mcm_document['priority']})
 
-        return response_list, earliest_status
+        return response_list
+
+    def get_all_statuses_in_history(self, data):
+        """
+        Get list of all possible statuses in data
+        """
+        all_possible = set(['created', 'validation', 'approved', 'submitted', 'done'])
+        statuses = set()
+        for item in data:
+            for history_key in item.get('history', []):
+                status = history_key.lower()
+                if status not in statuses:
+                    statuses.add(status)
+                    all_possible.remove(status)
+
+            if len(all_possible) == 0:
+                break
+
+        statuses = sorted(statuses, key=lambda i: self.status_order.get(i, -1))
+        return statuses
 
     def get(self, query, priority_filter=None, pwg_filter=None, status_filter=None):
         """
@@ -77,14 +93,15 @@ class PerformanceAPI(APIBase):
                                                                 status_filter,
                                                                 type(status_filter)))
         # Construct data by given query
-        response, first_status = self.prepare_response(query)
+        response = self.prepare_response(query)
         logging.info('Requests before filtering %s' % (len(response)))
         # Apply priority, PWG and status filters
         response, pwgs, statuses = self.apply_filters(response, priority_filter, pwg_filter, status_filter)
+        all_statuses_in_history = self.get_all_statuses_in_history(response)
         logging.info('Requests after filtering %s' % (len(response)))
         res = {'data': response,
                'pwg': pwgs,
                'status': statuses,
-               'first_status': first_status}
+               'all_statuses_in_history': all_statuses_in_history}
         logging.info('Will return')
         return json.dumps({'results': res})

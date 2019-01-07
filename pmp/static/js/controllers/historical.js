@@ -62,7 +62,12 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
             }
 
             if (urlParameters.pwg !== undefined) {
-                Data.setPWGFilter(urlParameters.pwg.split(','));
+                var w = {}
+                var tmp = urlParameters.pwg.split(',');
+                for (var i = 0; i < tmp.length; i++) {
+                    w[tmp] = true;
+                }
+                Data.setPWGFilter(w);
             }
 
             // load graph data
@@ -136,8 +141,8 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
 
             $rootScope.loadingData = true;
             var priorityQuery = Data.getPriorityQuery();
-            var statusQuery = Data.getStatusQuery($scope.data === undefined);
-            var pwgQuery = Data.getPWGQuery($scope.data === undefined);
+            var statusQuery = Data.getStatusQuery();
+            var pwgQuery = Data.getPWGQuery();
             var granularity = $scope.granularity;
             var queryUrl = 'api/historical?r=' + inputTags.join(',');
             if (granularity) {
@@ -183,7 +188,9 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
             // $location.path($location.path(), false);
             var params = $scope.constructURLQuery($scope, Data)
             // reload url
+            console.log('setURL -> $location.search()')
             console.log($location.search())
+            console.log('setURL -> constructURLQuery')
             console.log(params)
             $location.search(params).replace();
             // broadcast change notification

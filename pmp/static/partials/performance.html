@@ -1,14 +1,14 @@
-<div class="row">
+<div ng-hide="loadingData || availableStatuses.length == 0" class="row">
 
   <!-- <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 text-center">
     <drop-selections options="difference" selections="selections" scale="scale" show-scale="true" show-mode="false"></drop-selections>
   </div>
  -->
   <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 m-2" >
-    Subtrahend: <radio-selections class="ml-2" options="availableStatuses" selected="subtrahend" on-value-change="subtrahendChange"></radio-selections>
+    Subtrahend (From): <radio-selections style="text-transform: capitalize;" class="ml-2" options="availableStatuses" selected="subtrahend" on-value-change="subtrahendChange"></radio-selections>
   </div>
   <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 m-2" >
-    Minuend: <radio-selections class="ml-2" options="availableStatuses" selected="minuend" on-value-change="minuendChange"></radio-selections>
+    Minuend (To): <radio-selections style="text-transform: capitalize;" class="ml-2" options="availableStatuses" selected="minuend" on-value-change="minuendChange"></radio-selections>
   </div>
   <div ng-show="data.length" class="col-xs-12 col-sm-12 col-md-12 col-lg-12 text-center">
     <performance-histogram chart-data="data"
