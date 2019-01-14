@@ -228,9 +228,10 @@ def create_rereco_request(stats_doc, rereco_cfg, process_string_cfg):
     fake_request['reqmgr_name'] = [stats_doc['_id']]
     fake_request['reqmgr_status_history'] = [{'name': stats_doc['_id'], 'history':[]}]
     fake_request['history'] = []
+
+    # Translate ReqMgr2 statuses to McM-like statuses
     workflow_to_mcm_statuses = {
-        'new': 'submitted',
-        'announced': 'done'
+        'new': 'submitted'
     }
     for transition in stats_doc.get('RequestTransition', []):
         fake_request['reqmgr_status_history'][0]['history'].append(transition['status'])
@@ -240,10 +241,40 @@ def create_rereco_request(stats_doc, rereco_cfg, process_string_cfg):
                 'time': transition['update_time']
             })
 
+    # Check if all datasets are VALID, if yes, it means Request is 'done'
+    # Find latest timestamp of 'VALID' dataset, in any of them is not valid, set timestamp
+    # to 0 and not add 'done' history entry
+    event_number_history = stats_doc.get('EventNumberHistory', [])
+    logging.info('EventNumberHistory %s' % (json.dumps(event_number_history, indent=4)))
+    if len(event_number_history) > 0:
+        latest_timestamp = 0
+        for dataset_entry in event_number_history:
+            dataset_history = dataset_entry.get('history')
+            if len(dataset_history) > 0:
+                sorted_history = sorted(dataset_history, key=lambda k: k['time'])
+                last_type = sorted_history[-1].get('type', 'NON-EXISTING')
+                if last_type != 'VALID':
+                    latest_timestamp = 0
+                    break
+
+                last_timestamp = sorted_history[-1].get('time', 0)
+                if last_timestamp > latest_timestamp:
+                    latest_timestamp = last_timestamp
+            else:
+                latest_timestamp = 0
+                break
+
+        if last_timestamp != 0:
+            fake_request['history'].append({
+                'action': 'done',
+                'time': last_timestamp
+            })
+
     if len(fake_request.get('history', [])) > 0:
         fake_request['status'] = fake_request['history'][-1]['action']
     else:
         fake_request['status'] = 'unknown'
+
     fake_request['pwg'] = 'ReReco'
     processing_string = stats_doc.get('ProcessingString', None)
     if processing_string is not None:
