@@ -34,7 +34,20 @@ class SuggestionsAPI(esadapter.InitConnection):
             return []
 
     def get(self, query):
-        """Get suggestions for the query"""
+        """
+        Get suggestions for the query
+        Order:
+          campaign
+          request
+          tag
+          flow
+          rereco request
+          rereco processing string
+          rereco campaign
+          relval request
+          relval cmssw version
+          relval campaign
+        """
         searchable = query.replace("-", r"\-")
         if '-' in query:
             search = ('prepid:%s' % searchable)
@@ -48,7 +61,7 @@ class SuggestionsAPI(esadapter.InitConnection):
         results += [{'type': 'CAMPAIGN', 'label': x} for x in self.search(search, 'campaigns')]
 
         if len(results) < self.max_suggestions:
-            results += [{'type': 'PROCESSING STRING', 'label': x} for x in self.search(search, 'processing_strings')]
+            results += [{'type': 'REQUEST', 'label': x} for x in self.search(search, 'requests')]
 
         if len(results) < self.max_suggestions:
             results += [{'type': 'TAG', 'label': x} for x in self.search(search, 'tags')]
@@ -57,17 +70,23 @@ class SuggestionsAPI(esadapter.InitConnection):
             if len(results) < self.max_suggestions:
                 results += [{'type': 'FLOW', 'label': x} for x in self.search(search, 'flows')]
 
-            if len(results) < self.max_suggestions:
-                results += [{'type': 'REQUEST', 'label': x} for x in self.search(search, 'requests')]
+        if len(results) < self.max_suggestions:
+            results += [{'type': 'RERECO', 'label': x} for x in self.search(search, 'rereco_requests')]
 
-            if len(results) < self.max_suggestions:
-                results += [{'type': 'RERECO', 'label': x} for x in self.search(search, 'rereco_requests')]
+        if len(results) < self.max_suggestions:
+            results += [{'type': 'PROCESSING STRING', 'label': x} for x in self.search(search, 'processing_strings')]
 
-        # if self.historical and len(results) < self.max_suggestions:
-        #     results += [{'type': 'WORKFLOW', 'label': x} for x in self.search(search_stats, 'workflows')]
+        if len(results) < self.max_suggestions:
+            results += [{'type': 'RERECO CAMPAIGN', 'label': x} for x in self.search(search, 'rereco_campaigns')]
 
-        if self.present and len(results) < self.max_suggestions:
-            results += [{'type': 'CHAINED CAMPAIGN', 'label': x} for x in self.search(search, 'chained_campaigns')]
+        if len(results) < self.max_suggestions:
+            results += [{'type': 'RELVAL', 'label': x} for x in self.search(search, 'relval_requests')]
+
+        if len(results) < self.max_suggestions:
+            results += [{'type': 'RELVAL CMSSW', 'label': x} for x in self.search(search, 'relval_cmssw_versions')]
+
+        if len(results) < self.max_suggestions:
+            results += [{'type': 'RELVAL CAMPAIGN', 'label': x} for x in self.search(search, 'relval_campaigns')]
 
         # order of ext does matter because of the typeahead in bootstrap
         return json.dumps({'results': results})
@@ -204,6 +223,17 @@ class APIBase(esadapter.InitConnection):
         """
         Returns correct field, index name and doctype
         Returns field, index name, doctype and query
+        Order:
+          campaign
+          request
+          tag
+          flow
+          rereco request
+          rereco processing string
+          rereco campaign
+          relval request
+          relval cmssw version
+          relval campaign
         """
         if query == 'all':
             # change all to wildcard or check if chain
@@ -215,6 +245,9 @@ class APIBase(esadapter.InitConnection):
         elif self.is_instance(query, 'requests', 'request'):
             return None, 'requests', 'request', query
 
+        elif self.is_instance(query, 'tags', 'tag'):
+            return 'tags', 'requests', 'request', query
+
         elif self.is_instance(query, 'flows', 'flow'):
             return 'flown_with', 'requests', 'request', query
 
@@ -224,23 +257,24 @@ class APIBase(esadapter.InitConnection):
         elif self.is_instance(query, 'processing_strings', 'processing_string'):
             return 'processing_string', 'rereco_requests', 'rereco_request', query
 
-        elif self.is_instance(query, 'tags', 'tag'):
-            return 'tags', 'requests', 'request', query
+        elif self.is_instance(query, 'rereco_campaigns', 'rereco_campaign'):
+            return 'member_of_campaign', 'rereco_requests', 'rereco_request', query
+
+        elif self.is_instance(query, 'relval_requests', 'relval_request'):
+            return None, 'relval_requests', 'relval_request', query
+
+        elif self.is_instance(query, 'relval_cmssw_versions', 'relval_cmssw_version'):
+            return 'cmssw_version', 'relval_requests', 'relval_request', query
+
+        elif self.is_instance(query, 'relval_campaigns', 'relval_campaign'):
+            return 'member_of_campaign', 'relval_requests', 'relval_request', query
 
         return None, None, None, None
 
-    def db_query(self, query, include_stats_document=True):
+    def fetch_objects(self, field, query, index, doctype):
         """
-        Query DB and return array of raw documents
-        Tuple of three things is returned: stats document, mcm document
+        Fetch one object by given id, index name and doctype
         """
-        req_arr = []
-        field, index, doctype, query = self.parse_query(query)
-        logging.info('Field: %s, index: %s, doctype: %s, query: %s' % (field, index, doctype, query))
-        if index is None:
-            logging.info('Returning nothing')
-            return None, None
-
         if field is not None:
             # If field is present first find all results that have given value in
             # that field. For example, if query is campaign, find  all requests
@@ -256,9 +290,27 @@ class APIBase(esadapter.InitConnection):
             except elasticsearch.NotFoundError:
                 req_arr = []
 
+        return req_arr
+
+    def db_query(self, query, include_stats_document=True):
+        """
+        Query DB and return array of raw documents
+        Tuple of three things is returned: stats document, mcm document
+        """
+        req_arr = []
+        field, index, doctype, query = self.parse_query(query)
+        logging.info('Field: %s, index: %s, doctype: %s, query: %s' % (field, index, doctype, query))
+        if index is None:
+            logging.info('Returning nothing')
+            return None, None
+
+        req_arr = self.fetch_objects(field, query, index, doctype)
+
         if index == 'requests':
             logging.info('Found %d requests for %s' % (len(req_arr), query))
-        else:
+        elif index == 'relval_requests':
+            logging.info('Found %s RelVal requests from %s' % (len(req_arr), query))
+        elif index == 'rereco_requests':
             logging.info('Found %d ReReco requests for %s' % (len(req_arr), query))
 
         # Iterate over array and collect details (McM documents)
@@ -364,10 +416,10 @@ class APIBase(esadapter.InitConnection):
                     if upper_priority is not None and priority > upper_priority:
                         continue
 
-            if 'prepid' in item:
-                print('%s %s %s %s' % (item['prepid'], priority, pwg, status))
-            elif 'r' in item:
-                print('%s %s %s %s' % (item['r'], priority, pwg, status))
+            # if 'prepid' in item:
+            #     print('%s %s %s %s' % (item['prepid'], priority, pwg, status))
+            # elif 'r' in item:
+            #     print('%s %s %s %s' % (item['r'], priority, pwg, status))
 
             if all_pwgs[pwg] and all_statuses[status]:
                 new_data.append(item)

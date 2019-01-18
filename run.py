@@ -12,6 +12,7 @@ from flask import request
 from werkzeug.contrib.cache import SimpleCache
 from pmp.api.historical import HistoricalAPI
 from pmp.api.performance import PerformanceAPI
+from pmp.api.present import PresentAPI
 
 import json
 import config
@@ -170,6 +171,43 @@ def api_performance():
     return result
 
 
+@app.route('/api/present')
+def api_present():
+    i = flask.request.args.get('r', '')
+    priority = flask.request.args.get('priority', None)
+    if priority:
+        priority = priority.split(',')
+        if len(priority) < 2:
+            priority = None
+        else:
+            try:
+                priority[0] = int(priority[0]) if priority[0] != '' else None
+                priority[1] = int(priority[1]) if priority[1] != '' else None
+            except:
+                priority = None
+
+    pwg = flask.request.args.get('pwg', None)
+    if pwg:
+        pwg = pwg.split(',')
+
+    status = flask.request.args.get('status', None)
+    if status:
+        status = status.split(',')
+
+    chained_mode = flask.request.args.get('chained_mode', None) == 'True'
+    growing_mode = flask.request.args.get('growing_mode', None) == 'True'
+
+    i = sanitize(i)
+    result = PresentAPI().get(i,
+                              chained_mode=chained_mode,
+                              growing_mode=growing_mode,
+                              priority_filter=priority,
+                              pwg_filter=pwg,
+                              status_filter=status)
+    # cache.add(request.path, result, timeout=config.CACHE_TIMEOUT)
+    return result
+
+
 @app.route('/api/suggest/<fragment>/<typeof>')
 def suggest(fragment, typeof):
     """API call for typeahead
@@ -206,9 +244,15 @@ if __name__ == '__main__':
     from fetchd.utils import Utils
     Utils.setup_console_logging()
 
-    settings = dict(ssl_options={'certfile': config.CERTFILE,
-                                 'keyfile': config.KEYFILE})
+    # settings = dict(ssl_options={'certfile': config.CERTFILE,
+    #                              'keyfile': config.KEYFILE})
+    # 
+    # http_server = HTTPServer(WSGIContainer(app), **settings)
+    # http_server.listen(config.PORT)
+    # IOLoop.instance().start()
+    app.run(host='0.0.0.0',
+            port=config.PORT,
+            debug=True,
+            threaded=True,
+            ssl_context=(config.CERTFILE, config.KEYFILE))
 
-    http_server = HTTPServer(WSGIContainer(app), **settings)
-    http_server.listen(config.PORT)
-    IOLoop.instance().start()

@@ -15,13 +15,12 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
         $scope.defaults = {
             r: undefined, // query value (from search box)
             p: '1,0,3,0,0,0,0,0', // the options above the graph affecting the plot
-            m: 'false', // growing mode (boolean)
-            c: 'false', // chained mode (boolean)
-            t: 'false', // show last update time (boolean)
-            h: 'true', // show human-readable numbers (boolean)
-            x: ',', // priority filter
-            w: undefined, // PWG filter
-            s: undefined, // status filter
+            growingMode: false, // growing mode (boolean)
+            chainedMode: false, // chained mode (boolean)
+            humanReadable: true, // show human-readable numbers (boolean)
+            priority: undefined, // priority filter
+            pwg: undefined, // PWG filter
+            status: undefined, // status filter
         };
 
         /**

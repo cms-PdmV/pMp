@@ -36,7 +36,7 @@ class PerformanceAPI(APIBase):
                     continue
 
                 if mcm_document['prepid'] in seen_prepids:
-                    logging.warning('%s is already in seen_prepids. Why is it here agait?' % (mcm_document['prepid']))
+                    logging.warning('%s is already in seen_prepids. Why is it here again?' % (mcm_document['prepid']))
                     continue
 
                 # Remove new and unchained to clean up output plots

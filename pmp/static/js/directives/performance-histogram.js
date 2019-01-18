@@ -86,23 +86,23 @@
                 scope.minDiff = d3.min(data, function(d) { return d.diff; })
                 scope.maxDiff = d3.max(data, function(d) { return d.diff; })
                 scope.range = scope.maxDiff - scope.minDiff
-                scope.numberOfBins = Math.min(data.length, scope.numberOfBins)
-                var binWidth = scope.range / scope.numberOfBins;
+                var bins = Math.min(data.length, scope.numberOfBins)
+                var binWidth = scope.range / bins;
                 var fullBins = []
-                for (var i = 0; i < scope.numberOfBins; i++) {
-                    fullBins.push({x0: i * 1 / scope.numberOfBins, x1: (i + 1) * 1 / scope.numberOfBins, values: []})
+                for (var i = 0; i < bins; i++) {
+                    fullBins.push({x0: i * 1 / bins, x1: (i + 1) * 1 / bins, values: []})
                 }
                 for (var i = 0; i < data.length; i++) {
                     var binNo = 0;
                     if (binWidth != 0) {
-                        binNo = Math.min(Math.floor((data[i].diff - scope.minDiff) / binWidth), scope.numberOfBins - 1)
+                        binNo = Math.min(Math.floor((data[i].diff - scope.minDiff) / binWidth), bins - 1)
                     }
                     data[i].niceDiff = msToDate(data[i].diff)
                     fullBins[binNo].values.push(data[i])
                 }
                 scope.selectedBin = -1;
                 scope.binSelectedCallback([])
-                xAxis.ticks(Math.min(10, scope.numberOfBins))
+                xAxis.ticks(Math.min(10, bins))
                 y.domain([0, d3.max(fullBins, function(d) { return d.values.length; }) + 1]).range([height, 0]);
                 yAxis.scale(y);
                 svg.selectAll("rect.bar").remove()

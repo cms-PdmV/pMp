@@ -132,6 +132,13 @@ def create_index(cfg):
     else:
         logging.error('Index not created for %s. Code %s' % (index_url, code))
 
+    _, code = Utils.curl('PUT', index_url + '/_settings', {'index' : {'max_result_window': 1000000}})
+    if code == 200:
+        logging.info('Result window increased for %s' % (index_url + '/_settings'))
+    else:
+        logging.error('Failed to increase result window for %s. Code %s' % (index_url + '/_settings', code))
+
+
 
 def create_mapping(cfg):
     """Create mapping"""
@@ -194,7 +201,8 @@ def get_changed_object_ids(cfg):
             logging.info('No changes since last update')
 
         _, code = Utils.curl('PUT',
-                             cfg.last_seq, json.loads('{"val":"%s", "time":%s}' % (last_seq, int(round(time.time() * 1000)))))
+                             cfg.last_seq, {'val': last_seq,
+                                            'time': int(round(time.time() * 1000))})
 
         if code not in [200, 201]:
             logging.error('Cannot update last sequence')
@@ -213,7 +221,7 @@ def save(object_id, data, cfg):
         logging.error('Failed to update %s. Reason %s.' % (object_id, response))
 
 
-def create_rereco_request(stats_doc, rereco_cfg, process_string_cfg):
+def create_rereco_request(stats_doc, rereco_cfg, process_string_cfg, rereco_campaigns_cfg):
     """
     Creates a request-like object from a given stats object
     """
@@ -222,7 +230,11 @@ def create_rereco_request(stats_doc, rereco_cfg, process_string_cfg):
     fake_request['total_events'] = stats_doc['TotalEvents']
     fake_request['priority'] = stats_doc['RequestPriority']
     if len(stats_doc['Campaigns']) > 0:
-        fake_request['member_of_campaign'] = stats_doc['Campaigns'][0]
+        campaign = stats_doc['Campaigns'][0]
+        if campaign:
+            logging.info('Found campaign %s in %s' % (campaign, fake_request['prepid']))
+            fake_request['member_of_campaign'] = campaign
+            save(campaign, {'prepid': campaign}, rereco_campaigns_cfg)
 
     fake_request['output_dataset'] = stats_doc['OutputDatasets']
     fake_request['reqmgr_name'] = [stats_doc['_id']]
@@ -231,7 +243,8 @@ def create_rereco_request(stats_doc, rereco_cfg, process_string_cfg):
 
     # Translate ReqMgr2 statuses to McM-like statuses
     workflow_to_mcm_statuses = {
-        'new': 'submitted'
+        'new': 'submitted',
+        'announced': 'done'
     }
     for transition in stats_doc.get('RequestTransition', []):
         fake_request['reqmgr_status_history'][0]['history'].append(transition['status'])
@@ -239,35 +252,6 @@ def create_rereco_request(stats_doc, rereco_cfg, process_string_cfg):
             fake_request['history'].append({
                 'action': workflow_to_mcm_statuses[transition['status']],
                 'time': transition['update_time']
-            })
-
-    # Check if all datasets are VALID, if yes, it means Request is 'done'
-    # Find latest timestamp of 'VALID' dataset, in any of them is not valid, set timestamp
-    # to 0 and not add 'done' history entry
-    event_number_history = stats_doc.get('EventNumberHistory', [])
-    logging.info('EventNumberHistory %s' % (json.dumps(event_number_history, indent=4)))
-    if len(event_number_history) > 0:
-        latest_timestamp = 0
-        for dataset_entry in event_number_history:
-            dataset_history = dataset_entry.get('history')
-            if len(dataset_history) > 0:
-                sorted_history = sorted(dataset_history, key=lambda k: k['time'])
-                last_type = sorted_history[-1].get('type', 'NON-EXISTING')
-                if last_type != 'VALID':
-                    latest_timestamp = 0
-                    break
-
-                last_timestamp = sorted_history[-1].get('time', 0)
-                if last_timestamp > latest_timestamp:
-                    latest_timestamp = last_timestamp
-            else:
-                latest_timestamp = 0
-                break
-
-        if last_timestamp != 0:
-            fake_request['history'].append({
-                'action': 'done',
-                'time': last_timestamp
             })
 
     if len(fake_request.get('history', [])) > 0:
@@ -285,6 +269,54 @@ def create_rereco_request(stats_doc, rereco_cfg, process_string_cfg):
     save(fake_request['prepid'], fake_request, rereco_cfg)
 
 
+def create_relval_request(stats_doc, relval_cfg, relval_cmssw_cfg, relval_campaigns_cfg):
+    """
+    Creates a request-like object from a given stats object
+    """
+    fake_request = {}
+    fake_request['prepid'] = stats_doc['PrepID']
+    fake_request['total_events'] = stats_doc['TotalEvents']
+    fake_request['priority'] = stats_doc['RequestPriority']
+    if len(stats_doc['Campaigns']) > 0:
+        campaign = stats_doc['Campaigns'][0]
+        if campaign:
+            logging.info('Found campaign %s in %s' % (campaign, fake_request['prepid']))
+            fake_request['member_of_campaign'] = campaign
+            save(campaign, {'prepid': campaign}, relval_campaigns_cfg)
+
+    fake_request['output_dataset'] = stats_doc['OutputDatasets']
+    fake_request['reqmgr_name'] = [stats_doc['_id']]
+    fake_request['reqmgr_status_history'] = [{'name': stats_doc['_id'], 'history':[]}]
+    fake_request['history'] = []
+
+    # Translate ReqMgr2 statuses to McM-like statuses
+    workflow_to_mcm_statuses = {
+        'new': 'submitted',
+        'announced': 'done'
+    }
+    for transition in stats_doc.get('RequestTransition', []):
+        fake_request['reqmgr_status_history'][0]['history'].append(transition['status'])
+        if transition['status'] in workflow_to_mcm_statuses:
+            fake_request['history'].append({
+                'action': workflow_to_mcm_statuses[transition['status']],
+                'time': transition['update_time']
+            })
+
+    if len(fake_request.get('history', [])) > 0:
+        fake_request['status'] = fake_request['history'][-1]['action']
+    else:
+        fake_request['status'] = 'unknown'
+
+    fake_request['pwg'] = 'RelVal'
+    cmssw_version = stats_doc.get('CMSSWVersion', None)
+    if cmssw_version is not None:
+        logging.info('Found CMSSW version %s in %s' % (cmssw_version, fake_request['prepid']))
+        fake_request['cmssw_version'] = cmssw_version
+        save(cmssw_version, {'prepid': cmssw_version}, relval_cmssw_cfg)
+
+    save(fake_request['prepid'], fake_request, relval_cfg)
+
+
 def is_excluded_rereco(stats_doc):
     """
     Returns true if the given object is to be excluded from the ReReco requests index
@@ -300,6 +332,9 @@ def is_excluded_rereco(stats_doc):
 
 
 def process_request_tags(tags, tags_cfg):
+    """
+    Get list of tags and save them
+    """
     for tag in tags:
         save(tag, {'prepid': tag}, tags_cfg)
 
@@ -313,6 +348,10 @@ if __name__ == "__main__":
     if index == 'workflows':
         rereco_cfg = Config('rereco_requests')
         process_string_cfg = Config('processing_strings')
+        rereco_campaigns_cfg = Config('rereco_campaigns')
+        relval_cfg = Config('relval_requests')
+        relval_cmssw_cfg = Config('relval_cmssw_versions')
+        relval_campaigns_cfg = Config('relval_campaigns')
         skippable_status = set(['rejected',
                                 'aborted',
                                 'failed',
@@ -347,12 +386,17 @@ if __name__ == "__main__":
                 if index == 'workflows':
                     # Try to delete it from ReReco index (maybe it's ReReco request)
                     data, _ = Utils.curl('GET', cfg.pmp_type + object_id)
-                    logging.info('Trying to delete %s as ReReco' % (data.get('prepid')))
-                    _, status = Utils.curl('DELETE', rereco_cfg.pmp_type + str(data.get('prepid')))
-                    if status == 200:
-                        logging.info('Deleted ReReco request %s' % (object_id))
-                    elif status != 404:  # 404 just means it's not a ReReco request
-                        logging.warning('Code %s while deleting %s from ReReco index' % (status, data.get('prepid')))
+                    prepid = data.get('RequestPrepid')
+                    if prepid:
+                        logging.info('Trying to delete %s as ReReco' % (prepid))
+                        _, status = Utils.curl('DELETE', rereco_cfg.pmp_type + prepid)
+                        if status == 200:
+                            logging.info('Deleted ReReco request %s' % (object_id))
+
+                        logging.info('Trying to delete %s as RelVal' % (prepid))
+                        _, status = Utils.curl('DELETE', relval_cfg.pmp_type + prepid)
+                        if status == 200:
+                            logging.info('Deleted RelVal request %s' % (object_id))
 
                 # Delete it normally
                 _, status = Utils.curl('DELETE', '%s%s' % (cfg.pmp_type, object_id))
@@ -364,14 +408,19 @@ if __name__ == "__main__":
                 # It was not deleted, so it was added or modified
                 if status == 200:
                     if index == 'workflows':
-                        data['EventNumberHistory'] = parse_workflows_history(data['EventNumberHistory'])
                         # Make transition keys lowercase
                         data['RequestTransition'] = [{'status': x['Status'], 'update_time': x['UpdateTime']} for x in data['RequestTransition']]
                         request_type = data.get('RequestType', '')
-                        if request_type.lower() == 'rereco' and not is_excluded_rereco(data):
+                        request_name = data.get('RequestName', '')
+                        request_prepid = data.get('PrepID', '')
+                        if request_type and request_type.lower() == 'rereco' and not is_excluded_rereco(data):
                             logging.info('Creating mock ReReco request for %s' % (object_id))
-                            create_rereco_request(data, rereco_cfg, process_string_cfg)
+                            create_rereco_request(data, rereco_cfg, process_string_cfg, rereco_campaigns_cfg)
+                        elif request_name and '_rvcmssw_' in request_name.lower() and request_prepid and 'cmssw_' in request_prepid.lower():
+                            logging.info('Creating mock RelVal request for %s' % (object_id))
+                            create_relval_request(data, relval_cfg, relval_cmssw_cfg, relval_campaigns_cfg)
 
+                        data['EventNumberHistory'] = parse_workflows_history(data['EventNumberHistory'])
                     elif index == 'requests':
                         if 'reqmgr_name' in data:
                             data['reqmgr_status_history'] = parse_request_status_history(data['reqmgr_name'])
