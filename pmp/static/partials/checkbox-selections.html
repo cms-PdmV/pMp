@@ -1,0 +1,7 @@
+<div style="display: inline-block;">
+  <div class="btn-group btn-group-toggle" data-toggle="buttons">
+    <label ng-repeat="(option, name) in options" class="btn btn-secondary {{selectionDict[option] ? 'active' : ''}}">
+      <input type="checkbox" name="options" id="option-{{option}}" ng-model="selectionDict[option]" autocomplete="off" ng-change="selectionChanged(option)"> {{name}}
+    </label>
+  </div>
+</div>

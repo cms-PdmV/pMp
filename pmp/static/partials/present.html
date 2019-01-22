@@ -1,12 +1,49 @@
 <div class="row" ng-show="data.length">
+  <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 m-2" >
+    Scale: <radio-selections style="text-transform: capitalize;" class="ml-2" options="availableScales" selected="scale" on-value-change="scaleChange"></radio-selections>
+  </div>
+  <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 m-2" >
+    Mode: <radio-selections style="text-transform: capitalize;" class="ml-2" options="availableModes" selected="mode" on-value-change="modeChange"></radio-selections>
+  </div>
+  <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 m-2" >
+    Group by: <checkbox-selections style="text-transform: capitalize;" class="ml-2" options="availableSelections" selected="groupBy" on-value-change="groupByChange"></checkbox-selections>
+  </div>
+  <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 m-2" >
+    Color by: <checkbox-selections style="text-transform: capitalize;" class="ml-2" options="availableSelections" selected="colorBy" on-value-change="colorByChange"></checkbox-selections>
+  </div>
+  <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 m-2" >
+    Stack by: <checkbox-selections style="text-transform: capitalize;" class="ml-2" options="availableSelections" selected="stackBy" on-value-change="stackByChange"></checkbox-selections>
+  </div>
   <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 text-center">
-
-    <drop-selections scale="scaleType" mode="modeType" options="requests.options" selections="requests.selections" show-mode="true" show-scale="true"></drop-selections>
-
-    <column-chart scale="scaleType" mode="modeType" sort="requests.settings.sort" legend="requests.settings.legend" duration="requests.settings.duration" coloring="requests.options.coloring" stacking="requests.options.stacking" grouping="requests.options.grouping" data="data" priority-markup="priorityBlockMarkup"></column-chart>
+    <column-chart scale="scale"
+                  mode="mode"
+                  group-by="groupBy"
+                  color-by="colorBy"
+                  stack-by="stackBy"
+                  human-readable-numbers="humanReadable"
+                  bin-selected-callback="binSelected"
+                  data="data"></column-chart>
     
-    <multiple-pie-charts color-domain="piecharts.domain" table-title="Campaigns" data="data" full-terms="piecharts.fullTerms" compact-terms="piecharts.compactTerms" sum-by="piecharts.sum" nest-by="piecharts.nestBy" show-upcoming="displayChains" human-readable-numbers="humanReadableNumbers" show-table="true">
-    </multiple-pie-charts>
-    
+  </div>
+  <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 text-center margin-20" ng-show="selectedBin.length">
+    <p>Requests (<b>{{selectedBin.length}}</b>) in selected bar</p>
+    <div ng-repeat="binEntry in selectedBin" class="row zebra-lines small-padding">
+      <div class="col-sm-4">
+        <a ng-if="binEntry.prepid.indexOf('ReReco') == -1" ng-href="https://cms-pdmv.cern.ch/mcm/requests?prepid={{binEntry.prepid}}" target="_blank">{{binEntry.prepid}}</a>
+        <a ng-if="binEntry.prepid.indexOf('ReReco') != -1" ng-href="https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?prep_id={{binEntry.prepid}}" target="_blank">{{binEntry.prepid}}</a>
+      </div>
+      <div class="col-sm-2">
+        Priority: <b>{{binEntry.priority}}</b>
+      </div>
+      <div class="col-sm-2">
+        Expected events: <b>{{binEntry.total_events | readableNumbers}}</b>
+      </div>
+      <div class="col-sm-2">
+        Status: <b>{{binEntry.status}}</b>
+      </div>
+      <div class="col-sm-2">
+        PWG: <b>{{binEntry.pwg}}</b>
+      </div>
+    </div>
   </div>
 </div>

@@ -24,7 +24,7 @@
  -->
 
   <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 text-center margin-20" ng-show="selectedBin.length">
-    <p>Requests ({{selectedBin.length}}) in selected bar (Time taken from {{subtrahend}} to {{minuend}})</p>
+    <p>Requests (<b>{{selectedBin.length}}</b>) in selected bar (Time taken from <b>{{subtrahend}}</b> to <b>{{minuend}}</b>)</p>
     <div ng-repeat="binEntry in selectedBin" class="row zebra-lines small-padding">
       <div class="col-sm-6">
         <a ng-if="binEntry.prepid.indexOf('ReReco') == -1" ng-href="https://cms-pdmv.cern.ch/mcm/requests?prepid={{binEntry.prepid}}" target="_blank">{{binEntry.prepid}}</a>

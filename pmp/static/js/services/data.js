@@ -104,8 +104,6 @@ angular.module('pmpApp').service('Data', ['$rootScope', function ($rootScope) {
          * @return {Object} PWG filter object in a form {pwg_name:{boolean}}.
          */
         getPWGFilter: function () {
-            console.log('Data returning PWG filter ')
-            console.log(this.pwgFilter)
             return this.pwgFilter;
         },
         /**
@@ -113,8 +111,6 @@ angular.module('pmpApp').service('Data', ['$rootScope', function ($rootScope) {
          * @params {Object} i the PWG filter object in a form {pwg_name:{boolean}}.
          */
         setPWGFilter: function (i) {
-            console.log('Data setting PWG filter ')
-            console.log(i)
             this.pwgFilter = i;
         },
         /**
@@ -164,8 +160,6 @@ angular.module('pmpApp').service('Data', ['$rootScope', function ($rootScope) {
             }
             var w = [];
             var filter = this.getPWGFilter();
-            console.log('Data PWG filter')
-            console.log(filter)
             for (var pwg in filter) {
                 if (filter[pwg]) {
                     w.push(pwg);
