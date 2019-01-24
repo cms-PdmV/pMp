@@ -45,6 +45,7 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
             $scope.minuend = urlParameters.minuend;
             $scope.subtrahend = urlParameters.subtrahend;
             $scope.availableStatuses = [];
+            $scope.availableScales = ['linear', 'log'];
 
             // if linear scale
             $scope.scale = urlParameters.scale;
@@ -85,7 +86,7 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
             }
             // if this is empty just change URL as some filters
             // could have been initiated
-            $scope.setURL();
+            $scope.setURL($scope, Data);
         };
 
         /**
@@ -148,8 +149,6 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
             if (pwgQuery) {
                 queryUrl += '&pwg=' + pwgQuery;
             }
-            // query for linear chart data
-            console.log('Query ' + queryUrl);
             var promise = $http.get(queryUrl);
             promise.then(function (data) {
                 Data.setLoadedData(data.data.results.data, false);
@@ -160,7 +159,6 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
                 });
                 $rootScope.loadingData = false;
                 $scope.availableStatuses = data.data.results.all_statuses_in_history.slice()
-                console.log($scope.availableStatuses)
                 if ($scope.availableStatuses.length == 0) {
                     $scope.subtrahend = undefined
                     $scope.minuend = undefined
@@ -173,7 +171,7 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
                     }
                 }
                 $scope.data = $scope.filterByMinuendSubtrahend(Data.getLoadedData(), $scope.subtrahend, $scope.minuend);
-                $scope.setURL();
+                $scope.setURL($scope, Data);
             }, function () {
                 $scope.showPopUp(PageDetailsProvider.messages
                     .E1.type, PageDetailsProvider.messages
@@ -191,16 +189,27 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
 
         $scope.minuendChange = function(minuend) {
             $scope.minuend = minuend;
-            console.log('minuend ' + minuend)
-            $scope.setURL();
+            $scope.setURL($scope, Data);
             $scope.data = $scope.filterByMinuendSubtrahend(Data.getLoadedData(), $scope.subtrahend, $scope.minuend);
             $scope.binSelected([])
         }
 
         $scope.subtrahendChange = function(subtrahend) {
             $scope.subtrahend = subtrahend;
-            console.log('subtrahend ' + subtrahend)
-            $scope.setURL();
+            $scope.setURL($scope, Data);
+            $scope.data = $scope.filterByMinuendSubtrahend(Data.getLoadedData(), $scope.subtrahend, $scope.minuend);
+            $scope.binSelected([])
+        }
+
+        $scope.scaleChange = function(scale) {
+            $scope.scale = scale;
+            $scope.setURL($scope, Data);
+            $scope.data = $scope.filterByMinuendSubtrahend(Data.getLoadedData(), $scope.subtrahend, $scope.minuend);
+            $scope.binSelected([])
+        }
+
+        $scope.changeBins = function() {
+            $scope.setURL($scope, Data);
             $scope.data = $scope.filterByMinuendSubtrahend(Data.getLoadedData(), $scope.subtrahend, $scope.minuend);
             $scope.binSelected([])
         }
@@ -220,44 +229,5 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
             }
             return newData
         }
-        /**
-         * @description Core: Change URL when data or filter changes
-         */
-        $scope.setURL = function () {
-            $location.path($location.path(), false);
-            var params = $scope.constructURLQuery($scope, Data)
-            // reload url
-            $location.search(params);
-            // broadcast change notification
-            $scope.$broadcast('onChangeNotification:URL');
-        };
-
-        /**
-         * @description Core: Query server for a report of current view
-         * @param {String} format which will be requested (pdf/png/svg)
-         */
-        $scope.takeScreenshot = function (format) {
-            $rootScope.loadingData = true;
-            if (format === undefined) format = 'svg';
-            var xml = (new XMLSerializer()).serializeToString(
-                    document.getElementById("ctn").getElementsByTagName(
-                        "svg")[0])
-                .replace('viewBox="0 -20 1170 300"',
-                    'viewBox="0 -20 1170 400" font-family="sans-serif"'
-                ).replace('</svg>',
-                    '<text transform="translate(0, 300)">Generated: ' +
-                    $scope.dt + '. For input: ' + Data.getInputTags()
-                    .join(', ') + '. Time difference between ' +
-                    $scope.difference.minuend + ' and ' + $scope.difference
-                    .subtrahend + '</text></svg>').replace(/\n/g, ' ');
-            $http({
-                url: 'ts',
-                method: "POST",
-                data: {data: xml, ext: format}
-            }).then(function (data) {
-                window.open(data.data);
-                $rootScope.loadingData = false;
-            });
-        };
     }
 ]);

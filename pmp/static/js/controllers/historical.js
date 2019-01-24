@@ -78,9 +78,6 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
                 }
                 $scope.query();
             }
-            // if this is empty just change URL as some filters
-            // could have been initiated
-            // $scope.setURL();
         };
 
         /**
@@ -134,7 +131,7 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
                 $scope.listSubmitted = [];
                 $scope.listDone = [];
                 $scope.data = Data.getLoadedData();
-                $scope.setURL();
+                $scope.setURL($scope, Data);
                 $scope.$broadcast('onChangeNotification:LoadedData');
                 return null;
             }
@@ -172,7 +169,7 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
                 });
                 $rootScope.loadingData = false;
                 $scope.data = Data.getLoadedData();
-                $scope.setURL();
+                $scope.setURL($scope, Data);
             }, function () {
                 $scope.showPopUp(PageDetailsProvider.messages
                     .E1.type, PageDetailsProvider.messages
@@ -181,21 +178,18 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
             });
         };
 
-        /**
-         * @description Core: Change URL when data or filter changes
-         */
-        $scope.setURL = function () {
-            // $location.path($location.path(), false);
-            var params = $scope.constructURLQuery($scope, Data)
-            // reload url
-            console.log('setURL -> $location.search()')
-            console.log($location.search())
-            console.log('setURL -> constructURLQuery')
-            console.log(params)
-            $location.search(params).replace();
-            // broadcast change notification
-            $scope.$broadcast('onChangeNotification:URL');
-        };
+        $scope.changeGranularity = function() {
+            $scope.query()
+        }
+
+        $scope.changeHumanReadable = function() {
+            $scope.setURL($scope, Data);
+            $scope.data = $scope.data.slice();
+        }
+
+        $scope.changeZoomY = function() {
+            $scope.setURL($scope, Data);
+        }
 
         /**
          * @description Core: Query server for a report of current view
@@ -244,12 +238,5 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
                 $rootScope.loadingData = false;
             });
         };
-
-        // Broadcast receiver, change filtered data on loaded data change
-        $scope.$on('onChangeNotification:FilteredData', function () {
-            $rootScope.loadingData = false;
-            $scope.setURL();
-            $scope.data = Data.getFilteredData();
-        });
     }
 ]);

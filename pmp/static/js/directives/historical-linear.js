@@ -3,10 +3,10 @@
     return {
         restrict: 'AE',
         scope: {
-            chartData: '=',
+            data: '=',
             humanReadableNumbers: '=',
-            taskChain: '=',
-            zoomY: '='
+            zoomY: '=',
+            bigNumberFormatter: '='
         },
             link: function(scope, element, compile, http) {
             // graph configuration
@@ -38,32 +38,6 @@
                     .attr("transform", "translate(" + config.margin.left + "," + config.margin.top + ")")
                     .attr('style', 'fill: none');
 
-            function formatBigNumbers(number) {
-                if (number < 0) {
-                  return ''
-                }
-                var result = ''
-                if (number >= 1e9) {
-                    result = (Math.round(number / 10000000.0) / 100.0).toFixed(2) + "G"
-                } else if (number >= 1e6) {
-                    result = (Math.round(number / 10000.0) / 100.0).toFixed(2) + "M"
-                } else if (number >= 1e3) {
-                    result = (Math.round(number / 10.0) / 100.0).toFixed(2) + "k"
-                } else {
-                    result = number.toString()
-                }
-                return result.replace('.00', '')
-                             .replace('.10', '.1')
-                             .replace('.20', '.2')
-                             .replace('.30', '.3')
-                             .replace('.40', '.4')
-                             .replace('.50', '.5')
-                             .replace('.60', '.6')
-                             .replace('.70', '.7')
-                             .replace('.80', '.8')
-                             .replace('.90', '.9')
-            }
-
             // axes
             // Create a linear scale for time
             var x = d3.scaleTime().range([0, width]);
@@ -76,7 +50,7 @@
                 .attr("transform", "translate(0," + (height + 10) + ")")
                 .call(xAxis);
             var y = d3.scaleLinear().range([height, 0]);
-            var yAxis = d3.axisLeft(y).ticks(5).tickFormat(formatBigNumbers);
+            var yAxis = d3.axisLeft(y).ticks(5).tickFormat(scope.bigNumberFormatter);
             var gy = svg.append("svg:g")
                 .attr("class", "y axis minory")
                 .attr("font-size", "12")
@@ -139,8 +113,8 @@
                                  .y0(function(d) { return y(d.d); })
                                  .y1(function(d) { return y(d.e); });
 
-            // When new data to load
-            var onLoad = function(data) {
+            var prepareData = function(data) {
+                scope.dataCopy = angular.copy(data);
                 // Update ranges of axis according to new data
                 x.domain([d3.min(data, function(d) { return d.t; }),
                           d3.max(data, function(d) { return d.t; })]).range([0, width]);
@@ -189,12 +163,7 @@
                 constructDataLabel()
             };
 
-            var prepareData = function(data) {
-                scope.dataCopy = angular.copy(data);
-                onLoad(scope.dataCopy);
-            };
-
-            scope.$watch('chartData', function(data) {
+            scope.$watch('data', function(data) {
                 if (data !== undefined && data.length) {
                     prepareData(data);
                 }
@@ -231,9 +200,9 @@
 
                     var html = ''
                     html += '<div style="color: #90a4ae;">Time: ' + data[0] + "</div>"
-                    html += '<div style="color: #263238;">Expected events: ' + (scope.humanReadableNumbers ? formatBigNumbers(data[1]) : data[1]) + "</div>"
-                    html += '<div style="color: #ff6f00;">Events in DAS: ' + (scope.humanReadableNumbers ? formatBigNumbers(data[2]) : data[2]) + "</div>"
-                    html += '<div style="color: #01579b;">Done events in DAS: ' + (scope.humanReadableNumbers ? formatBigNumbers(data[3]) : data[3]) + "</div>"
+                    html += '<div style="color: #263238;">Expected events: ' + (scope.humanReadableNumbers ? scope.bigNumberFormatter(data[1]) : data[1]) + "</div>"
+                    html += '<div style="color: #ff6f00;">Events in DAS: ' + (scope.humanReadableNumbers ? scope.bigNumberFormatter(data[2]) : data[2]) + "</div>"
+                    html += '<div style="color: #01579b;">Done events in DAS: ' + (scope.humanReadableNumbers ? scope.bigNumberFormatter(data[3]) : data[3]) + "</div>"
                     $("#historical-drilldown").html(html);
                 };
 

@@ -22,6 +22,8 @@
                   stack-by="stackBy"
                   human-readable-numbers="humanReadable"
                   bin-selected-callback="binSelected"
+                  big-number-formatter="formatBigNumber"
+                  big-number-formatter-log="formatBigNumberLog"
                   data="data"></column-chart>
     
   </div>
@@ -35,7 +37,10 @@
       <div class="col-sm-2">
         Priority: <b>{{binEntry.priority}}</b>
       </div>
-      <div class="col-sm-2">
+      <div ng-hide="humanReadable" class="col-sm-2">
+        Expected events: <b>{{binEntry.total_events}}</b>
+      </div>
+      <div ng-hide="!humanReadable" class="col-sm-2">
         Expected events: <b>{{binEntry.total_events | readableNumbers}}</b>
       </div>
       <div class="col-sm-2">

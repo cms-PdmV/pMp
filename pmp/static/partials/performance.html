@@ -1,27 +1,34 @@
 <div ng-hide="loadingData || availableStatuses.length == 0" class="row">
 
-  <!-- <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 text-center">
-    <drop-selections options="difference" selections="selections" scale="scale" show-scale="true" show-mode="false"></drop-selections>
-  </div>
- -->
   <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 m-2" >
-    Subtrahend (From): <radio-selections style="text-transform: capitalize;" class="ml-2" options="availableStatuses" selected="subtrahend" on-value-change="subtrahendChange"></radio-selections>
+    Scale: <radio-selections style="text-transform: capitalize;"
+                             class="ml-2"
+                             options="availableScales"
+                             selected="scale"
+                             on-value-change="scaleChange"></radio-selections>
   </div>
   <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 m-2" >
-    Minuend (To): <radio-selections style="text-transform: capitalize;" class="ml-2" options="availableStatuses" selected="minuend" on-value-change="minuendChange"></radio-selections>
+    Subtrahend (From): <radio-selections style="text-transform: capitalize;"
+                                         class="ml-2"
+                                         options="availableStatuses"
+                                         selected="subtrahend"
+                                         on-value-change="subtrahendChange"></radio-selections>
+  </div>
+  <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 m-2" >
+    Minuend (To): <radio-selections style="text-transform: capitalize;"
+                                    class="ml-2"
+                                    options="availableStatuses"
+                                    selected="minuend"
+                                    on-value-change="minuendChange"></radio-selections>
   </div>
   <div ng-show="data.length" class="col-xs-12 col-sm-12 col-md-12 col-lg-12 text-center">
-    <performance-histogram chart-data="data"
-                           chart-data-extended="histogramDataExtended"
-                           linear-scale="scaleType"
+    <performance-histogram data="data"
+                           scale="scale"
                            number-of-bins="bins"
-                           bin-selected-callback="binSelected"></performance-histogram>
+                           bin-selected-callback="binSelected"
+                           big-number-formatter="formatBigNumber"
+                           big-number-formatter-log="formatBigNumberLog"></performance-histogram>
   </div>
-
-<!--   <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 text-center">
-    <stats-table chart-data="data" minuend="difference.minuend" subtrahend="difference.subtrahend"></stats-table>
-  </div>
- -->
 
   <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 text-center margin-20" ng-show="selectedBin.length">
     <p>Requests (<b>{{selectedBin.length}}</b>) in selected bar (Time taken from <b>{{subtrahend}}</b> to <b>{{minuend}}</b>)</p>

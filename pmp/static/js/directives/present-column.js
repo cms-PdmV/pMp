@@ -15,7 +15,9 @@
             colorBy: '=',
             stackBy: '=',
             humanReadableNumbers: '=',
-            binSelectedCallback: '='
+            binSelectedCallback: '=',
+            bigNumberFormatter: '=',
+            bigNumberFormatterLog: '='
         },
         link: function(scope, element, compile, http) {
             // graph configuration
@@ -42,35 +44,6 @@
                     .attr("transform", "translate(" + config.margin.left + "," + config.margin.top + ")")
                     .attr('style', 'fill: none');
 
-            function formatBigNumbers(number) {
-                if (number < 1) {
-                    return ''
-                }
-                if (scope.scale === 'log' && Math.log10(number) % 1 !== 0) {
-                    return ''
-                }
-                var result = ''
-                if (number >= 1e9) {
-                    result = (Math.round(number / 10000000.0) / 100.0).toFixed(2) + "G"
-                } else if (number >= 1e6) {
-                    result = (Math.round(number / 10000.0) / 100.0).toFixed(2) + "M"
-                } else if (number >= 1e3) {
-                    result = (Math.round(number / 10.0) / 100.0).toFixed(2) + "k"
-                } else {
-                    result = number.toString()
-                }
-                return result.replace('.00', '')
-                             .replace('.10', '.1')
-                             .replace('.20', '.2')
-                             .replace('.30', '.3')
-                             .replace('.40', '.4')
-                             .replace('.50', '.5')
-                             .replace('.60', '.6')
-                             .replace('.70', '.7')
-                             .replace('.80', '.8')
-                             .replace('.90', '.9')
-            }
-
             // axes
             var x = d3.scaleLinear().range([0, width]);
             var xAxis = d3.axisBottom(x).ticks(10);
@@ -81,7 +54,7 @@
                 .call(xAxis);
 
             var y = d3.scaleLinear().range([height, 0]).domain([0, 100]);
-            var yAxis = d3.axisLeft(y).ticks(5).tickFormat(formatBigNumbers);
+            var yAxis = d3.axisLeft(y).ticks(5).tickFormat(scope.bigNumberFormatter);
             var gy = svg.append("svg:g")
                 .attr("class", "y axis minory")
                 .attr('fill', '#666')
@@ -134,17 +107,20 @@
                 }
                 var rgb = parseInt(color, 16);
                 var r = Math.abs(((rgb >> 16) & 0xFF) + v);
-                if (r > 255) r = 255;
                 var g = Math.abs(((rgb >> 8) & 0xFF) + v);
-                if (g > 255) g = 255;
                 var b = Math.abs((rgb & 0xFF) + v);
-                if (b > 255) b = 255;
                 r = Number(r < 0 || isNaN(r)) ? 0 : ((r > 255) ? 255 : r).toString(16);
-                if (r.length == 1) r = '0' + r;
+                if (r.length == 1) {
+                    r = '0' + r;
+                }
                 g = Number(g < 0 || isNaN(g)) ? 0 : ((g > 255) ? 255 : g).toString(16);
-                if (g.length == 1) g = '0' + g;
+                if (g.length == 1) {
+                    g = '0' + g;
+                }
                 b = Number(b < 0 || isNaN(b)) ? 0 : ((b > 255) ? 255 : b).toString(16);
-                if (b.length == 1) b = '0' + b;
+                if (b.length == 1) {
+                    b = '0' + b;
+                }
                 return "#" + r + g + b;
             }
 
@@ -252,12 +228,12 @@
                         }
                     }
                 }
-                console.log('Flat data')
-                console.log(flatData)
                 if (scope.scale === 'log') {
                     y = d3.scaleLog()
+                    yAxis = yAxis.tickFormat(scope.bigNumberFormatterLog)
                 } else {
                     y = d3.scaleLinear()
+                    yAxis = yAxis.tickFormat(scope.bigNumberFormatter)
                 }
                 y = y.domain([0.1, d3.max(flatData, function(d) { return d.y1; }) * 1.05]).range([height, 0]);
                 xAxis.ticks(10)
@@ -285,7 +261,7 @@
                     var title = '';
                     var forrmattedSum = d.sum;
                     if (scope.humanReadableNumbers) {
-                        forrmattedSum = formatBigNumbers(forrmattedSum);
+                        forrmattedSum = scope.bigNumberFormatter(forrmattedSum);
                     }
                     if (scope.mode === 'events') {
                         title += 'Events: ' + forrmattedSum + '\n';
@@ -302,16 +278,22 @@
                                 'pwg': 'PWG',
                                 'is_member_of_chain': 'Member of chain'}
                     for (var i in scope.groupBy) {
-                        var key = scope.groupBy[i]
-                        title += keys[key] + ': ' + d.value[0][key] + '\n'
+                        if (i in keys) {
+                            var key = scope.groupBy[i]
+                            title += keys[key] + ': ' + d.value[0][key] + '\n'
+                        }
                     }
                     for (var i in scope.colorBy) {
-                        var key = scope.colorBy[i]
-                        title += keys[key] + ': ' + d.value[0][key] + '\n'
+                        if (i in keys) {
+                            var key = scope.colorBy[i]
+                            title += keys[key] + ': ' + d.value[0][key] + '\n'
+                        }
                     }
                     for (var i in scope.stackBy) {
-                        var key = scope.stackBy[i]
-                        title += keys[key] + ': ' + d.value[0][key] + '\n'
+                        if (i in keys) {
+                            var key = scope.stackBy[i]
+                            title += keys[key] + ': ' + d.value[0][key] + '\n'
+                        }
                     }
                     return title;
                 }
@@ -329,12 +311,12 @@
                         d3.select(this).style("fill", '#bdbdbd');
                     })
                     .on('mousedown',function(d){
-                        scope.binSelectedCallback(d.value)
+                        scope.binSelectedCallback(d.value);
                     })
                     .on("mouseout", function() {
                         d3.select(this).style("fill", function(d) { return d.color; });
-                    }).append("svg:title").text(setTitle)
-                    ;
+                    })
+                    .append("svg:title").text(setTitle);
             };
 
             scope.$watch('data', function(data) {

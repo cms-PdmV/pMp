@@ -7,11 +7,12 @@
     return {
         restrict: 'E',
         scope: {
-            chartData: '=',
-            chartDataExtended: '=',
-            linearScale: '=',
+            data: '=',
+            scale: '=',
             numberOfBins: '=',
-            binSelectedCallback: '='
+            binSelectedCallback: '=',
+            bigNumberFormatter: '=',
+            bigNumberFormatterLog: '='
         },
         link: function(scope, element, compile, http) {
             // graph configuration
@@ -25,8 +26,6 @@
                     left: 50
                 }
             };
-            scope.dataCopy = []
-            scope.selectedBin = -1;
             scope.minDiff = 0;
             scope.maxDiff = 0;
             // General attributes
@@ -71,18 +70,17 @@
             var gx = svg.append("svg:g")
                 .attr("class", "x axis minorx")
                 .attr('fill', '#666')
-                .attr("transform", "translate(0," + (height + 10) + ")")
+                .attr("transform", "translate(0," + height + ")")
                 .call(xAxis);
 
             var y = d3.scaleLinear().range([height, 0]).domain([0, 10]);
-            var yAxis = d3.axisLeft(y).ticks(5);
+            var yAxis = d3.axisLeft(y).ticks(5).tickFormat(scope.bigNumberFormatter);
             var gy = svg.append("svg:g")
                 .attr("class", "y axis minory")
                 .attr('fill', '#666')
                 .call(yAxis)
 
             var prepareData = function(data) {
-                scope.dataCopy = angular.copy(data);
                 scope.minDiff = d3.min(data, function(d) { return d.diff; })
                 scope.maxDiff = d3.max(data, function(d) { return d.diff; })
                 scope.range = scope.maxDiff - scope.minDiff
@@ -103,7 +101,14 @@
                 scope.selectedBin = -1;
                 scope.binSelectedCallback([])
                 xAxis.ticks(Math.min(10, bins))
-                y.domain([0, d3.max(fullBins, function(d) { return d.values.length; }) + 1]).range([height, 0]);
+                if (scope.scale === 'log') {
+                    y = d3.scaleLog()
+                    yAxis = yAxis.tickFormat(scope.bigNumberFormatterLog)
+                } else {
+                    y = d3.scaleLinear()
+                    yAxis = yAxis.tickFormat(scope.bigNumberFormatter)
+                }
+                y = y.domain([0.1, d3.max(fullBins, function(d) { return d.values.length; }) + 1]).range([height, 0]);
                 yAxis.scale(y);
                 svg.selectAll("rect.bar").remove()
                 svg.selectAll("text.bar-size-label").remove()
@@ -125,28 +130,21 @@
                     .attr("class", "bar")
                     .attr("x", 1)
                     .attr("transform", function(d) {
-                        return "translate(" + x(d.x0) + "," + y(d.values.length) + ")";
+                        return "translate(" + x(d.x0) + "," + y(Math.max(0.001, d.values.length)) + ")";
                     })
-                    .attr("width", function(d) { return x(d.x1) - x(d.x0) -1 ; })
-                    .attr("height", function(d) { return height - y(d.values.length); })
+                    .attr("width", function(d) { return Math.max(0, x(d.x1) - x(d.x0) - 1); })
+                    .attr("height", function(d) { return Math.max(0, height - y(Math.max(0.001, d.values.length))); })
                     .on('mousedown',function(d){
                         rect.selectAll('rect').attr("fill", "#8eb2cf")
-                        var newBin = Math.round(d.x1 / (d.x1 - d.x0)) - 1;
-                        if (scope.selectedBin != newBin) {
-                            scope.selectedBin = Math.round(d.x1 / (d.x1 - d.x0)) - 1;
-                            d3.select(d3.event.srcElement).attr('fill', '#f4bc91');
-                            scope.binSelectedCallback(fullBins[scope.selectedBin].values)
-                        } else {
-                            scope.selectedBin = -1;
-                            scope.binSelectedCallback([])
-                        }
+                        d3.select(d3.event.srcElement).attr('fill', '#f4bc91');
+                        scope.binSelectedCallback(d.values)
                     });
 
                 rect.append('text')
                     .attr('dy', '.75em')
                     .attr('text-anchor', 'middle')
                     .attr('class', 'bar-size-label')
-                    .attr('y', function(d) { return y(d.values.length) - 16; })
+                    .attr('y', function(d) { return y(Math.max(0.001, d.values.length)) - 16; })
                     .attr('x', function(d) { return x(d.x1) - (x(d.x1) - x(d.x0)) / 2 ; })
                     .style('fill', '#333')
                     .text(function (d) {
@@ -154,7 +152,7 @@
                     });
             };
 
-            scope.$watch('chartData', function(data) {
+            scope.$watch('data', function(data) {
                 console.log('Data changed')
                 if (data !== undefined && data.length) {
                     prepareData(data);

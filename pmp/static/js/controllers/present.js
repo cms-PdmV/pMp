@@ -174,7 +174,7 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
                 });
                 $rootScope.loadingData = false;
                 $scope.data = Data.getLoadedData();
-                $scope.setURL();
+                $scope.setURL($scope, Data);
             }, function () {
                 $scope.showPopUp(PageDetailsProvider.messages
                     .E1.type, PageDetailsProvider.messages
@@ -183,15 +183,6 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
             });
         };
 
-        /**
-         * @description Core: Change URL when data or filter changes
-         */
-        $scope.setURL = function () {
-            $location.path($location.path(), false);
-            var params = $scope.constructURLQuery($scope, Data)
-            $location.search(params);
-            $scope.$broadcast('onChangeNotification:URL');
-        };
 
         /**
          * @description Core: Query server for a report of current view
@@ -220,13 +211,13 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
 
         $scope.modeChange = function(mode) {
             $scope.mode = mode;
-            $scope.setURL();
+            $scope.setURL($scope, Data);
             $scope.data = $scope.data.slice()
         }
 
         $scope.scaleChange = function(scale) {
             $scope.scale = scale;
-            $scope.setURL();
+            $scope.setURL($scope, Data);
             $scope.data = $scope.data.slice()
         }
 
@@ -239,7 +230,7 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
                 $scope.groupBy.push(groupBy);
             }
             $scope.groupBy = $scope.groupBy.slice()
-            $scope.setURL();
+            $scope.setURL($scope, Data);
             $scope.data = $scope.data.slice()
         }
 
@@ -252,7 +243,7 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
                 $scope.colorBy = [colorBy];
             }
             $scope.colorBy = $scope.colorBy.slice()
-            $scope.setURL();
+            $scope.setURL($scope, Data);
             $scope.data = $scope.data.slice()
         }
 
@@ -265,7 +256,7 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
                 $scope.stackBy.push(stackBy);
             }
             $scope.stackBy = $scope.stackBy.slice()
-            $scope.setURL();
+            $scope.setURL($scope, Data);
             $scope.data = $scope.data.slice()
         }
 
@@ -274,6 +265,21 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
             $timeout(function(){
                 $scope.$apply();
             });
+        }
+
+        $scope.changeChainedMode = function() {
+            $scope.setURL($scope, Data);
+            $scope.query();
+        }
+
+        $scope.changeGrowingMode = function() {
+            $scope.setURL($scope, Data);
+            $scope.query();
+        }
+
+        $scope.changeHumanReadable = function() {
+            $scope.setURL($scope, Data);
+            $scope.data = $scope.data.slice();
         }
     }
 ]);

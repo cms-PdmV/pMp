@@ -1,41 +1,56 @@
 <div id="advanced" class="collapse col-xs-12 col-sm-12 col-md-12 col-lg-12 spacing">
   <form class="form-group text-uppercase">
     <label class="checkbox-inline col-lg-12 col-md-12 col-sm-12" ng-show="page.id == 1">
-      <input type="checkbox" ng-model="$parent.displayChains" ng-change="modeUpdate(false);setURL()" ng-disabled="loadingData">
+      <input type="checkbox"
+             ng-model="$parent.chainedMode"
+             ng-change="changeChainedMode();"
+             ng-disabled="loadingData">
       <small>Display Chains</small>
     </label>
     <br ng-show="page.id == 1"/>
     <label class="checkbox-inline col-lg-12 col-md-12 col-sm-12" ng-show="page.id == 1">
-      <input type="checkbox" ng-model="$parent.growingMode" ng-change="modeUpdate(false);setURL()" ng-disabled="loadingData">
+      <input type="checkbox"
+             ng-model="$parent.growingMode"
+             ng-change="changeGrowingMode();"
+             ng-disabled="loadingData">
       <small>Growing Mode</small>
     </label>
     <br ng-show="page.id == 1"/>
     <label class="checkbox-inline col-lg-12 col-md-12 col-sm-12" ng-hide="page.id == 3">
-      <input type="checkbox" ng-model="$parent.humanReadable" ng-disabled="loadingData" ng-change="setURL()">
+      <input type="checkbox"
+             ng-model="$parent.humanReadable"
+             ng-disabled="loadingData"
+             ng-change="changeHumanReadable()">
       <small>Human Readable Numbers</small>
     </label>
     <br ng-hide="page.id == 3"/>
-    <label class="checkbox-inline col-lg-12 col-md-12 col-sm-12" ng-show="page.id == 1">
-      <input type="checkbox" ng-model="$parent.priorityBlockMarkup" ng-init="$parent.priorityBlockMarkup=true" ng-disabled="loadingData">
-      <small>Priority blocks markup</small>
-    </label>
     <label class="checkbox-inline col-lg-12 col-md-12 col-sm-12" ng-show="page.id == 2">
-      <input type="checkbox" ng-model="$parent.zoomY" ng-change="setURL()" ng-disabled="loadingData">
-      <small>y axis zoom</small>
+      <input type="checkbox"
+             ng-model="$parent.zoomY"
+             ng-change="changeZoomY()"
+             ng-disabled="loadingData">
+      <small>Y axis zoom</small>
     </label>
   </form>
   
   <div class="input-group spacing text-uppercase" ng-show="page.id == 2">
-    <div class="hidden-sm input-group-addon">Probing</div>
-    <input type="number" class="form-control" ng-model="$parent.probing" ng-change="setURL()" placeholder="Default: 100">
-    <div class="btn btn-primary input-group-addon" ng-click="query(true)">
-      <i class="fa fa-refresh"></i>
-    </div>
+    <div class="hidden-sm input-group-addon">Granularity</div>
+    <input type="number"
+           class="form-control"
+           ng-model="$parent.granularity"
+           ng-change="changeGranularity()"
+           placeholder="Default: 100"
+           ng-model-options="{ debounce: 1500 }">
   </div>
   
   <div class="input-group input-group-sm spacing text-uppercase" ng-show="page.id == 3">
     <span class="hidden-sm input-group-addon">Bins</span>
-    <input type="number" class="form-control" ng-model="$parent.bins" ng-change="setURL()" placeholder="Default: 20">
+    <input type="number"
+           class="form-control"
+           ng-model="$parent.bins"
+           ng-change="changeBins()"
+           placeholder="Default: 20"
+           ng-model-options="{ debounce: 1500 }">
   </div>
   
   <div class="btn-group btn-group-sm pull-left spacing text-uppercase hidden-xs">
