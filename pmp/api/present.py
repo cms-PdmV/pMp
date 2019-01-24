@@ -65,6 +65,9 @@ class PresentAPI(APIBase):
                                       'pwg': mcm_document['pwg'],
                                       'status': mcm_document['status'],
                                       'priority': mcm_document['priority'],
+                                      'member_of_chain': mcm_document['member_of_chain'],
+                                      'is_member_of_chain': 'YES' if len(mcm_document['member_of_chain']) > 0 else 'NO',
+                                      'time_event_sum': sum(mcm_document['time_event']),
                                       'total_events': mcm_document['total_events']})
 
         return response_list

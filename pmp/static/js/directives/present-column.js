@@ -10,6 +10,7 @@
         scope: {
             data: '=',
             mode: '=',
+            scale: '=',
             groupBy: '=',
             colorBy: '=',
             stackBy: '=',
@@ -42,7 +43,10 @@
                     .attr('style', 'fill: none');
 
             function formatBigNumbers(number) {
-                if (number < 0) {
+                if (number < 1) {
+                    return ''
+                }
+                if (scope.scale === 'log' && Math.log10(number) % 1 !== 0) {
                     return ''
                 }
                 var result = ''
@@ -112,7 +116,10 @@
                 TAU: '#90a4ae', // blue gray 300
                 TOP: '#e0e0e0', // gray 300
                 TRK: '#f06292', // pink 300
-                TSG: '#ffb74d' // orange 300
+                TSG: '#ffb74d', // orange 300
+
+                YES: '#81c784',
+                NO: '#f06292'
             };
 
             /*
@@ -223,7 +230,7 @@
                         if (color === undefined) {
                             color = '#2196f3'
                         }
-                        var barY = 0;
+                        var barY = 0.1;
                         for (var k = 0; k < preparedData[i].value[j].value.length; k++) {
                             preparedData[i].value[j].value[k].x0 = preparedData[i].value[j].x0;
                             preparedData[i].value[j].value[k].x1 = preparedData[i].value[j].x0 + subBarWidth;
@@ -232,7 +239,7 @@
                             if (scope.mode === 'events') {
                                 sum = d3.sum(preparedData[i].value[j].value[k].value, function(d) { return d.total_events; })
                             } else if (scope.mode === 'seconds') {
-                                sum = d3.sum(preparedData[i].value[j].value[k].value, function(d) { return d.time_events; })
+                                sum = d3.sum(preparedData[i].value[j].value[k].value, function(d) { return d.total_events * d.time_event_sum; })
                             } else {
                                 sum = preparedData[i].value[j].value[k].value.length;
                             }
@@ -247,8 +254,14 @@
                 }
                 console.log('Flat data')
                 console.log(flatData)
-                y.domain([0, d3.max(flatData, function(d) { return d.y1; }) * 1.05]).range([height, 0]);
+                if (scope.scale === 'log') {
+                    y = d3.scaleLog()
+                } else {
+                    y = d3.scaleLinear()
+                }
+                y = y.domain([0.1, d3.max(flatData, function(d) { return d.y1; }) * 1.05]).range([height, 0]);
                 xAxis.ticks(10)
+                yAxis.ticks(5)
                 yAxis.scale(y);
                 svg.selectAll("rect.bar").remove()
                 svg.selectAll("text.bar-size-label").remove()
@@ -264,8 +277,6 @@
                 var rect = svg.selectAll("rect")
                               .data(flatData)
                               .enter()
-
-
 
                 function setTitle(d) {
                     if (d.value.length === 0) {
@@ -288,7 +299,8 @@
                                 'prepid': 'Prepid',
                                 'status': 'Status',
                                 'priority': 'Priority',
-                                'pwg': 'PWG'}
+                                'pwg': 'PWG',
+                                'is_member_of_chain': 'Member of chain'}
                     for (var i in scope.groupBy) {
                         var key = scope.groupBy[i]
                         title += keys[key] + ': ' + d.value[0][key] + '\n'
@@ -304,8 +316,6 @@
                     return title;
                 }
 
-
-
                 rect.append("rect")
                     .attr("fill", function(d) { return d.color; })
                     .attr("class", "bar")
@@ -313,13 +323,12 @@
                        return "translate(" + x(d.x0) + "," + y(d.y1) + ")";
                     })
                     .attr("width", function(d) { return Math.max(0, x(d.x1) - x(d.x0)); })
-                    .attr("height", function(d) { return height - y(d.y1 - d.y0); })
+                    .attr("height", function(d) { return y(d.y0) - y(d.y1); })
                     .on("mouseover", function() {
                         this.parentNode.appendChild(this);
                         d3.select(this).style("fill", '#bdbdbd');
                     })
                     .on('mousedown',function(d){
-                        console.log(scope.binSelectedCallback)
                         scope.binSelectedCallback(d.value)
                     })
                     .on("mouseout", function() {

@@ -62,6 +62,7 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
                                           'prepid': 'Prepid',
                                           'status': 'Status',
                                           'priority': 'Priority',
+                                          'is_member_of_chain': 'In chain',
                                           'pwg': 'PWG'}
 
             $scope.groupBy = urlParameters.groupBy.split(',').filter(e => e.length > 0)

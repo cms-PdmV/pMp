@@ -121,11 +121,9 @@ angular.module('pmpApp').controller('MainController', ['$http', '$location',
 
         $scope.fillDefaults = function(values, defaults) {
             var filledValues = {};
-            console.log('will fill defaults')
             Object.keys(defaults).forEach(function (param, index, array) {
                 var urlValue = values[param];
                 // if the default is a number, expect a numerical parameter
-                console.log(param);
                 if (urlValue === undefined || (angular.isNumber(defaults[param]) && !angular.isNumber(parseInt(urlValue, 10)))) {
                     filledValues[param] = defaults[param];
                 } else {
@@ -135,8 +133,6 @@ angular.module('pmpApp').controller('MainController', ['$http', '$location',
                     filledValues[param] = filledValues[param].toString()
                 }
             });
-            console.log('filledValues!')
-            console.log(filledValues)
             return filledValues;
         };
 

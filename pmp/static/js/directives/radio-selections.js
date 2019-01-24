@@ -21,7 +21,6 @@
                 }
             }
             scope.$watch('options', function(options) {
-                console.log(scope.allowMultiple)
                 if (options !== undefined) {
                     scope.selectionDict = {}
                     for (var i in options) {
