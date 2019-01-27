@@ -31,6 +31,7 @@ module.exports = function(grunt) {
           'static/js/directives/performance-histogram.js',
           'static/js/directives/present-column.js',
           'static/js/directives/present-donut.js',
+          'static/js/directives/present-stats-table.js',
           'static/js/directives/stats-table.js',
           'static/js/directives/tags.js'
           ],
@@ -91,6 +92,7 @@ module.exports = function(grunt) {
         'static/build/present.min.html': 'static/partials/present.html',
         'static/build/share.min.html': 'static/partials/share.html',
         'static/build/stats-table.min.html': 'static/partials/stats-table.html',
+        'static/build/present-stats-table.min.html': 'static/partials/present-stats-table.html',
         'static/build/table.min.html': 'static/partials/statustable.html',
         'static/build/search-suggestion.min.html': 'static/partials/search-suggestion.html',
         'static/build/tags.min.html': 'static/partials/tags.html',

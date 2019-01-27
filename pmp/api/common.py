@@ -382,10 +382,10 @@ class APIBase(esadapter.InitConnection):
         """
         logging.info('Requests before filtering %s' % (len(data)))
         new_data = []
-        if pwg_filter:
+        if pwg_filter is not None:
             pwg_filter = [x.upper() for x in pwg_filter if x]
 
-        if status_filter:
+        if status_filter is not None:
             status_filter = [x.lower() for x in status_filter if x]
 
         all_pwgs = {}
@@ -393,14 +393,14 @@ class APIBase(esadapter.InitConnection):
         for item in data:
             pwg = item.get('pwg', '').upper()
             if pwg not in all_pwgs:
-                if pwg_filter:
+                if pwg_filter is not None:
                     all_pwgs[pwg] = pwg in pwg_filter
                 else:
                     all_pwgs[pwg] = True
 
             status = item.get('status', '').lower()
             if status not in all_statuses:
-                if status_filter:
+                if status_filter is not None:
                     all_statuses[status] = status in status_filter
                 else:
                     all_statuses[status] = True

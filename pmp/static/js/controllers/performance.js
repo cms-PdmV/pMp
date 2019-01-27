@@ -40,7 +40,6 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
 
             // collect URL parameters together
             var urlParameters = $scope.fillDefaults($location.search(), $scope.defaults)
-            console.log(urlParameters);
             // define graph difference
             $scope.minuend = urlParameters.minuend;
             $scope.subtrahend = urlParameters.subtrahend;
@@ -82,7 +81,7 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
                 for (var i = 0; i < tmp.length; i++) {
                     Data.addInputTag(tmp[i]);
                 }
-                $scope.query();
+                $scope.query(true);
             }
             // if this is empty just change URL as some filters
             // could have been initiated
@@ -98,7 +97,6 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
          * @param {Boolean} defaultStatus When new status shows up what should be default filter value
          */
         $scope.load = function (request, add, more, defaultPWG, defaultStatus) {
-            console.log('request ' + request + ' | add ' + add + ' | more ' + more + ' | defaultPWG ' + defaultPWG + ' | defaultStatus ' + defaultStatus)
             if (!request) {
                 $scope.showPopUp('warning', 'Empty search field');
                 return;
@@ -115,7 +113,7 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
                     Data.reset(true);
                 }
                 Data.addInputTag(request);
-                $scope.query(true);
+                $scope.query(false);
             }
         };
 
@@ -123,7 +121,7 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
          * @description Core: Parse filters to query API
          * @param {Boolean} filter If filter data is present.
          */
-        $scope.query = function () {
+        $scope.query = function (alwaysReturnQueryalwaysReturnQuery) {
             var inputTags = Data.getInputTags();
             if (inputTags.length === 0) {
                 Data.setLoadedData([]);
@@ -137,16 +135,16 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
 
             $rootScope.loadingData = true;
             var priorityQuery = Data.getPriorityQuery();
-            var statusQuery = Data.getStatusQuery();
-            var pwgQuery = Data.getPWGQuery();
+            var statusQuery = Data.getStatusQuery(alwaysReturnQuery);
+            var pwgQuery = Data.getPWGQuery(alwaysReturnQuery);
             var queryUrl = 'api/performance?r=' + inputTags.join(',');
-            if (priorityQuery) {
+            if (priorityQuery !== undefined) {
                 queryUrl += '&priority=' + priorityQuery;
             }
-            if (statusQuery) {
+            if (statusQuery !== undefined !== undefined) {
                 queryUrl += '&status=' + statusQuery;
             }
-            if (pwgQuery) {
+            if (pwgQuery !== undefined) {
                 queryUrl += '&pwg=' + pwgQuery;
             }
             var promise = $http.get(queryUrl);

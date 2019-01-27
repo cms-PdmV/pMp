@@ -229,3 +229,17 @@ h1.dark-gray,h3.dark-gray {
 .pmp-blue {
     background-color: #8eb2cf;
 }
+
+.pmp-radio-buttons {
+    height: 30px;
+}
+
+.pmp-radio-buttons > label {
+    padding: 2px 10px;
+    background-color: #dc3545
+}
+
+.pmp-radio-buttons > label.active {
+    background-color: #f4bc91 !important;
+    color: black !important;
+}

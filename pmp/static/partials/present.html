@@ -6,13 +6,13 @@
     Mode: <radio-selections style="text-transform: capitalize;" class="ml-2" options="availableModes" selected="mode" on-value-change="modeChange"></radio-selections>
   </div>
   <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 m-2" >
-    Group by: <checkbox-selections style="text-transform: capitalize;" class="ml-2" options="availableSelections" selected="groupBy" on-value-change="groupByChange"></checkbox-selections>
+    Group graph by: <checkbox-selections style="text-transform: capitalize;" class="ml-2" options="availableSelections" selected="groupBy" on-value-change="groupByChange"></checkbox-selections>
   </div>
   <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 m-2" >
-    Color by: <checkbox-selections style="text-transform: capitalize;" class="ml-2" options="availableSelections" selected="colorBy" on-value-change="colorByChange"></checkbox-selections>
+    Color graph by: <checkbox-selections style="text-transform: capitalize;" class="ml-2" options="availableSelections" selected="colorBy" on-value-change="colorByChange"></checkbox-selections>
   </div>
   <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 m-2" >
-    Stack by: <checkbox-selections style="text-transform: capitalize;" class="ml-2" options="availableSelections" selected="stackBy" on-value-change="stackByChange"></checkbox-selections>
+    Stack graph by: <checkbox-selections style="text-transform: capitalize;" class="ml-2" options="availableSelections" selected="stackBy" on-value-change="stackByChange"></checkbox-selections>
   </div>
   <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 text-center">
     <column-chart scale="scale"
@@ -41,7 +41,7 @@
         Expected events: <b>{{binEntry.total_events}}</b>
       </div>
       <div ng-hide="!humanReadable" class="col-sm-2">
-        Expected events: <b>{{binEntry.total_events | readableNumbers}}</b>
+        Expected events: <b title="{{binEntry.total_events}}">{{binEntry.total_events | readableNumbers}}</b>
       </div>
       <div class="col-sm-2">
         Status: <b>{{binEntry.status}}</b>
@@ -50,5 +50,10 @@
         Member of chains: <b>{{binEntry.member_of_chain.length}}</b>
       </div>
     </div>
+  </div>
+  <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 mt-5 text-center margin-20">
+    <present-stats-table mode="mode"
+                         human-readable-numbers="humanReadable"
+                         data="data"></present-stats-table>
   </div>
 </div>

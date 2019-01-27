@@ -25,7 +25,6 @@ angular.module('pmpApp').controller('TypeaheadController', ['$scope', '$http',
             }
             $http.get('api/suggest/' + query + type).then(function (response) {
                 $scope.suggestions = response.data.results;
-                console.log('Suggestions: ' + $scope.suggestions.length)
             });
         };
     }

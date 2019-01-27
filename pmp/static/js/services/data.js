@@ -154,12 +154,14 @@ angular.module('pmpApp').service('Data', ['$rootScope', function ($rootScope) {
             }
             return (dataPriorityFilter[0] || '') + ',' + (dataPriorityFilter[1] || '');
         },
-        getPWGQuery: function () {
+        getPWGQuery: function (alwaysReturnQuery) {
+            var filter = this.getPWGFilter();
             if (this.allPWGsEnabled()) {
-                return undefined;
+                if (!alwaysReturnQuery || Object.keys(filter).length == 0) {
+                    return undefined;
+                }
             }
             var w = [];
-            var filter = this.getPWGFilter();
             for (var pwg in filter) {
                 if (filter[pwg]) {
                     w.push(pwg);
@@ -167,13 +169,15 @@ angular.module('pmpApp').service('Data', ['$rootScope', function ($rootScope) {
             }
             return w.join(',');
         },
-        getStatusQuery: function() {
+        getStatusQuery: function(alwaysReturnQuery) {
             // add status filter
+            var filter = this.getStatusFilter();
             if (this.allStatusesEnabled()) {
-                return undefined;
+                if (!alwaysReturnQuery || Object.keys(filter).length == 0) {
+                    return undefined;
+                }
             }
             var s = [];
-            var filter = this.getStatusFilter();
             for (var status in filter) {
                 if (filter[status]) {
                     s.push(status);

@@ -278,20 +278,20 @@
                                 'pwg': 'PWG',
                                 'is_member_of_chain': 'Member of chain'}
                     for (var i in scope.groupBy) {
-                        if (i in keys) {
-                            var key = scope.groupBy[i]
+                        var key = scope.groupBy[i]
+                        if (key in keys) {
                             title += keys[key] + ': ' + d.value[0][key] + '\n'
                         }
                     }
                     for (var i in scope.colorBy) {
-                        if (i in keys) {
-                            var key = scope.colorBy[i]
+                        var key = scope.colorBy[i]
+                        if (key in keys) {
                             title += keys[key] + ': ' + d.value[0][key] + '\n'
                         }
                     }
                     for (var i in scope.stackBy) {
-                        if (i in keys) {
-                            var key = scope.stackBy[i]
+                        var key = scope.stackBy[i]
+                        if (key in keys) {
                             title += keys[key] + ': ' + d.value[0][key] + '\n'
                         }
                     }
@@ -302,7 +302,7 @@
                     .attr("fill", function(d) { return d.color; })
                     .attr("class", "bar")
                     .attr("transform", function(d) {
-                       return "translate(" + x(d.x0) + "," + y(d.y1) + ")";
+                       return "translate(" + x(d.x0) + "," + y(d.y1 - 0.1) + ")";
                     })
                     .attr("width", function(d) { return Math.max(0, x(d.x1) - x(d.x0)); })
                     .attr("height", function(d) { return y(d.y0) - y(d.y1); })
@@ -310,7 +310,7 @@
                         this.parentNode.appendChild(this);
                         d3.select(this).style("fill", '#bdbdbd');
                     })
-                    .on('mousedown',function(d){
+                    .on('mousedown',function(d) {
                         scope.binSelectedCallback(d.value);
                     })
                     .on("mouseout", function() {

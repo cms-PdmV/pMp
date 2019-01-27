@@ -153,7 +153,6 @@
             };
 
             scope.$watch('data', function(data) {
-                console.log('Data changed')
                 if (data !== undefined && data.length) {
                     prepareData(data);
                 }

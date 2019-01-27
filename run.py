@@ -110,7 +110,7 @@ def api_historical():
             granularity = 100
 
     priority = flask.request.args.get('priority', None)
-    if priority:
+    if priority is not None:
         priority = priority.split(',')
         if len(priority) < 2:
             priority = None
@@ -122,11 +122,11 @@ def api_historical():
                 priority = None
 
     pwg = flask.request.args.get('pwg', None)
-    if pwg:
+    if pwg is not None:
         pwg = pwg.split(',')
 
     status = flask.request.args.get('status', None)
-    if status:
+    if status is not None:
         status = status.split(',')
 
     i = sanitize(i)
@@ -143,7 +143,7 @@ def api_historical():
 def api_performance():
     i = flask.request.args.get('r', '')
     priority = flask.request.args.get('priority', None)
-    if priority:
+    if priority is not None is not None:
         priority = priority.split(',')
         if len(priority) < 2:
             priority = None
@@ -155,11 +155,11 @@ def api_performance():
                 priority = None
 
     pwg = flask.request.args.get('pwg', None)
-    if pwg:
+    if pwg is not None:
         pwg = pwg.split(',')
 
     status = flask.request.args.get('status', None)
-    if status:
+    if status is not None:
         status = status.split(',')
 
     i = sanitize(i)
@@ -175,7 +175,7 @@ def api_performance():
 def api_present():
     i = flask.request.args.get('r', '')
     priority = flask.request.args.get('priority', None)
-    if priority:
+    if priority is not None:
         priority = priority.split(',')
         if len(priority) < 2:
             priority = None
@@ -187,11 +187,11 @@ def api_present():
                 priority = None
 
     pwg = flask.request.args.get('pwg', None)
-    if pwg:
+    if pwg is not None:
         pwg = pwg.split(',')
 
     status = flask.request.args.get('status', None)
-    if status:
+    if status is not None:
         status = status.split(',')
 
     chained_mode = flask.request.args.get('chained_mode', None) == 'True'

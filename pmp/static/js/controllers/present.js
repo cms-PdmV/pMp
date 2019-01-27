@@ -98,7 +98,7 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
                 for (var i = 0; i < tmp.length; i++) {
                     Data.addInputTag(tmp[i]);
                 }
-                $scope.query();
+                $scope.query(true);
             }
         };
 
@@ -111,7 +111,6 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
          * @param {Boolean} defaultStatus When new status shows up what should be default filter value
          */
         $scope.load = function (request, add, more, defaultPWG, defaultStatus) {
-            console.log('request ' + request + ' | add ' + add + ' | more ' + more + ' | defaultPWG ' + defaultPWG + ' | defaultStatus ' + defaultStatus)
             if (!request) {
                 $scope.showPopUp('warning', 'Empty search field');
                 return;
@@ -128,7 +127,7 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
                     Data.reset(true);
                 }
                 Data.addInputTag(request);
-                $scope.query(true);
+                $scope.query(false);
             }
         };
 
@@ -136,7 +135,7 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
          * @description Core: Parse filters to query API
          * @param {Boolean} filter If filter data is present.
          */
-        $scope.query = function () {
+        $scope.query = function (alwaysReturnQuery) {
             var inputTags = Data.getInputTags();
             if (inputTags.length === 0) {
                 Data.setLoadedData([]);
@@ -150,20 +149,19 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
 
             $rootScope.loadingData = true;
             var priorityQuery = Data.getPriorityQuery();
-            var statusQuery = Data.getStatusQuery();
-            var pwgQuery = Data.getPWGQuery();
+            var statusQuery = Data.getStatusQuery(alwaysReturnQuery);
+            var pwgQuery = Data.getPWGQuery(alwaysReturnQuery);
             var queryUrl = 'api/present?r=' + inputTags.join(',');
-            if (priorityQuery) {
+            if (priorityQuery !== undefined) {
                 queryUrl += '&priority=' + priorityQuery;
             }
-            if (statusQuery) {
+            if (statusQuery !== undefined) {
                 queryUrl += '&status=' + statusQuery;
             }
-            if (pwgQuery) {
+            if (pwgQuery !== undefined) {
                 queryUrl += '&pwg=' + pwgQuery;
             }
             // query for linear chart data
-            console.log('Query ' + queryUrl);
             var promise = $http.get(queryUrl);
             promise.then(function (data) {
                 Data.setLoadedData(data.data.results.data, false);

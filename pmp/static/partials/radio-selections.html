@@ -1,5 +1,5 @@
 <div style="display: inline-block;">
-  <div class="btn-group btn-group-toggle" data-toggle="buttons">
+  <div class="btn-group btn-group-toggle pmp-radio-buttons" data-toggle="buttons">
     <label ng-repeat="option in options" class="btn btn-secondary {{option == selected ? 'active' : ''}}">
       <input type="radio" name="options" id="option-{{option}}" ng-model="selectionDict[option]" autocomplete="off" ng-change="selectionChanged(option)"> {{option}}
     </label>

@@ -30,7 +30,6 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
          * @description Core: Init method for the page. Init scope variables from url.
          */
         $scope.init = function () {
-            console.log('Historical init')
             // get information about page
             $scope.page = PageDetailsProvider.historical;
 
@@ -76,7 +75,7 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
                 for (var i = 0; i < tmp.length; i++) {
                     Data.addInputTag(tmp[i]);
                 }
-                $scope.query();
+                $scope.query(true);
             }
         };
 
@@ -89,7 +88,6 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
          * @param {Boolean} defaultStatus When new status shows up what should be default filter value
          */
         $scope.load = function (request, add, more, defaultPWG, defaultStatus) {
-            console.log('request ' + request + ' | add ' + add + ' | more ' + more + ' | defaultPWG ' + defaultPWG + ' | defaultStatus ' + defaultStatus)
             if (!request) {
                 $scope.showPopUp('warning', 'Empty search field');
                 return;
@@ -106,7 +104,7 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
                     Data.reset(true);
                 }
                 Data.addInputTag(request);
-                $scope.query(true);
+                $scope.query(false);
             }
         };
 
@@ -114,7 +112,7 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
          * @description Core: Parse filters to query API
          * @param {Boolean} filter If filter data is present.
          */
-        $scope.query = function (ignoreUncheckedFilters) {
+        $scope.query = function (alwaysReturnQuery) {
             var inputTags = Data.getInputTags();
             if (inputTags.length === 0) {
                 Data.setLoadedData([]);
@@ -125,37 +123,25 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
                 });
                 return null;
             }
-            if (!ignoreUncheckedFilters && $scope.data && (Data.allPWGsDisabled() || Data.allStatusesDisabled())) {
-                console.log('Do not reload')
-                Data.setLoadedData([]);
-                $scope.listSubmitted = [];
-                $scope.listDone = [];
-                $scope.data = Data.getLoadedData();
-                $scope.setURL($scope, Data);
-                $scope.$broadcast('onChangeNotification:LoadedData');
-                return null;
-            }
-
             $rootScope.loadingData = true;
             var priorityQuery = Data.getPriorityQuery();
-            var statusQuery = Data.getStatusQuery();
-            var pwgQuery = Data.getPWGQuery();
+            var statusQuery = Data.getStatusQuery(alwaysReturnQuery);
+            var pwgQuery = Data.getPWGQuery(alwaysReturnQuery);
             var granularity = $scope.granularity;
             var queryUrl = 'api/historical?r=' + inputTags.join(',');
             if (granularity) {
                 queryUrl += '&granularity=' + granularity;
             }
-            if (priorityQuery) {
+            if (priorityQuery !== undefined) {
                 queryUrl += '&priority=' + priorityQuery;
             }
-            if (statusQuery) {
+            if (statusQuery !== undefined) {
                 queryUrl += '&status=' + statusQuery;
             }
-            if (pwgQuery) {
+            if (pwgQuery !== undefined) {
                 queryUrl += '&pwg=' + pwgQuery;
             }
             // query for linear chart data
-            console.log('Query ' + queryUrl);
             var promise = $http.get(queryUrl);
             promise.then(function (data) {
                 Data.setLoadedData(data.data.results.data, false);

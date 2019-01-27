@@ -1,0 +1,39 @@
+<div class="col-12" ng-repeat="tableName in ['chained', 'unchained', 'all']">
+  <h3 style="text-align: left !important;"><strong><span style="text-transform: capitalize;">{{tableName}}</span> requests by status (showing {{mode}}):</strong></h3>
+  <table class="table text-center col-12">
+    <thead>
+      <tr>
+        <th>Campaign</th>
+        <th>new</th>
+        <th>validation</th>
+        <th>defined</th>
+        <th>approved</th>
+        <th>submitted</th>
+        <th>done</th>
+        <th>Total</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr ng-hide="humanReadableNumbers" ng-repeat="(campaign, values) in tableData[tableName]">
+        <td>{{campaign}}</td>
+        <td>{{values.new}}</td>
+        <td>{{values.validation}}</td>
+        <td>{{values.defined}}</td>
+        <td>{{values.approved}}</td>
+        <td>{{values.submitted}}</td>
+        <td>{{values.done}}</td>
+        <td>{{values.total}}</td>
+      </tr>
+      <tr ng-hide="!humanReadableNumbers" ng-repeat="(campaign, values) in tableData[tableName]">
+        <td>{{campaign}}</td>
+        <td title="{{values.new}}">{{values.new | readableNumbers}}</td>
+        <td title="{{values.validation}}">{{values.validation | readableNumbers}}</td>
+        <td title="{{values.defined}}">{{values.defined | readableNumbers}}</td>
+        <td title="{{values.approved}}">{{values.approved | readableNumbers}}</td>
+        <td title="{{values.submitted}}">{{values.submitted | readableNumbers}}</td>
+        <td title="{{values.done}}">{{values.done | readableNumbers}}</td>
+        <td title="{{values.total}}">{{values.total | readableNumbers}}</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
