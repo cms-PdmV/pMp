@@ -243,3 +243,8 @@ h1.dark-gray,h3.dark-gray {
     background-color: #f4bc91 !important;
     color: black !important;
 }
+
+.zebra-lines > div {
+    padding-left: 5px;
+    padding-right: 5px;
+}

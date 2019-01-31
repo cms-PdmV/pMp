@@ -262,7 +262,8 @@ class HistoricalAPI(APIBase):
                              'p': request['priority'],
                              'ds': request['dataset'],
                              'x': data_points[-1]['x'],
-                             'd': data_points[-1][key]})
+                             'd': data_points[-1][key],
+                             'fc': request['force_completed']})
 
         return new_data
 
@@ -296,6 +297,7 @@ class HistoricalAPI(APIBase):
         # Get submitted and done requests separately
         submitted_requests = self.get_with_status(response, 'submitted')
         done_requests = self.get_with_status(response, 'done')
+        print(done_requests)
         # Continue aggregating data points for response
         logging.info('Will aggregate requests')
         response = self.aggregate_requests(response)

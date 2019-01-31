@@ -3,9 +3,6 @@ pMp production run script
 Configuration file in config.py
 > sudo python run.py
 """
-from tornado.wsgi import WSGIContainer
-from tornado.httpserver import HTTPServer
-from tornado.ioloop import IOLoop
 from flask import Flask, make_response, redirect
 from pmp import models
 from flask import request
@@ -194,13 +191,11 @@ def api_present():
     if status is not None:
         status = status.split(',')
 
-    chained_mode = flask.request.args.get('chained_mode', None) == 'True'
-    growing_mode = flask.request.args.get('growing_mode', None) == 'True'
+    chained_mode = flask.request.args.get('chainedMode', '').lower() == 'true'
 
     i = sanitize(i)
     result = PresentAPI().get(i,
                               chained_mode=chained_mode,
-                              growing_mode=growing_mode,
                               priority_filter=priority,
                               pwg_filter=pwg,
                               status_filter=status)

@@ -30,17 +30,10 @@
             </button>
             <button type="button"
                     class="btn btn-danger"
-                    ng-click="load(campaign, true, false, true, true)"
-                    ng-disabled="loadingData || displayChains">
+                    ng-click="load(campaign, true)"
+                    ng-disabled="loadingData || chainedMode">
               <i class="hidden-lg hidden-md fa fa-plus"></i>
               <span class="hidden-sm hidden-xs"> Append</span>
-            </button>
-            <button type="button"
-                    class="btn btn-danger"
-                    ng-click="load('all')"
-                    ng-disabled="loadingData || displayChains || page.id == 2">
-              <i class="hidden-lg hidden-md fa fa-globe"></i>
-              <span class="hidden-sm hidden-xs"> Load <strong>all</strong></span>
             </button>
           </div>
         </div>

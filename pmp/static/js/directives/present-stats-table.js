@@ -9,6 +9,7 @@
         scope: {
             data: '=',
             mode: '=',
+            growingMode: '=',
             humanReadableNumbers: '='
         },
         templateUrl: 'build/present-stats-table.min.html',
@@ -26,9 +27,9 @@
                     var chained = data[i].is_member_of_chain === 'YES'
                     var amount = 1
                     if (scope.mode == 'events') {
-                        amount = data[i].total_events
+                        amount = data[i].status === 'done' ? data[i].completed_events : data[i].total_events
                     } else if (scope.mode == 'seconds') {
-                        amount = data[i].time_event_sum
+                        amount = data[i].time_event_sum * data[i].total_events
                     }
                     if (!(campaign in chainedRequests)) {
                         chainedRequests[campaign] = $.extend({}, emptyDict)
@@ -41,14 +42,41 @@
                     }
                     if (chained) {
                         chainedRequests[campaign][status] += amount
-                        chainedRequests[campaign]['total'] += amount
+                        if (scope.growingMode && scope.mode == 'events' && status === 'submitted') {
+                            var adjustment = Math.min(data[i].completed_events, data[i].total_events)
+                            chainedRequests[campaign]['submitted'] -= adjustment
+                            chainedRequests[campaign]['done'] += adjustment
+                        }
                     } else {
                         unchainedRequests[campaign][status] += amount
-                        unchainedRequests[campaign]['total'] += amount
+                        if (scope.growingMode && scope.mode == 'events' && status === 'submitted') {
+                            var adjustment = Math.min(data[i].completed_events, data[i].total_events)
+                            chainedRequests[campaign]['submitted'] -= adjustment
+                            chainedRequests[campaign]['done'] += adjustment
+                        }
                     }
-                    allRequests[campaign][status] += amount
-                    allRequests[campaign]['total'] += amount
                 }
+
+                for (var campaign in chainedRequests) {
+                    var campaignInfo = chainedRequests[campaign]
+                    for (var status in emptyDict) {
+                        if (status !== 'total') {
+                            campaignInfo['total'] += campaignInfo[status]
+                        }
+                        allRequests[campaign][status] += campaignInfo[status]
+                    }
+                }
+
+                for (var campaign in unchainedRequests) {
+                    var campaignInfo = unchainedRequests[campaign]
+                    for (var status in emptyDict) {
+                        if (status !== 'total') {
+                            campaignInfo['total'] += campaignInfo[status]
+                        }
+                        allRequests[campaign][status] += campaignInfo[status]
+                    }
+                }
+
                 if (Object.keys(allRequests).length > 1) {
                     var chainedTotal = $.extend({}, emptyDict)
                     var unchainedTotal = $.extend({}, emptyDict)
@@ -69,7 +97,7 @@
 
             scope.$watch('data', function(data) {
                 if (data !== undefined && data.length) {
-                    prepareData(data);
+                    prepareData(angular.copy(data));
                 }
             });
         }

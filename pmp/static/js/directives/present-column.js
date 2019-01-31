@@ -17,7 +17,8 @@
             humanReadableNumbers: '=',
             binSelectedCallback: '=',
             bigNumberFormatter: '=',
-            bigNumberFormatterLog: '='
+            bigNumberFormatterLog: '=',
+            growingMode: '='
         },
         link: function(scope, element, compile, http) {
             // graph configuration
@@ -31,7 +32,6 @@
                     left: 50
                 }
             };
-            scope.dataCopy = []
             // General attributes
             var width = config.customWidth - config.margin.left - config.margin.right;
             var height = config.customHeight - config.margin.top - config.margin.bottom;
@@ -161,7 +161,6 @@
             }
 
             var prepareData = function(data) {
-                scope.dataCopy = angular.copy(data);
                 preparedData = {}
                 scope.binSelectedCallback([])
 
@@ -192,11 +191,33 @@
                         }
                     }
                 }
+                if (scope.mode === 'events' && scope.growingMode) {
+                    for (var groupBy in preparedData) {
+                        for (var colorBy in preparedData[groupBy]) {
+                            for (var stackBy in preparedData[groupBy][colorBy]) {
+                                for (var i in preparedData[groupBy][colorBy][stackBy]) {
+                                    d = preparedData[groupBy][colorBy][stackBy][i]
+                                    if (d.status === 'submitted') {
+                                        var adjustment = Math.min(d.completed_events, d.total_events)
+                                        d.total_events -= adjustment
+                                        var newGroupBy = groupBy.replace('submitted', 'done')
+                                        var newColorBy = colorBy.replace('submitted', 'done')
+                                        var newStackBy = stackBy.replace('submitted', 'done')
+                                        preparedData[newGroupBy][newColorBy][newStackBy].push({prepid: 'GROWING_FAKE',
+                                                                                               status: 'done',
+                                                                                               completed_events: adjustment})
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                                                        
                 preparedData = dictToArray(preparedData)
                 var flatData = [];
                 var barMargin = 0.01;
                 var subBarMargin = 0.005;
-                var barWidth = (1.0 - (preparedData.length * barMargin))/ preparedData.length;
+                var barWidth = (1.0 - (preparedData.length * barMargin)) / preparedData.length;
                 for (var i = 0; i < preparedData.length; i++) {
                     preparedData[i].x0 = i * barWidth + (i + 1) * barMargin;
                     var subBarWidth = (barWidth - (preparedData[i].value.length * subBarMargin)) / preparedData[i].value.length;
@@ -206,14 +227,14 @@
                         if (color === undefined) {
                             color = '#2196f3'
                         }
-                        var barY = 0.1;
+                        var barY = 0;
                         for (var k = 0; k < preparedData[i].value[j].value.length; k++) {
                             preparedData[i].value[j].value[k].x0 = preparedData[i].value[j].x0;
                             preparedData[i].value[j].value[k].x1 = preparedData[i].value[j].x0 + subBarWidth;
-                            preparedData[i].value[j].value[k].y0 = barY
+                            preparedData[i].value[j].value[k].y0 = barY == 0 ? 0.1 : barY
                             var sum = 0;
                             if (scope.mode === 'events') {
-                                sum = d3.sum(preparedData[i].value[j].value[k].value, function(d) { return d.total_events; })
+                                sum = d3.sum(preparedData[i].value[j].value[k].value, function(d) { return d.status === 'done' ? d.completed_events : d.total_events; })
                             } else if (scope.mode === 'seconds') {
                                 sum = d3.sum(preparedData[i].value[j].value[k].value, function(d) { return d.total_events * d.time_event_sum; })
                             } else {
@@ -302,7 +323,7 @@
                     .attr("fill", function(d) { return d.color; })
                     .attr("class", "bar")
                     .attr("transform", function(d) {
-                       return "translate(" + x(d.x0) + "," + y(d.y1 - 0.1) + ")";
+                       return "translate(" + x(d.x0) + "," + y(d.y1) + ")";
                     })
                     .attr("width", function(d) { return Math.max(0, x(d.x1) - x(d.x0)); })
                     .attr("height", function(d) { return y(d.y0) - y(d.y1); })
@@ -321,7 +342,7 @@
 
             scope.$watch('data', function(data) {
                 if (data !== undefined && data.length) {
-                    prepareData(data);
+                    prepareData(angular.copy(data));
                 }
             });
         }

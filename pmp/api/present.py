@@ -50,7 +50,7 @@ class PresentAPI(APIBase):
                 continue
 
             # Process the db documents
-            for _, mcm_document in self.db_query(one, include_stats_document=True):
+            for stats_document, mcm_document in self.db_query(one, include_stats_document=True):
                 # skip legacy request with no prep_id
                 if len(mcm_document.get('prepid', '')) == 0:
                     continue
@@ -59,36 +59,51 @@ class PresentAPI(APIBase):
                     logging.warning('%s is already in seen_prepids. Why is it here again?' % (mcm_document['prepid']))
                     continue
 
+                completed_events = 0
+                print(json.dumps(stats_document, indent=2))
+                if stats_document is not None:
+                     if 'event_number_history' in stats_document:
+                        for history_record in stats_document['event_number_history']:
+                            if history_record['dataset'] != mcm_document['output_dataset']:
+                                continue
+
+                            if len(history_record.get('history', [])) == 0:
+                                break
+
+                            newest_entry = sorted(history_record.get('history', []), key=lambda k: k['time'])[-1]
+                            print(json.dumps(newest_entry, indent=2))
+                            if newest_entry['type'] == 'VALID' or newest_entry['type'] == 'PRODUCTION':
+                                completed_events = newest_entry.get('events', 0)
+
                 seen_prepids.add(mcm_document['prepid'])
                 response_list.append({'member_of_campaign': mcm_document['member_of_campaign'],
                                       'prepid': mcm_document['prepid'],
                                       'pwg': mcm_document['pwg'],
                                       'status': mcm_document['status'],
                                       'priority': mcm_document['priority'],
-                                      'member_of_chain': mcm_document['member_of_chain'],
-                                      'is_member_of_chain': 'YES' if len(mcm_document['member_of_chain']) > 0 else 'NO',
-                                      'time_event_sum': sum(mcm_document['time_event']),
-                                      'total_events': mcm_document['total_events']})
+                                      'member_of_chain': mcm_document.get('member_of_chain', []),
+                                      'is_member_of_chain': 'YES' if len(mcm_document.get('member_of_chain', [])) > 0 else 'NO',
+                                      'time_event_sum': sum(mcm_document.get('time_event', [])),
+                                      'total_events': mcm_document['total_events'],
+                                      'completed_events': completed_events})
 
         return response_list
 
-    def get(self, query, chained_mode=False, growing_mode=False, priority_filter=None, pwg_filter=None, status_filter=None):
+    def get(self, query, chained_mode=False, priority_filter=None, pwg_filter=None, status_filter=None):
 
         """
         Get the historical data based on query, data point count, priority and filter
         """
-        logging.info('query=%s (%s) | chained_mode=%s (%s) | growing_mode=%s (%s) | priority_filter=%s (%s) | pwg_filter=%s (%s) | status_filter=%s (%s)' % (query,
-                                                                                                                                                             type(query),
-                                                                                                                                                             chained_mode,
-                                                                                                                                                             type(chained_mode),
-                                                                                                                                                             growing_mode,
-                                                                                                                                                             type(growing_mode),
-                                                                                                                                                             priority_filter,
-                                                                                                                                                             type(priority_filter),
-                                                                                                                                                             pwg_filter,
-                                                                                                                                                             type(pwg_filter),
-                                                                                                                                                             status_filter,
-                                                                                                                                                             type(status_filter)))
+        logging.info('query=%s (%s) | chained_mode=%s (%s) | priority_filter=%s (%s) | pwg_filter=%s (%s) | status_filter=%s (%s)' % (query,
+                                                                                                                                      type(query),
+                                                                                                                                      chained_mode,
+                                                                                                                                      type(chained_mode),
+                                                                                                                                      priority_filter,
+                                                                                                                                      type(priority_filter),
+                                                                                                                                      pwg_filter,
+                                                                                                                                      type(pwg_filter),
+                                                                                                                                      status_filter,
+                                                                                                                                      type(status_filter)))
 
         if chained_mode:
             campaigns = self.get_campaigns_from_query(query)

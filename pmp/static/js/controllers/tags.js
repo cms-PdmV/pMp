@@ -36,7 +36,8 @@ angular.module('pmpApp').controller('TagsController', ['$rootScope', '$scope', '
                 }
                 Data.reloadFilters(data);
                 Data.removeInputTag(tagToRemove);
-            }, 1000);
+                $scope.inputTags = Data.getInputTags();
+            }, 100);
         };
 
         // Broadcast receiver, change input tags array

@@ -4,9 +4,9 @@
  * @description Common methods for all pages
  */
 angular.module('pmpApp').controller('MainController', ['$http', '$location',
-    '$route', '$rootScope', '$scope', '$timeout', 'browser',
+    '$route', '$rootScope', '$scope', '$timeout', 'browser', 'Data',
     function ($http, $location, $route, $rootScope, $scope, $timeout,
-        isSupportedBrowser) {
+        isSupportedBrowser, Data) {
         'use strict';
 
         $scope.showView = true; // controls visibility of page main container
@@ -31,6 +31,16 @@ angular.module('pmpApp').controller('MainController', ['$http', '$location',
             return original.apply($location, [path]);
         };
 
+        $scope.nav = function(link) {
+            $scope.activeIndex = 0;
+            if (link === '/present/') {
+                $scope.activeIndex = 1;
+            } else if (link === '/historical/') {
+                $scope.activeIndex = 2;
+            } else if (link === '/performance/') {
+                $scope.activeIndex = 3;
+            }
+        }
 
         /**
          * @description Pops up message
@@ -89,36 +99,6 @@ angular.module('pmpApp').controller('MainController', ['$http', '$location',
             return angular.equals({}, obj);
         };
 
-        /**
-         * @description Generates CSV for all keys having true value
-         * @param {Object} obj to check
-         * @return {String} CSV string
-         */
-        $scope.getCSVPerFilter = function (obj) {
-            var a = [];
-            for (var i in obj) {
-                if (obj[i]) a.push(i);
-            }
-            return a.join(',');
-        };
-
-        /**
-         * @description Update current time variable
-         */
-        $scope.updateCurrentDate = function () {
-            $scope.dt = new Date();
-        };
-
-        /**
-         * @description Query API for last successful update timestamp. Pass indexes as input as csv
-         */
-        $scope.updateLastUpdate = function (fieldsCSV) {
-            $http.get("api/" + fieldsCSV + "/lastupdate/_").then(
-                function (data) {
-                    $scope.lastUpdate = data.data.results.last_update;
-                });
-        };
-
         $scope.fillDefaults = function(values, defaults) {
             var filledValues = {};
             Object.keys(defaults).forEach(function (param, index, array) {
@@ -175,7 +155,7 @@ angular.module('pmpApp').controller('MainController', ['$http', '$location',
         };
 
         $scope.formatBigNumber = function (number) {
-            if (number < 1) {
+            if (number < 1 || number % 1 !== 0) {
                 return ''
             }
             var result = ''

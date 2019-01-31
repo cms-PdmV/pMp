@@ -220,7 +220,7 @@ angular.module('pmpApp').service('Data', ['$rootScope', function ($rootScope) {
          */
         reset: function (resetFilters) {
             this.loadedData = [];
-            this.setInputTags([]);
+            this.inputTags = [];
             if (resetFilters) {
                 this.priorityFilter = [];
                 this.statusFilter = {};

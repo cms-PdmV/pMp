@@ -35,9 +35,11 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
             // get information about page
             $scope.page = PageDetailsProvider.performance;
             $scope.selectedBin = [];
-            // reset data and filters
-            Data.reset(true);
 
+            $scope.loadingData = false;
+            Data.reset(true);
+            $scope.data = undefined;
+            $scope.firstLoad = true;
             // collect URL parameters together
             var urlParameters = $scope.fillDefaults($location.search(), $scope.defaults)
             // define graph difference
@@ -45,7 +47,6 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
             $scope.subtrahend = urlParameters.subtrahend;
             $scope.availableStatuses = [];
             $scope.availableScales = ['linear', 'log'];
-
             // if linear scale
             $scope.scale = urlParameters.scale;
 
@@ -61,7 +62,7 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
                 var s = {}
                 var tmp = urlParameters.status.split(',');
                 for (var i = 0; i < tmp.length; i++) {
-                    s[tmp] = true;
+                    s[tmp[i]] = true;
                 }
                 Data.setStatusFilter(s);
             }
@@ -70,33 +71,23 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
                 var w = {}
                 var tmp = urlParameters.pwg.split(',');
                 for (var i = 0; i < tmp.length; i++) {
-                    w[tmp] = true;
+                    w[tmp[i]] = true;
                 }
                 Data.setPWGFilter(w);
             }
 
-            // load graph data
+             // load graph data
             if (urlParameters.r !== '') {
-                var tmp = urlParameters.r.split(',');
-                for (var i = 0; i < tmp.length; i++) {
-                    Data.addInputTag(tmp[i]);
-                }
-                $scope.query(true);
+                Data.setInputTags(urlParameters.r.split(','));
             }
-            // if this is empty just change URL as some filters
-            // could have been initiated
-            $scope.setURL($scope, Data);
         };
 
         /**
          * @description Core: Query API
          * @param {String} request User input.
          * @param {Boolean} add Append results if true
-         * @param {Boolean} more Are there more requests in a queue
-         * @param {Boolean} defaultPWG When new PWG shows up what should be default filter value
-         * @param {Boolean} defaultStatus When new status shows up what should be default filter value
          */
-        $scope.load = function (request, add, more, defaultPWG, defaultStatus) {
+        $scope.load = function (request, add) {
             if (!request) {
                 $scope.showPopUp('warning', 'Empty search field');
                 return;
@@ -107,13 +98,11 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
             if (add && Data.getInputTags().indexOf(request) !== -1) {
                 $scope.showPopUp('warning', 'Object is already loaded');
             } else {
-                $rootScope.loadingData = true;
                 if (!add) {
                     // Reset data and filters
                     Data.reset(true);
                 }
                 Data.addInputTag(request);
-                $scope.query(false);
             }
         };
 
@@ -121,27 +110,25 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
          * @description Core: Parse filters to query API
          * @param {Boolean} filter If filter data is present.
          */
-        $scope.query = function (alwaysReturnQueryalwaysReturnQuery) {
+        $scope.query = function () {
             var inputTags = Data.getInputTags();
             if (inputTags.length === 0) {
                 Data.setLoadedData([]);
                 Data.setStatusFilter({});
                 Data.setPWGFilter({});
-                $scope.$broadcast('onChangeNotification:LoadedData', {
-                    update: false
-                });
+                $scope.$broadcast('onChangeNotification:LoadedData');
                 return null;
             }
-
-            $rootScope.loadingData = true;
+            $scope.loadingData = true;
             var priorityQuery = Data.getPriorityQuery();
-            var statusQuery = Data.getStatusQuery(alwaysReturnQuery);
-            var pwgQuery = Data.getPWGQuery(alwaysReturnQuery);
+            var statusQuery = Data.getStatusQuery($scope.firstLoad);
+            var pwgQuery = Data.getPWGQuery($scope.firstLoad);
+            $scope.firstLoad = false;
             var queryUrl = 'api/performance?r=' + inputTags.join(',');
             if (priorityQuery !== undefined) {
                 queryUrl += '&priority=' + priorityQuery;
             }
-            if (statusQuery !== undefined !== undefined) {
+            if (statusQuery !== undefined) {
                 queryUrl += '&status=' + statusQuery;
             }
             if (pwgQuery !== undefined) {
@@ -152,10 +139,6 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
                 Data.setLoadedData(data.data.results.data, false);
                 Data.setStatusFilter(data.data.results.status);
                 Data.setPWGFilter(data.data.results.pwg);
-                $scope.$broadcast('onChangeNotification:LoadedData', {
-                    update: false
-                });
-                $rootScope.loadingData = false;
                 $scope.availableStatuses = data.data.results.all_statuses_in_history.slice()
                 if ($scope.availableStatuses.length == 0) {
                     $scope.subtrahend = undefined
@@ -170,11 +153,13 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
                 }
                 $scope.data = $scope.filterByMinuendSubtrahend(Data.getLoadedData(), $scope.subtrahend, $scope.minuend);
                 $scope.setURL($scope, Data);
+                $scope.$broadcast('onChangeNotification:LoadedData');
+                $scope.loadingData = false;
             }, function () {
                 $scope.showPopUp(PageDetailsProvider.messages
                     .E1.type, PageDetailsProvider.messages
                     .E1.message);
-                $rootScope.loadingData = false;
+                $scope.loadingData = false;
             });
         };
 
@@ -227,5 +212,9 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
             }
             return newData
         }
+
+        $scope.$on('onChangeNotification:InputTags', function () {
+            $scope.query()
+        })
     }
 ]);

@@ -1,4 +1,4 @@
-<div class="row" ng-show="data.length">
+<div class="row" ng-hide="loadingData || !data || data.length == 0">
   <div class="col-sm-12 text-center spacing" id="measure">
     <linear-lifetime data="data"
                      zoom-y="zoomY"
@@ -54,13 +54,15 @@
         Expected: <b>{{done.x}}</b>
       </div>
       <div ng-hide="!humanReadable" class="col-sm-2">
-        Expected: <b>{{done.x | readableNumbers}}</b>
+        Expected: <b title="{{done.x}}">{{done.x | readableNumbers}}</b>
       </div>
       <div ng-hide="humanReadable" class="col-sm-2">
         Done: <b>{{done.d}}</b>
+        <small title="Force completed" style="color:red" ng-show="done.fc">(FC)</small>
       </div>
       <div ng-hide="!humanReadable" class="col-sm-2">
-        Done: <b>{{done.d | readableNumbers}}</b>
+        Done: <b title="{{done.d}}">{{done.d | readableNumbers}}</b>
+        <small title="Force completed" style="color:red" ng-show="done.fc">(FC)</small>
       </div>
       <div class="col-sm-2">
         <div class="progress total-bar">
