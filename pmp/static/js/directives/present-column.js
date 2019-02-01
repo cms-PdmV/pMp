@@ -198,13 +198,18 @@
                                 for (var i in preparedData[groupBy][colorBy][stackBy]) {
                                     d = preparedData[groupBy][colorBy][stackBy][i]
                                     if (d.status === 'submitted') {
+                                        var realTotal = d.total_events;
                                         var adjustment = Math.min(d.completed_events, d.total_events)
                                         d.total_events -= adjustment
                                         var newGroupBy = groupBy.replace('submitted', 'done')
                                         var newColorBy = colorBy.replace('submitted', 'done')
                                         var newStackBy = stackBy.replace('submitted', 'done')
-                                        preparedData[newGroupBy][newColorBy][newStackBy].push({prepid: 'GROWING_FAKE',
+                                        preparedData[newGroupBy][newColorBy][newStackBy].push({prepid: d.prepid,
+                                                                                               total_events: realTotal,
+                                                                                               priority: d.priority,
+                                                                                               member_of_chain: d.member_of_chain,
                                                                                                status: 'done',
+                                                                                               growing_fake: true,
                                                                                                completed_events: adjustment})
                                     }
                                 }

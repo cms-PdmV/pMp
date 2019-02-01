@@ -60,7 +60,6 @@ class PresentAPI(APIBase):
                     continue
 
                 completed_events = 0
-                print(json.dumps(stats_document, indent=2))
                 if stats_document is not None:
                      if 'event_number_history' in stats_document:
                         for history_record in stats_document['event_number_history']:
@@ -71,7 +70,6 @@ class PresentAPI(APIBase):
                                 break
 
                             newest_entry = sorted(history_record.get('history', []), key=lambda k: k['time'])[-1]
-                            print(json.dumps(newest_entry, indent=2))
                             if newest_entry['type'] == 'VALID' or newest_entry['type'] == 'PRODUCTION':
                                 completed_events = newest_entry.get('events', 0)
 
