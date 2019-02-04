@@ -28,8 +28,6 @@
                   data="data"></column-chart>
     
   </div>
-
-      {{humanReadable}}{{growingMode}}
   <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 text-center margin-20" ng-show="selectedBin.length">
     <p>Requests (<b>{{selectedBin.length}}</b>) in selected bar</p>
     <div ng-repeat="binEntry in selectedBin" class="row zebra-lines small-padding">

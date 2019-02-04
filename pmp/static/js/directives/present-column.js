@@ -44,6 +44,21 @@
                     .attr("transform", "translate(" + config.margin.left + "," + config.margin.top + ")")
                     .attr('style', 'fill: none');
 
+            svg.append('defs')
+               .append('pattern')
+               .attr('id', 'diagonal-stripes')
+               .attr('patternUnits', 'userSpaceOnUse')
+               .attr('patternTransform', 'rotate(45)')
+               .attr('width', 20)
+               .attr('height', 20)
+               .append('line')
+               .attr('x1', 0)
+               .attr('y1', 10)
+               .attr('x2', 20)
+               .attr('y2', 10)
+               .attr('stroke', '#bdbdbd')
+               .attr('stroke-width', 8);
+
             // axes
             var x = d3.scaleLinear().range([0, width]);
             var xAxis = d3.axisBottom(x).ticks(10);
@@ -266,6 +281,7 @@
                 yAxis.ticks(5)
                 yAxis.scale(y);
                 svg.selectAll("rect.bar").remove()
+                svg.selectAll(".selected-bar").remove()
                 svg.selectAll("text.bar-size-label").remove()
                 svg.selectAll("g .x.axis").call(xAxis);
                 svg.selectAll("g .y.axis").call(yAxis);
@@ -333,10 +349,20 @@
                     .attr("width", function(d) { return Math.max(0, x(d.x1) - x(d.x0)); })
                     .attr("height", function(d) { return y(d.y0) - y(d.y1); })
                     .on("mouseover", function() {
-                        this.parentNode.appendChild(this);
                         d3.select(this).style("fill", '#bdbdbd');
                     })
                     .on('mousedown',function(d) {
+                        d3.selectAll(".selected-bar").remove()
+                        var selectedRect = rect.append("rect")
+                                               .attr("class", "selected-bar")
+                                               .attr("transform", "translate(" + x(d.x0) + "," + y(d.y1) + ")")
+                                               .attr("width", Math.max(0, x(d.x1) - x(d.x0)))
+                                               .attr("height", y(d.y0) - y(d.y1))
+                                               .style("fill", "url(#diagonal-stripes)")
+                        selectedRect.on('mousedown',function(d) {
+                            d3.selectAll(".selected-bar").remove()
+                            scope.binSelectedCallback([]);
+                        })
                         scope.binSelectedCallback(d.value);
                     })
                     .on("mouseout", function() {

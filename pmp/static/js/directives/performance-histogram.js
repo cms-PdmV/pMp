@@ -40,6 +40,21 @@
                     .attr("transform", "translate(" + config.margin.left + "," + config.margin.top + ")")
                     .attr('style', 'fill: none');
 
+            svg.append('defs')
+               .append('pattern')
+               .attr('id', 'diagonal-stripes')
+               .attr('patternUnits', 'userSpaceOnUse')
+               .attr('patternTransform', 'rotate(45)')
+               .attr('width', 20)
+               .attr('height', 20)
+               .append('line')
+               .attr('x1', 0)
+               .attr('y1', 10)
+               .attr('x2', 20)
+               .attr('y2', 10)
+               .attr('stroke', '#bdbdbd')
+               .attr('stroke-width', 8);
+
             function formatTimestamp(number) {
                 return msToDate(number * scope.range + scope.minDiff)
             }
@@ -112,6 +127,7 @@
                 yAxis.scale(y);
                 svg.selectAll("rect.bar").remove()
                 svg.selectAll("text.bar-size-label").remove()
+                svg.selectAll(".selected-bar").remove()
                 svg.selectAll("g .x.axis").call(xAxis);
                 svg.selectAll("g .y.axis").call(yAxis);
                 svg.select(".x.axis")
@@ -126,7 +142,7 @@
                               .enter()
 
                 rect.append("rect")
-                    .attr("fill", "#8eb2cf")
+                    .attr("fill", "#2196f3")
                     .attr("class", "bar")
                     .attr("x", 1)
                     .attr("transform", function(d) {
@@ -134,11 +150,26 @@
                     })
                     .attr("width", function(d) { return Math.max(0, x(d.x1) - x(d.x0) - 1); })
                     .attr("height", function(d) { return Math.max(0, height - y(Math.max(0.001, d.values.length))); })
-                    .on('mousedown',function(d){
-                        rect.selectAll('rect').attr("fill", "#8eb2cf")
-                        d3.select(d3.event.srcElement).attr('fill', '#f4bc91');
-                        scope.binSelectedCallback(d.values)
-                    });
+                    .on("mouseover", function() {
+                        d3.select(this).style("fill", '#bdbdbd');
+                    })
+                    .on('mousedown',function(d) {
+                        d3.selectAll(".selected-bar").remove()
+                        var selectedRect = rect.append("rect")
+                                               .attr("class", "selected-bar")
+                                               .attr("transform", "translate(" + x(d.x0) + "," + y(Math.max(0.001, d.values.length)) + ")")
+                                               .attr("width", Math.max(0, x(d.x1) - x(d.x0) - 1))
+                                               .attr("height", Math.max(0, height - y(Math.max(0.001, d.values.length))))
+                                               .style("fill", "url(#diagonal-stripes)")
+                        selectedRect.on('mousedown',function(d) {
+                            d3.selectAll(".selected-bar").remove()
+                            scope.binSelectedCallback([]);
+                        })
+                        scope.binSelectedCallback(d.values);
+                    })
+                    .on("mouseout", function() {
+                        d3.select(this).style("fill", "#2196f3");
+                    })
 
                 rect.append('text')
                     .attr('dy', '.75em')
