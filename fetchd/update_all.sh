@@ -1,6 +1,3 @@
-echo $HOSTNAME
-echo $USER
-
 cern-get-sso-cookie --url https://cms-pdmv.cern.ch/mcm/ -o /home/jrumsevi/prod_cookie.txt --nocertverify
 cern-get-sso-cookie --url https://cms-pdmv-dev.cern.ch/mcm/ -o /home/jrumsevi/dev_cookie.txt --nocertverify
 python3 fetch.py requests

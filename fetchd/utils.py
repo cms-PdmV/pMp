@@ -53,7 +53,7 @@ class Utils(object):
         logging.basicConfig(format=CONSOLE_LOG_FORMAT, level=logging.INFO)
 
     @staticmethod
-    def curl(method, url, data=None, cookie=None, return_error=False):
+    def curl(method, url, data=None, cookie=None, return_error=False, parse_json=True):
         """
         Perform CURL - return_error kwarg returns status after failure - defaults to None
         To install pycurl:
@@ -84,8 +84,12 @@ class Utils(object):
         # logging.info('Will %s %s. Data %s. Cookie %s' % (method, url, data, cookie))
         curl.perform()
         try:
-            return (json.loads(out.getvalue().decode('UTF-8')),
-                    curl.getinfo(curl.RESPONSE_CODE))
+            if parse_json:
+                return (json.loads(out.getvalue().decode('UTF-8')),
+                        curl.getinfo(curl.RESPONSE_CODE))
+            else:
+                return (out.getvalue().decode('UTF-8'),
+                        curl.getinfo(curl.RESPONSE_CODE))
         except ValueError:
             logging.error("Status: %s/n%s" % (curl.getinfo(curl.RESPONSE_CODE),
                                               out.getvalue().decode('UTF-8')))

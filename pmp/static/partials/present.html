@@ -35,6 +35,7 @@
         <a ng-if="binEntry.prepid.indexOf('ReReco') == -1" ng-href="https://cms-pdmv.cern.ch/mcm/requests?prepid={{binEntry.prepid}}" target="_blank">{{binEntry.prepid}}</a>
         <a ng-if="binEntry.prepid.indexOf('ReReco') != -1" ng-href="https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?prep_id={{binEntry.prepid}}" target="_blank">{{binEntry.prepid}}</a>
         <small ng-show="binEntry.growing_fake" style="color:red" title="This is a part of {{binEntry.prepid}} counted as done">(Partial)</small>
+        <br><small>{{binEntry.dataset_name}}</small>
       </div>
       <div class="col-sm-2">
         <span ng-show="!growingMode || binEntry.status !== 'submitted'">Expected: </span>

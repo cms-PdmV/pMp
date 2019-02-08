@@ -1,6 +1,5 @@
 """A list of classes supporting historical statistics API"""
 from pmp.api.common import APIBase
-import elasticsearch
 import json
 import time
 import logging
@@ -297,7 +296,7 @@ class HistoricalAPI(APIBase):
         # Get submitted and done requests separately
         submitted_requests = self.get_with_status(response, 'submitted')
         done_requests = self.get_with_status(response, 'done')
-        print(done_requests)
+        # print(done_requests)
         # Continue aggregating data points for response
         logging.info('Will aggregate requests')
         response = self.aggregate_requests(response)

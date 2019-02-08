@@ -38,6 +38,18 @@ class PresentAPI(APIBase):
         logging.info('Campaigns from query "%s" are %s' % (query, campaigns))
         return list(campaigns)
 
+    def sum(self, thing):
+        if thing is None:
+            return 0
+
+        if isinstance(thing, int):
+            return thing
+
+        if isinstance(thing, float):
+            return int(thing + 0.5)
+
+        return sum(thing)
+
     def prepare_response(self, query):
         response_list = []
         query = query.split(',')
@@ -81,8 +93,9 @@ class PresentAPI(APIBase):
                                       'priority': mcm_document['priority'],
                                       'member_of_chain': mcm_document.get('member_of_chain', []),
                                       'is_member_of_chain': 'YES' if len(mcm_document.get('member_of_chain', [])) > 0 else 'NO',
-                                      'time_event_sum': sum(mcm_document.get('time_event', [])),
+                                      'time_event_sum': self.sum(mcm_document.get('time_event', [])),
                                       'total_events': mcm_document['total_events'],
+                                      'dataset_name': mcm_document.get('dataset_name', ''),
                                       'completed_events': completed_events})
 
         return response_list

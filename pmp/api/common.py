@@ -1,11 +1,9 @@
 """A list of classes for utils api"""
-from io import StringIO
 from datetime import datetime
 from subprocess import call
 from fetchd.utils import Utils
 import pmp.api.esadapter as esadapter
 import elasticsearch
-import pycurl
 import json
 import os
 import logging
@@ -39,8 +37,10 @@ class SuggestionsAPI(esadapter.InitConnection):
         Order:
           campaign
           request
+          ppd tag
           tag
           flow
+          mcm dataset name
           rereco request
           rereco processing string
           rereco campaign
@@ -66,9 +66,15 @@ class SuggestionsAPI(esadapter.InitConnection):
         if len(results) < self.max_suggestions:
             results += [{'type': 'TAG', 'label': x} for x in self.search(search, 'tags')]
 
+        if len(results) < self.max_suggestions:
+            results += [{'type': 'PPD TAG', 'label': x} for x in self.search(search, 'ppd_tags')]
+
         if self.historical or self.present:
             if len(results) < self.max_suggestions:
                 results += [{'type': 'FLOW', 'label': x} for x in self.search(search, 'flows')]
+
+        if len(results) < self.max_suggestions:
+            results += [{'type': 'MCM DATASET', 'label': x} for x in self.search(search, 'mcm_dataset_names')]
 
         if len(results) < self.max_suggestions:
             results += [{'type': 'RERECO', 'label': x} for x in self.search(search, 'rereco_requests')]
@@ -92,37 +98,6 @@ class SuggestionsAPI(esadapter.InitConnection):
         return json.dumps({'results': results})
 
 
-class LastUpdateAPI(esadapter.InitConnection):
-    """Get time of last successful update to the database"""
-    def get(self, query):
-        """Returning time since the epoch
-        query - csv of collections to check
-        """
-        last_update = 0
-        response = {}
-
-        try:
-            response['last_update'] = self.es.get(index='meta',
-                                                  doc_type='meta',
-                                                  id='last_completed_update')['_source']['datetime']
-            response['source'] = 'last completed update'
-        except elasticsearch.TransportError:
-            # there's no last_completed_update document!
-            last_update = 1
-            # for collection in query.split(','):
-            #     # loop and select lowest
-            #     details = self.es.get(index='last_sequences',
-            #                           doc_type='last_seq',
-            #                           id=collection)['_source']
-            #     if last_update == 0 or details['time'] < last_update:
-            #         last_update = details['time']
-
-            response['last_update'] = last_update
-            response['source'] = 'last sequence'
-
-        return json.dumps({"results": response})
-
-
 class ShortenAPI(object):
     """Shorten URL with tinyurl api"""
 
@@ -130,22 +105,21 @@ class ShortenAPI(object):
         # api url
         self.base_url = "http://tinyurl.com/api-create.php?url="
 
-    @staticmethod
-    def generate_url(base, url, params):
-        """URL generation"""
-        return str(base + url + "?" + params)
+    def get(self, url):
+        """
+        Curl tinyurl and return url
+        """
+        import sys
+        sys.path.append(os.path.abspath(os.path.dirname(__file__) + '/' + '..'))
+        from fetchd.utils import Utils
+        print(self.base_url)
+        print(url)
+        response, _ = Utils.curl('GET', self.base_url + url, parse_json=False)
+        print(response)
+        return response
 
-    def get(self, url, params):
-        """Curl tinyurl and return url"""
-        out = StringIO()
-        curl = pycurl.Curl()
-        curl.setopt(pycurl.URL, self.generate_url(self.base_url, url, params))
-        curl.setopt(pycurl.WRITEFUNCTION, out.write)
-        curl.perform()
-        return out.getvalue()
 
-
-class TakeScreenshotAPI(object):
+class ScreenshotAPI(object):
     """Generate screenshot/report api"""
 
     def __init__(self):
@@ -226,8 +200,10 @@ class APIBase(esadapter.InitConnection):
         Order:
           campaign
           request
+          ppd tag
           tag
           flow
+          mcm dataset name
           rereco request
           rereco processing string
           rereco campaign
@@ -248,8 +224,14 @@ class APIBase(esadapter.InitConnection):
         elif self.is_instance(query, 'tags', 'tag'):
             return 'tags', 'requests', 'request', query
 
+        elif self.is_instance(query, 'ppd_tags', 'ppd_tag'):
+            return 'ppd_tags', 'requests', 'request', query
+
         elif self.is_instance(query, 'flows', 'flow'):
             return 'flown_with', 'requests', 'request', query
+
+        elif self.is_instance(query, 'mcm_dataset_names', 'mcm_dataset_name'):
+            return 'dataset_name', 'requests', 'request', query
 
         elif self.is_instance(query, 'rereco_requests', 'rereco_request'):
             return None, 'rereco_requests', 'rereco_request', query
@@ -415,11 +397,6 @@ class APIBase(esadapter.InitConnection):
 
                     if upper_priority is not None and priority > upper_priority:
                         continue
-
-            # if 'prepid' in item:
-            #     print('%s %s %s %s' % (item['prepid'], priority, pwg, status))
-            # elif 'r' in item:
-            #     print('%s %s %s %s' % (item['r'], priority, pwg, status))
 
             if all_pwgs[pwg] and all_statuses[status]:
                 new_data.append(item)

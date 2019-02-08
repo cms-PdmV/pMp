@@ -15,9 +15,9 @@
                 customHeight: 500,
                 margin: {
                     top: 40,
-                    right: 50,
+                    right: 10,
                     bottom: 50,
-                    left: 50
+                    left: 80
                 }
             };
 

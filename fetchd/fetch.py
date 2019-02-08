@@ -361,10 +361,12 @@ if __name__ == "__main__":
                                 'aborted-completed'])
     elif index == 'requests':
         tags_cfg = Config('tags')
+        ppd_tags_cfg = Config('ppd_tags')
+        dataset_cfg = Config('mcm_dataset_name')
 
     done = 0
     for object_id, deleted in get_changed_object_ids(cfg):
-        time.sleep(0.01)
+        time.sleep(0.05)
         done += 1
 
         logging.info('(%s) Processing %s. Deleted %s' % (done, object_id, 'YES' if deleted else 'NO'))
@@ -438,6 +440,16 @@ if __name__ == "__main__":
                             process_request_tags(data['tags'], tags_cfg)
                         else:
                             data['tags'] = []
+
+                        if 'ppd_tags' in data:
+                            process_request_tags(data['ppd_tags'], ppd_tags_cfg)
+                        else:
+                            data['ppd_tags'] = []
+
+                        if data.get('dataset_name'):
+                            save(data['dataset_name'], {'prepid': data['dataset_name']}, dataset_cfg)
+                        else:
+                            data['dataset_name'] = None
 
                     # Trim fields we don't want
                     data = pick_attributes(data, cfg.fetch_fields)

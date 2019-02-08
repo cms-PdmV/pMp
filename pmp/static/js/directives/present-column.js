@@ -24,12 +24,12 @@
             // graph configuration
             config = {
                 customWidth: 1160,
-                customHeight: 500,
+                customHeight: 600,
                 margin: {
                     top: 40,
-                    right: 50,
-                    bottom: 50,
-                    left: 50
+                    right: 10,
+                    bottom: 150,
+                    left: 80
                 }
             };
             // General attributes
@@ -157,7 +157,7 @@
                     }
                 }
                 function compare(a, b) {
-                    var knownKeys = ['new', 'validation', 'defined', 'submitted', 'done']
+                    var knownKeys = ['new', 'validation', 'defined', 'approved', 'submitted', 'done']
                     if (knownKeys.includes(a.key) && knownKeys.includes(b.key)) {
                         return knownKeys.indexOf(a.key) - knownKeys.indexOf(b.key);
                     }
@@ -240,9 +240,11 @@
                 var barWidth = (1.0 - (preparedData.length * barMargin)) / preparedData.length;
                 for (var i = 0; i < preparedData.length; i++) {
                     preparedData[i].x0 = i * barWidth + (i + 1) * barMargin;
+                    preparedData[i].x1 = preparedData[i].x0 + barWidth;
                     var subBarWidth = (barWidth - (preparedData[i].value.length * subBarMargin)) / preparedData[i].value.length;
                     for (var j = 0; j < preparedData[i].value.length; j++) {
                         preparedData[i].value[j].x0 = preparedData[i].x0 + j * subBarWidth + (j + 1) * subBarMargin;
+                        preparedData[i].value[j].x1 = preparedData[i].value[j].x0 + subBarWidth;
                         var color = colorMap[preparedData[i].value[j].key]
                         if (color === undefined) {
                             color = '#2196f3'
@@ -269,6 +271,20 @@
                         }
                     }
                 }
+                var xAxisLabels = [];
+                if (preparedData[0].key !== '') {
+                    for (var i = 0; i < preparedData.length; i++) {
+                        xAxisLabels.push({key: preparedData[i].key.replace(/___/g, ', '),
+                                          x: preparedData[i].x0 + ((preparedData[i].x1 - preparedData[i].x0) / 2.0)})
+                    }
+                } else if (preparedData[0].value[0].key !== '') {
+                    for (var i = 0; i < preparedData[0].value.length; i++) {
+                        xAxisLabels.push({key: preparedData[0].value[i].key.replace(/___/g, ', '),
+                                          x: preparedData[0].value[i].x0 + ((preparedData[0].value[i].x1 - preparedData[0].value[i].x0) / 2.0)})
+                    }
+                } else {
+                    xAxisLabels.push({key: 'All', x: 0.5})
+                }
                 if (scope.scale === 'log') {
                     y = d3.scaleLog()
                     yAxis = yAxis.tickFormat(scope.bigNumberFormatterLog)
@@ -277,7 +293,9 @@
                     yAxis = yAxis.tickFormat(scope.bigNumberFormatter)
                 }
                 y = y.domain([0.1, d3.max(flatData, function(d) { return d.y1; }) * 1.05]).range([height, 0]);
-                xAxis.ticks(10)
+                // xAxis.ticks(xAxisLabels.length)
+                xAxis.tickValues(Array.from(xAxisLabels, x => x.x - barMargin / 2))
+                xAxis.tickFormat(function(d, i) { return xAxisLabels[i].key; })
                 yAxis.ticks(5)
                 yAxis.scale(y);
                 svg.selectAll("rect.bar").remove()
@@ -344,7 +362,7 @@
                     .attr("fill", function(d) { return d.color; })
                     .attr("class", "bar")
                     .attr("transform", function(d) {
-                       return "translate(" + x(d.x0) + "," + y(d.y1) + ")";
+                       return "translate(" + x(d.x0 - barMargin / 2) + "," + y(d.y1) + ")";
                     })
                     .attr("width", function(d) { return Math.max(0, x(d.x1) - x(d.x0)); })
                     .attr("height", function(d) { return y(d.y0) - y(d.y1); })
@@ -355,7 +373,7 @@
                         d3.selectAll(".selected-bar").remove()
                         var selectedRect = rect.append("rect")
                                                .attr("class", "selected-bar")
-                                               .attr("transform", "translate(" + x(d.x0) + "," + y(d.y1) + ")")
+                                               .attr("transform", "translate(" + x(d.x0 - barMargin / 2) + "," + y(d.y1) + ")")
                                                .attr("width", Math.max(0, x(d.x1) - x(d.x0)))
                                                .attr("height", y(d.y0) - y(d.y1))
                                                .style("fill", "url(#diagonal-stripes)")
@@ -369,6 +387,12 @@
                         d3.select(this).style("fill", function(d) { return d.color; });
                     })
                     .append("svg:title").text(setTitle);
+
+                svg.selectAll(".x.axis .tick>text")
+                   .style("text-anchor"," end")
+                   .attr("transform", "rotate(-30)")
+                   .style("font-weight", "lighter")
+                   .style("text-transform", "uppercase")
             };
 
             scope.$watch('data', function(data) {

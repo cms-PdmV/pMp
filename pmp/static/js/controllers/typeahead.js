@@ -23,7 +23,7 @@ angular.module('pmpApp').controller('TypeaheadController', ['$scope', '$http',
             if (query === '') {
                 return null;
             }
-            $http.get('api/suggest/' + query + type).then(function (response) {
+            $http.get('api/suggest/' + type + '/' + query).then(function (response) {
                 $scope.suggestions = response.data.results;
             });
         };

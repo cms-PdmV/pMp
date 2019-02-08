@@ -5,7 +5,6 @@ module.exports = function(grunt) {
     src: ['static/js/app.js',
           'static/js/filters/array.js',
           'static/js/filters/readable.js',
-          'static/js/filters/time.js',
           'static/js/services/browser.js',
           'static/js/services/data.js',
           'static/js/services/info.js',
@@ -21,18 +20,13 @@ module.exports = function(grunt) {
     dest: 'static/build/pmp.build.min.js'
    },
    js2: {
-    src: ['static/js/directives/__init__.js',
-          'static/js/directives/drop-selections.js',
-          'static/js/directives/radio-selections.js',
+    src: ['static/js/directives/radio-selections.js',
           'static/js/directives/checkbox-selections.js',
-          'static/js/directives/event-drop.js',
           'static/js/directives/historical-linear.js',
-          'static/js/directives/multiple-pie.js',
           'static/js/directives/performance-histogram.js',
           'static/js/directives/present-column.js',
           'static/js/directives/present-donut.js',
           'static/js/directives/present-stats-table.js',
-          'static/js/directives/stats-table.js',
           'static/js/directives/tags.js'
           ],
     dest: 'static/build/directives.pmp.build.js'
@@ -81,7 +75,6 @@ module.exports = function(grunt) {
       },
       files: {
         'static/build/advanced.min.html': 'static/partials/advanced.html',
-        'static/build/drop-selections.min.html': 'static/partials/drop-selections.html',
         'static/build/radio-selections.min.html': 'static/partials/radio-selections.html',
         'static/build/checkbox-selections.min.html': 'static/partials/checkbox-selections.html',
         'static/build/filter.min.html': 'static/partials/filter.html',
@@ -91,9 +84,7 @@ module.exports = function(grunt) {
         'static/build/plot.min.html': 'static/partials/plot.html',
         'static/build/present.min.html': 'static/partials/present.html',
         'static/build/share.min.html': 'static/partials/share.html',
-        'static/build/stats-table.min.html': 'static/partials/stats-table.html',
         'static/build/present-stats-table.min.html': 'static/partials/present-stats-table.html',
-        'static/build/table.min.html': 'static/partials/statustable.html',
         'static/build/search-suggestion.min.html': 'static/partials/search-suggestion.html',
         'static/build/tags.min.html': 'static/partials/tags.html',
         'static/build/valid.min.html': 'static/build/valid.prod.html',

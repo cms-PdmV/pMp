@@ -3,13 +3,12 @@ pMp production run script
 Configuration file in config.py
 > sudo python run.py
 """
-from flask import Flask, make_response, redirect
-from pmp import models
-from flask import request
+from flask import Flask, make_response, redirect, request
 from werkzeug.contrib.cache import SimpleCache
 from pmp.api.historical import HistoricalAPI
 from pmp.api.performance import PerformanceAPI
 from pmp.api.present import PresentAPI
+from pmp.api.common import OverallAPI, SuggestionsAPI, ShortenAPI, ScreenshotAPI
 
 import json
 import config
@@ -65,29 +64,16 @@ def dashboard():
     """Redirect to graph template"""
     return make_response(open('pmp/static/build/valid.min.html').read())
 
+@app.route('/api/overall')
+def api_overall():
+    """
+    API call to get statistics of pMp database
+    """
+    i = flask.request.args.get('r', '')
+    i = sanitize(i).split(',')
+    result = OverallAPI().get(i)
 
-@app.route('/api/<i>/<typeof>/<extra>')
-def api(i, typeof, extra):
-    """Simple API call"""
-    i = sanitize(i)
-    res = make_response('{}')
-
-    if typeof == 'announced':
-        res = make_response(models.APICall.present_announced_mode(i, extra == 'true'))
-    elif typeof == 'growing':
-        res = make_response(models.APICall.present_growing_mode(i, extra == 'true'))
-    elif typeof == 'historical':
-        res = make_response(models.APICall.historical_simple(i))
-    elif typeof == 'performance':
-        res = make_response(models.APICall.performance(i))
-    elif typeof == 'lastupdate':
-        res = make_response(models.APICall.last_update(i))
-    elif typeof == 'overall':
-        res = make_response(models.APICall.overall(i))
-
-    cache.add(request.path, res, timeout=config.CACHE_TIMEOUT)
-    return res
-
+    return result
 
 @app.route('/api/historical')
 def api_historical():
@@ -203,48 +189,39 @@ def api_present():
     return result
 
 
-@app.route('/api/suggest/<fragment>/<typeof>')
-def suggest(fragment, typeof):
+@app.route('/api/suggest/<string:statistics_type>/<string:fragment>')
+def api_suggest(statistics_type, fragment):
     """API call for typeahead
     fragment - input string to search in db
     typeof - lifetime/growing/announced/performance
     """
     fragment = sanitize(fragment)
 
-    result = make_response(models.APICall.suggestions(typeof, fragment))
+    result = SuggestionsAPI(statistics_type).get(fragment)
     # cache.add(request.path, result, timeout=config.CACHE_TIMEOUT)
     return result
 
 
-@app.route('/shorten/<path:url>')
-def shorten(url):
+@app.route('/api/shorten')
+def api_shorten():
     """Shorten URL"""
-    return make_response(models.APICall.shorten_url(url,
-                                                    request.query_string))
+    url = flask.request.args.get('r', None)
+    if url:
+        return ShortenAPI().get(url)
+    else:
+        return {}
 
 
-@app.route('/ts', methods=['POST'])
-def take_screenshot():
+@app.route('/api/screenshot', methods=['POST'])
+def api_screenshot():
     """Take screenshot"""
     data = json.loads(request.data)
-    return models.APICall.take_screenshot(data['data'], data['ext'])
+    return ScreenshotAPI().get(data['data'], data['ext'])
 
 
 if __name__ == '__main__':
-    # from logger import setup_access_logging, setup_email_logging
-    # setup_access_logging(app)
-    # if not app.debug:
-    #     setup_email_logging(app)
-
     from fetchd.utils import Utils
     Utils.setup_console_logging()
-
-    # settings = dict(ssl_options={'certfile': config.CERTFILE,
-    #                              'keyfile': config.KEYFILE})
-    # 
-    # http_server = HTTPServer(WSGIContainer(app), **settings)
-    # http_server.listen(config.PORT)
-    # IOLoop.instance().start()
     app.run(host='0.0.0.0',
             port=config.PORT,
             debug=True,
