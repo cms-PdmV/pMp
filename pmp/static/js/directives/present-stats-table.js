@@ -43,15 +43,15 @@
                     if (chained) {
                         chainedRequests[campaign][status] += amount
                         if (scope.growingMode && scope.mode == 'events' && status === 'submitted') {
-                            var adjustment = Math.min(data[i].completed_events, data[i].total_events)
-                            chainedRequests[campaign]['submitted'] -= adjustment
+                            var adjustment = data[i].completed_events
+                            chainedRequests[campaign]['submitted'] -= Math.min(adjustment, data[i].total_events)
                             chainedRequests[campaign]['done'] += adjustment
                         }
                     } else {
                         unchainedRequests[campaign][status] += amount
                         if (scope.growingMode && scope.mode == 'events' && status === 'submitted') {
-                            var adjustment = Math.min(data[i].completed_events, data[i].total_events)
-                            chainedRequests[campaign]['submitted'] -= adjustment
+                            var adjustment = data[i].completed_events
+                            chainedRequests[campaign]['submitted'] -= Math.min(adjustment, data[i].total_events)
                             chainedRequests[campaign]['done'] += adjustment
                         }
                     }

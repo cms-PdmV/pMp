@@ -214,8 +214,8 @@
                                     d = preparedData[groupBy][colorBy][stackBy][i]
                                     if (d.status === 'submitted') {
                                         var realTotal = d.total_events;
-                                        var adjustment = Math.min(d.completed_events, d.total_events)
-                                        d.total_events -= adjustment
+                                        var adjustment = d.completed_events
+                                        d.total_events -= Math.min(adjustment, d.total_events)
                                         var newGroupBy = groupBy.replace('submitted', 'done')
                                         var newColorBy = colorBy.replace('submitted', 'done')
                                         var newStackBy = stackBy.replace('submitted', 'done')

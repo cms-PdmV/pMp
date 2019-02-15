@@ -71,20 +71,7 @@ class PresentAPI(APIBase):
                     logging.warning('%s is already in seen_prepids. Why is it here again?' % (mcm_document['prepid']))
                     continue
 
-                completed_events = 0
-                if stats_document is not None:
-                     if 'event_number_history' in stats_document:
-                        for history_record in stats_document['event_number_history']:
-                            if history_record['dataset'] != mcm_document['output_dataset']:
-                                continue
-
-                            if len(history_record.get('history', [])) == 0:
-                                break
-
-                            newest_entry = sorted(history_record.get('history', []), key=lambda k: k['time'])[-1]
-                            if newest_entry['type'] == 'VALID' or newest_entry['type'] == 'PRODUCTION':
-                                completed_events = newest_entry.get('events', 0)
-
+                completed_events = self.number_of_completed_events(stats_document, mcm_document['output_dataset'])
                 seen_prepids.add(mcm_document['prepid'])
                 response_list.append({'member_of_campaign': mcm_document['member_of_campaign'],
                                       'prepid': mcm_document['prepid'],

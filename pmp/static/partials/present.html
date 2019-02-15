@@ -36,6 +36,7 @@
         <a ng-if="binEntry.prepid.indexOf('ReReco') != -1" ng-href="https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?prep_id={{binEntry.prepid}}" target="_blank">{{binEntry.prepid}}</a>
         <small ng-show="binEntry.growing_fake" style="color:red" title="This is a part of {{binEntry.prepid}} counted as done">(Partial)</small>
         <br><small>{{binEntry.dataset_name}}</small>
+        <small title="Number of completed events estimated from {{binEntry.estimate_from}}" style="color:red" ng-show="binEntry.estimate_from"><br>(Estimate from {{binEntry.estimate_from}})</small>
       </div>
       <div class="col-sm-2">
         <span ng-show="!growingMode || binEntry.status !== 'submitted'">Expected: </span>
@@ -47,12 +48,11 @@
         Done:
         <b ng-show="!humanReadable">{{binEntry.completed_events}}</b>
         <b ng-show="humanReadable" title="{{binEntry.completed_events}}">{{binEntry.completed_events | readableNumbers}}</b>
-        <small title="Number of events estimated from {{binEntry.estimate_from}}" style="color:red" ng-show="binEntry.estimate_from"><br>(Estimate from {{binEntry.estimate_from}})</small>
       </div>
       <div class="col-sm-1">
         Status:
         <b ng-hide="binEntry.growing_fake">{{binEntry.status}}</b>
-        <b ng-show="binEntry.growing_fake">submitted</b>
+        <b ng-show="binEntry.growing_fake" title="This request is actually submitted, but produced part is counted as done"><i>"done"</i></b>
       </div>
       <div class="col-sm-2">
         Priority: <b>{{binEntry.priority}}</b>

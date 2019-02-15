@@ -275,6 +275,22 @@ class APIBase(esadapter.InitConnection):
 
         return req_arr
 
+    def number_of_completed_events(self, stats_document, output_dataset):
+        completed_events = 0
+        if stats_document and output_dataset and 'event_number_history' in stats_document:
+            for history_record in stats_document['event_number_history']:
+                if history_record['dataset'] != output_dataset:
+                    continue
+
+                if len(history_record.get('history', [])) == 0:
+                    break
+
+                newest_entry = sorted(history_record.get('history', []), key=lambda k: k['time'])[-1]
+                if newest_entry['type'] == 'VALID' or newest_entry['type'] == 'PRODUCTION':
+                     completed_events = newest_entry.get('events', 0)
+
+        return completed_events
+
     def get_info_for_estimate(self, req):
         """
         Return (tuple) a request name, output dataset and request manager name
@@ -282,8 +298,7 @@ class APIBase(esadapter.InitConnection):
         be used to estimate number of completed events of given request
         """
         member_of_chains = req['member_of_chain']
-        potential_results = []
-        added_potential_results = set()
+        potential_results_with_events = []
         for member_of_chain in member_of_chains:
             chained_requests = self.fetch_objects(field=None,
                                                   query=member_of_chain,
@@ -294,31 +309,30 @@ class APIBase(esadapter.InitConnection):
                 chain = chained_request.get('chain', [])
                 if req['prepid'] in chain:
                     following_requests = chain[chain.index(req['prepid']) + 1:]
-                    logging.info('Following requests in %s are %s' % (chained_request['prepid'], following_requests))
-                    for i, request in enumerate(following_requests):
-                        if request not in added_potential_results:
-                            potential_results.append((i, request))
-                            added_potential_results.add(request)
+                    for following_request_prepid in following_requests:
+                        following_requests = list(self.db_query(following_request_prepid,
+                                                                include_stats_document=True,
+                                                                estimate_completed_events=False))
 
-        logging.info('Potential requests for estimating %s' % (req['prepid']))
-        potential_results = sorted(potential_results, key=lambda k: k[0])
-        for distance, request in potential_results:
-            logging.info('%s is %s away' % (request, distance))
+                        if len(following_requests) == 0:
+                            continue
 
-        for distance, request in potential_results:
-            fetched_potential_results = list(self.db_query(request,
-                                                           include_stats_document=True,
-                                                           estimate_completed_events=False))
+                        stats_document, mcm_document = following_requests[0]
+                        output_dataset = mcm_document.get('output_dataset')
+                        request_manager_name = mcm_document.get('name')
+                        request = mcm_document.get('prepid')
+                        if output_dataset and request_manager_name:
+                            potential_results_with_events.append((self.number_of_completed_events(stats_document, output_dataset),
+                                                                  request,
+                                                                  output_dataset,
+                                                                  request_manager_name))
+                            # Find next one that has dataset, no need to iterate over all of the chain
+                            break
 
-            if len(fetched_potential_results) == 0:
-                continue
-
-            stats_document, mcm_document = fetched_potential_results[0]
-            output_dataset = mcm_document.get('output_dataset')
-            request_manager_name = mcm_document.get('name')
-            request = mcm_document.get('prepid')
-            if output_dataset and request_manager_name:
-                return request, output_dataset, request_manager_name
+        potential_results_with_events = sorted(potential_results_with_events, key=lambda k: k[0])
+        if len(potential_results_with_events) > 0:
+            best_match = potential_results_with_events[0]
+            return best_match[1], best_match[2], best_match[3]
 
         return None, None, None
 
