@@ -50,7 +50,7 @@ class PresentAPI(APIBase):
 
         return sum(thing)
 
-    def prepare_response(self, query):
+    def prepare_response(self, query, estimate_completed_events):
         response_list = []
         query = query.split(',')
         seen_prepids = set()
@@ -62,7 +62,7 @@ class PresentAPI(APIBase):
                 continue
 
             # Process the db documents
-            for stats_document, mcm_document in self.db_query(one, include_stats_document=True):
+            for stats_document, mcm_document in self.db_query(one, include_stats_document=True, estimate_completed_events=estimate_completed_events):
                 # skip legacy request with no prep_id
                 if len(mcm_document.get('prepid', '')) == 0:
                     continue
@@ -96,11 +96,12 @@ class PresentAPI(APIBase):
                                       'time_event_sum': self.sum(mcm_document.get('time_event', [])),
                                       'total_events': mcm_document['total_events'],
                                       'dataset_name': mcm_document.get('dataset_name', ''),
-                                      'completed_events': completed_events})
+                                      'completed_events': completed_events,
+                                      'estimate_from': mcm_document.get('estimate_from')})
 
         return response_list
 
-    def get(self, query, chained_mode=False, priority_filter=None, pwg_filter=None, status_filter=None):
+    def get(self, query, chained_mode=False, estimate_completed_events=False, priority_filter=None, pwg_filter=None, status_filter=None):
 
         """
         Get the historical data based on query, data point count, priority and filter
@@ -122,7 +123,7 @@ class PresentAPI(APIBase):
             query = ','.join(campaigns)
 
         # Construct data by given query
-        response = self.prepare_response(query)
+        response = self.prepare_response(query, estimate_completed_events)
         # Apply priority, PWG and status filters
         response, pwgs, statuses = self.apply_filters(response, priority_filter, pwg_filter, status_filter)
         res = {'data': response,

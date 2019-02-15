@@ -22,6 +22,7 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
             granularity: 100, // granularity value
             humanReadable: true, // human-readable numbers
             showDoneRequestsList: false,
+            estimateCompleted: false,
             priority: undefined, // priority filter
             status: undefined, // status filter
             pwg: undefined, // PWG filter
@@ -51,6 +52,8 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
             $scope.humanReadable = urlParameters.humanReadable === 'true';
 
             $scope.showDoneRequestsList = urlParameters.showDoneRequestsList === 'true';
+
+            $scope.estimateCompleted = urlParameters.estimateCompleted === 'true';
 
             // initialise filters
             if (urlParameters.priority !== undefined) {
@@ -137,6 +140,9 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
             if (pwgQuery !== undefined) {
                 queryUrl += '&pwg=' + pwgQuery;
             }
+            if ($scope.estimateCompleted) {
+                queryUrl += '&estimateCompleted=true';
+            }
             // query for linear chart data
             var promise = $http.get(queryUrl);
             promise.then(function (data) {
@@ -175,6 +181,10 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
 
         $scope.changeShowDoneRequestsList = function() {
             $scope.setURL($scope, Data);
+        }
+
+        $scope.changeEstimateCompleted = function() {
+            $scope.query();
         }
 
         $scope.$on('onChangeNotification:InputTags', function () {

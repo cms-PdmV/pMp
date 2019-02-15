@@ -47,6 +47,7 @@
         Done:
         <b ng-show="!humanReadable">{{binEntry.completed_events}}</b>
         <b ng-show="humanReadable" title="{{binEntry.completed_events}}">{{binEntry.completed_events | readableNumbers}}</b>
+        <small title="Number of events estimated from {{binEntry.estimate_from}}" style="color:red" ng-show="binEntry.estimate_from"><br>(Estimate from {{binEntry.estimate_from}})</small>
       </div>
       <div class="col-sm-1">
         Status:

@@ -22,9 +22,11 @@
         </div>
         <div ng-hide="humanReadable" class="col-sm-2">
           Produced: <b>{{submitted.d}}</b>
+          <small title="Number of events estimated from {{submitted.est}}" style="color:red" ng-show="submitted.est"><br>(Estimate from {{submitted.est}})</small>
         </div>
         <div ng-hide="!humanReadable" class="col-sm-2">
           Produced: <b title="{{submitted.d}}">{{submitted.d | readableNumbers}}</b>
+          <small title="Number of events estimated from {{submitted.est}}" style="color:red" ng-show="submitted.est"><br>(Estimate from {{submitted.est}})</small>
         </div>
         <div class="col-sm-2">
           <div class="progress total-bar">
@@ -63,10 +65,12 @@
         <div ng-hide="humanReadable" class="col-sm-2">
           Done: <b>{{done.d}}</b>
           <small title="Force completed" style="color:red" ng-show="done.fc">(FC)</small>
+          <small title="Number of events estimated from {{done.est}}" style="color:red" ng-show="done.est"><br>(Estimate from {{done.est}})</small>
         </div>
         <div ng-hide="!humanReadable" class="col-sm-2">
           Done: <b title="{{done.d}}">{{done.d | readableNumbers}}</b>
           <small title="Force completed" style="color:red" ng-show="done.fc">(FC)</small>
+          <small title="Number of events estimated from {{done.est}}" style="color:red" ng-show="done.est"><br>(Estimate from {{done.est}})</small>
         </div>
         <div class="col-sm-2">
           <div class="progress total-bar">

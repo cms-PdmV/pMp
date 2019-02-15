@@ -95,7 +95,7 @@ class HistoricalAPI(APIBase):
 
         return data
 
-    def prepare_response(self, query):
+    def prepare_response(self, query, estimate_completed_events):
         """
         Loop through all the workflow data, generate response
         """
@@ -110,7 +110,7 @@ class HistoricalAPI(APIBase):
                 continue
 
             # Process the db documents
-            for stats_document, mcm_document in self.db_query(one, include_stats_document=True):
+            for stats_document, mcm_document in self.db_query(one, include_stats_document=True, estimate_completed_events=estimate_completed_events):
                 if stats_document is None and mcm_document is None:
                     # Well, there's nothing to do, is there?
                     continue
@@ -142,6 +142,8 @@ class HistoricalAPI(APIBase):
                     response['status'] = mcm_document['status']
                     response['force_completed'] = mcm_document['force_completed']
                     response['dataset'] = mcm_document['output_dataset']
+                    if 'estimate_from' in mcm_document:
+                        response['estimate_from'] = mcm_document['estimate_from']
                 else:
                     response['request'] = stats_document['prepid']
                     response['pwg'] = None
@@ -262,11 +264,12 @@ class HistoricalAPI(APIBase):
                              'ds': request['dataset'],
                              'x': data_points[-1]['x'],
                              'd': data_points[-1][key],
-                             'fc': request['force_completed']})
+                             'fc': request['force_completed'],
+                             'est': request.get('estimate_from', None)})
 
         return new_data
 
-    def get(self, query, data_point_count=100, priority_filter=None, pwg_filter=None, status_filter=None):
+    def get(self, query, data_point_count=100, estimate_completed_events=False, priority_filter=None, pwg_filter=None, status_filter=None):
         """
         Get the historical data based on query, data point count, priority and filter
         """
@@ -281,7 +284,7 @@ class HistoricalAPI(APIBase):
                                                                          status_filter,
                                                                          type(status_filter)))
         # Construct data by given query
-        response = self.prepare_response(query)
+        response = self.prepare_response(query, estimate_completed_events)
         # Apply priority, PWG and status filters
         response, pwgs, statuses = self.apply_filters(response, priority_filter, pwg_filter, status_filter)
         # Get submitted and done requests separately

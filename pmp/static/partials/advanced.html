@@ -58,6 +58,17 @@
             Show list of done requests
           </label>
         </div>
+        <div class="col-xs-12">
+          <label class="checkbox-inline col-lg-12 col-md-12 col-sm-12"
+                 ng-show="page.id == 1 || page.id == 2"
+                 title="Estimate completed events for requests that do not have output dataset">
+            <input type="checkbox"
+                   ng-model="$parent.estimateCompleted"
+                   ng-change="changeEstimateCompleted()"
+                   ng-disabled="loadingData">
+            Estimate completed events
+          </label>
+        </div>
         <div class="col-xs-12 mt-1" ng-show="page.id == 2">
           <div class="input-group spacing"
                title="Number of data points in plot">

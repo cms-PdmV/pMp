@@ -23,6 +23,7 @@ angular.module('pmpApp').controller('PresentController', ['$http',
             growingMode: false, // growing mode (boolean)
             chainedMode: false, // chained mode (boolean)
             humanReadable: true, // show human-readable numbers (boolean)
+            estimateCompleted: false,
             priority: undefined, // priority filter
             pwg: undefined, // PWG filter
             status: undefined, // status filter
@@ -56,6 +57,8 @@ angular.module('pmpApp').controller('PresentController', ['$http',
 
             // show human-readable numbers?
             $scope.humanReadable = urlParameters.humanReadable === 'true';
+
+            $scope.estimateCompleted = urlParameters.estimateCompleted === 'true';
 
             $scope.availableScales = ['linear', 'log']
 
@@ -158,6 +161,9 @@ angular.module('pmpApp').controller('PresentController', ['$http',
             }
             if (pwgQuery !== undefined) {
                 queryUrl += '&pwg=' + pwgQuery;
+            }
+            if ($scope.estimateCompleted) {
+                queryUrl += '&estimateCompleted=true';
             }
             queryUrl += '&chainedMode=' + $scope.chainedMode;
 
@@ -280,6 +286,10 @@ angular.module('pmpApp').controller('PresentController', ['$http',
             if ($scope.data) {
                 $scope.data = $scope.data.slice();
             }
+        }
+
+        $scope.changeEstimateCompleted = function() {
+            $scope.query();
         }
 
         $scope.$on('onChangeNotification:InputTags', function () {

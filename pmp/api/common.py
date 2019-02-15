@@ -275,7 +275,54 @@ class APIBase(esadapter.InitConnection):
 
         return req_arr
 
-    def db_query(self, query, include_stats_document=True):
+    def get_info_for_estimate(self, req):
+        """
+        Return (tuple) a request name, output dataset and request manager name
+        Returns name of request, it's dataset and request manager name that should
+        be used to estimate number of completed events of given request
+        """
+        member_of_chains = req['member_of_chain']
+        potential_results = []
+        added_potential_results = set()
+        for member_of_chain in member_of_chains:
+            chained_requests = self.fetch_objects(field=None,
+                                                  query=member_of_chain,
+                                                  index='chained_requests',
+                                                  doctype='chained_request')
+
+            for chained_request in chained_requests:
+                chain = chained_request.get('chain', [])
+                if req['prepid'] in chain:
+                    following_requests = chain[chain.index(req['prepid']) + 1:]
+                    logging.info('Following requests in %s are %s' % (chained_request['prepid'], following_requests))
+                    for i, request in enumerate(following_requests):
+                        if request not in added_potential_results:
+                            potential_results.append((i, request))
+                            added_potential_results.add(request)
+
+        logging.info('Potential requests for estimating %s' % (req['prepid']))
+        potential_results = sorted(potential_results, key=lambda k: k[0])
+        for distance, request in potential_results:
+            logging.info('%s is %s away' % (request, distance))
+
+        for distance, request in potential_results:
+            fetched_potential_results = list(self.db_query(request,
+                                                           include_stats_document=True,
+                                                           estimate_completed_events=False))
+
+            if len(fetched_potential_results) == 0:
+                continue
+
+            stats_document, mcm_document = fetched_potential_results[0]
+            output_dataset = mcm_document.get('output_dataset')
+            request_manager_name = mcm_document.get('name')
+            request = mcm_document.get('prepid')
+            if output_dataset and request_manager_name:
+                return request, output_dataset, request_manager_name
+
+        return None, None, None
+
+    def db_query(self, query, include_stats_document=True, estimate_completed_events=True):
         """
         Query DB and return array of raw documents
         Tuple of three things is returned: stats document, mcm document
@@ -306,6 +353,19 @@ class APIBase(esadapter.InitConnection):
                     dataset = dataset_list[0]
             else:
                 dataset = None
+
+            logging.info('Dataset of %s is %s' % (req['prepid'], dataset))
+            if not dataset and estimate_completed_events and index == 'requests':
+                logging.info('Will try to find closest dataset for %s' % (req['prepid']))
+                closest_request, closest_output_dataset, closest_request_manager = self.get_info_for_estimate(req)
+                if closest_request and closest_output_dataset and closest_request_manager:
+                    logging.info('Will use %s dataset and %s request manager of %s as an estimate for %s' % (closest_output_dataset,
+                                                                                                             closest_request_manager,
+                                                                                                             closest_request,
+                                                                                                             req['prepid']))
+                    dataset = closest_output_dataset
+                    req['reqmgr_name'] = [closest_request_manager]
+                    req['estimate_from'] = closest_request
 
             req['force_completed'] = False
             for reqmgr_dict in req.get('reqmgr_status_history', []):
