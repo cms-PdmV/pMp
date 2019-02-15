@@ -1,83 +1,89 @@
 <div class="row" ng-hide="loadingData || !data || data.length == 0">
-  <div class="col-sm-12 text-center spacing" id="measure">
+  <div class="col-sm-12 text-center spacing pb-4" id="measure">
     <linear-lifetime data="data"
                      zoom-y="zoomY"
                      human-readable-numbers="humanReadable"
                      big-number-formatter="formatBigNumber"
                      class="spacing"><div class="historical-drilldown" id="historical-drilldown"></div></linear-lifetime>
-    <p ng-hide="listSubmitted.length == 0" class="margin-20">
-      List of requests (<b>{{listSubmitted.length}}</b>) in status <b>submitted</b>
-    </p>
-    <div ng-repeat="submitted in listSubmitted" class="row zebra-lines small-padding">
-      <div class="col-sm-4">
-        <a ng-if="submitted.r.indexOf('ReReco') == -1" ng-href="https://cms-pdmv.cern.ch/mcm/requests?prepid={{submitted.r}}" target="_blank">{{submitted.r}}</a>
-        <a ng-if="submitted.r.indexOf('ReReco') != -1" ng-href="https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?prep_id={{submitted.r}}" target="_blank">{{submitted.r}}</a>
-      </div>
-      <div ng-hide="humanReadable" class="col-sm-2">
-        Expected: <b>{{submitted.x}}</b>
-      </div>
-      <div ng-hide="!humanReadable" class="col-sm-2">
-        Expected: <b>{{submitted.x | readableNumbers}}</b>
-      </div>
-      <div ng-hide="humanReadable" class="col-sm-2">
-        Produced: <b>{{submitted.d}}</b>
-      </div>
-      <div ng-hide="!humanReadable" class="col-sm-2">
-        Produced: <b>{{submitted.d | readableNumbers}}</b>
-      </div>
-      <div class="col-sm-2">
-        <div class="progress total-bar">
-          <div class="font-shadow progress-bar pmp-orange"
-               role="progressbar"
-               aria-valuemin="0"
-               aria-valuemax="100"
-               style="max-width: 100%;
-                      width:{{submitted.d / submitted.x * 100}}%;">
-            <b>{{submitted.d / submitted.x * 100 | readableNumbers}}%</b>
+    <div ng-hide="listSubmitted.length == 0">
+      <p class="mt-4">
+        List of requests (<b>{{listSubmitted.length}}</b>) in status <b>submitted</b>
+      </p>
+      <div ng-repeat="submitted in listSubmitted" class="row zebra-lines small-padding">
+        <div class="col-sm-4">
+          <a ng-if="submitted.r.indexOf('ReReco') == -1" ng-href="https://cms-pdmv.cern.ch/mcm/requests?prepid={{submitted.r}}" target="_blank">{{submitted.r}}</a>
+          <a ng-if="submitted.r.indexOf('ReReco') != -1" ng-href="https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?prep_id={{submitted.r}}" target="_blank">{{submitted.r}}</a>
+        </div>
+        <div ng-hide="humanReadable" class="col-sm-2">
+          Expected: <b>{{submitted.x}}</b>
+        </div>
+        <div ng-hide="!humanReadable" class="col-sm-2">
+          Expected: <b title="{{submitted.x}}">{{submitted.x | readableNumbers}}</b>
+        </div>
+        <div ng-hide="humanReadable" class="col-sm-2">
+          Produced: <b>{{submitted.d}}</b>
+        </div>
+        <div ng-hide="!humanReadable" class="col-sm-2">
+          Produced: <b title="{{submitted.d}}">{{submitted.d | readableNumbers}}</b>
+        </div>
+        <div class="col-sm-2">
+          <div class="progress total-bar">
+            <div class="font-shadow progress-bar pmp-orange"
+                 role="progressbar"
+                 aria-valuemin="0"
+                 aria-valuemax="100"
+                 style="color: black;
+                        max-width: 100%;
+                        width:{{submitted.d / submitted.x * 100}}%;">
+              {{submitted.d / submitted.x * 100 | readableNumbers}}%
+            </div>
           </div>
         </div>
-      </div>
-      <div class="col-sm-2">
-        <a ng-if="submitted.ds" ng-href="https://cmsweb.cern.ch/das/request?view=list&limit=50&instance=prod/global&input=dataset={{submitted.ds}}" target="_blank">Dataset in DAS</a>
+        <div class="col-sm-2">
+          <a ng-if="submitted.ds" ng-href="https://cmsweb.cern.ch/das/request?view=list&limit=50&instance=prod/global&input=dataset={{submitted.ds}}" target="_blank">Dataset in DAS</a>
+        </div>
       </div>
     </div>
 
-    <p ng-hide="listDone.length == 0" class="margin-20">
-      List of requests (<b>{{listDone.length}}</b>) in status <b>done</b>
-    </p>
-    <div ng-repeat="done in listDone" class="row zebra-lines small-padding">
-      <div class="col-sm-4">
-        <a ng-if="done.r.indexOf('ReReco') == -1" ng-href="https://cms-pdmv.cern.ch/mcm/requests?prepid={{done.r}}" target="_blank">{{done.r}}</a>
-        <a ng-if="done.r.indexOf('ReReco') != -1" ng-href="https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?prep_id={{done.r}}" target="_blank">{{done.r}}</a>
-      </div>
-      <div ng-hide="humanReadable" class="col-sm-2">
-        Expected: <b>{{done.x}}</b>
-      </div>
-      <div ng-hide="!humanReadable" class="col-sm-2">
-        Expected: <b title="{{done.x}}">{{done.x | readableNumbers}}</b>
-      </div>
-      <div ng-hide="humanReadable" class="col-sm-2">
-        Done: <b>{{done.d}}</b>
-        <small title="Force completed" style="color:red" ng-show="done.fc">(FC)</small>
-      </div>
-      <div ng-hide="!humanReadable" class="col-sm-2">
-        Done: <b title="{{done.d}}">{{done.d | readableNumbers}}</b>
-        <small title="Force completed" style="color:red" ng-show="done.fc">(FC)</small>
-      </div>
-      <div class="col-sm-2">
-        <div class="progress total-bar">
-          <div class="font-shadow progress-bar pmp-blue"
-               role="progressbar"
-               aria-valuemin="0"
-               aria-valuemax="100"
-               style="max-width: 100%;
-                      width:{{done.d / done.x * 100}}%;">
-            <b>{{done.d / done.x * 100 | readableNumbers}}%</b>
+    <div ng-hide="!showDoneRequestsList || listDone.length == 0">
+      <p class="mt-4">
+        List of requests (<b>{{listDone.length}}</b>) in status <b>done</b>
+      </p>
+      <div ng-repeat="done in listDone" class="row zebra-lines small-padding">
+        <div class="col-sm-4">
+          <a ng-if="done.r.indexOf('ReReco') == -1" ng-href="https://cms-pdmv.cern.ch/mcm/requests?prepid={{done.r}}" target="_blank">{{done.r}}</a>
+          <a ng-if="done.r.indexOf('ReReco') != -1" ng-href="https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?prep_id={{done.r}}" target="_blank">{{done.r}}</a>
+        </div>
+        <div ng-hide="humanReadable" class="col-sm-2">
+          Expected: <b>{{done.x}}</b>
+        </div>
+        <div ng-hide="!humanReadable" class="col-sm-2">
+          Expected: <b title="{{done.x}}">{{done.x | readableNumbers}}</b>
+        </div>
+        <div ng-hide="humanReadable" class="col-sm-2">
+          Done: <b>{{done.d}}</b>
+          <small title="Force completed" style="color:red" ng-show="done.fc">(FC)</small>
+        </div>
+        <div ng-hide="!humanReadable" class="col-sm-2">
+          Done: <b title="{{done.d}}">{{done.d | readableNumbers}}</b>
+          <small title="Force completed" style="color:red" ng-show="done.fc">(FC)</small>
+        </div>
+        <div class="col-sm-2">
+          <div class="progress total-bar">
+            <div class="font-shadow progress-bar pmp-blue"
+                 role="progressbar"
+                 aria-valuemin="0"
+                 aria-valuemax="100"
+                 style="color: black;
+                        max-width: 100%;
+                        width:{{done.d / done.x * 100}}%;">
+              {{done.d / done.x * 100 | readableNumbers}}%
+            </div>
           </div>
         </div>
-      </div>
-      <div class="col-sm-2">
-        <a ng-if="done.ds" ng-href="https://cmsweb.cern.ch/das/request?view=list&limit=50&instance=prod/global&input=dataset={{done.ds}}" target="_blank">Dataset in DAS</a>
+        <div class="col-sm-2">
+          <a ng-if="done.ds" ng-href="https://cmsweb.cern.ch/das/request?view=list&limit=50&instance=prod/global&input=dataset={{done.ds}}" target="_blank">Dataset in DAS</a>
+        </div>
       </div>
     </div>
   </div>

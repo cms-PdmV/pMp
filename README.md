@@ -1,20 +1,21 @@
 # Production Monitoring Platform (pMp)
 
-## What is pMp?
-pMp stands for Production Monitoring Platform. pMp provides monitoring of the workflow Monte Carlo request submission from PdmV/mccm to computing, and the advancement of the workflows in production.
+## pMp
+pMp stands for Production Monitoring Platform. pMp provides monitoring of the Monte Carlo requests production, ReReco production.
 
 ## Contributors
-The code is based on Igor Jurkowski and Jean-Roch Vlimant contributions. Further developed by Adrian Alan Pol, Antanas Norkus, Giovanni Franzoni and Jacob Walker. Completely overhauled by Justinas Rumsevicius.
-
-More information: [Twiki](https://twiki.cern.ch/twiki/bin/viewauth/CMS/PdmVpMp)
+The original code is based on Igor Jurkowski and Jean-Roch Vlimant contributions. Further developed by Adrian Alan Pol, Antanas Norkus, Giovanni Franzoni and Jacob Walker. Second Edition is done by Justinas Rumsevicius.
 
 ## Database structure
-All records are cloned from McM and Stats2 and stored in Elasticsearch index in pMp.
+All data is taken from McM and Stats service and stored in pMp's Elasticsearch index.
 
+### Dataset Names
+Index - `mcm_dataset_names`, document type - `mcm_dataset_name`
 
 ### Requests
 Index - `requests`, document type - `request`
 
+* dataset_name - name of dataset from McM
 * flown_with - name of flow that request is associated with
 * history - list of dictionaries that have keys 'action' (value is string) and 'time' (value is int - unix timestamp) that represent actions as they appear in McM ('created', 'approved', 'submitted', 'done', etc.)
 * member_of_campaign - name of campaign that this request is member of
@@ -52,11 +53,15 @@ Tags come only from McM requests
 
 * prepid - tag itself
 
+### PPD Tags
+
 ### Processing strings
 Index - `processing_strings`, document type - `processing_strings`
 Processing strings come only from ReReco requests
 
 * prepid - processing string itself
+
+### RelVal Requests
 
 ### ReReco Requests
 Index - `rereco_requests`, document type - `rereco_request`
@@ -86,3 +91,17 @@ Index - `workflows`, document type - `workflow`
 * request_transition - list of dictionaries that have keys 'status' (value is string) and 'time' (value is int - unix timestamp). Status changes from ReqMgr2 ('new', 'assignment-approved', 'announced', etc).
 * request_type - request type ('TaskChain', 'Resubmission', 'ReReco', etc.)
 * total_events - number of expected events
+
+## Search in pMp
+
+## Present Statistics
+
+### Announced Mode
+
+### Growing Mode
+
+### Display Chains
+
+## Historical Statistics
+
+## Performance Statistics

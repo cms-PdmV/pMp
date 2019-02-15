@@ -219,6 +219,15 @@
                                         var newGroupBy = groupBy.replace('submitted', 'done')
                                         var newColorBy = colorBy.replace('submitted', 'done')
                                         var newStackBy = stackBy.replace('submitted', 'done')
+                                        if (!(newGroupBy in preparedData)) {
+                                            preparedData[newGroupBy] = {}
+                                        }
+                                        if (!(newColorBy in preparedData[newGroupBy])) {
+                                            preparedData[newGroupBy][newColorBy] = {}
+                                        }
+                                        if (!(newStackBy in preparedData[newGroupBy][newColorBy])) {
+                                            preparedData[newGroupBy][newColorBy][newStackBy] = []
+                                        }
                                         preparedData[newGroupBy][newColorBy][newStackBy].push({prepid: d.prepid,
                                                                                                total_events: realTotal,
                                                                                                priority: d.priority,

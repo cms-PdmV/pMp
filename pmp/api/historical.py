@@ -280,17 +280,8 @@ class HistoricalAPI(APIBase):
                                                                          type(pwg_filter),
                                                                          status_filter,
                                                                          type(status_filter)))
-        cache_key = json.dumps({'q': query, 'g': data_point_count}, sort_keys=True)
-        cache_enabled = False
-        if cache_enabled and cache_key in HistoricalAPI.cache:
-            logging.info('Found %s in cache. DELETE THIS AFTER DEVELOPMENT!' % (cache_key))
-            response = HistoricalAPI.cache[cache_key]
-        else:
-            response = self.prepare_response(query)
-            HistoricalAPI.cache[cache_key] = response
-
         # Construct data by given query
-        # response = self.prepare_response(query)
+        response = self.prepare_response(query)
         # Apply priority, PWG and status filters
         response, pwgs, statuses = self.apply_filters(response, priority_filter, pwg_filter, status_filter)
         # Get submitted and done requests separately

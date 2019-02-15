@@ -200,9 +200,9 @@
 
                     var html = ''
                     html += '<div style="color: #90a4ae;">Time: ' + data[0] + "</div>"
-                    html += '<div style="color: #263238;">Expected events: ' + (scope.humanReadableNumbers ? scope.bigNumberFormatter(data[1]) : data[1]) + "</div>"
-                    html += '<div style="color: #ff6f00;">Events in DAS: ' + (scope.humanReadableNumbers ? scope.bigNumberFormatter(data[2]) : data[2]) + "</div>"
-                    html += '<div style="color: #01579b;">Done events in DAS: ' + (scope.humanReadableNumbers ? scope.bigNumberFormatter(data[3]) : data[3]) + "</div>"
+                    html += '<div style="color: #263238;" title="' + data[1] + '">Expected events: ' + (scope.humanReadableNumbers ? scope.bigNumberFormatter(data[1]) : data[1]) + "</div>"
+                    html += '<div style="color: #ff6f00;" title="' + data[2] + '">Events in DAS: ' + (scope.humanReadableNumbers ? scope.bigNumberFormatter(data[2]) : data[2]) + "</div>"
+                    html += '<div style="color: #01579b;" title="' + data[3] + '">Done events in DAS: ' + (scope.humanReadableNumbers ? scope.bigNumberFormatter(data[3]) : data[3]) + "</div>"
                     $("#historical-drilldown").html(html);
                 };
 

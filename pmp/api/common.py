@@ -95,6 +95,7 @@ class SuggestionsAPI(esadapter.InitConnection):
             results += [{'type': 'RELVAL CAMPAIGN', 'label': x} for x in self.search(search, 'relval_campaigns')]
 
         # order of ext does matter because of the typeahead in bootstrap
+        # print('%s suggestions for %s' % (len(results), search))
         return json.dumps({'results': results})
 
 

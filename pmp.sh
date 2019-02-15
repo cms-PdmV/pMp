@@ -44,17 +44,9 @@ then
     (cd $DIR && ./pmp.sh stop)
     # echo "Pulling updates..."
     # (cd $DIR && git pull)
-    echo "Running bower..."
-    (cd $DIR/pmp/static && bower --allow-root -f install)
     echo "Running grunt..."
     (cd $DIR/pmp/ && grunt &)
     (cd $DIR && ./pmp.sh start)
 fi
 
-if [[ $1 == "update_dev" ]]
-then
-    echo "Running grunt..."
-    (cd $DIR && rm -rf pmp/static/build)
-    (cd $DIR/pmp/ && grunt &)
-    cd $DIR && python3 run.py dev
-fi
+

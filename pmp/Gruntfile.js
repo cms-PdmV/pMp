@@ -20,7 +20,8 @@ module.exports = function(grunt) {
     dest: 'static/build/pmp.build.min.js'
    },
    js2: {
-    src: ['static/js/directives/radio-selections.js',
+    src: ['static/js/directives/pmp.js',
+          'static/js/directives/radio-selections.js',
           'static/js/directives/checkbox-selections.js',
           'static/js/directives/historical-linear.js',
           'static/js/directives/performance-histogram.js',
@@ -32,23 +33,26 @@ module.exports = function(grunt) {
     dest: 'static/build/directives.pmp.build.js'
    },
    dependjs: {
-    src: ['static/bower_components/jquery/dist/jquery.min.js',
-          'static/bower_components/jquery-sortable/source/js/jquery-sortable-min.js',
-          'static/bower_components/bootstrap/dist/js/bootstrap.min.js',
-          'static/bower_components/angular/angular.min.js',
-          'static/bower_components/angular-animate/angular-animate.min.js',
-          'static/bower_components/angular-route/angular-route.min.js',
-          'static/bower_components/d3/d3.min.js',
-          'static/bower_components/angular-bootstrap/ui-bootstrap-tpls.min.js'],
+    src: ['node_modules/jquery/dist/jquery.min.js',
+          'node_modules/jquery-sortable/source/js/jquery-sortable-min.js',
+          'node_modules/bootstrap/dist/js/bootstrap.min.js',
+          'node_modules/angular/angular.min.js',
+          'node_modules/angular-animate/angular-animate.min.js',
+          'node_modules/angular-route/angular-route.min.js',
+          'node_modules/angular-ui-bootstrap/dist/ui-bootstrap-tpls.js',
+          'node_modules/d3/dist/d3.min.js',
+          'node_modules/clipboard/dist/clipboard.min.js'],
     dest: 'static/build/depend.build.js'
    },
    pmpcss: {
-    src: ['static/css/pmp.css'],
+    src: ['static/css/pmp.css',
+          'static/css/bootstrap-custom.css'],
     dest: 'static/build/pmp.build.css'
    },
    dependcss: {
-    src: ['static/bower_components/animate.css/animate.min.css',
-          'static/bower_components/bootstrap/dist/css/bootstrap.min.css'],
+    src: ['node_modules/animate.css/animate.min.css',
+          'node_modules/bootstrap/dist/css/bootstrap.min.css',
+          'node_modules/font-awesome/css/fontawesome.min.css'],
     dest: 'static/build/depend.build.css'
    },
    html: {
@@ -85,7 +89,6 @@ module.exports = function(grunt) {
         'static/build/present.min.html': 'static/partials/present.html',
         'static/build/share.min.html': 'static/partials/share.html',
         'static/build/present-stats-table.min.html': 'static/partials/present-stats-table.html',
-        'static/build/search-suggestion.min.html': 'static/partials/search-suggestion.html',
         'static/build/tags.min.html': 'static/partials/tags.html',
         'static/build/valid.min.html': 'static/build/valid.prod.html',
         'static/build/invalid.min.html': 'templates/invalid.html'
@@ -116,8 +119,4 @@ module.exports = function(grunt) {
  grunt.loadNpmTasks('grunt-contrib-htmlmin');
  grunt.loadNpmTasks('grunt-contrib-watch');
  grunt.registerTask('default', ['concat', 'cssmin', 'htmlmin', 'watch'])
- /*
-  *ToDo: Add charts.js to js watch
-  *There are some problems after uglifying
-  */
 };

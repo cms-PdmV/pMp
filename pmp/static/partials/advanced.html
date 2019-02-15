@@ -1,74 +1,91 @@
-<div id="advanced" class="collapse col-xs-12 col-sm-12 col-md-12 col-lg-12 spacing">
-  <form class="form-group text-uppercase">
-    <label class="checkbox-inline col-lg-12 col-md-12 col-sm-12" ng-show="page.id == 1">
-      <input type="checkbox"
-             ng-model="$parent.chainedMode"
-             ng-change="changeChainedMode();"
-             ng-disabled="loadingData">
-      <small>Display Chains</small>
-    </label>
-    <br ng-show="page.id == 1"/>
-    <label class="checkbox-inline col-lg-12 col-md-12 col-sm-12" ng-show="page.id == 1">
-      <input type="checkbox"
-             ng-model="$parent.growingMode"
-             ng-change="changeGrowingMode();"
-             ng-disabled="loadingData">
-      <small>Growing Mode</small>
-    </label>
-    <br ng-show="page.id == 1"/>
-    <label class="checkbox-inline col-lg-12 col-md-12 col-sm-12" ng-hide="page.id == 3">
-      <input type="checkbox"
-             ng-model="$parent.humanReadable"
-             ng-disabled="loadingData"
-             ng-change="changeHumanReadable()">
-      <small>Human Readable Numbers</small>
-    </label>
-    <br ng-hide="page.id == 3"/>
-    <label class="checkbox-inline col-lg-12 col-md-12 col-sm-12" ng-show="page.id == 2">
-      <input type="checkbox"
-             ng-model="$parent.zoomY"
-             ng-change="changeZoomY()"
-             ng-disabled="loadingData">
-      <small>Y axis zoom</small>
-    </label>
-  </form>
-  
-  <div class="input-group spacing text-uppercase" ng-show="page.id == 2">
-    <div class="hidden-sm input-group-addon">Granularity</div>
-    <input type="number"
-           class="form-control"
-           ng-model="$parent.granularity"
-           ng-change="changeGranularity()"
-           placeholder="Default: 100"
-           ng-model-options="{ debounce: 1500 }">
-  </div>
-  
-  <div class="input-group input-group-sm spacing text-uppercase" ng-show="page.id == 3">
-    <span class="hidden-sm input-group-addon">Bins</span>
-    <input type="number"
-           class="form-control"
-           ng-model="$parent.bins"
-           ng-change="changeBins()"
-           placeholder="Default: 20"
-           ng-model-options="{ debounce: 1500 }">
-  </div>
-  
-  <div class="btn-group btn-group-sm pull-left spacing text-uppercase hidden-xs">
-    <button type="button" class="btn text-center text-uppercase hidden-sm" ng-disabled="true">
-      <small class="hidden-xs">Download</small>
-      <i class="hidden-lg fa fa-download"></i>
-    </button>
-    <button type="button" class="btn btn-default text-center" ng-click="takeScreenshot('pdf')" ng-disabled="false">
-      <small class="hidden-md hidden-sm">PDF</small>
-      <i class="hidden-lg fa fa-file-pdf-o"></i>
-    </button>
-    <button type="button" class="btn btn-default text-center" ng-click="takeScreenshot('png')" ng-disabled="false">
-      <small class="hidden-md hidden-sm">PNG</small>
-      <i class="hidden-lg fa fa-file-image-o"></i>
-    </button>
-    <button type="button" class="btn btn-default text-center" ng-click="takeScreenshot()" ng-disabled="false">
-      <small class="hidden-md hidden-sm">SVG</small>
-      <i class="hidden-lg fa fa-file"></i>
-    </button>
+<div id="advanced" class="collapse col-xs-12 col-sm-12 col-md-12 col-lg-12 spacing pl-0 pr-0">
+  <div class="row">
+    <div class="col-xs-12 mt-3">
+      <b>PLOT OPTIONS</b>
+      <div class="" style="width: 100%;">
+        <div class="col-xs-12">
+          <label class="checkbox-inline col-lg-12 col-md-12 col-sm-12"
+                 ng-show="page.id == 1"
+                 title="Get all campaigns that are chained with search object's campaign">
+            <input type="checkbox"
+                   ng-model="$parent.chainedMode"
+                   ng-change="changeChainedMode();"
+                   ng-disabled="loadingData">
+            Display Chains
+          </label>
+        </div>
+        <div class="col-xs-12">
+          <label class="checkbox-inline col-lg-12 col-md-12 col-sm-12"
+                 ng-show="page.id == 1"
+                 title="Count produced events as 'Done' even if request is still submitted">
+            <input type="checkbox"
+                   ng-model="$parent.growingMode"
+                   ng-change="changeGrowingMode();"
+                   ng-disabled="loadingData">
+            Growing Mode
+          </label>
+        </div>
+        <div class="col-xs-12">
+          <label class="checkbox-inline col-lg-12 col-md-12 col-sm-12"
+                 ng-hide="page.id == 3"
+                 title="Show 1k instead of 1000, 1M instead of 1000000, etc.">
+            <input type="checkbox"
+                   ng-model="$parent.humanReadable"
+                   ng-disabled="loadingData"
+                   ng-change="changeHumanReadable()">
+            Use SI suffix for large numbers
+          </label>
+        </div>
+        <div class="col-xs-12">
+          <label class="checkbox-inline col-lg-12 col-md-12 col-sm-12"
+                 ng-show="page.id == 2"
+                 title="Zoom on X and Y axis while zooming, not only X">
+            <input type="checkbox"
+                   ng-model="$parent.zoomY"
+                   ng-change="changeZoomY()"
+                   ng-disabled="loadingData">
+            Zoom both axes
+          </label>
+        </div>
+        <div class="col-xs-12">
+          <label class="checkbox-inline col-lg-12 col-md-12 col-sm-12"
+                 ng-show="page.id == 2"
+                 title="Show list of done requests used in the plot">
+            <input type="checkbox"
+                   ng-model="$parent.showDoneRequestsList"
+                   ng-change="changeShowDoneRequestsList()"
+                   ng-disabled="loadingData">
+            Show list of done requests
+          </label>
+        </div>
+        <div class="col-xs-12 mt-1" ng-show="page.id == 2">
+          <div class="input-group spacing"
+               title="Number of data points in plot">
+            <span class="input-group-addon">Granularity</span>
+            <input type="number"
+                   class="form-control"
+                   ng-model="$parent.granularity"
+                   ng-change="changeGranularity()"
+                   placeholder="Default: 100"
+                   ng-model-options="{ debounce: 1500 }">
+          </div>
+        </div>
+        <div class="col-xs-12 mt-1" ng-show="page.id == 3">
+          <div class="input-group input-group-sm spacing"
+               title="Number of bars in histogram">
+            <span class="input-group-addon">Bins</span>
+            <input type="number"
+                   class="form-control"
+                   ng-model="$parent.bins"
+                   ng-change="changeBins()"
+                   placeholder="Default: 20"
+                   ng-model-options="{ debounce: 1500 }">
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-xs-12">
+      <hr class="line mt-2 mb-0"/>
+    </div>
   </div>
 </div>

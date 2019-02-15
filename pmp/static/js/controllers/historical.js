@@ -21,6 +21,7 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
             zoomY: false, // zoom on Y axis
             granularity: 100, // granularity value
             humanReadable: true, // human-readable numbers
+            showDoneRequestsList: false,
             priority: undefined, // priority filter
             status: undefined, // status filter
             pwg: undefined, // PWG filter
@@ -48,6 +49,8 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
             $scope.granularity = parseInt(urlParameters.granularity, 10);
 
             $scope.humanReadable = urlParameters.humanReadable === 'true';
+
+            $scope.showDoneRequestsList = urlParameters.showDoneRequestsList === 'true';
 
             // initialise filters
             if (urlParameters.priority !== undefined) {
@@ -167,6 +170,10 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
         }
 
         $scope.changeZoomY = function() {
+            $scope.setURL($scope, Data);
+        }
+
+        $scope.changeShowDoneRequestsList = function() {
             $scope.setURL($scope, Data);
         }
 

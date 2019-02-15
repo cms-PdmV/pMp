@@ -8,7 +8,6 @@
 
     <!--external CSS-->
     <link href="build/depend.build.css" rel="stylesheet" type="text/css"/>
-    <link href="bower_components/font-awesome/web-fonts-with-css/css/fontawesome-all.min.css" rel="stylesheet" type="text/css"/>
     <link href="https://fonts.googleapis.com/css?family=Roboto:900,400,300" rel="stylesheet" type="text/css"/>
 
     <!--pMp CSS-->
@@ -16,7 +15,6 @@
 
     <!--external JS-->
     <script type="text/javascript" src="build/depend.build.js"></script>
-    <script type="text/javascript" src="bower_components/clipboard/dist/clipboard.min.js"></script>
 
     <!--pMp JS-->
     <script type="text/javascript" src="build/directives.pmp.build.js"></script>
@@ -26,17 +24,25 @@
   </head>
   <body ng-controller="MainController">
 
-    <nav class="navbar navbar-expand-lg navbar-dark" style="background-color:red !important" role="navigation">
+    <nav class="navbar navbar-default  navbar-dark">
       <div class="container-fluid">
-        <a href="index" class="navbar-brand" ng-click="nav('/index/')">
-          <img src="img/ic_fav.png" class="brand-adjust" alt="PMP"/>
-          <span style="line-height: 40px"><b>Private Development Version</b></span>
-        </a>
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-          <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-          <ul class="navbar-nav">
+        <div class="navbar-header">
+          <button type="button"
+                  class="navbar-toggle collapsed"
+                  data-toggle="collapse"
+                  data-target="#navigation-bar-collapse"
+                  aria-expanded="false">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a href="index" class="navbar-brand" ng-click="nav('/index/')">
+            <!-- <img src="img/ic_fav.png" class="brand-adjust" alt="pMp Logo"/> -->
+            <span><b>pMp <sup style="color: red" title="Production Monitoring Platform: Second Edition">SE</sup></b></span>
+          </a>
+        </div>
+        <div class="collapse navbar-collapse" id="navigation-bar-collapse">
+          <ul class="nav navbar-nav">
             <li class="nav-item" ng-class="{active: activeIndex == 1}">
               <a class="nav-link" href="present" ng-click="nav('/present/')">
                 <i class="fa fa-chart-bar spacing-r"></i>
@@ -73,7 +79,6 @@
     </nav>
 
     <div class="container" id="ctn">
-
       <div class="panel {{popUp.style}} popup" ng-show="popUp.show">
         <div class="panel-heading text-uppercase">
           <i class="fa {{popUp.icon}} spacing-r"></i> 
@@ -101,19 +106,7 @@
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-body text-center">
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
             <p>You are using a web browser we do not support. Try one of the options below</p>
-            <a class="btn btn-default" href="http://www.google.com/chrome/" role="button">
-              <img height="20px" src="img/ic_chrome.png" /><br/>
-              Chrome
-            </a>
-            <a class="btn btn-default" href="https://www.mozilla.org/en-US/firefox/new/" role="button">
-              <img height="20px" src="img/ic_firefox.png" /><br/>
-              Firefox
-            </a>
-            <a class="btn btn-default" href="https://www.apple.com/safari/" role="button">
-              <img height="20px" src="img/ic_safari.png" /><br/>
-              Safari</a>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-default" data-dismiss="modal">Let me try pMp anyway</button>

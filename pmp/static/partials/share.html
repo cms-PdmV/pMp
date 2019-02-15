@@ -1,11 +1,47 @@
-<div id="share" class="collapse hidden-xs col-sm-12 col-md-12 col-lg-12" ng-controller="ShareController">
-  <div class="input-group input-group-sm pull-left spacing text-uppercase">
-    <span class="btn btn-primary input-group-addon pointer text-uppercase" ng-click="shortenURL()">
-      <small>Shorten</small>
-    </span>
-    <input id="url" type="text" class="form-control" ng-model="url" placeholder="Refresh to get URL">
-    <span id="copy" data-clipboard-text="{{url}}" data-clipboard-target="#url" class="btn btn-primary input-group-addon pointer">
-      <i class="fa fa-copy"></i>
-    </span>
+<div id="share" class="collapse col-xs-12 col-sm-12 col-md-12 col-lg-12 spacing pl-0 pr-0" ng-controller="ShareController">
+  <div class="row">
+    <div class="col-xs-12 mt-3">
+      <b>SHARE LINK</b>
+      <div class="input-group mt-2" style="width: 100%; padding-left: 15px; padding-right: 15px;">
+        <input id="url" type="text" class="form-control" ng-model="url" placeholder="Refresh for URL">
+        <span class="btn btn-primary input-group-addon pointer"
+              ng-click="shortenURL()"
+              title="Use tinyurl to shorten the link">
+          Shorten
+        </span>
+        <span id="copy"
+              data-clipboard-text="{{url}}"
+              data-clipboard-target="#url"
+              class="btn btn-primary input-group-addon pointer"
+              title="Copy link to clipboard">
+          Copy
+        </span>
+      </div>
+    </div>
+    <div class="col-xs-12">
+      <hr class="line mt-2 mb-3"/>
+      <b>DOWNLOAD</b>
+      <div class="btn-group btn-group-justified mt-2" role="group" style="width: 100%; padding-left: 15px; padding-right: 15px;">
+        <div class="btn-group" role="group">
+          <button type="button" class="btn btn-default text-center" ng-click="takeScreenshot('pdf')">
+            PDF
+          </button>
+        </div>
+        <div class="btn-group" role="group">
+          <button type="button" class="btn btn-default text-center" ng-click="takeScreenshot('png')">
+            PNG
+          </button>
+        </div>
+        <div class="btn-group" role="group">
+          <button type="button" class="btn btn-default text-center" ng-click="takeScreenshot()">
+            SVG
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="col-xs-12">
+      <hr class="line mt-2 mb-0"/>
+    </div>
   </div>
 </div>
+
