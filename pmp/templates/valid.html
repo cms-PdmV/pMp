@@ -7,20 +7,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
 
     <!--external CSS-->
-    <link href="build/depend.build.css" rel="stylesheet" type="text/css"/>
+    <link href="static/build/depend.build.css" rel="stylesheet" type="text/css"/>
+    <link href="node_modules/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css"/>
     <link href="https://fonts.googleapis.com/css?family=Roboto:900,400,300" rel="stylesheet" type="text/css"/>
 
     <!--pMp CSS-->
-    <link href="build/pmp.build.min.css" rel="stylesheet" type="text/css"/>
+    <link href="static/build/pmp.build.min.css" rel="stylesheet" type="text/css"/>
 
     <!--external JS-->
-    <script type="text/javascript" src="build/depend.build.js"></script>
+    <script type="text/javascript" src="static/build/depend.build.js"></script>
 
     <!--pMp JS-->
-    <script type="text/javascript" src="build/directives.pmp.build.js"></script>
-    <script type="text/javascript" src="build/pmp.build.min.js"></script>
+    <script type="text/javascript" src="static/build/directives.pmp.build.js"></script>
+    <script type="text/javascript" src="static/build/pmp.build.min.js"></script>
 
-    <link rel="shortcut icon" type="image/x-icon" href="img/ic_fav.png" />
+    <link rel="shortcut icon" type="image/x-icon" href="static/ic_fav.png" />
   </head>
   <body ng-controller="MainController">
 
@@ -45,13 +46,13 @@
           <ul class="nav navbar-nav">
             <li class="nav-item" ng-class="{active: activeIndex == 1}">
               <a class="nav-link" href="present" ng-click="nav('/present/')">
-                <i class="fa fa-chart-bar spacing-r"></i>
+                <i class="fa fa-bar-chart spacing-r"></i>
                 Present Statistics
               </a>
             </li>
             <li class="nav-item" ng-class="{active: activeIndex == 2}">
               <a class="nav-link" href="historical" ng-click="nav('/historical/')"">
-                <i class="fa fa-chart-line spacing-r"></i>
+                <i class="fa fa-line-chart spacing-r"></i>
                 Historical Statistics
               </a>
             </li>

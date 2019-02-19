@@ -11,7 +11,7 @@
             selected: '=', // specifies list of unassigned selections
             onValueChange: '='
         },
-        templateUrl: 'build/radio-selections.min.html',
+        templateUrl: 'static/build/radio-selections.min.html',
         link: function (scope, element) {
             scope.selectionChanged = function(selection) {
                 scope.selectionDict[scope.selected] = false

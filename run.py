@@ -17,7 +17,7 @@ import flask
 
 app = Flask(__name__,
             static_url_path='',
-            static_folder='./pmp/static')
+            static_folder='./pmp')
 cache = SimpleCache()
 
 

@@ -12,7 +12,7 @@
             growingMode: '=',
             humanReadableNumbers: '='
         },
-        templateUrl: 'build/present-stats-table.min.html',
+        templateUrl: 'static/build/present-stats-table.min.html',
         link: function (scope, element) {
             scope.tableData = {}
 

@@ -11,7 +11,7 @@
             selected: '=', // specifies list of unassigned selections
             onValueChange: '='
         },
-        templateUrl: 'build/checkbox-selections.min.html',
+        templateUrl: 'static/build/checkbox-selections.min.html',
         link: function (scope, element) {
             scope.selectionChanged = function(selection) {
                 scope.selectionDict[selection] = !scope.selectionDict[selection]
