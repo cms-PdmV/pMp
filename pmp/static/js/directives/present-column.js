@@ -24,11 +24,11 @@
             // graph configuration
             config = {
                 customWidth: 1160,
-                customHeight: 600,
+                customHeight: 620,
                 margin: {
                     top: 40,
                     right: 10,
-                    bottom: 150,
+                    bottom: 170,
                     left: 80
                 }
             };
@@ -109,6 +109,25 @@
                 YES: '#81c784',
                 NO: '#f06292'
             };
+
+            function getRandomColor() {
+                var r = Math.floor(Math.random() * 168) + 32;
+                var g = Math.floor(Math.random() * 168) + 32;
+                var b = Math.floor(Math.random() * 168) + 32;
+                r = Number(r < 0 || isNaN(r)) ? 0 : ((r > 255) ? 255 : r).toString(16);
+                if (r.length == 1) {
+                    r = '0' + r;
+                }
+                g = Number(g < 0 || isNaN(g)) ? 0 : ((g > 255) ? 255 : g).toString(16);
+                if (g.length == 1) {
+                    g = '0' + g;
+                }
+                b = Number(b < 0 || isNaN(b)) ? 0 : ((b > 255) ? 255 : b).toString(16);
+                if (b.length == 1) {
+                    b = '0' + b;
+                }
+                return "#" + r + g + b;
+            }
 
             /*
              * Used for generating shaded color for stacking
@@ -247,6 +266,7 @@
                 var barMargin = 0.01;
                 var subBarMargin = 0.005;
                 var barWidth = (1.0 - (preparedData.length * barMargin)) / preparedData.length;
+                var colors = {}
                 for (var i = 0; i < preparedData.length; i++) {
                     preparedData[i].x0 = i * barWidth + (i + 1) * barMargin;
                     preparedData[i].x1 = preparedData[i].x0 + barWidth;
@@ -254,10 +274,20 @@
                     for (var j = 0; j < preparedData[i].value.length; j++) {
                         preparedData[i].value[j].x0 = preparedData[i].x0 + j * subBarWidth + (j + 1) * subBarMargin;
                         preparedData[i].value[j].x1 = preparedData[i].value[j].x0 + subBarWidth;
-                        var color = colorMap[preparedData[i].value[j].key]
-                        if (color === undefined) {
+                        var colorKey = preparedData[i].value[j].key
+                        if (colorKey === undefined || colorKey === '') {
                             color = '#2196f3'
+                        } else {
+                            var color = colors[colorKey]
+                            if (color === undefined) {
+                                color = colorMap[colorKey]
+                                if (color === undefined) {
+                                    color = getRandomColor()
+                                }
+                                colorMap[colorKey] = color
+                            }
                         }
+                        
                         var barY = 0;
                         for (var k = 0; k < preparedData[i].value[j].value.length; k++) {
                             preparedData[i].value[j].value[k].x0 = preparedData[i].value[j].x0;
@@ -294,18 +324,21 @@
                 } else {
                     xAxisLabels.push({key: 'All', x: 0.5})
                 }
+                var topMargin = 1.05;
                 if (scope.scale === 'log') {
                     y = d3.scaleLog()
                     yAxis = yAxis.tickFormat(scope.bigNumberFormatterLog)
+                    topMargin = 10;
                 } else {
                     y = d3.scaleLinear()
                     yAxis = yAxis.tickFormat(scope.bigNumberFormatter)
                 }
-                y = y.domain([0.1, d3.max(flatData, function(d) { return d.y1; }) * 1.05]).range([height, 0]);
+                var maxValue = d3.max(flatData, function(d) { return d.y1; });
+                y = y.domain([0.1, maxValue * topMargin]).range([height, 0]);
                 // xAxis.ticks(xAxisLabels.length)
                 xAxis.tickValues(Array.from(xAxisLabels, x => x.x - barMargin / 2))
                 xAxis.tickFormat(function(d, i) { return xAxisLabels[i].key; })
-                yAxis.ticks(5)
+                yAxis.ticks(Math.min(5,maxValue))
                 yAxis.scale(y);
                 svg.selectAll("rect.bar").remove()
                 svg.selectAll(".selected-bar").remove()
@@ -399,7 +432,7 @@
 
                 svg.selectAll(".x.axis .tick>text")
                    .style("text-anchor"," end")
-                   .attr("transform", "rotate(-30)")
+                   .attr("transform", "rotate(-32)")
                    .style("font-weight", "lighter")
                    .style("text-transform", "uppercase")
             };

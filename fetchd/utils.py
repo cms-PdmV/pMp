@@ -4,6 +4,7 @@ import os
 import re
 import pycurl
 import logging
+import time
 from configparser import ConfigParser
 from datetime import datetime
 from io import BytesIO
@@ -53,7 +54,7 @@ class Utils(object):
         logging.basicConfig(format=CONSOLE_LOG_FORMAT, level=logging.INFO)
 
     @staticmethod
-    def curl(method, url, data=None, cookie=None, return_error=False, parse_json=True):
+    def curl(method, url, data=None, cookie=None, return_error=False, parse_json=True, retry_on_failure=True):
         """
         Perform CURL - return_error kwarg returns status after failure - defaults to None
         To install pycurl:
@@ -65,6 +66,7 @@ class Utils(object):
         curl.setopt(pycurl.WRITEFUNCTION, out.write)
         curl.setopt(pycurl.SSL_VERIFYPEER, 0)
         curl.setopt(pycurl.SSL_VERIFYHOST, 0)
+        curl.setopt(pycurl.FOLLOWLOCATION, 1)
         if cookie is not None:
             curl.setopt(pycurl.COOKIEFILE, cookie)
             curl.setopt(pycurl.COOKIEJAR, cookie)
@@ -93,5 +95,10 @@ class Utils(object):
         except ValueError:
             logging.error("Status: %s/n%s" % (curl.getinfo(curl.RESPONSE_CODE),
                                               out.getvalue().decode('UTF-8')))
+            if retry_on_failure:
+                time.sleep(5)
+                logging.info('Will retry %s to %s' % (method, url))
+                return Utils.curl(method, url, data, cookie, return_error, parse_json, retry_on_failure=False)
+
             if return_error:
                 return None, curl.getinfo(curl.RESPONSE_CODE)

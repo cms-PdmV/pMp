@@ -15,8 +15,8 @@ class SuggestionsAPI(esadapter.InitConnection):
     """
     def __init__(self, typeof):
         esadapter.InitConnection.__init__(self)
-        self.results_window_size = 5
-        self.max_suggestions = 15
+        self.max_results_in_index = 5
+        self.max_suggestions = 20
         self.present = (typeof == 'present')
         self.historical = (typeof == 'historical')
         self.performance = (typeof == 'performance')
@@ -26,7 +26,7 @@ class SuggestionsAPI(esadapter.InitConnection):
             return [s['_id'] for s in
                     self.es.search(q=query,
                                    index=index,
-                                   size=self.results_window_size)['hits']['hits']]
+                                   size=self.max_results_in_index)['hits']['hits']]
         except elasticsearch.NotFoundError as ex:
             logging.error(str(ex))
             return []
@@ -48,13 +48,7 @@ class SuggestionsAPI(esadapter.InitConnection):
           relval cmssw version
           relval campaign
         """
-        searchable = query.replace("-", r"\-")
-        if '-' in query:
-            search = ('prepid:%s' % searchable)
-            # search_stats = ('RequestName:%s' % searchable)
-        else:
-            search = ('prepid:*%s*' % searchable)
-            # search_stats = ('RequestName:*%s*' % searchable)
+        search = ('prepid:*%s*' % query)
 
         results = []
 
@@ -175,7 +169,7 @@ class OverallAPI(object):
             count = response.get('count', 0)
             results[collection_name.replace('_', ' ')] = count
 
-        return json.dumps({"results": results})
+        return json.dumps({"results": results}, sort_keys=True)
 
 
 class APIBase(esadapter.InitConnection):
@@ -336,7 +330,7 @@ class APIBase(esadapter.InitConnection):
 
         return None, None, None
 
-    def db_query(self, query, include_stats_document=True, estimate_completed_events=True):
+    def db_query(self, query, include_stats_document=True, estimate_completed_events=False):
         """
         Query DB and return array of raw documents
         Tuple of three things is returned: stats document, mcm document
@@ -368,7 +362,6 @@ class APIBase(esadapter.InitConnection):
             else:
                 dataset = None
 
-            logging.info('Dataset of %s is %s' % (req['prepid'], dataset))
             if not dataset and estimate_completed_events and index == 'requests':
                 logging.info('Will try to find closest dataset for %s' % (req['prepid']))
                 closest_request, closest_output_dataset, closest_request_manager = self.get_info_for_estimate(req)

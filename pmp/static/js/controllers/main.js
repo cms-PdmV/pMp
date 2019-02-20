@@ -12,34 +12,24 @@ angular.module('pmpApp').controller('MainController', ['$http', '$location',
         $scope.showView = true; // controls visibility of page main container
         if (!isSupportedBrowser) $('#unsupportedModal').modal('show'); // show unsupported modal if the page is not supported
 
-
-        /**
-         * @description
-         * Prevent default operation of $loaction.path
-         * This way only URL will be updated on path change and page will not be refreshed
-         */
-        var original = $location.path;
-        $location.path = function (path, reload) {
-            if (reload === false) {
-                var lastRoute = $route.current;
-                var un = $rootScope.$on('$locationChangeSuccess',
-                    function () {
-                        $route.current = lastRoute;
-                        un();
-                    });
-            }
-            return original.apply($location, [path]);
-        };
-
         $scope.nav = function(link) {
-            $scope.activeIndex = 0;
+            var previousIndex = $scope.activeIndex
             if (link === '/present/') {
-                $scope.activeIndex = 1;
+                $scope.changeActiveIndex(1)
             } else if (link === '/historical/') {
-                $scope.activeIndex = 2;
+                $scope.changeActiveIndex(2)
             } else if (link === '/performance/') {
-                $scope.activeIndex = 3;
+                $scope.changeActiveIndex(3)
+            } else {
+                $scope.changeActiveIndex(0)
             }
+            if (previousIndex === $scope.activeIndex) {
+                $scope.$broadcast('onChangeNotification:ReInit')
+            }
+        }
+
+        $scope.changeActiveIndex = function(index) {
+            $scope.activeIndex = index;
         }
 
         /**
@@ -150,7 +140,7 @@ angular.module('pmpApp').controller('MainController', ['$http', '$location',
 
         $scope.setURL = function (scope, data) {
             var params = $scope.constructURLQuery(scope, data)
-            $location.search(params);
+            $location.search(params).replace();
             $scope.$broadcast('onChangeNotification:URL');
         };
 

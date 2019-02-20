@@ -40,6 +40,7 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
             Data.reset(true);
             $scope.data = undefined;
             $scope.firstLoad = true;
+            $scope.changeActiveIndex(2);
 
             // collect URL parameters together
             var urlParameters = $scope.fillDefaults($location.search(), $scope.defaults)
@@ -81,6 +82,8 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
             // load graph data
             if (urlParameters.r !== '') {
                 Data.setInputTags(urlParameters.r.split(','));
+            } else {
+                Data.setInputTags([]);
             }
         };
 
@@ -118,6 +121,8 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
                 Data.setLoadedData([]);
                 Data.setStatusFilter({});
                 Data.setPWGFilter({});
+                $scope.data = Data.getLoadedData();
+                $scope.setURL($scope, Data);
                 $scope.$broadcast('onChangeNotification:LoadedData');
                 return null;
             }
@@ -189,6 +194,11 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
 
         $scope.$on('onChangeNotification:InputTags', function () {
             $scope.query()
+        })
+
+        $scope.$on('onChangeNotification:ReInit', function () {
+            $location.url('/historical')
+            $scope.init()
         })
 
         /**

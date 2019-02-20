@@ -5,6 +5,7 @@
 .#*
 venv*
 *.log
+nuke.sh
 pmp/static/tmp/*
 pmp/static/build/*
 pmp/static/bower_components/*

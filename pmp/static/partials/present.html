@@ -44,7 +44,7 @@
         <b ng-show="!humanReadable">{{binEntry.total_events}}</b>
         <b ng-show="humanReadable" title="{{binEntry.total_events}}">{{binEntry.total_events | readableNumbers}}</b>
       </div>
-      <div ng-hide="!humanReadable" class="col-sm-2">
+      <div class="col-sm-2">
         Done:
         <b ng-show="!humanReadable">{{binEntry.completed_events}}</b>
         <b ng-show="humanReadable" title="{{binEntry.completed_events}}">{{binEntry.completed_events | readableNumbers}}</b>

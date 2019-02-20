@@ -46,6 +46,7 @@ angular.module('pmpApp').controller('PresentController', ['$http',
             Data.reset(true);
             $scope.data = undefined;
             $scope.firstLoad = true;
+            $scope.changeActiveIndex(1);
             // collect URL parameters and fill in defaults where necessary
             var urlParameters = $scope.fillDefaults($location.search(), $scope.defaults)
 
@@ -143,6 +144,8 @@ angular.module('pmpApp').controller('PresentController', ['$http',
                 Data.setLoadedData([]);
                 Data.setStatusFilter({});
                 Data.setPWGFilter({});
+                $scope.data = Data.getLoadedData();
+                $scope.setURL($scope, Data);
                 $scope.$broadcast('onChangeNotification:LoadedData');
                 return null;
             }
@@ -294,6 +297,11 @@ angular.module('pmpApp').controller('PresentController', ['$http',
 
         $scope.$on('onChangeNotification:InputTags', function () {
             $scope.query()
+        })
+
+        $scope.$on('onChangeNotification:ReInit', function () {
+            $location.url('/present')
+            $scope.init()
         })
     }
 ]);

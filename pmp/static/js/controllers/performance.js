@@ -40,6 +40,7 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
             Data.reset(true);
             $scope.data = undefined;
             $scope.firstLoad = true;
+            $scope.changeActiveIndex(3);
             // collect URL parameters together
             var urlParameters = $scope.fillDefaults($location.search(), $scope.defaults)
             // define graph difference
@@ -116,6 +117,8 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
                 Data.setLoadedData([]);
                 Data.setStatusFilter({});
                 Data.setPWGFilter({});
+                $scope.data = Data.getLoadedData();
+                $scope.setURL($scope, Data);
                 $scope.$broadcast('onChangeNotification:LoadedData');
                 return null;
             }
@@ -215,6 +218,11 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
 
         $scope.$on('onChangeNotification:InputTags', function () {
             $scope.query()
+        })
+
+        $scope.$on('onChangeNotification:ReInit', function () {
+            $location.url('/performance')
+            $scope.init()
         })
     }
 ]);
