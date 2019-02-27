@@ -8,12 +8,16 @@ import json
 import os
 import logging
 import config
+from werkzeug.contrib.cache import SimpleCache
 
 
 class SuggestionsAPI(esadapter.InitConnection):
     """
     Used to search in elastic index for similar PrepIDs as given
     """
+
+    __cache = SimpleCache(threshold=config.CACHE_SIZE, default_timeout=config.CACHE_TIMEOUT)
+
     def __init__(self, typeof):
         esadapter.InitConnection.__init__(self)
         self.max_results_in_index = 5
@@ -49,6 +53,12 @@ class SuggestionsAPI(esadapter.InitConnection):
           relval cmssw version
           relval campaign
         """
+        cache_key = 'suggestions_%s' % (query)
+        if self.__cache.has(cache_key):
+            results = self.__cache.get(cache_key)
+            logging.info('Found %s suggestions in cache for %s' % (len(results), cache_key))
+            return json.dumps({'results': results})
+
         search = ('prepid:*%s*' % query)
 
         results = []
@@ -91,6 +101,8 @@ class SuggestionsAPI(esadapter.InitConnection):
 
         # order of ext does matter because of the typeahead in bootstrap
         logging.info('Found %s suggestions for %s' % (len(results), search))
+
+        self.__cache.set(cache_key, results)
         return json.dumps({'results': results})
 
 
@@ -166,6 +178,9 @@ class OverallAPI(object):
 
 
 class APIBase(esadapter.InitConnection):
+
+    __cache = SimpleCache(threshold=config.CACHE_SIZE, default_timeout=config.CACHE_TIMEOUT)
+
     def __init__(self):
         esadapter.InitConnection.__init__(self)
         Utils.setup_console_logging()
@@ -199,47 +214,57 @@ class APIBase(esadapter.InitConnection):
           relval cmssw version
           relval campaign
         """
+        cache_key = 'parse_query_%s' % (query)
+        if self.__cache.has(cache_key):
+            result = self.__cache.get(cache_key)
+            logging.info('Found result in cache for key: %s' % cache_key)
+            return result
+
         if query == 'all':
             # change all to wildcard or check if chain
-            return 'member_of_campaign', 'requests', 'request', '*'
+            result = ('member_of_campaign', 'requests', 'request', '*')
 
         elif self.is_instance(query, 'campaigns', 'campaign'):
-            return 'member_of_campaign', 'requests', 'request', query
+            result = ('member_of_campaign', 'requests', 'request', query)
 
         elif self.is_instance(query, 'requests', 'request'):
-            return None, 'requests', 'request', query
+            result = (None, 'requests', 'request', query)
 
         elif self.is_instance(query, 'tags', 'tag'):
-            return 'tags', 'requests', 'request', query
+            result = ('tags', 'requests', 'request', query)
 
         elif self.is_instance(query, 'ppd_tags', 'ppd_tag'):
-            return 'ppd_tags', 'requests', 'request', query
+            result = ('ppd_tags', 'requests', 'request', query)
 
         elif self.is_instance(query, 'flows', 'flow'):
-            return 'flown_with', 'requests', 'request', query
+            result = ('flown_with', 'requests', 'request', query)
 
         elif self.is_instance(query, 'mcm_dataset_names', 'mcm_dataset_name'):
-            return 'dataset_name', 'requests', 'request', query
+            result = ('dataset_name', 'requests', 'request', query)
 
         elif self.is_instance(query, 'rereco_requests', 'rereco_request'):
-            return None, 'rereco_requests', 'rereco_request', query
+            result = (None, 'rereco_requests', 'rereco_request', query)
 
         elif self.is_instance(query, 'processing_strings', 'processing_string'):
-            return 'processing_string', 'rereco_requests', 'rereco_request', query
+            result = ('processing_string', 'rereco_requests', 'rereco_request', query)
 
         elif self.is_instance(query, 'rereco_campaigns', 'rereco_campaign'):
-            return 'member_of_campaign', 'rereco_requests', 'rereco_request', query
+            result = ('member_of_campaign', 'rereco_requests', 'rereco_request', query)
 
         elif self.is_instance(query, 'relval_requests', 'relval_request'):
-            return None, 'relval_requests', 'relval_request', query
+            result = (None, 'relval_requests', 'relval_request', query)
 
         elif self.is_instance(query, 'relval_cmssw_versions', 'relval_cmssw_version'):
-            return 'cmssw_version', 'relval_requests', 'relval_request', query
+            result = ('cmssw_version', 'relval_requests', 'relval_request', query)
 
         elif self.is_instance(query, 'relval_campaigns', 'relval_campaign'):
-            return 'member_of_campaign', 'relval_requests', 'relval_request', query
+            result = ('member_of_campaign', 'relval_requests', 'relval_request', query)
 
-        return None, None, None, None
+        else:
+            result = (None, None, None, None)
+
+        self.__cache.set(cache_key, result)
+        return result
 
     def fetch_objects(self, field, query, index, doctype):
         """
@@ -330,12 +355,19 @@ class APIBase(esadapter.InitConnection):
         Query DB and return array of raw documents
         Tuple of three things is returned: stats document, mcm document
         """
+
         req_arr = []
         field, index, doctype, query = self.parse_query(query)
         logging.info('Field: %s, index: %s, doctype: %s, query: %s' % (field, index, doctype, query))
         if index is None:
             logging.info('Returning nothing because index for %s could not be found' % (query))
             return None, None
+
+        cache_key = 'db_query_%s_____%s______%s' % (str(query), include_stats_document, estimate_completed_events)
+        if self.__cache.has(cache_key):
+            results = self.__cache.get(cache_key)
+            logging.info('Found result in cache for key: %s' % cache_key)
+            return results
 
         req_arr = self.fetch_objects(field, query, index, doctype)
 
@@ -346,6 +378,7 @@ class APIBase(esadapter.InitConnection):
         elif index == 'rereco_requests':
             logging.info('Found %d ReReco requests for %s' % (len(req_arr), query))
 
+        results = []
         # Iterate over array and collect details (McM documents)
         for req in req_arr:
             dataset_list = req['output_dataset']
@@ -410,14 +443,18 @@ class APIBase(esadapter.InitConnection):
                 mcm_document.update({'expected': req['total_events'],
                                      'name': reqmgr,
                                      'output_dataset': dataset})
-                yield stats_document, mcm_document
+                results.append((stats_document, mcm_document))
                 break
             else:
                 # Add reqmgr as name and output dataset to request
                 mcm_document = dict(req)
                 mcm_document.update({'expected': req['total_events'],
                                      'output_dataset': dataset})
-                yield None, mcm_document
+                results.append((None, mcm_document))
+
+
+        self.__cache.set(cache_key, results)
+        return results
 
     def apply_filters(self, data, priority_filter, pwg_filter, status_filter):
         """

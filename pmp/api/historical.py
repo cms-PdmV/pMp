@@ -3,13 +3,14 @@ from pmp.api.common import APIBase
 import json
 import time
 import logging
+from werkzeug.contrib.cache import SimpleCache
+import config
 
 
 class HistoricalAPI(APIBase):
     """Used to return list of points for historical plots"""
 
-    # Temp for development
-    cache = {}
+    __cache = SimpleCache(threshold=config.CACHE_SIZE, default_timeout=config.CACHE_TIMEOUT)
 
     def __init__(self):
         APIBase.__init__(self)
@@ -283,8 +284,16 @@ class HistoricalAPI(APIBase):
                                                                          type(pwg_filter),
                                                                          status_filter,
                                                                          type(status_filter)))
-        # Construct data by given query
-        response = self.prepare_response(query, estimate_completed_events)
+
+        cache_key = 'present_%s_____%s' % (query, estimate_completed_events)
+        if self.__cache.has(cache_key):
+            self.logging.info('Found result in cache for key: %s' % cache_key)
+            response = self.__cache.get(cache_key)
+        else:
+            # Construct data by given query
+            response = self.prepare_response(query, estimate_completed_events)
+            self.__cache.set(cache_key,response)
+
         # Apply priority, PWG and status filters
         response, pwgs, statuses = self.apply_filters(response, priority_filter, pwg_filter, status_filter)
         # Get submitted and done requests separately

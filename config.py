@@ -9,4 +9,5 @@ HOST = '127.0.0.1'
 HOSTMAIL = os.getenv('HOSTNAME') + '@noreply.com'
 PORT = 443
 SECRET_KEY = ''
-CACHE_TIMEOUT = 30 * 60
+CACHE_TIMEOUT = 600
+CACHE_SIZE = 1000

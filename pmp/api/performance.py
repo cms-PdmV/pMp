@@ -2,6 +2,8 @@
 from pmp.api.common import APIBase
 import json
 import logging
+from werkzeug.contrib.cache import SimpleCache
+import config
 
 
 class PerformanceAPI(APIBase):
@@ -14,6 +16,8 @@ class PerformanceAPI(APIBase):
         'submitted': 3,
         'done': 4
     }
+
+    __cache = SimpleCache(threshold=config.CACHE_SIZE, default_timeout=config.CACHE_TIMEOUT)
 
     def __init__(self):
         APIBase.__init__(self)
@@ -92,8 +96,16 @@ class PerformanceAPI(APIBase):
                                                                 type(pwg_filter),
                                                                 status_filter,
                                                                 type(status_filter)))
-        # Construct data by given query
-        response = self.prepare_response(query)
+
+        cache_key = 'performance_%s' % (query)
+        if self.__cache.has(cache_key):
+            self.logging.info('Found result in cache for key: %s' % cache_key)
+            response = self.__cache.get(cache_key)
+        else:
+            # Construct data by given query
+            response = self.prepare_response(query)
+            self.__cache.set(cache_key,response)
+
         logging.info('Requests before filtering %s' % (len(response)))
         # Apply priority, PWG and status filters
         response, pwgs, statuses = self.apply_filters(response, priority_filter, pwg_filter, status_filter)

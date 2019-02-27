@@ -132,7 +132,7 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
             var pwgQuery = Data.getPWGQuery($scope.firstLoad);
             var granularity = $scope.granularity;
             $scope.firstLoad = false;
-            var queryUrl = 'api/historical?r=' + inputTags.join(',');
+            var queryUrl = 'api/historical?r=' + inputTags.slice().sort().join(',');
             if (granularity) {
                 queryUrl += '&granularity=' + granularity;
             }

@@ -155,7 +155,7 @@ angular.module('pmpApp').controller('PresentController', ['$http',
             var statusQuery = Data.getStatusQuery($scope.firstLoad);
             var pwgQuery = Data.getPWGQuery($scope.firstLoad);
             $scope.firstLoad = false;
-            var queryUrl = 'api/present?r=' + inputTags.join(',');
+            var queryUrl = 'api/present?r=' + inputTags.slice().sort().join(',');
             if (priorityQuery !== undefined) {
                 queryUrl += '&priority=' + priorityQuery;
             }

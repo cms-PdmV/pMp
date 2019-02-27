@@ -1,10 +1,14 @@
 """A list of classes supporting present statistics API"""
 from pmp.api.common import APIBase
 import json
-
 import logging
+from werkzeug.contrib.cache import SimpleCache
+import config
+
 
 class PresentAPI(APIBase):
+
+    __cache = SimpleCache(threshold=config.CACHE_SIZE, default_timeout=config.CACHE_TIMEOUT)
 
     def __init__(self):
         APIBase.__init__(self)
@@ -109,8 +113,15 @@ class PresentAPI(APIBase):
             logging.info('Campaign Mode! Campaigns for query %s are %s' % (query, campaigns))
             query = ','.join(campaigns)
 
-        # Construct data by given query
-        response = self.prepare_response(query, estimate_completed_events)
+        cache_key = 'present_%s_____%s' % (query, estimate_completed_events)
+        if self.__cache.has(cache_key):
+            logging.info('Found result in cache for key: %s' % cache_key)
+            response = self.__cache.get(cache_key)
+        else:
+            # Construct data by given query
+            response = self.prepare_response(query, estimate_completed_events)
+            self.__cache.set(cache_key,response)
+
         # Apply priority, PWG and status filters
         response, pwgs, statuses = self.apply_filters(response, priority_filter, pwg_filter, status_filter)
         res = {'data': response,
