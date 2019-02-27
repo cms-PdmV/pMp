@@ -287,7 +287,7 @@ class HistoricalAPI(APIBase):
 
         cache_key = 'present_%s_____%s' % (query, estimate_completed_events)
         if self.__cache.has(cache_key):
-            self.logging.info('Found result in cache for key: %s' % cache_key)
+            logging.info('Found result in cache for key: %s' % cache_key)
             response = self.__cache.get(cache_key)
         else:
             # Construct data by given query

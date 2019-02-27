@@ -4,7 +4,6 @@ Configuration file in config.py
 > sudo python run.py
 """
 from flask import Flask, make_response, redirect, request
-from werkzeug.contrib.cache import SimpleCache
 from pmp.api.historical import HistoricalAPI
 from pmp.api.performance import PerformanceAPI
 from pmp.api.present import PresentAPI
@@ -18,7 +17,6 @@ import flask
 app = Flask(__name__,
             static_url_path='',
             static_folder='./pmp')
-cache = SimpleCache()
 
 
 @app.errorhandler(404)
@@ -29,17 +27,6 @@ def page_not_found(error):
 
 def sanitize(string):
     return string.replace("\\", "")
-
-
-@app.before_request
-def check_cache():
-    path = request.path
-
-    if path.startswith('/api') and 'lastupdate' not in path and 'overall' not in path:
-        cache_item = cache.get(request.path)
-
-        if cache_item is not None:
-            return cache_item
 
 
 @app.route('/404')
@@ -121,7 +108,7 @@ def api_historical():
                                  priority_filter=priority,
                                  pwg_filter=pwg,
                                  status_filter=status)
-    # cache.add(request.path, result, timeout=config.CACHE_TIMEOUT)
+
     return result
 
 
@@ -153,7 +140,7 @@ def api_performance():
                                  priority_filter=priority,
                                  pwg_filter=pwg,
                                  status_filter=status)
-    # cache.add(request.path, result, timeout=config.CACHE_TIMEOUT)
+
     return result
 
 
@@ -190,20 +177,18 @@ def api_present():
                               priority_filter=priority,
                               pwg_filter=pwg,
                               status_filter=status)
-    # cache.add(request.path, result, timeout=config.CACHE_TIMEOUT)
+
     return result
 
 
 @app.route('/api/suggest/<string:statistics_type>/<string:fragment>')
 def api_suggest(statistics_type, fragment):
-    """API call for typeahead
-    fragment - input string to search in db
-    typeof - lifetime/growing/announced/performance
+    """A
+    PI call for suggestions
     """
     fragment = sanitize(fragment)
 
     result = SuggestionsAPI(statistics_type).get(fragment)
-    # cache.add(request.path, result, timeout=config.CACHE_TIMEOUT)
     return result
 
 
