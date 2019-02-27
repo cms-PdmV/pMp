@@ -170,7 +170,7 @@ class HistoricalAPI(APIBase):
                                     'x': mcm_document.get('expected', 0),
                                     't': entry['time'] * 1000
                                 }
-                                if entry['type'] == 'VALID' or entry['type'] == 'INVALID':
+                                if entry['type'] == 'VALID' or entry['type'] == 'INVALID' or entry['type'] == 'DELETED':
                                     data_point['d'] = entry.get('events', 0)
 
                                 response['data'].append(data_point)

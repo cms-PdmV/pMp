@@ -7,6 +7,7 @@ import elasticsearch
 import json
 import os
 import logging
+import config
 
 
 class SuggestionsAPI(esadapter.InitConnection):
@@ -89,7 +90,7 @@ class SuggestionsAPI(esadapter.InitConnection):
             results += [{'type': 'RELVAL CAMPAIGN', 'label': x} for x in self.search(search, 'relval_campaigns')]
 
         # order of ext does matter because of the typeahead in bootstrap
-        # print('%s suggestions for %s' % (len(results), search))
+        logging.info('Found %s suggestions for %s' % (len(results), search))
         return json.dumps({'results': results})
 
 
@@ -104,13 +105,8 @@ class ShortenAPI(object):
         """
         Curl tinyurl and return url
         """
-        import sys
-        sys.path.append(os.path.abspath(os.path.dirname(__file__) + '/' + '..'))
-        from fetchd.utils import Utils
-        print(self.base_url)
-        print(url)
         response, _ = Utils.curl('GET', self.base_url + url, parse_json=False)
-        print(response)
+        logging.info('Shortened %s to %s' % (url, response))
         return response
 
 
@@ -159,16 +155,13 @@ class OverallAPI(object):
         """
         Query DB and return response
         """
-        import sys
-        sys.path.append(os.path.abspath(os.path.dirname(__file__) + '/' + '..'))
-        from fetchd.utils import Utils
-        import config
         results = {}
         for collection_name in collections:
             response, _ = Utils.curl('GET', config.DATABASE_URL + collection_name + '/_count')
             count = response.get('count', 0)
             results[collection_name.replace('_', ' ')] = count
 
+        logging.info('OverallAPI results: %s' % (results))
         return json.dumps({"results": results}, sort_keys=True)
 
 
@@ -299,6 +292,7 @@ class APIBase(esadapter.InitConnection):
                                                   index='chained_requests',
                                                   doctype='chained_request')
 
+            logging.info('Will look in %s chained requests for %s estimate' % (len(chained_requests), req['prepid']))
             for chained_request in chained_requests:
                 chain = chained_request.get('chain', [])
                 if req['prepid'] in chain:
@@ -326,6 +320,7 @@ class APIBase(esadapter.InitConnection):
         potential_results_with_events = sorted(potential_results_with_events, key=lambda k: k[0])
         if len(potential_results_with_events) > 0:
             best_match = potential_results_with_events[0]
+            logging.info('Best match for %s is %s %s %s' % (req['prepid'], best_match[1], best_match[2], best_match[3]))
             return best_match[1], best_match[2], best_match[3]
 
         return None, None, None
@@ -339,7 +334,7 @@ class APIBase(esadapter.InitConnection):
         field, index, doctype, query = self.parse_query(query)
         logging.info('Field: %s, index: %s, doctype: %s, query: %s' % (field, index, doctype, query))
         if index is None:
-            logging.info('Returning nothing')
+            logging.info('Returning nothing because index for %s could not be found' % (query))
             return None, None
 
         req_arr = self.fetch_objects(field, query, index, doctype)
@@ -355,7 +350,7 @@ class APIBase(esadapter.InitConnection):
         for req in req_arr:
             dataset_list = req['output_dataset']
             if len(dataset_list) > 0:
-                if index == 'rereco_requests':
+                if index == 'rereco_requests' or index == 'relval_requests':
                     dataset = dataset_list[-1]
                 else:
                     dataset = dataset_list[0]
@@ -363,7 +358,7 @@ class APIBase(esadapter.InitConnection):
                 dataset = None
 
             if not dataset and estimate_completed_events and index == 'requests':
-                logging.info('Will try to find closest dataset for %s' % (req['prepid']))
+                logging.info('Will try to find closest estimate for %s' % (req['prepid']))
                 closest_request, closest_output_dataset, closest_request_manager = self.get_info_for_estimate(req)
                 if closest_request and closest_output_dataset and closest_request_manager:
                     logging.info('Will use %s dataset and %s request manager of %s as an estimate for %s' % (closest_output_dataset,
@@ -398,6 +393,8 @@ class APIBase(esadapter.InitConnection):
             # Iterate through all workflow names, starting from the newest one
             # and stopping once any valid workflow is found
             req['reqmgr_name'] = sorted(req.get('reqmgr_name', []), key=lambda k: '_'.join(k.split('_')[-3:]), reverse=True)
+            logging.info('ReqMgr names for %s are %s' % (req['prepid'], req.get('reqmgr_name', [])))
+            logging.info('Dataset for %s is %s' % (req['prepid'], dataset))
             for reqmgr in req['reqmgr_name']:
                 try:
                     stats_document = self.es.get(index='workflows', doc_type='workflow', id=reqmgr)['_source']

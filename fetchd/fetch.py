@@ -200,12 +200,12 @@ def get_changed_object_ids(cfg):
         else:
             logging.info('No changes since last update')
 
-        _, code = Utils.curl('PUT',
-                             cfg.last_seq, {'val': last_seq,
+        r, code = Utils.curl('PUT',
+                             cfg.last_seq, {'val': str(last_seq),
                                             'time': int(round(time.time() * 1000))})
 
         if code not in [200, 201]:
-            logging.error('Cannot update last sequence')
+            logging.error('Cannot update last sequence. Code: %s Reason: %s' % (code, r))
         else:
             logging.info('Updated last sequence to %s' % (last_seq))
 

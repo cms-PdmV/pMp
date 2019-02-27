@@ -28,12 +28,12 @@
                   data="data"></column-chart>
     
   </div>
-  <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 text-center margin-20" ng-show="selectedBin.length">
+  <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 text-center" ng-show="selectedBin.length">
     <p>Requests (<b>{{selectedBin.length}}</b>) in selected bar</p>
     <div ng-repeat="binEntry in selectedBin" class="row zebra-lines small-padding">
       <div class="col-sm-4">
-        <a ng-if="binEntry.prepid.indexOf('ReReco') == -1" ng-href="https://cms-pdmv.cern.ch/mcm/requests?prepid={{binEntry.prepid}}" target="_blank">{{binEntry.prepid}}</a>
-        <a ng-if="binEntry.prepid.indexOf('ReReco') != -1" ng-href="https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?prep_id={{binEntry.prepid}}" target="_blank">{{binEntry.prepid}}</a>
+        <a ng-if="binEntry.prepid.indexOf('ReReco') == -1 && binEntry.prepid.indexOf('CMSSW') == -1" ng-href="https://cms-pdmv.cern.ch/mcm/requests?prepid={{binEntry.prepid}}" target="_blank">{{binEntry.prepid}}</a>
+        <a ng-if="binEntry.prepid.indexOf('ReReco') != -1 || binEntry.prepid.indexOf('CMSSW') != -1" ng-href="https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?prep_id={{binEntry.prepid}}" target="_blank">{{binEntry.prepid}}</a>
         <small ng-show="binEntry.growing_fake" style="color:red" title="This is a part of {{binEntry.prepid}} counted as done">(Partial)</small>
         <br><small>{{binEntry.dataset_name}}</small>
         <small title="Number of completed events estimated from {{binEntry.estimate_from}}" style="color:red" ng-show="binEntry.estimate_from"><br>(Estimate from {{binEntry.estimate_from}})</small>
@@ -62,7 +62,7 @@
       </div>
     </div>
   </div>
-  <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 mt-5 text-center margin-20">
+  <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 mt-5 text-center">
     <present-stats-table mode="mode"
                          human-readable-numbers="humanReadable"
                          growing-mode="growingMode"

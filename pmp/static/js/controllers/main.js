@@ -91,6 +91,34 @@ angular.module('pmpApp').controller('MainController', ['$http', '$location',
 
         $scope.fillDefaults = function(values, defaults) {
             var filledValues = {};
+            // Old pMp links support
+            if ('w' in values && !('pwg' in values)) {
+                values['pwg'] = values['w'];
+            }
+            if ('s' in values && !('status' in values)) {
+                values['status'] = values['s']
+            }
+            if ('c' in values && !('chainedMode' in values)) {
+                values['chainedMode'] = values['c']
+            }
+            if ('m' in values && !('growingMode' in values)) {
+                values['growingMode'] = values['m']
+            }
+            if ('h' in values && !('humanReadable' in values)) {
+                values['humanReadable'] = values['h']
+            }
+            if ('x' in values && !('priority' in values)) {
+                values['priority'] = values['x']
+            }
+            if ('y' in values && !('zoomY' in values)) {
+                values['zoomY'] = values['y']
+            }
+            if ('p' in values && !('granularity' in values)) {
+                values['granularity'] = values['p']
+            }
+            if ('b' in values && !('bins' in values)) {
+                values['bins'] = values['b']
+            }
             Object.keys(defaults).forEach(function (param, index, array) {
                 var urlValue = values[param];
                 // if the default is a number, expect a numerical parameter

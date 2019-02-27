@@ -174,10 +174,9 @@
                 containerBox = document.querySelector('#lifetime');
 
                 var handleMouseOverGraph = function(event) {
-                    var hoverLineXOffset = $(containerBox).offset().left;
-                    var hoverLineYOffset = config.margin.top + $(containerBox).offset().top;
-                    var mouseX = event.pageX - hoverLineXOffset;
-                    var mouseY = event.pageY - hoverLineYOffset;
+                    var boundingRect = event.currentTarget.getBoundingClientRect()
+                    var mouseX = event.clientX - boundingRect.left;
+                    var mouseY = event.clientY - boundingRect.top;
                     if (mouseX >= 0 && mouseX <= width && mouseY >= 0 && mouseY <= height) {
                         displayValueLabelsForPositionX(mouseX);
                     }
