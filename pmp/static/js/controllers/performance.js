@@ -139,29 +139,30 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
             }
             var promise = $http.get(queryUrl);
             promise.then(function (data) {
-                Data.setLoadedData(data.data.results.data, false);
-                Data.setStatusFilter(data.data.results.status);
-                Data.setPWGFilter(data.data.results.pwg);
-                $scope.availableStatuses = data.data.results.all_statuses_in_history.slice()
-                if ($scope.availableStatuses.length == 0) {
-                    $scope.subtrahend = undefined
-                    $scope.minuend = undefined
-                } else {
-                    if ($scope.availableStatuses.indexOf($scope.subtrahend) == -1) {
-                        $scope.subtrahend = $scope.availableStatuses[0];
+                $scope.showPopUp('success', 'Downloaded data. Drawing plot...');
+                setTimeout(function() {
+                    Data.setLoadedData(data.data.results.data, false);
+                    Data.setStatusFilter(data.data.results.status);
+                    Data.setPWGFilter(data.data.results.pwg);
+                    $scope.availableStatuses = data.data.results.all_statuses_in_history.slice()
+                    if ($scope.availableStatuses.length == 0) {
+                        $scope.subtrahend = undefined
+                        $scope.minuend = undefined
+                    } else {
+                        if ($scope.availableStatuses.indexOf($scope.subtrahend) == -1) {
+                            $scope.subtrahend = $scope.availableStatuses[0];
+                        }
+                        if ($scope.availableStatuses.indexOf($scope.minuend) == -1) {
+                            $scope.minuend = $scope.availableStatuses[$scope.availableStatuses.length - 1];
+                        }
                     }
-                    if ($scope.availableStatuses.indexOf($scope.minuend) == -1) {
-                        $scope.minuend = $scope.availableStatuses[$scope.availableStatuses.length - 1];
-                    }
-                }
-                $scope.data = $scope.filterByMinuendSubtrahend(Data.getLoadedData(), $scope.subtrahend, $scope.minuend);
-                $scope.setURL($scope, Data);
-                $scope.$broadcast('onChangeNotification:LoadedData');
-                $scope.loadingData = false;
+                    $scope.data = $scope.filterByMinuendSubtrahend(Data.getLoadedData(), $scope.subtrahend, $scope.minuend);
+                    $scope.setURL($scope, Data);
+                    $scope.$broadcast('onChangeNotification:LoadedData');
+                    $scope.loadingData = false;
+                }, 100)
             }, function () {
-                $scope.showPopUp(PageDetailsProvider.messages
-                    .E1.type, PageDetailsProvider.messages
-                    .E1.message);
+                $scope.showPopUp('error', 'Error loading requests');
                 $scope.loadingData = false;
             });
         };

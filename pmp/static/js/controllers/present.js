@@ -173,17 +173,18 @@ angular.module('pmpApp').controller('PresentController', ['$http',
             // query for linear chart data
             var promise = $http.get(queryUrl);
             promise.then(function (data) {
-                Data.setLoadedData(data.data.results.data, false);
-                Data.setStatusFilter(data.data.results.status);
-                Data.setPWGFilter(data.data.results.pwg);
-                $scope.data = Data.getLoadedData();
-                $scope.setURL($scope, Data);
-                $scope.$broadcast('onChangeNotification:LoadedData');
-                $scope.loadingData = false;
+                $scope.showPopUp('success', 'Downloaded data. Drawing plots...');
+                setTimeout(function() {
+                    Data.setLoadedData(data.data.results.data, false);
+                    Data.setStatusFilter(data.data.results.status);
+                    Data.setPWGFilter(data.data.results.pwg);
+                    $scope.data = Data.getLoadedData();
+                    $scope.setURL($scope, Data);
+                    $scope.$broadcast('onChangeNotification:LoadedData');
+                    $scope.loadingData = false;
+                }, 100)
             }, function () {
-                $scope.showPopUp(PageDetailsProvider.messages
-                    .E1.type, PageDetailsProvider.messages
-                    .E1.message);
+                $scope.showPopUp('error', 'Error loading requests');
                 $scope.loadingData = false;
             });
         };
