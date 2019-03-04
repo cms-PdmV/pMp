@@ -131,7 +131,7 @@ class ScreenshotAPI(object):
     @staticmethod
     def get_time():
         """Get current time"""
-        return str(datetime.now())
+        return str(datetime.now()).replace(' ', '_').replace(':', '-').replace('.', '-')
 
     @staticmethod
     def is_file(check_file):
@@ -156,7 +156,7 @@ class ScreenshotAPI(object):
             output_file = self.static_dir + gen_name + '.' + output_format
             call(['rsvg-convert', '-o', output_file, '-f', output_format,
                   '--background-color', 'white', svg_file])
-        return gen_name + '.' + output_format
+        return 'static/' + gen_name + '.' + output_format
 
 
 class OverallAPI(object):

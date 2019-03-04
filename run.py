@@ -205,7 +205,8 @@ def api_shorten():
 @app.route('/api/screenshot', methods=['POST'])
 def api_screenshot():
     """Take screenshot"""
-    data = json.loads(request.data)
+    data = request.data.decode('utf-8')
+    data = json.loads(data)
     return ScreenshotAPI().get(data['data'], data['ext'])
 
 

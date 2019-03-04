@@ -35,9 +35,17 @@
                     .attr("viewBox", "0 -20 " + config.customWidth + " " + config.customHeight)
                     .attr("xmlns", "http://www.w3.org/2000/svg")
                     .append("svg:g")
+                    .attr("id", "plot")
                     .attr("transform", "translate(" + config.margin.left + "," + config.margin.top + ")")
                     .attr('style', 'fill: none');
 
+            svg.append("defs").append("SVG:clipPath")
+               .attr("id", "clip")
+               .append("SVG:rect")
+               .attr("width", width )
+               .attr("height", height )
+               .attr("x", 0)
+               .attr("y", 0);
             // axes
             // Create a linear scale for time
             var x = d3.scaleTime().range([0, width]);
@@ -134,20 +142,47 @@
                 svg.select("path.expected-graph-data").remove()
                 svg.select("path.done-graph-data").remove()
                 svg.select("path.produced-graph-data").remove()
+                svg.selectAll("clipping-class").remove()
                 svg.select("g.hover-line").remove();
                 svg.select("#lifetime").remove();
-                svg.append("path")
+                svg.append("g")
+                   .attr("clip-path", "url(#clip)")
+                   .attr("class", "clipping-class")
+                   .append("path")
                    .data([data])
                    .attr("class", "expected-graph-data")
-                   .attr("d", expectedPlot);
-                svg.append("path")
-                   .data([data]).transition()
+                   .attr("d", expectedPlot)
+                   .style("opacity", "0.4")
+                   .style("vector-effect", "non-scaling-stroke")
+                   .style("stroke-width", "1")
+                   .style("stroke", "#263238")
+                   .style("fill", "#263238");
+
+                svg.append("g")
+                   .attr("clip-path", "url(#clip)")
+                   .attr("class", "clipping-class")
+                   .append("path")
+                   .data([data])
                    .attr("class", "done-graph-data")
-                   .attr("d", donePlot);
-                svg.append("path")
-                   .data([data]).transition()
+                   .attr("d", donePlot)
+                   .style("opacity", "0.4")
+                   .style("vector-effect", "non-scaling-stroke")
+                   .style("stroke-width", "1")
+                   .style("stroke", "#01579b")
+                   .style("fill", "#01579b");
+
+                svg.append("g")
+                   .attr("clip-path", "url(#clip)")
+                   .attr("class", "clipping-class")
+                   .append("path")
+                   .data([data])
                    .attr("class", "produced-graph-data")
-                   .attr("d", producedPlot);
+                   .attr("d", producedPlot)
+                   .style("opacity", "0.4")
+                   .style("vector-effect", "non-scaling-stroke")
+                   .style("stroke-width", "1")
+                   .style("stroke", "#ff6f00")
+                   .style("fill", "#ff6f00");
 
                 svg.append("rect")
                     .attr('id', 'lifetime')

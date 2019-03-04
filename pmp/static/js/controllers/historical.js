@@ -224,40 +224,33 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
          */
         $scope.takeScreenshot = function (format) {
             $rootScope.loading = true;
+            var dataLabel = document.getElementById("historical-drilldown").getElementsByTagName("div")
             // lets get the labels text
-            var __time_line = '<tspan x="1" y="15">' +
-                    document.getElementById("historical-drilldown").getElementsByTagName("div")[0].textContent +
-                '</tspan>';
+            var date = new Date()
+            var dataLabelWidth = (1160 - 20)  / 4;
+            var time_line = '<text x="10" y="15">' + dataLabel[0].textContent + '</text>';
+            var expected_evts = '<text x="' + (dataLabelWidth + 10) + '" y="15" style="fill: #263238;">' + dataLabel[1].textContent + '</text>';
+            var evts_in_DAS = '<text x="' + (dataLabelWidth * 2 + 10) + '" y="15" style="fill: #ff6f00;">' + dataLabel[2].textContent + '</text>';
+            var done_evts_in_DAS = '<text x="' + (dataLabelWidth * 3 + 10) + '" y="15" style="fill: #01579b;">' + dataLabel[3].textContent + '</text>';
 
-            var __expected_evts = '<tspan style="fill: #263238;">' +
-                    document.getElementById("historical-drilldown").getElementsByTagName("div")[1].textContent +
-                '</tspan>';
+            if (format === undefined) {
+                format = 'svg';
+            }
 
-            var __evts_in_DAS = '<tspan style="fill: #ff6f00;">' +
-                    document.getElementById("historical-drilldown").getElementsByTagName("div")[2].textContent +
-                '</tspan>';
-
-            var __done_evts_in_DAS = '<tspan style="fill: #01579b;">' +
-                    document.getElementById("historical-drilldown").getElementsByTagName("div")[3].textContent +
-                '</tspan>';
-
-            if (format === undefined) format = 'svg';
-            var obj = (new XMLSerializer()).serializeToString(document.
-                getElementById("ctn").getElementsByTagName("svg")[0].getElementsByTagName("g")[0])
-            obj += '<text transform="translate(1, 500)">Generated: ' + $scope.dt +
-                    '. For input: ' + Data.getInputTags().join(', ') + '</text>';
+            var plot = (new XMLSerializer()).serializeToString(document.getElementById("plot"))
+            plot += '<text transform="translate(10, 520)">Generated: ' + (date.toDateString() + ' ' + date.toLocaleTimeString()) +'</text>'
+            plot += '<text transform="translate(10, 540)">For input: ' + Data.getInputTags().join(', ') + '</text>';
 
             // viewBox is needed for rsvg convert
-            var xml = '<svg viewBox="0 -20 1160 600" font-family="sans-serif" xmlns="http://www.w3.org/2000/svg">' +
-                '<text>'+
-                __time_line + __expected_evts +__evts_in_DAS + __done_evts_in_DAS+
-                '</text>'+
-                (obj
-                .replace('<g xmlns="http://www.w3.org/2000/svg" transform="translate(50,40)" style="fill: none">',
-                    '<g transform="translate(60,50)" style="fill: none">') + '</svg>');
-
+            var xml = '<svg viewBox="0 -20 1160 600" font-family="sans-serif" xmlns="http://www.w3.org/2000/svg">' + 
+                      time_line +
+                      expected_evts +
+                      evts_in_DAS +
+                      done_evts_in_DAS+
+                      plot +
+                      '</svg>';
             $http({
-                url: 'ts',
+                url: 'api/screenshot',
                 method: "POST",
                 data: {data: xml, ext: format}
             }).then(function (data) {

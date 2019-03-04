@@ -84,30 +84,6 @@ body {
     background: #d4d7d8;
 }
 
-.done-graph-data {
-    stroke-width: 1;
-    stroke: rgb(1, 87, 155);
-    opacity: 0.4;
-    fill: rgb(1, 87, 155);
-    vector-effect: non-scaling-stroke;
-}
-
-.produced-graph-data {
-    stroke-width: 1;
-    stroke: rgb(255, 111, 0);
-    opacity: 0.4;
-    fill: rgb(255, 111, 0);
-    vector-effect: non-scaling-stroke;
-}
-
-.expected-graph-data {
-    stroke-width: 1;
-    stroke: rgb(38, 50, 56);
-    opacity: 0.4;
-    fill: rgb(38, 50, 56);
-    vector-effect: non-scaling-stroke;
-}
-
 .total-bar {
     background-color: #9da3a7;
     width:100%;

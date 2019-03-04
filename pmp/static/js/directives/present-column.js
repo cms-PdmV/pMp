@@ -41,6 +41,7 @@
                     .attr("viewBox", "0 -20 " + config.customWidth + " " + config.customHeight)
                     .attr("xmlns", "http://www.w3.org/2000/svg")
                     .append("svg:g")
+                    .attr("id", "plot")
                     .attr("transform", "translate(" + config.margin.left + "," + config.margin.top + ")")
                     .attr('style', 'fill: none');
 

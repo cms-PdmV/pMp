@@ -232,5 +232,30 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
             $location.url('/performance')
             $scope.init()
         })
+
+        $scope.takeScreenshot = function (format) {
+            var date = new Date()
+
+            if (format === undefined) {
+                format = 'svg';
+            }
+
+            var plot = (new XMLSerializer()).serializeToString(document.getElementById("plot"))
+            plot += '<text transform="translate(10, 620)">Generated: ' + (date.toDateString() + ' ' + date.toLocaleTimeString()) +'</text>'
+            plot += '<text transform="translate(10, 640)">For input: ' + Data.getInputTags().join(', ') + '</text>';
+
+            // viewBox is needed for rsvg convert
+            var xml = '<svg viewBox="0 -20 1160 700" font-family="sans-serif" xmlns="http://www.w3.org/2000/svg">' + 
+                      plot +
+                      '</svg>';
+            $http({
+                url: 'api/screenshot',
+                method: "POST",
+                data: {data: xml, ext: format}
+            }).then(function (data) {
+                window.open(data.data);
+                $rootScope.loadingData = false;
+            });
+        };
     }
 ]);

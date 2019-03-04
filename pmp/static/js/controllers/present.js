@@ -202,18 +202,22 @@ angular.module('pmpApp').controller('PresentController', ['$http',
          * @param {String} format which will be requested (pdf/png/svg)
          */
         $scope.takeScreenshot = function (format) {
-            $rootScope.loadingData = true;
-            if (format === undefined) format = 'svg';
-            var xml = (new XMLSerializer()).serializeToString(
-                document.getElementById("ctn").getElementsByTagName(
-                    "svg")[0]).replace('viewBox="0 0 1125 434"',
-                'viewBox="0 0 1125 534" font-family="sans-serif"'
-            ).replace('</svg>',
-                '<text transform="translate(0, 434)">Generated: ' +
-                $scope.dt + '. For input: ' + Data.getInputTags()
-                .join(', ') + '</text></svg>').replace(/\n/g, ' ');
+            var date = new Date()
+
+            if (format === undefined) {
+                format = 'svg';
+            }
+
+            var plot = (new XMLSerializer()).serializeToString(document.getElementById("plot"))
+            plot += '<text transform="translate(10, 620)">Generated: ' + (date.toDateString() + ' ' + date.toLocaleTimeString()) +'</text>'
+            plot += '<text transform="translate(10, 640)">For input: ' + Data.getInputTags().join(', ') + '</text>';
+
+            // viewBox is needed for rsvg convert
+            var xml = '<svg viewBox="0 -20 1160 700" font-family="sans-serif" xmlns="http://www.w3.org/2000/svg">' + 
+                      plot +
+                      '</svg>';
             $http({
-                url: 'ts',
+                url: 'api/screenshot',
                 method: "POST",
                 data: {data: xml, ext: format}
             }).then(function (data) {
