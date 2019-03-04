@@ -34,8 +34,7 @@
     <p>Requests (<b>{{selectedBin.length}}</b>) in selected bar (Time taken from <b>{{subtrahend}}</b> to <b>{{minuend}}</b>)</p>
     <div ng-repeat="binEntry in selectedBin" class="row zebra-lines small-padding">
       <div class="col-sm-6">
-        <a ng-if="binEntry.prepid.indexOf('ReReco') == -1 && binEntry.prepid.indexOf('CMSSW') == -1" ng-href="https://cms-pdmv.cern.ch/mcm/requests?prepid={{binEntry.prepid}}" target="_blank">{{binEntry.prepid}}</a>
-        <a ng-if="binEntry.prepid.indexOf('ReReco') != -1 || binEntry.prepid.indexOf('CMSSW') != -1" ng-href="https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?prep_id={{binEntry.prepid}}" target="_blank">{{binEntry.prepid}}</a>
+        <a ng-href="{{binEntry.url}}" target="_blank">{{binEntry.prepid}}</a>
       </div>
       <div class="col-sm-6" title="{{binEntry.diff}} seconds">
         {{binEntry.niceDiff}}

@@ -361,7 +361,7 @@ class APIBase(esadapter.InitConnection):
         logging.info('Field: %s, index: %s, doctype: %s, query: %s' % (field, index, doctype, query))
         if index is None:
             logging.info('Returning nothing because index for %s could not be found' % (query))
-            return None, None
+            return []
 
         cache_key = 'db_query_%s_____%s______%s' % (str(query), include_stats_document, estimate_completed_events)
         if self.__cache.has(cache_key):

@@ -157,7 +157,23 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
                     Data.setStatusFilter(data.data.results.status);
                     Data.setPWGFilter(data.data.results.pwg);
                     $scope.loadTaskChain = false;
+                    data.data.results.submitted_requests.forEach(function(entry) {
+                        if (entry.r.indexOf('ReReco') == -1 && entry.r.indexOf('CMSSW') == -1) {
+                            entry.url = 'https://cms-pdmv.cern.ch/mcm/requests?prepid=' + entry.r
+                        } else {
+                            entry.url = 'https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?prep_id=' + entry.r
+                        }
+                        entry.perc = entry.d / entry.x * 100;
+                    });
                     $scope.listSubmitted = data.data.results.submitted_requests;
+                    data.data.results.done_requests.forEach(function(entry) {
+                        if (entry.r.indexOf('ReReco') == -1 && entry.r.indexOf('CMSSW') == -1) {
+                            entry.url = 'https://cms-pdmv.cern.ch/mcm/requests?prepid=' + entry.r
+                        } else {
+                            entry.url = 'https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?prep_id=' + entry.r
+                        }
+                        entry.perc = entry.d / entry.x * 100;
+                    });
                     $scope.listDone = data.data.results.done_requests
                     $scope.data = Data.getLoadedData();
                     $scope.setURL($scope, Data);

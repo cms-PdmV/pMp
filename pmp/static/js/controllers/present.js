@@ -175,6 +175,13 @@ angular.module('pmpApp').controller('PresentController', ['$http',
             promise.then(function (data) {
                 $scope.showPopUp('success', 'Downloaded data. Drawing plots...');
                 setTimeout(function() {
+                    data.data.results.data.forEach(function(entry) {
+                        if (entry.prepid.indexOf('ReReco') == -1 && entry.prepid.indexOf('CMSSW') == -1) {
+                            entry.url = 'https://cms-pdmv.cern.ch/mcm/requests?prepid=' + entry.prepid
+                        } else {
+                            entry.url = 'https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?prep_id=' + entry.prepid
+                        }
+                    });
                     Data.setLoadedData(data.data.results.data, false);
                     Data.setStatusFilter(data.data.results.status);
                     Data.setPWGFilter(data.data.results.pwg);
