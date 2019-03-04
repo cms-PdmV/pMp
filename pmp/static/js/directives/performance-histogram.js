@@ -18,11 +18,11 @@
             // graph configuration
             config = {
                 customWidth: 1160,
-                customHeight: 500,
+                customHeight: 620,
                 margin: {
                     top: 40,
-                    right: 10,
-                    bottom: 50,
+                    right: 80,
+                    bottom: 170,
                     left: 80
                 }
             };
@@ -181,6 +181,11 @@
                     .text(function (d) {
                         return d.values.length ? d.values.length : '';
                     });
+
+                svg.selectAll(".x.axis .tick>text")
+                   .style("text-anchor","center")
+                   .attr("transform", "rotate(-20) translate(0, 15)")
+                   .style("font-weight", "lighter")
             };
 
             scope.$watch('data', function(data) {
