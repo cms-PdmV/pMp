@@ -3,11 +3,18 @@
  * @type controller
  * @description Index Controller
  */
-angular.module('pmpApp').controller('IndexController', ['$location', '$http', '$scope', function (
-    $location, $http, $scope) {
+angular.module('pmpApp').controller('IndexController', ['$location', '$http', '$scope', '$interval', function (
+    $location, $http, $scope, $interval) {
     $location.search({}); // ensure no params in URL
-    promise = $http.get("api/requests,flows,campaigns,stats/overall/_");
-    promise.then(function (data) {
-        $scope.data = data.data.results;
+    $scope.updateLastUpdate = function () {
+        promise = $http.get("api/overall?r=requests,campaigns,workflows,rereco_requests,relval_requests,tags");
+            promise.then(function (data) {
+            $scope.data = data.data.results;
         });
+    };
+
+    $scope.updateLastUpdate();
+    $interval(function () {
+        $scope.updateLastUpdate();
+    }, 60 * 1000);
 }]);

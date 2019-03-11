@@ -3,9 +3,15 @@
  * @type controller
  * @description Present Graph Controller
  */
-angular.module('pmpApp').controller('PresentController', ['$http', '$location',
-    '$interval', '$rootScope', '$scope', 'PageDetailsProvider', 'Data',
-    function ($http, $location, $interval, $rootScope, $scope, PageDetailsProvider,
+angular.module('pmpApp').controller('PresentController', ['$http',
+                                                          '$location',
+                                                          '$interval',
+                                                          '$rootScope',
+                                                          '$scope',
+                                                          '$timeout',
+                                                          'PageDetailsProvider',
+                                                          'Data',
+    function ($http, $location, $interval, $rootScope, $scope, $timeout, PageDetailsProvider,
         Data) {
         'use strict';
 
@@ -13,15 +19,19 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
          * @description stores defaults for URL parameters
          */
         $scope.defaults = {
-            r: undefined, // query value (from search box)
-            p: '1,0,3,0,0,0,0,0', // the options above the graph affecting the plot
-            m: 'false', // growing mode (boolean)
-            c: 'false', // chained mode (boolean)
-            t: 'false', // show last update time (boolean)
-            h: 'true', // show human-readable numbers (boolean)
-            x: ',', // priority filter
-            w: undefined, // PWG filter
-            s: undefined, // status filter
+            r: '', // query value (from search box)
+            growingMode: false, // growing mode (boolean)
+            chainedMode: false, // chained mode (boolean)
+            humanReadable: true, // show human-readable numbers (boolean)
+            estimateCompleted: false,
+            priority: undefined, // priority filter
+            pwg: undefined, // PWG filter
+            status: undefined, // status filter
+            scale: 'linear',
+            mode: 'requests',
+            groupBy: 'member_of_campaign',
+            colorBy: 'status',
+            stackBy: ''
         };
 
         /**
@@ -30,137 +40,73 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
         $scope.init = function () {
             // get information about page
             $scope.page = PageDetailsProvider.present;
-            $scope.loadingAll = false; // updated when $scope.load is called
+
             // reset data and filters
+            $scope.loadingData = false;
             Data.reset(true);
-
+            $scope.data = undefined;
+            $scope.firstLoad = true;
+            $scope.changeActiveIndex(1);
             // collect URL parameters and fill in defaults where necessary
-            var urlParameters = {};
-
-            ['r', 'p', 'm', 'c', 't', 'h', 'x', 'w', 's'].forEach(function (param, index, array) {
-                var urlValue = $location.search()[param];
-
-                if (urlValue === undefined) {
-                    urlParameters[param] = $scope.defaults[param];
-                }
-                else {
-                    urlParameters[param] = urlValue;
-                }
-            });
-
-            // define piecharts options
-            $scope.piecharts = {
-                compactTerms: ["done", "to do"],
-                domain: ["new", "validation", "done",
-                    "approved", "submitted", "nothing",
-                    "defined", "to do"
-                ],
-                fullTerms: ["new", "validation", "defined",
-                    "approved", "submitted", "done",
-                    "upcoming"
-                ],
-                nestBy: ["member_of_campaign", "status"],
-                sum: "total_events"
-            };
-
-            // Plot parameters - defining how the plot is displayed
-            var plotParams = urlParameters.p.split(',');
-            $scope.parameters = plotParams.slice(0, 6);
-            $scope.radio = plotParams.slice(6, 8);
-
-            // set requests globals
-            $scope.requests = {
-                options: {
-                    grouping: [],
-                    stacking: [],
-                    coloring: ""
-                },
-                selections: [],
-                settings: {
-                    duration: 1000,
-                    legend: true,
-                    sort: true
-                }
-            };
-
-            // assign selections to options
-            $scope.options = ['possible-selections', 'grouping', 'stacking',
-                'coloring'
-            ];
-            $scope.selections = ['member_of_campaign',
-                'total_events', 'status', 'prepid', 'priority',
-                'pwg'
-            ];
-            for (var i = 0; i < $scope.parameters.length; i++) {
-                if ($scope.parameters[i] === '0') {
-                    $scope.requests.selections.push($scope.selections[i]);
-                } else if ($scope.parameters[i] === '1') {
-                    $scope.requests.options.grouping.push($scope.selections[i]);
-                } else if ($scope.parameters[i] === '2') {
-                    $scope.requests.options.stacking.push($scope.selections[i]);
-                } else if ($scope.parameters[i] === '3') {
-                    $scope.requests.options.coloring = $scope.selections[i];
-                }
-            }
-
-            // assign radio values, scale and mode
-            if ($scope.radio[1] === "1") {
-                $scope.scaleType = "log";
-            } else {
-                $scope.scaleType = "linear";
-            }
-
-            if ($scope.radio[0] === "1") {
-                $scope.changeMode("requests")
-            } else if ($scope.radio[0] === "2") {
-                $scope.changeMode("seconds")
-            } else {
-                $scope.changeMode("events")
-            }
-
-            // show "last updated" time?
-            $scope.showDate = urlParameters.t === 'true';
+            var urlParameters = $scope.fillDefaults($location.search(), $scope.defaults)
 
             // enable growing mode?
-            $scope.growingMode = urlParameters.m === 'true';
+            $scope.growingMode = urlParameters.growingMode === 'true';
 
             // enable chained mode?
-            $scope.displayChains = urlParameters.c === 'true';
+            $scope.chainedMode = urlParameters.chainedMode === 'true';
 
             // show human-readable numbers?
-            $scope.humanReadableNumbers = urlParameters.h === 'true';
+            $scope.humanReadable = urlParameters.humanReadable === 'true';
 
-            // update mode
-            $scope.modeUpdate(true);
+            $scope.estimateCompleted = urlParameters.estimateCompleted === 'true';
 
-            // initiate filters
-            if (urlParameters.x !== undefined) {
-                Data.setPriorityFilter(urlParameters.x.split(','));
+            $scope.availableScales = ['linear', 'log']
+
+            $scope.availableModes = ['events', 'requests', 'seconds']
+
+            $scope.scale = urlParameters.scale;
+
+            $scope.mode = urlParameters.mode;
+
+            $scope.availableSelections = {'member_of_campaign': 'Campaign',
+                                          'total_events': 'Total Events',
+                                          'prepid': 'Prepid',
+                                          'status': 'Status',
+                                          'priority': 'Priority',
+                                          'is_member_of_chain': 'In chain',
+                                          'pwg': 'PWG'}
+
+            $scope.groupBy = urlParameters.groupBy.split(',').filter(e => e.length > 0)
+            $scope.colorBy = urlParameters.colorBy.split(',').filter(e => e.length > 0)
+            $scope.stackBy = urlParameters.stackBy.split(',').filter(e => e.length > 0)
+
+            // initialise filters
+            if (urlParameters.priority !== undefined) {
+                Data.setPriorityFilter(urlParameters.priority.split(','));
             }
 
-            if (urlParameters.s !== undefined) {
-                Data.initializeFilter(urlParameters.s.split(','), true);
+            if (urlParameters.status !== undefined) {
+                var s = {}
+                var tmp = urlParameters.status.split(',');
+                for (var i = 0; i < tmp.length; i++) {
+                    s[tmp[i]] = true;
+                }
+                Data.setStatusFilter(s);
             }
 
-            if (urlParameters.w !== undefined) {
-                Data.initializeFilter(urlParameters.w.split(','), false);
+            if (urlParameters.pwg !== undefined) {
+                var w = {}
+                var tmp = urlParameters.pwg.split(',');
+                for (var i = 0; i < tmp.length; i++) {
+                    w[tmp[i]] = true;
+                }
+                Data.setPWGFilter(w);
             }
 
             // load graph data
-            if (urlParameters.r !== undefined && urlParameters.r !== '') {
-                var tmp = $location.search().r.split(',');
-                // if filter is empty, assume all true
-                var empty = [$scope.isEmpty(Data.getPWGFilter()),
-                    $scope.isEmpty(Data.getStatusFilter())
-                ];
-                for (var j = 0; j < tmp.length; j++) {
-                    $scope.load(tmp[j], true, tmp.length, empty[0],
-                        empty[1]);
-                }
-            } else {
-                // if this is empty just change URL as some filters
-                // could have been initiated
-                $scope.setURL();
+            if (urlParameters.r !== '') {
+                Data.setInputTags(urlParameters.r.split(','));
             }
         };
 
@@ -168,176 +114,110 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
          * @description Core: Query API
          * @param {String} request User input.
          * @param {Boolean} add Append results if true
-         * @param {Boolean} more Are there more requests in a queue
-         * @param {Boolean} defaultPWG When new PWG shows up what should be default filter value
-         * @param {Boolean} defaultStatus When new status shows up what should be default filter value
          */
-        $scope.load = function (campaign, add, more, defaultPWG,
-            defaultStatus) {
-            if (!campaign) {
-                $scope.showPopUp(PageDetailsProvider.messages.W0.type,
-                    PageDetailsProvider.messages.W0.message);
-            } else if (add && Data.getInputTags().indexOf(campaign) !==
-                -1) {
-                $scope.showPopUp(PageDetailsProvider.messages.W1.type,
-                    PageDetailsProvider.messages.W1.message);
+        $scope.load = function (request, add) {
+            if (!request) {
+                $scope.showPopUp('warning', 'Empty search field');
+                return;
+            }
+            if (request.constructor == Object) {
+                request = request.label;
+            }
+            if (add && Data.getInputTags().indexOf(request) !== -1) {
+                $scope.showPopUp('warning', 'Object is already loaded');
             } else {
-                $rootScope.loadingData = true;
-                var promise;
-                if ($scope.growingMode) {
-                    promise = $http.get("api/" + campaign +
-                        "/growing/" + $scope.displayChains);
-                } else {
-                    promise = $http.get("api/" + campaign +
-                        "/announced/" + $scope.displayChains);
+                if (!add) {
+                    // Reset data and filters
+                    Data.reset(true);
                 }
-                promise.then(function (data) {
-                    if (!data.data.results.length) {
-                        // if API response is empty 
-                        $scope.showPopUp(
-                            PageDetailsProvider.messages
-                            .W2.type,
-                            PageDetailsProvider.messages
-                            .W2.message);
-                        $scope.setURL();
-                        $rootScope.loadingData = false;
-                    } else {
-                        if (add) {
-                            // apply appending campaign
-                            Data.changeFilter(data.data.results,
-                                false, defaultStatus,
-                                true);
-                            Data.changeFilter(data.data.results,
-                                false, defaultPWG,
-                                false);
-                            Data.setLoadedData(data.data.results,
-                                               true, true, more);
-                            $scope.showPopUp(
-                                PageDetailsProvider.messages
-                                .S1.type,
-                                PageDetailsProvider.messages
-                                .S1.message);
-                        } else {
-                            // apply loading all or single campaign
-                            Data.reset(false);
-                            Data.changeFilter(data.data.results,
-                                true, true, true);
-                            Data.changeFilter(data.data.results,
-                                true, true, false);
-                            Data.setLoadedData(data.data.results,
-                                false, true);
-                            $scope.showPopUp(
-                                PageDetailsProvider.messages
-                                .S0.type,
-                                PageDetailsProvider.messages
-                                .S0.message);
-                        }
-
-                        $scope.loadingAll = (campaign === 'all');
-                        Data.setInputTags(campaign, true, false);
-                        $scope.setURL();
-                    }
-                }, function () {
-                    $scope.showPopUp(PageDetailsProvider.messages
-                        .E1.type, PageDetailsProvider.messages
-                        .E1.message);
-                    $rootScope.loadingData = false;
-                });
+                Data.addInputTag(request);
             }
         };
 
         /**
-         * @description Core: Change URL when data or filter changes
-         * @param {String} name the name of parameter that has changed
-         * @param {Integer} value the position of parameter that has changed
+         * @description Core: Parse filters to query API
+         * @param {Boolean} filter If filter data is present.
          */
-        $scope.setURL = function () {
-            $location.path($location.path(), false);
-            var params = {}, r, p, m, c, t, h, x, w, s;
-
-            // collect user inputs
-            if ($scope.loadingAll) {
-                params.r = 'all';
-            } else {
-                r = Data.getInputTags();
-                if (r.length) params.r = r.join(',');
+        $scope.query = function () {
+            var inputTags = Data.getInputTags();
+            if (inputTags.length === 0) {
+                Data.setLoadedData([]);
+                Data.setStatusFilter({});
+                Data.setPWGFilter({});
+                $scope.data = Data.getLoadedData();
+                $scope.setURL($scope, Data);
+                $scope.$broadcast('onChangeNotification:LoadedData');
+                return null;
             }
 
-            // graph parameters
-            p = $scope.parameters.join(',') + ',' + $scope.radio.join(',');
-
-            if (p !== $scope.defaults.p) {
-                params.p = p;
+            $scope.loadingData = true;
+            var priorityQuery = Data.getPriorityQuery();
+            var statusQuery = Data.getStatusQuery($scope.firstLoad);
+            var pwgQuery = Data.getPWGQuery($scope.firstLoad);
+            $scope.firstLoad = false;
+            var queryUrl = 'api/present?r=' + inputTags.slice().sort().join(',');
+            if (priorityQuery !== undefined) {
+                queryUrl += '&priority=' + priorityQuery;
             }
-
-            // is in growing mode
-            m = $scope.growingMode + '';
-
-            if (m !== $scope.defaults.m) {
-                params.m = m;
+            if (statusQuery !== undefined) {
+                queryUrl += '&status=' + statusQuery;
             }
-
-            // is in chain mode
-            c = $scope.displayChains + '';
-
-            if (c !== $scope.defaults.c) {
-                params.c = c;
+            if (pwgQuery !== undefined) {
+                queryUrl += '&pwg=' + pwgQuery;
             }
-
-            // show time label
-            t = $scope.showDate + '';
-
-            if (t !== $scope.defaults.t) {
-                params.t = t;
+            if ($scope.estimateCompleted) {
+                queryUrl += '&estimateCompleted=true';
             }
+            queryUrl += '&chainedMode=' + $scope.chainedMode;
 
-            // show human-readable numbers
-            h = $scope.humanReadableNumbers + '';
-
-            if (h !== $scope.defaults.h) {
-                params.h = h;
-            }
-
-            // set priority filter
-            x = Data.getPriorityFilter().join(',');
-
-            if (x !== $scope.defaults.x) {
-                params.x = x;
-            }
-
-            // set pwg filter
-            if (!Data.allPWGsEnabled()) {
-                params.w = $scope.getCSVPerFilter(Data.getPWGFilter());
-            }
-
-            // set status filter
-            if (!Data.allStatusesEnabled()) {
-                params.s = $scope.getCSVPerFilter(Data.getStatusFilter());
-            }
-
-            // reload url
-            $location.search(params);
-            // broadcast change notification
-            $scope.$broadcast('onChangeNotification:URL');
+            // query for linear chart data
+            var promise = $http.get(queryUrl);
+            promise.then(function (data) {
+                $scope.showPopUp('success', 'Downloaded data. Drawing plots...');
+                setTimeout(function() {
+                    data.data.results.data.forEach(function(entry) {
+                        if (entry.prepid.indexOf('ReReco') == -1 && entry.prepid.indexOf('CMSSW') == -1) {
+                            entry.url = 'https://cms-pdmv.cern.ch/mcm/requests?prepid=' + entry.prepid
+                        } else {
+                            entry.url = 'https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?prep_id=' + entry.prepid
+                        }
+                    });
+                    Data.setLoadedData(data.data.results.data, false);
+                    Data.setStatusFilter(data.data.results.status);
+                    Data.setPWGFilter(data.data.results.pwg);
+                    $scope.data = Data.getLoadedData();
+                    $scope.setURL($scope, Data);
+                    $scope.$broadcast('onChangeNotification:LoadedData');
+                    $scope.loadingData = false;
+                }, 100)
+            }, function () {
+                $scope.showPopUp('error', 'Error loading requests');
+                $scope.loadingData = false;
+            });
         };
+
 
         /**
          * @description Core: Query server for a report of current view
          * @param {String} format which will be requested (pdf/png/svg)
          */
         $scope.takeScreenshot = function (format) {
-            $rootScope.loadingData = true;
-            if (format === undefined) format = 'svg';
-            var xml = (new XMLSerializer()).serializeToString(
-                document.getElementById("ctn").getElementsByTagName(
-                    "svg")[0]).replace('viewBox="0 0 1125 434"',
-                'viewBox="0 0 1125 534" font-family="sans-serif"'
-            ).replace('</svg>',
-                '<text transform="translate(0, 434)">Generated: ' +
-                $scope.dt + '. For input: ' + Data.getInputTags()
-                .join(', ') + '</text></svg>').replace(/\n/g, ' ');
+            var date = new Date()
+
+            if (format === undefined) {
+                format = 'svg';
+            }
+
+            var plot = (new XMLSerializer()).serializeToString(document.getElementById("plot"))
+            plot += '<text transform="translate(10, 620)">Generated: ' + (date.toDateString() + ' ' + date.toLocaleTimeString()) +'</text>'
+            plot += '<text transform="translate(10, 640)">For input: ' + Data.getInputTags().join(', ') + '</text>';
+
+            // viewBox is needed for rsvg convert
+            var xml = '<svg viewBox="0 -20 1160 700" font-family="sans-serif" xmlns="http://www.w3.org/2000/svg">' + 
+                      plot +
+                      '</svg>';
             $http({
-                url: 'ts',
+                url: 'api/screenshot',
                 method: "POST",
                 data: {data: xml, ext: format}
             }).then(function (data) {
@@ -346,105 +226,94 @@ angular.module('pmpApp').controller('PresentController', ['$http', '$location',
             });
         };
 
-        /**
-         * @description Update mode
-         * @param {Boolean} onlyTitle if false, perform API query as well
-         */
-        $scope.modeUpdate = function (onlyTitle) {
-            if ($scope.growingMode) {
-                $scope.mode = ': Growing Mode';
+        $scope.modeChange = function(mode) {
+            $scope.mode = mode;
+            $scope.setURL($scope, Data);
+            $scope.data = $scope.data.slice()
+        }
+
+        $scope.scaleChange = function(scale) {
+            $scope.scale = scale;
+            $scope.setURL($scope, Data);
+            $scope.data = $scope.data.slice()
+        }
+
+        $scope.groupByChange = function(groupBy) {
+            $scope.colorBy = $scope.colorBy.filter(e => e !== groupBy && e.length > 0);
+            $scope.stackBy = $scope.stackBy.filter(e => e !== groupBy && e.length > 0);
+            if ($scope.groupBy.includes(groupBy)) {
+                $scope.groupBy = $scope.groupBy.filter(e => e !== groupBy && e.length > 0);
             } else {
-                $scope.mode = ': Announced Mode';
+                $scope.groupBy.push(groupBy);
             }
+            $scope.groupBy = $scope.groupBy.slice()
+            $scope.setURL($scope, Data);
+            $scope.data = $scope.data.slice()
+        }
 
-            if (onlyTitle) {
-                return null;
-            }
-	    // flush requests before reloading them with growing-toggled mode
-	    Data.setLoadedData([]);
-            var tmp = Data.getInputTags();
-            Data.setInputTags([], false, false);
-            if (tmp.length < 2 || !$scope.displayChains) {
-                for (var i = 0; i < tmp.length; i++) {
-                    $scope.load(tmp[i], true, tmp.length, Data.getPWGFilter(),
-                        Data.getStatusFilter());
-                }
+        $scope.colorByChange = function(colorBy) {
+            $scope.groupBy = $scope.groupBy.filter(e => e !== colorBy && e.length > 0);
+            $scope.stackBy = $scope.stackBy.filter(e => e !== colorBy && e.length > 0);
+            if ($scope.colorBy.includes(colorBy)) {
+                $scope.colorBy = [];
             } else {
-                Data.reset(false);
+                $scope.colorBy = [colorBy];
             }
-        };
+            $scope.colorBy = $scope.colorBy.slice()
+            $scope.setURL($scope, Data);
+            $scope.data = $scope.data.slice()
+        }
 
-        /**
-         * @description When scale has been changed.
-         */
-        $scope.changeScale = function (type) {
-            $scope.scaleType = type;
-            $scope.setScaleAndOperation(1, (type === "log") + 0)
-        };
-
-        /**
-         * @description When scale has been changed.
-         */
-        $scope.changeMode = function (type) {
-            $scope.modeType = type;
-            if (type == "requests") {
-                // sumBy special case: _requests
-                // Number of requests
-                $scope.piecharts.sum = "_requests";
-            } else if (type == "seconds") {
-                // sumBy special case: _seconds
-                // Sum of time event multiplied by total events
-                $scope.piecharts.sum = "_seconds";
+        $scope.stackByChange = function(stackBy) {
+            $scope.groupBy = $scope.groupBy.filter(e => e !== stackBy && e.length > 0);
+            $scope.colorBy = $scope.colorBy.filter(e => e !== stackBy && e.length > 0);
+            if ($scope.stackBy.includes(stackBy)) {
+                $scope.stackBy = $scope.stackBy.filter(e => e !== stackBy && e.length > 0);
             } else {
-                // sumBy key "total_events"
-                $scope.piecharts.sum = "total_events";
+                $scope.stackBy.push(stackBy);
             }
-            $scope.setScaleAndOperation(0, ['events', 'requests', 'seconds'].indexOf(type));
-        };
+            $scope.stackBy = $scope.stackBy.slice()
+            $scope.setURL($scope, Data);
+            $scope.data = $scope.data.slice()
+        }
 
-        $scope.applyDifference = function(values, optionName, optionValue) {
+        $scope.binSelected = function(selectedBin) {
+            $scope.selectedBin = selectedBin.slice();
+            $timeout(function(){
+                $scope.$apply();
+            });
+        }
 
-            // Selections: 'member_of_campaign', 'total_events', 'status', 'prepid', 'priority', 'pwg'
-            var selectionIndex = $scope.selections.indexOf(optionValue);
+        $scope.changeChainedMode = function() {
+            $scope.setURL($scope, Data);
+            $scope.query();
+        }
 
-            // Options: 'selections', 'grouping', 'stacking', 'coloring'
-            var optionIndex = $scope.options.indexOf(optionName);
-
-            if (selectionIndex !== -1 && optionIndex !== -1) {
-                $scope.parameters[selectionIndex] = optionIndex;
+        $scope.changeGrowingMode = function() {
+            $scope.setURL($scope, Data);
+            if ($scope.data) {
+                $scope.data = $scope.data.slice();
             }
+        }
 
-            $scope.requests.options = values;
-            $scope.setURL(optionName, optionValue);
-        };
-
-        $scope.setScaleAndOperation = function (i, value) {
-            if ($scope.radio[i] != value) {
-                $scope.radio[i] = value;
-                $scope.setURL();
+        $scope.changeHumanReadable = function() {
+            $scope.setURL($scope, Data);
+            if ($scope.data) {
+                $scope.data = $scope.data.slice();
             }
-        };
+        }
 
-        // Broadcast receiver, change filtered data on loaded data change
-        $scope.$on('onChangeNotification:FilteredData', function () {
-            $scope.setURL();
-            $scope.data = Data.getFilteredData();
-            $rootScope.loadingData = false;
-        });
+        $scope.changeEstimateCompleted = function() {
+            $scope.query();
+        }
 
-        // Set interval update of time variables
-        var intervalUpdate1 = $interval($scope.updateCurrentDate, 1000);
-        var intervalUpdate2 = $interval(function () {
-            $scope.updateLastUpdate(
-                'campaigns,chained_campaigns,requests,chained_requests'
-            );
-        }, 2 * 60 * 1000);
-        $scope.updateLastUpdate(
-            'campaigns,chained_campaigns,requests,chained_requests'
-        );
-        $scope.$on('$destroy', function () {
-            $interval.cancel(intervalUpdate1);
-            $interval.cancel(intervalUpdate2);
-        });
+        $scope.$on('onChangeNotification:InputTags', function () {
+            $scope.query()
+        })
+
+        $scope.$on('onChangeNotification:ReInit', function () {
+            $location.url('/present')
+            $scope.init()
+        })
     }
 ]);

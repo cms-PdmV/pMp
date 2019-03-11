@@ -5,10 +5,11 @@
  */
 angular.module('pmpApp').service('Data', ['$rootScope', function ($rootScope) {
     'use strict';
-    var filteredData = [], // currently displayed data (after filtering)
-        loadedData = [], // currently loaded data (before filtering)
-        inputTags = [], // input tags management
-        priorityFilter, statusFilter, pwgFilter; // filter details
+    var loadedData = [], // currently loaded data
+        inputTags = [], // query elements
+        priorityFilter = [undefined, undefined], // array of min and max values of priority
+        statusFilter = [], // array of enabled statuses
+        pwgFilter = []; // array of enabled PWGs
 
     /**
      * @description Tests whether all items in a {key:boolean} object are true
@@ -16,11 +17,19 @@ angular.module('pmpApp').service('Data', ['$rootScope', function ($rootScope) {
      * @return {Boolean} True iff all items are set to true
      */
     var allEnabled = function (filter) {
-        if (!angular.equals({}, filter)) {
-            for (var item in filter) {
-                if (!filter[item]) {
-                    return false;
-                }
+        for (var item in filter) {
+            if (!filter[item]) {
+                return false;
+            }
+        }
+
+        return true;
+    };
+
+    var allDisabled = function (filter) {
+        for (var item in filter) {
+            if (filter[item]) {
+                return false;
             }
         }
 
@@ -28,22 +37,6 @@ angular.module('pmpApp').service('Data', ['$rootScope', function ($rootScope) {
     };
 
     return {
-        /**
-         * @description Filtered data getter.
-         * @return {Array} Array of filtered data objects.
-         */
-        getFilteredData: function () {
-            return this.filteredData;
-        },
-        /**
-         * @description Filtered data setter. Emits onChangeNotification.
-         * @params {Array} i the array of filtered data objects.
-         */
-        setFilteredData: function (i) {
-            this.filteredData = i;
-            $rootScope.$broadcast(
-                'onChangeNotification:FilteredData');
-        },
         /**
          * @description Input tags getter.
          * @return {Array} String array of input tags.
@@ -57,23 +50,19 @@ angular.module('pmpApp').service('Data', ['$rootScope', function ($rootScope) {
          * @params {Boolean} append the tag is supposed to be added.
          * @params {Boolean} remove the tag is supposed to be removed.
          */
-        setInputTags: function (i, append, remove) {
-            if (i === 'all') {
-                for (var j = 0; j < this.loadedData.length; j++) {
-                    var input = this.loadedData[j].input;
-                    if (this.inputTags.indexOf(input) === -1)
-                        this.inputTags.push(input);
-                }
-            } else if (append) {
-                this.inputTags.push(i);
-            } else if (remove) {
-                this.inputTags.splice(this.inputTags.indexOf(i),
-                    1);
-            } else {
-                this.inputTags = i;
-            }
-            $rootScope.$broadcast(
-                'onChangeNotification:InputTags');
+        setInputTags: function (i) {
+            this.inputTags = i;
+            $rootScope.$broadcast('onChangeNotification:InputTags');
+        },
+
+        addInputTag: function (i) {
+            this.inputTags.push(i);
+            $rootScope.$broadcast('onChangeNotification:InputTags');
+        },
+
+        removeInputTag: function (i) {
+            this.inputTags.splice(this.inputTags.indexOf(i), 1);
+            $rootScope.$broadcast('onChangeNotification:InputTags');
         },
         /**
          * @description Loaded data getter.
@@ -87,19 +76,20 @@ angular.module('pmpApp').service('Data', ['$rootScope', function ($rootScope) {
          * @params {Array} i the Array of loaded data objects.
          * @params {Boolean} append the array is supposed to be added instead of overwrite.
          */
-        setLoadedData: function (i, append, sort, more) {
-            if (append) Array.prototype.push.apply(i, this.loadedData);
-            this.loadedData = i;
-            if (sort) this.sortDataByStatus();
-            if (more === undefined || more -1 <= this.inputTags.length) {
-                $rootScope.$broadcast('onChangeNotification:LoadedData');
+        setLoadedData: function (i, append) {
+            if (append) {
+                Array.prototype.push.apply(i, this.loadedData);
             }
+            this.loadedData = i;
         },
         /**
          * @description Priority filter getter.
          * @return {Array} String array in a form [minimum, maximum].
          */
         getPriorityFilter: function () {
+            if (this.priorityFilter === undefined) {
+                return undefined
+            }
             return this.priorityFilter;
         },
         /**
@@ -151,6 +141,50 @@ angular.module('pmpApp').service('Data', ['$rootScope', function ($rootScope) {
         allStatusesEnabled: function () {
             return allEnabled(this.statusFilter);
         },
+        allPWGsDisabled: function() {
+            return allDisabled(this.pwgFilter);
+        },
+        allStatusesDisabled: function() {
+            return allDisabled(this.statusFilter);
+        },
+        getPriorityQuery: function () {
+            var dataPriorityFilter = this.getPriorityFilter();
+            if (dataPriorityFilter[0] === undefined && dataPriorityFilter[1] === undefined) {
+                return undefined;
+            }
+            return (dataPriorityFilter[0] || '') + ',' + (dataPriorityFilter[1] || '');
+        },
+        getPWGQuery: function (alwaysReturnQuery) {
+            var filter = this.getPWGFilter();
+            if (this.allPWGsEnabled()) {
+                if (!alwaysReturnQuery || Object.keys(filter).length == 0) {
+                    return undefined;
+                }
+            }
+            var w = [];
+            for (var pwg in filter) {
+                if (filter[pwg]) {
+                    w.push(pwg);
+                }
+            }
+            return w.join(',');
+        },
+        getStatusQuery: function(alwaysReturnQuery) {
+            // add status filter
+            var filter = this.getStatusFilter();
+            if (this.allStatusesEnabled()) {
+                if (!alwaysReturnQuery || Object.keys(filter).length == 0) {
+                    return undefined;
+                }
+            }
+            var s = [];
+            for (var status in filter) {
+                if (filter[status]) {
+                    s.push(status);
+                }
+            }
+            return s.join(',');
+        },
         /**
          * @description Change filter object, status or pwg.
          * @params {Array} data the loaded data array.
@@ -158,61 +192,7 @@ angular.module('pmpApp').service('Data', ['$rootScope', function ($rootScope) {
          * @params {Boolean} value the default boolean assigned to new keys.
          * @params {Boolean} isStatusFilter if true change status filter, otherwise change pwg.
          */
-        changeFilter: function (data, reset, value, isStatusFilter) {
-            if (reset) {
-                if (isStatusFilter) {
-                    this.statusFilter = {};
-                } else {
-                    this.pwgFilter = {};
-                }
-            }
-            var key, field, filter, defaultsAsObject = false;
 
-            if (angular.isObject(value)) {
-                defaultsAsObject = true;
-            }
-
-            if (isStatusFilter) {
-                filter = this.statusFilter;
-                field = 'status';
-            } else {
-                filter = this.pwgFilter;
-                field = 'pwg';
-            }
-
-            // Populate the PWG filter from the PWGs available in the data
-            for (var i = 0; i < data.length; i++) {
-                key = data[i][field];
-                if (filter[key] === undefined) { // only for PWGs not yet in filter
-                    if (defaultsAsObject) {
-                        if (value[key] === undefined) {
-                            // don't leave out new PWGs
-                            filter[key] = true;
-                        } else {
-                            filter[key] = value[key];
-                        }
-                    } else {
-                        filter[key] = value;
-                    }
-                }
-            }
-        },
-        /**
-         * @description Initialize filter.
-         * @params {Array} data the array of keys to be set as true.
-         * @params {Boolean} isStatusFilter if true initialize status filter, otherwise change pwg.
-         */
-        initializeFilter: function (data, isStatusFilter) {
-            for (var i = 0; i < data.length; i++) {
-                if (data[i] !== '') {
-                    if (isStatusFilter) {
-                        this.statusFilter[data[i]] = true;
-                    } else {
-                        this.pwgFilter[data[i]] = true;
-                    }
-                }
-            }
-        },
         /**
          * @description When removing data, reload filters.
          * @params {Array} data the loaded data array.
@@ -236,57 +216,16 @@ angular.module('pmpApp').service('Data', ['$rootScope', function ($rootScope) {
         },
         /**
          * @description Resets data objects shared in this service.
-         * @params {Boolean} ifFilter the reset filters marker.
+         * @params {Boolean} resetFilters the reset filters marker.
          */
-        reset: function (ifFilter) {
+        reset: function (resetFilters) {
             this.loadedData = [];
-            this.setInputTags([], false, false);
-            if (ifFilter) {
-                this.priorityFilter = ['', ''];
+            this.inputTags = [];
+            if (resetFilters) {
+                this.priorityFilter = [];
                 this.statusFilter = {};
                 this.pwgFilter = {};
             }
-        },
-        statusOrder: {
-            'upcoming': 0,
-            'new': 1,
-            'validation': 2,
-            'defined': 3,
-            'approved': 4,
-            'submitted': 5,
-            'done': 6
-        },
-        merge: function (left, right) {
-            var result = [], leftIndex = 0, rightIndex = 0;
-
-            while (leftIndex < left.length && rightIndex < right.length){
-                if (this.statusOrder[left[leftIndex].status] <
-                        this.statusOrder[right[rightIndex].status]){
-                    result.push(left[leftIndex++]);
-                } else {
-                    result.push(right[rightIndex++]);
-                }
-            }
-
-            return result.concat(left.slice(leftIndex)).concat(right.slice(rightIndex));
-        },
-        mergeSort: function (items) {
-            if (items.length < 2) {
-                return items;
-            }
-
-            var middle = Math.floor(items.length / 2);
-
-            return this.merge(this.mergeSort(items.slice(0, middle)),
-                    this.mergeSort(items.slice(middle)));
-        },
-        /**
-         * @description Merge sort the loaded data. Incurs a performance penalty in
-         *     sensible browsers, but it hugely faster (by orders of magnitude) in
-         *     Chrome, and so is a somewhat-necessary evil
-         */
-        sortDataByStatus: function() {
-            this.loadedData = this.mergeSort(this.loadedData);
         }
     };
 }]);

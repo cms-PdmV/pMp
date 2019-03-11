@@ -11,14 +11,5 @@ class InitConnection(object):
         """Initiate connection
         Default cropping is 20, set overflow that will not crop results
         """
-        self.es = self.elastic_connect()
-        self.overflow = 1000000
-
-    @staticmethod
-    def elastic_connect():
-        """Initiate ElasticSearch"""
-        return Elasticsearch(config.DATABASE_URL)
-
-    def set_overflow(self, overflow):
-        """Set number of returned results"""
-        self.overflow = overflow
+        self.es = Elasticsearch(config.DATABASE_URL)
+        self.results_window_size = 1000000

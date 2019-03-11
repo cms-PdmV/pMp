@@ -1,27 +1,44 @@
-<div class="row" ng-show="data.length">
+<div ng-hide="loadingData || availableStatuses.length == 0" class="row">
 
-  <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 text-center">
-    <drop-selections options="difference" selections="selections" scale="scaleType" show-scale="true" show-mode="false"></drop-selections>
+  <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 m-2" >
+    Scale: <radio-selections style="text-transform: capitalize;"
+                             class="ml-2"
+                             options="availableScales"
+                             selected="scale"
+                             on-value-change="scaleChange"></radio-selections>
+  </div>
+  <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 m-2" >
+    Subtrahend (From): <radio-selections style="text-transform: capitalize;"
+                                         class="ml-2"
+                                         options="availableStatuses"
+                                         selected="subtrahend"
+                                         on-value-change="subtrahendChange"></radio-selections>
+  </div>
+  <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 m-2" >
+    Minuend (To): <radio-selections style="text-transform: capitalize;"
+                                    class="ml-2"
+                                    options="availableStatuses"
+                                    selected="minuend"
+                                    on-value-change="minuendChange"></radio-selections>
+  </div>
+  <div ng-show="data.length" class="col-xs-12 col-sm-12 col-md-12 col-lg-12 text-center">
+    <performance-histogram data="data"
+                           scale="scale"
+                           number-of-bins="bins"
+                           bin-selected-callback="binSelected"
+                           big-number-formatter="formatBigNumber"
+                           big-number-formatter-log="formatBigNumberLog"></performance-histogram>
   </div>
 
-  <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 text-center">
-    <performance-histogram chart-data="histogramData" chart-data-extended="histogramDataExtended" linear-scale="scaleType", number-of-bins="bins"></performance-histogram>
+  <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 text-center pb-4" ng-show="selectedBin.length">
+    <p>Requests (<b>{{selectedBin.length}}</b>) in selected bar (Time taken from <b>{{subtrahend}}</b> to <b>{{minuend}}</b>)</p>
+    <div ng-repeat="binEntry in selectedBin" class="row zebra-lines small-padding">
+      <div class="col-sm-6">
+        <a ng-href="{{binEntry.url}}" target="_blank">{{binEntry.prepid}}</a>
+      </div>
+      <div class="col-sm-6" title="{{binEntry.diff}} seconds">
+        {{binEntry.niceDiff}}
+      </div>
+    </div>
   </div>
-
-  <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 text-center">
-    <stats-table chart-data="data" minuend="difference.minuend" subtrahend="difference.subtrahend"></stats-table>
-  </div>
-
-  <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 text-center">
-    <a class="btn btn-sm text-uppercase padding-r" data-target="#event-drop" data-toggle="collapse">
-      <small>
-        Requests' lifetime phases
-      </small>
-    </a>  
-  </div>
-
-  <div id="event-drop" class="collapse col-xs-12 col-sm-12 col-md-12 col-lg-12 text-center">
-    <event-drop chart-data="data"></event-drop>
-  </div>
-
 </div>

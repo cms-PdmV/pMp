@@ -21,11 +21,6 @@ angular.module('pmpApp').controller('TagsController', ['$rootScope', '$scope', '
          */
         $scope.tagRemove = function (tagToRemove, isServerSide) {
             $rootScope.loadingData = true;
-            if (isServerSide) {
-                Data.setInputTags(tagToRemove, false, true);
-                $scope.query(true);
-                return null;
-            }
             var tmp = Data.getLoadedData();
             var data = [];
             setTimeout(function () {
@@ -35,8 +30,9 @@ angular.module('pmpApp').controller('TagsController', ['$rootScope', '$scope', '
                     }
                 }
                 Data.reloadFilters(data);
-                Data.setInputTags(tagToRemove, false, true);
-            }, 1000);
+                Data.removeInputTag(tagToRemove);
+                $scope.inputTags = Data.getInputTags();
+            }, 100);
         };
 
         // Broadcast receiver, change input tags array

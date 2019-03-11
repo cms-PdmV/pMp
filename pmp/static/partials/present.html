@@ -1,12 +1,70 @@
-<div class="row" ng-show="data.length">
+<div class="row" ng-hide="loadingData || !data || data.length == 0">
+  <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 m-2" >
+    <span>Scale: </span><radio-selections class="ml-2" options="availableScales" selected="scale" on-value-change="scaleChange"></radio-selections>
+  </div>
+  <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 m-2" >
+    <span>Mode: </span><radio-selections class="ml-2" options="availableModes" selected="mode" on-value-change="modeChange"></radio-selections>
+  </div>
+  <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 m-2" >
+    Group graph by: <checkbox-selections class="ml-2" options="availableSelections" selected="groupBy" on-value-change="groupByChange"></checkbox-selections>
+  </div>
+  <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 m-2" >
+    Color graph by: <checkbox-selections class="ml-2" options="availableSelections" selected="colorBy" on-value-change="colorByChange"></checkbox-selections>
+  </div>
+  <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 m-2" >
+    Stack graph by: <checkbox-selections class="ml-2" options="availableSelections" selected="stackBy" on-value-change="stackByChange"></checkbox-selections>
+  </div>
   <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 text-center">
-
-    <drop-selections scale="scaleType" mode="modeType" options="requests.options" selections="requests.selections" show-mode="true" show-scale="true"></drop-selections>
-
-    <column-chart scale="scaleType" mode="modeType" sort="requests.settings.sort" legend="requests.settings.legend" duration="requests.settings.duration" coloring="requests.options.coloring" stacking="requests.options.stacking" grouping="requests.options.grouping" data="data" priority-markup="priorityBlockMarkup"></column-chart>
+    <column-chart scale="scale"
+                  mode="mode"
+                  group-by="groupBy"
+                  color-by="colorBy"
+                  stack-by="stackBy"
+                  human-readable-numbers="humanReadable"
+                  bin-selected-callback="binSelected"
+                  big-number-formatter="formatBigNumber"
+                  big-number-formatter-log="formatBigNumberLog"
+                  growing-mode="growingMode"
+                  data="data"></column-chart>
     
-    <multiple-pie-charts color-domain="piecharts.domain" table-title="Campaigns" data="data" full-terms="piecharts.fullTerms" compact-terms="piecharts.compactTerms" sum-by="piecharts.sum" nest-by="piecharts.nestBy" show-upcoming="displayChains" human-readable-numbers="humanReadableNumbers" show-table="true">
-    </multiple-pie-charts>
-    
+  </div>
+  <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 text-center" ng-if="selectedBin.length">
+    <p>Requests (<b>{{selectedBin.length}}</b>) in selected bar</p>
+    <div ng-repeat="binEntry in selectedBin" class="row zebra-lines small-padding">
+      <div class="col-sm-4">
+        <a ng-href="{{binEntry.url}}" target="_blank">{{binEntry.prepid}}</a>
+        <small ng-if="binEntry.growing_fake" style="color:red" title="This is a part of {{binEntry.prepid}} counted as done">(Partial)</small>
+        <br><small>{{binEntry.dataset_name}}</small>
+        <small title="Number of completed events estimated from {{binEntry.estimate_from}}" style="color:red" ng-if="binEntry.estimate_from"><br>(Estimate from {{binEntry.estimate_from}})</small>
+      </div>
+      <div class="col-sm-2">
+        <span ng-if="!growingMode || binEntry.status !== 'submitted'">Expected: </span>
+        <span ng-if="growingMode && binEntry.status === 'submitted'">Left: </span>
+        <b ng-if="!humanReadable">{{binEntry.total_events}}</b>
+        <b ng-if="humanReadable" title="{{binEntry.total_events}}">{{binEntry.total_events | readableNumbers}}</b>
+      </div>
+      <div class="col-sm-2">
+        Done:
+        <b ng-if="!humanReadable">{{binEntry.completed_events}}</b>
+        <b ng-if="humanReadable" title="{{binEntry.completed_events}}">{{binEntry.completed_events | readableNumbers}}</b>
+      </div>
+      <div class="col-sm-1">
+        Status:
+        <b ng-if="!binEntry.growing_fake">{{binEntry.status}}</b>
+        <b ng-if="binEntry.growing_fake" title="This request is actually submitted, but produced part is counted as done"><i>"done"</i></b>
+      </div>
+      <div class="col-sm-2">
+        Priority: <b>{{binEntry.priority}}</b>
+      </div>
+      <div class="col-sm-1">
+        In chains: <b>{{binEntry.member_of_chain.length}}</b>
+      </div>
+    </div>
+  </div>
+  <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 mt-5 text-center">
+    <present-stats-table mode="mode"
+                         human-readable-numbers="humanReadable"
+                         growing-mode="growingMode"
+                         data="data"></present-stats-table>
   </div>
 </div>
