@@ -1,6 +1,6 @@
 """Change configuration here"""
 import os
-ADMINS = ['justinas.rumsevicius@cern.ch']
+ADMINS = ['pdmvserv@cern.ch']
 CERTFILE = '/home/crtkey/localhost.crt'
 KEYFILE = '/home/crtkey/localhost.key'
 DEBUG = True

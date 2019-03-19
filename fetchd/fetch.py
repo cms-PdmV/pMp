@@ -214,11 +214,14 @@ def get_changed_object_ids(cfg):
 
 
 def save(object_id, data, cfg):
-    response, status = Utils.curl('POST', '%s%s' % (cfg.pmp_type, object_id), data)
-    if status in [200, 201]:
-        logging.info('New record %s (%s)' % (object_id, cfg.pmp_type.split('/')[-2]))
-    else:
-        logging.error('Failed to update %s. Reason %s.' % (object_id, response))
+    try:
+        response, status = Utils.curl('POST', '%s%s' % (cfg.pmp_type, object_id), data)
+        if status in [200, 201]:
+            logging.info('New record %s (%s)' % (object_id, cfg.pmp_type.split('/')[-2]))
+        else:
+            logging.error('Failed to update %s. Reason %s.' % (object_id, response))
+    except Exception as ex:
+        logging.error('Error saving %s. Error: %s' % (object_id, ex))
 
 
 def create_rereco_request(stats_doc, rereco_cfg, process_string_cfg, rereco_campaigns_cfg):
