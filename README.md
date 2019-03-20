@@ -1,12 +1,89 @@
 # Production Monitoring Platform (pMp)
 
 ## pMp
-pMp stands for Production Monitoring Platform. pMp provides monitoring of the Monte Carlo requests production, ReReco production.
+pMp stands for Production Monitoring Platform. pMp provides monitoring of the Monte Carlo, ReReco and RelVal production.
 
 ## Contributors
 The original code is based on Igor Jurkowski and Jean-Roch Vlimant contributions. Further developed by Adrian Alan Pol, Antanas Norkus, Giovanni Franzoni and Jacob Walker. Second Edition is done by Justinas Rumsevicius.
 
-## Database structure
+## Data in pMp
+
+pMp collects data from McM (Monte Carlo Management service) and Stats (Stats service, PdmV's cache of RequestManager2) and displays it in graphs, histograms and tables. pMp enables users to search for information about event production based on request ids, campaigns, datasets, tags, etc. Returned results can be additionally filtered by priority, physics working group and status. Data is periodically updated from McM and Stats service using Jenkins job. Responses in pMp is cached for a short period of time, initially - 10 minutes, but this is easily configurable and may be changed at any time. 
+
+## Search in pMp
+
+Search bar in pMp can be found in all statistics pages. Next to it, there are two buttons: Show and Append. Start typing in search bar to see suggestions. For the sake of easier explanation, words entered in search bar will be called search terms. Show button clears all existing search terms (if any) and adds search term that is currently in search bar. Append button appends search term that is in search bar to existing search terms (if any). pMp allows users to search for information by:
+
+* Campaigns (McM)
+* Request prepids (McM)
+* PPD tags (McM)
+* Request tags (McM)
+* Flows (McM)
+* Dataset names (McM)
+* ReReco request prepids
+* ReReco processing strings
+* ReReco campaigns
+* RelVal request prepids
+* RelVal CMSSW versions
+* RelVal campaigns
+
+Suggestions in search are shown as prepids of objects in the list above. pMp does not have wildcard (asterisk - *) search, so queries must contain complete tags, campaigns, prepids, etc, i.e. search terms must be full identifiers of objects. If multiple objects in different indexes (of different types) have the same identifier, i.e. there is a PPD tag `TAG1` and a request tag `TAG1` then pMp fill treat `TAG1` as PPD tag and fetch only requests that have `TAG1` as a PPD tag because PPD tags are higher in the list above. Objects in pMp are stored in indexes - databases for each type. Once user enters a search term, pMp first needs to figure out which type of object is user searching for and then look into appropriate index in Elasticsearch. List above shows order in which indexes are checked for an object with given id to determine object type (whether it's a campaign, PPD tag, tag, CMSSW version or etc.). Search in pMp is case-sensitive. 
+
+If multiple search terms are given then requests that fit any of these terms are shown, in other words, terms in search are joined with OR. For example if user searches by `TAG1` and `TAG2` then requests that have `TAG1` or `TAG2` (or both) are shown. If a request fits multiple terms in the search, it is still added to results only once.
+
+## Present Statistics
+
+Present statistics in pMp shows current status of requests. Users can choose histogram scale - Linear or Logarithmic. Histogram Y values can show either number of requests, number of total events\* or seconds which is calculated by multiplying time per event and number of total events\*. Bars in histogram can be grouped, colored and stacked by different attributes of requests. More information about any histogram bar can be seen by hovering mouse cursor over bars in histogram. User can see which requests are in the bar by clicking on it in the histogram.
+
+At the bottom there are three tables. First one shows requests that are at least in one chained request (attribute `member_of_chains`). Second table shows requests that are not members of any chained request. Third table shows all requests - chained and unchained. It is possible to switch table mode between number of requests, total events* and seconds by changing Mode of the histogram. Last column in table shows sum of all numbers in that row. If there is more than one campaign in a table, last row, called _All_ will show sum of all numbers in that column.
+
+\* _except if request is `done`, then number of completed events is used_
+
+## Historical Statistics
+
+Historical statistics in pMp show how number of events grew over time. Only requests with status `submitted` or `done` are shown in this plot. There are three colors in graph - gray, orange and blue. Gray area represent requested (expected) events. Orange area represent events that are produced, but the dataset is not yet in 'VALID' state (not completed). Blue area represent events that are produced and dataset is 'VALID'. Usually gray area is a bit higher than orange and blue area. In the end, blue area should be the same height as orange area. If request is force completed (it's workflow has `force-complete` in request transitions) then number of expected events for that request is set to done events (blue value).
+
+Below the main plot there are two tables\* that show all requests that were used to produce said plot. Requests that were force completed will have '(FC)' next to done events in table of done requests.
+
+\* _second table can be turned on by checking 'Show list of done requests' option_
+
+## Performance Statistics
+
+Performance statistics in pMp show how much time it took for requests to get from one status to another. All data is grouped in equal width (number of seconds) bins. Lowest value in x axis is the smallest amount of time of all requests to change status while highest value is the largest amount of time. User can see which requests are in the bar by clicking on it in the histogram. Users can choose histogram scale - Linear or Logarithmic.
+
+## Options in pMp
+
+### Display chains (only in Present Statistics)
+
+### Growing mode (only in Present Statistics)
+
+### Using SI suffix for large numbers
+
+If number is changed so it would be shown with SI suffix, then exact value can be seen by hovering mouse cursor over shortened number.
+
+### Estimate completed events (only in Present and Historical Statistics)
+
+### Zoom both axes (only in Historical Statistics)
+
+### Show list of done requests (only in Historical Statistics)
+
+### Bins (only in Performance Statistics)
+
+## Filtering in pMp
+
+### Priority filter
+
+### Status filter
+
+### PWG filter
+
+## Sharing in pMp
+
+### Share a link
+
+### Download an image
+
+## Database structure (for advanced users)
 All data is taken from McM and Stats service and stored in pMp's Elasticsearch index.
 Below is structure of objects kept in Elasticsearch. 
 
@@ -190,57 +267,10 @@ Source - workflows are fetched from Stats.
 * request_type - request type ('TaskChain', 'Resubmission', 'ReReco', etc.)
 * total_events - number of expected events
 
-## Search in pMp
-
-pMp allows users to search for data by:
-
-* Campaigns (McM)
-* Request prepids (McM)
-* PPD tags (McM)
-* Request tags (McM)
-* Flows (McM)
-* Dataset names (McM)
-* ReReco request prepids
-* ReReco processing strings
-* ReReco campaigns
-* RelVal request prepids
-* RelVal CMSSW versions
-* RelVal campaigns
-
-Suggestions in search are shown as prepids of objects in the list above. pMp does not have wildcard (asterisk - *) search, so queries must contain complete tags, campaigns, prepids, etc. If multiple objects in different indexes have the same identifier, i.e. there is a PPD tag `TAG1` and a request tag `TAG1` then pMp fill treat `TAG1` as PPD tag and fetch only requests that have `TAG1` as a PPD tag because PPD tags are higher in the list above. List above shows order in which object type (whether it's a campaign, PPD tag, tag, CMSSW version or etc.) of given search term (user input) will be determined. Search is done like this because pMp first needs to decide which type of object is user searching for and then look into appropriate index in Elasticsearch. Search in pMp is case-sensitive. 
-
-If new terms are appended to already existing search terms then requests that fit any of these terms are shown, i.e. terms in search are joined with OR. For example if user searches by `TAG1` and `TAG2` then requests that have `TAG1` or `TAG2` (or both) are shown. If a request fits multiple terms in the search, it is still added to results only once.
-
-## Statistics in pMp
-
-If number is changed so it would be shown with SI suffix, then exact value can be seen by hovering mouse cursor over shortened number.
-
-### Filtering
-
-### Estimation of completed events
-
-## Present Statistics
-
-Present statistics in pMp displays current status of requests. Users can choose histogram scale - Linear or Logarithmic. Histogram Y values can show either number of requests, number of total events* or seconds which is calculated by multiplying time per event and number of total events*. Bars in histogram can be grouped, colored and stacked by different attributes of requests. More information about any histogram bar can be seen by hovering mouse cursor over bars in histogram. User can see which requests are in the bar by clicking on it in the histogram.
-
-At the bottom there are three tables. First one shows requests that are at least in one chained request (attribute `member_of_chains`). Second table shows requests that are not members of any chained request. Third table shows all requests - chained and unchained. It is possible to switch table mode between number of requests, total events* and seconds by changing Mode of the histogram.
-
-\* except if request is `done`, then number of completed events is used
-
-### Announced Mode
-
-### Growing Mode
-
-### Display Chains
-
-## Historical Statistics
-
-## Performance Statistics
-
-## Screenshots
+## Screenshots (for advanced users)
 
 pMp2 allows to download graphs as PDF, PNG or SVG files. In order for this function to work, these two things need to be installed:
 ```
-sudo yum install librsvg2.x86_64
-sudo yum install librsvg2-tools.x86_64
+yum install librsvg2.x86_64
+yum install librsvg2-tools.x86_64
 ```
