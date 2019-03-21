@@ -57,56 +57,56 @@ Performance statistics in pMp show how much time it took for requests to get fro
 
 Fetch all campaigns from all chained campaigns that contain campaigns of all requests for user given search query. In other words: fetch all requests for user given search term. Take all campaigns from there requests. Find all chained campaigns for these campaigns. Take all campaigns from these chained campaigns. Fetch results for all these campaigns from chained campaigns. This may return more results than expected and can be very slow. Results may conatain up to tens of thousands of requests. 
 
-Default value: `false`
+Default value: `false`  
 URL parameter: `chainedMode`
 
 ### Growing mode (only in Present Statistics)
 
 For each `submitted` request create a corresponding "fake" request with same prepid that would have status `done` and number of done events would be number of produced events in `submitted` request. For example there is a `submitted` request that has 1000 expected events of which 200 are already produced. Then this request would have 800 total events (this is show as "Left" in table) and there would be another request with same prepid and status `done` that would have 1000 expected events and 200 done events. This option works only if plot mode is set to "Events".
 
-Default value: `false`
+Default value: `false`  
 URL parameter: `growingMode`
 
 ### Using SI suffix for large numbers
 
 This option changes large numbers to smaller numbers with SI suffix. 1 000 becomes 1k, 1 000 000 becomes 1M, 1 000 000 000 becomes 1G. Up to two digits are shown after decimal point, for example 1234 is 1.23k, 123456 is 1.23M, 123456789 is 1.23G. If this option is enabled, actual value of number can be seen by hovering mouse cursor over shortened number.
 
-Default value: `true`
+Default value: `true`  
 URL parameter: `humanReadable`
 
 ### Estimate completed events (only in Present and Historical Statistics)
 
 If request does not have output dataset, then try to guess how many events are produced based on subsequent requests in chain. pMp finds all chains where this request is present and finds another request down the chain which has the biggest number of completed events and uses dataset of that request as source of information.
 
-Default value: `false`
+Default value: `false`  
 URL parameter: `estimateCompleted`
 
 ### Zoom both axes (only in Historical Statistics)
 
 If this option is enabled, zoom happens not only in x axis, but in y axis as well.
 
-Default value: `false`
+Default value: `false`  
 URL parameter: `zoomY`
 
 ### Show list of done requests (only in Historical Statistics)
 
 If this option is enabled, a second list is shown in Historical statistics that contains all requests that are in `done` status.
 
-Default value: `false`
+Default value: `false`  
 URL parameter: `showDoneRequestsList`
 
 ### Granularity (only in Historical Statistics)
 
 This option controls how many data points are in the graph, that is, how many different x values are there.
 
-Default value: `100`
+Default value: `100`  
 URL parameter: `granularity`
 
 ### Bins (only in Performance Statistics)
 
 This option controls how many bins (bars) are in histogram. If number of requests is lower than number of bins, then number of requests is used rather the number of bins.
 
-Default value: `20`
+Default value: `20`  
 URL parameter: `bins`
 
 ## Filtering in pMp
@@ -124,12 +124,14 @@ URL parameter: `bins`
 ### Download an image
 
 ## Database structure (for advanced users)
+
 All data is taken from McM and Stats service and stored in pMp's Elasticsearch index.
+
 Below is structure of objects kept in Elasticsearch. 
 
 ### Campaigns
-Index - `campaigns`.
-Document type - `campaign`.
+Index - `campaigns`.  
+Document type - `campaign`.  
 Source - campaigns are fetched from McM.
 
 ##### Attributes:
@@ -137,8 +139,8 @@ Source - campaigns are fetched from McM.
 * prepid - prepid of campaign
 
 ### Chained Campaigns
-Index - `chained_campaigns`.
-Document type - `chained_campaign`.
+Index - `chained_campaigns`.  
+Document type - `chained_campaign`.  
 Source - chained campaigns are fetched from McM.
 
 ##### Attributes:
@@ -147,8 +149,8 @@ Source - chained campaigns are fetched from McM.
 * prepid - prepid of chained campaign
 
 ### Chained Requests
-Index - `chained_requests`.
-Document type - `chained_request`.
+Index - `chained_requests`.  
+Document type - `chained_request`.  
 Source - chained requests are fetched from McM.
 
 ##### Attributes:
@@ -158,8 +160,8 @@ Source - chained requests are fetched from McM.
 * prepid - prepid of a chained request
 
 ### Dataset Names
-Index - `mcm_dataset_names`.
-Document type - `mcm_dataset_name`.
+Index - `mcm_dataset_names`.  
+Document type - `mcm_dataset_name`.  
 Source - dataset names are extracted from requests (attribute `dataset_name`) when pMp is fetching McM requests.
 
 ##### Attributes:
@@ -167,8 +169,8 @@ Source - dataset names are extracted from requests (attribute `dataset_name`) wh
 * prepid - dataset name
 
 ### Flows
-Index - `flows`.
-Document type - `flow`.
+Index - `flows`.  
+Document type - `flow`.  
 Source - flows are fetched from McM.
 
 ##### Attributes:
@@ -176,8 +178,8 @@ Source - flows are fetched from McM.
 * prepid - prepid of flow
 
 ### PPD Tags
-Index - `ppd_tags`.
-Document type - `ppd_tag`.
+Index - `ppd_tags`.  
+Document type - `ppd_tag`.  
 Source - PPDtags are extracted from requests (attribute `ppd_tags`) when pMp is fetching McM requests.
 
 ##### Attributes:
@@ -185,8 +187,8 @@ Source - PPDtags are extracted from requests (attribute `ppd_tags`) when pMp is 
 * prepid - tag itself
 
 ### Processing strings
-Index - `processing_strings`.
-Document type - `processing_string`.
+Index - `processing_strings`.  
+Document type - `processing_string`.  
 Source - processing strings are extracted from ReReco requests (attribute `processing_string`).
 
 ##### Attributes:
@@ -194,8 +196,8 @@ Source - processing strings are extracted from ReReco requests (attribute `proce
 * prepid - processing string itself
 
 ### RelVal Campaigns
-Index - `relval_campaigns`.
-Document type - `relval_campaign`.
+Index - `relval_campaigns`.  
+Document type - `relval_campaign`.  
 Source - RelVal campaigns are extracted from RelVal requests (attribute `member_of_campaign`).
 
 ##### Attributes:
@@ -203,8 +205,8 @@ Source - RelVal campaigns are extracted from RelVal requests (attribute `member_
 * prepid - prepid of RelVal campaign
 
 ### RelVal CMSSW Versions
-Index - `relval_cmssw_versions`.
-Document type - `relval_cmssw_version`.
+Index - `relval_cmssw_versions`.  
+Document type - `relval_cmssw_version`.  
 Source - RelVal CMSSW versions are extracted from RelVal requests (attribute `cmssw_version`).
 
 ##### Attributes:
@@ -212,8 +214,8 @@ Source - RelVal CMSSW versions are extracted from RelVal requests (attribute `cm
 * prepid - CMSSW version itself
 
 ### RelVal Requests
-Index - `relval_requests`.
-Document type - `relval_request`.
+Index - `relval_requests`.  
+Document type - `relval_request`.  
 Source - RelVal requests are created when pMp is fetching workflows. If attribute `request_name` in workflow contains `_RVCMSSW_` and `prepid` contains `CMSSW_` then in addition to workflow, a RelVal request is created. They are created using information in workflow and they appear and have structure of a normal McM request with a few exceptions such as tags replaced by processing strings, no flow, no tags, no time per event and no member of chain.
 
 ##### Attributes:
@@ -231,8 +233,8 @@ Source - RelVal requests are created when pMp is fetching workflows. If attribut
 * total_events - number of total events of request
 
 ### ReReco Campaigns
-Index - `rereco_campaigns`.
-Document type - `rereco_campaign`.
+Index - `rereco_campaigns`.  
+Document type - `rereco_campaign`.  
 Source - ReReco campaigns are extracted from ReReco requests (attribute `member_of_campaign`).
 
 ##### Attributes:
@@ -240,8 +242,8 @@ Source - ReReco campaigns are extracted from ReReco requests (attribute `member_
 * prepid - prepid of ReReco campaign
 
 ### ReReco Requests
-Index - `rereco_requests`.
-Document type - `rereco_request`.
+Index - `rereco_requests`.  
+Document type - `rereco_request`.  
 Source - ReReco requests are created when pMp is fetching workflows. If attribute `request_type` in workflow is `ReReco` then in addition to workflow, a ReReco request is created. They are created using information in workflow and they appear and have structure of a normal McM request with a few exceptions such as tags replaced by processing strings, no flow, no tags, no time per event and no member of chain.
 
 ##### Attributes:
@@ -259,8 +261,8 @@ Source - ReReco requests are created when pMp is fetching workflows. If attribut
 * total_events - number of total events of request
 
 ### Requests
-Index - `requests`.
-Document type - `request`.
+Index - `requests`.  
+Document type - `request`.  
 Source - requests are fetched from McM.
 
 ##### Attributes:
@@ -283,8 +285,8 @@ Source - requests are fetched from McM.
 * total_events - number of total events of request
 
 ### Tags
-Index - `tags`.
-Document type - `tag`.
+Index - `tags`.  
+Document type - `tag`.  
 Source - tags are extracted from requests (attribute `tags`) when pMp is fetching McM requests.
 
 ##### Attributes:
@@ -292,8 +294,8 @@ Source - tags are extracted from requests (attribute `tags`) when pMp is fetchin
 * prepid - tag itself
 
 ### Workflows
-Index - `workflows`.
-Document type - `workflow`.
+Index - `workflows`.  
+Document type - `workflow`.  
 Source - workflows are fetched from Stats.
 
 ##### Attributes:
