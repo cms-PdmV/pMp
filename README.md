@@ -41,7 +41,7 @@ At the bottom there are three tables. First one shows requests that are at least
 
 ## Historical Statistics
 
-Historical statistics in pMp show how number of events grew over time. Only requests with status `submitted` or `done` are shown in this plot. There are three colors in graph - gray, orange and blue. Gray area represent requested (expected) events. Orange area represent events that are produced, but the dataset is not yet in 'VALID' state (not completed). Blue area represent events that are produced and dataset is 'VALID'. Usually gray area is a bit higher than orange and blue area. In the end, blue area should be the same height as orange area. If request is force completed (it's workflow has `force-complete` in request transitions) then number of expected events for that request is set to done events (blue value).
+Historical statistics in pMp show how number of events grew over time. Only requests with status `submitted` or `done` are shown in this plot. There are three colors in graph - gray, orange and blue. Gray area represent requested (expected) events. Orange area represent events that are produced, but the dataset is not yet in 'VALID' state (not completed). Blue area represent events that are produced and dataset is 'VALID'. Usually gray area is a bit higher than orange and blue area. In the end, blue area should be the same height as orange area. If request is force completed (it's workflow has `force-complete` in request transitions) then number of expected events for that request is set to done events (blue value). User can use mouse wheel to zoom in and out and drag graph to move it.
 
 Below the main plot there are two tables\* that show all requests that were used to produce said plot. Requests that were force completed will have '(FC)' next to done events in table of done requests.
 
@@ -49,25 +49,65 @@ Below the main plot there are two tables\* that show all requests that were used
 
 ## Performance Statistics
 
-Performance statistics in pMp show how much time it took for requests to get from one status to another. All data is grouped in equal width (number of seconds) bins. Lowest value in x axis is the smallest amount of time of all requests to change status while highest value is the largest amount of time. User can see which requests are in the bar by clicking on it in the histogram. Users can choose histogram scale - Linear or Logarithmic.
+Performance statistics in pMp show how much time it took for requests to get from one status to another. All data is grouped in equal width (number of seconds) bins. Lowest value in x axis is the smallest amount of time of all requests to change status while highest value is the largest amount of time. User can see which requests are in the bar by clicking on it in the histogram. Users can choose histogram scale - Linear or Logarithmic. If there are less requests than bins (bars), then number of bins (bars) is reduced to number of requests.
 
 ## Options in pMp
 
 ### Display chains (only in Present Statistics)
 
+Fetch all campaigns from all chained campaigns that contain campaigns of all requests for user given search query. In other words: fetch all requests for user given search term. Take all campaigns from there requests. Find all chained campaigns for these campaigns. Take all campaigns from these chained campaigns. Fetch results for all these campaigns from chained campaigns. This may return more results than expected and can be very slow. Results may conatain up to tens of thousands of requests. 
+
+Default value: `false`
+URL parameter: `chainedMode`
+
 ### Growing mode (only in Present Statistics)
+
+For each `submitted` request create a corresponding "fake" request with same prepid that would have status `done` and number of done events would be number of produced events in `submitted` request. For example there is a `submitted` request that has 1000 expected events of which 200 are already produced. Then this request would have 800 total events (this is show as "Left" in table) and there would be another request with same prepid and status `done` that would have 1000 expected events and 200 done events. This option works only if plot mode is set to "Events".
+
+Default value: `false`
+URL parameter: `growingMode`
 
 ### Using SI suffix for large numbers
 
-If number is changed so it would be shown with SI suffix, then exact value can be seen by hovering mouse cursor over shortened number.
+This option changes large numbers to smaller numbers with SI suffix. 1 000 becomes 1k, 1 000 000 becomes 1M, 1 000 000 000 becomes 1G. Up to two digits are shown after decimal point, for example 1234 is 1.23k, 123456 is 1.23M, 123456789 is 1.23G. If this option is enabled, actual value of number can be seen by hovering mouse cursor over shortened number.
+
+Default value: `true`
+URL parameter: `humanReadable`
 
 ### Estimate completed events (only in Present and Historical Statistics)
 
+If request does not have output dataset, then try to guess how many events are produced based on subsequent requests in chain. pMp finds all chains where this request is present and finds another request down the chain which has the biggest number of completed events and uses dataset of that request as source of information.
+
+Default value: `false`
+URL parameter: `estimateCompleted`
+
 ### Zoom both axes (only in Historical Statistics)
+
+If this option is enabled, zoom happens not only in x axis, but in y axis as well.
+
+Default value: `false`
+URL parameter: `zoomY`
 
 ### Show list of done requests (only in Historical Statistics)
 
+If this option is enabled, a second list is shown in Historical statistics that contains all requests that are in `done` status.
+
+Default value: `false`
+URL parameter: `showDoneRequestsList`
+
+### Granularity (only in Historical Statistics)
+
+This option controls how many data points are in the graph, that is, how many different x values are there.
+
+Default value: `100`
+URL parameter: `granularity`
+
 ### Bins (only in Performance Statistics)
+
+This option controls how many bins (bars) are in histogram. If number of requests is lower than number of bins, then number of requests is used rather the number of bins.
+
+Default value: `20`
+URL parameter: `bins`
 
 ## Filtering in pMp
 
