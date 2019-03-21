@@ -248,13 +248,15 @@
                                         if (!(newStackBy in preparedData[newGroupBy][newColorBy])) {
                                             preparedData[newGroupBy][newColorBy][newStackBy] = []
                                         }
-                                        preparedData[newGroupBy][newColorBy][newStackBy].push({prepid: d.prepid,
-                                                                                               total_events: realTotal,
-                                                                                               priority: d.priority,
-                                                                                               member_of_chain: d.member_of_chain,
-                                                                                               status: 'done',
-                                                                                               growing_fake: true,
-                                                                                               completed_events: adjustment})
+                                        if (adjustment > 0) {
+                                            preparedData[newGroupBy][newColorBy][newStackBy].push({prepid: d.prepid,
+                                                                                                   total_events: realTotal,
+                                                                                                   priority: d.priority,
+                                                                                                   member_of_chain: d.member_of_chain,
+                                                                                                   status: 'done',
+                                                                                                   growing_fake: true,
+                                                                                                   completed_events: adjustment})
+                                        }
                                     }
                                 }
                             }
