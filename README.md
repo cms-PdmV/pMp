@@ -81,6 +81,13 @@ If request does not have output dataset, then try to guess how many events are p
 Default value: `false`  
 URL parameter: `estimateCompleted`
 
+### Show table for unchained requests (only in Present Statistics)
+
+Additionally show tables of unchained and both chained and unchained requests at the bottom of the page.
+
+Default value: `false`  
+URL parameter: `showUnchainedTable`
+
 ### Zoom both axes (only in Historical Statistics)
 
 If this option is enabled, zoom happens not only in x axis, but in y axis as well.

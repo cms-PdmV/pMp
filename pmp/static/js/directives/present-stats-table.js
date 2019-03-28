@@ -10,7 +10,8 @@
             data: '=',
             mode: '=',
             growingMode: '=',
-            humanReadableNumbers: '='
+            humanReadableNumbers: '=',
+            showUnchainedTable: '='
         },
         templateUrl: 'static/build/present-stats-table.min.html',
         link: function (scope, element) {

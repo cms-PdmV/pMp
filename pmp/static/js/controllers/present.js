@@ -31,7 +31,8 @@ angular.module('pmpApp').controller('PresentController', ['$http',
             mode: 'requests',
             groupBy: 'member_of_campaign',
             colorBy: 'status',
-            stackBy: ''
+            stackBy: '',
+            showUnchainedTable: false
         };
 
         /**
@@ -60,6 +61,8 @@ angular.module('pmpApp').controller('PresentController', ['$http',
             $scope.humanReadable = urlParameters.humanReadable === 'true';
 
             $scope.estimateCompleted = urlParameters.estimateCompleted === 'true';
+
+            $scope.showUnchainedTable = urlParameters.showUnchainedTable === 'true';
 
             $scope.availableScales = ['linear', 'log']
 
@@ -305,6 +308,10 @@ angular.module('pmpApp').controller('PresentController', ['$http',
 
         $scope.changeEstimateCompleted = function() {
             $scope.query();
+        }
+
+        $scope.changeShowUnchainedTable = function(show) {
+            $scope.setURL($scope, Data);
         }
 
         $scope.$on('onChangeNotification:InputTags', function () {

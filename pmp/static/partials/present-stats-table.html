@@ -1,4 +1,4 @@
-<div class="col-12" ng-repeat="tableName in ['chained', 'unchained', 'all']">
+<div class="col-12" ng-repeat="tableName in (showUnchainedTable ? ['chained', 'unchained', 'all'] : ['chained'])">
   <h3 style="text-align: left !important;" title="Table is showing number of {{mode}}"><strong><span style="text-transform: capitalize;">{{tableName}}</span> requests by status ({{mode}}):</strong></h3>
   <table class="table text-center col-12">
     <thead>
