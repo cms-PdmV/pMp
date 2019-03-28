@@ -55,13 +55,18 @@ class PerformanceAPI(APIBase):
                 for history in mcm_document['history']:
                     patch_history[history['action']] = history['time']
 
+                workflow_name = ''
+                if len(mcm_document.get('reqmgr_name', [])) > 0:
+                    workflow_name = mcm_document['reqmgr_name'][0]
+
                 mcm_document['history'] = patch_history
                 seen_prepids.add(mcm_document['prepid'])
                 response_list.append({'history': mcm_document['history'],
                                       'prepid': mcm_document['prepid'],
                                       'pwg': mcm_document['pwg'],
                                       'status': mcm_document['status'],
-                                      'priority': mcm_document['priority']})
+                                      'priority': mcm_document['priority'],
+                                      'workflow': workflow_name})
 
         return response_list
 

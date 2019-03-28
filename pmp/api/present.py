@@ -77,6 +77,10 @@ class PresentAPI(APIBase):
 
                 completed_events = self.number_of_completed_events(stats_document, mcm_document['output_dataset'])
                 seen_prepids.add(mcm_document['prepid'])
+                workflow_name = ''
+                if len(mcm_document.get('reqmgr_name', [])) > 0:
+                    workflow_name = mcm_document['reqmgr_name'][0]
+
                 response_list.append({'member_of_campaign': mcm_document['member_of_campaign'],
                                       'prepid': mcm_document['prepid'],
                                       'pwg': mcm_document['pwg'],
@@ -88,7 +92,8 @@ class PresentAPI(APIBase):
                                       'total_events': mcm_document['total_events'],
                                       'dataset_name': mcm_document.get('dataset_name', ''),
                                       'completed_events': completed_events,
-                                      'estimate_from': mcm_document.get('estimate_from')})
+                                      'estimate_from': mcm_document.get('estimate_from'),
+                                      'workflow': workflow_name})
 
         return response_list
 

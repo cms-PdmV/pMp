@@ -11,7 +11,7 @@
       </p>
       <div ng-repeat="submitted in listSubmitted" class="row zebra-lines small-padding">
         <div class="col-sm-4">
-          <a ng-href="https://cms-pdmv.cern.ch/mcm/requests?prepid={{submitted.url}}" target="_blank">{{submitted.r}}</a>
+          <a ng-href="{{submitted.url}}" target="_blank">{{submitted.r}}</a>
           <small title="Number of events estimated from {{submitted.est}}" style="color:red" ng-if="submitted.est"><br>(Estimate from {{submitted.est}})</small>
         </div>
         <div ng-if="!humanReadable" class="col-sm-2">
@@ -51,7 +51,7 @@
       </p>
       <div ng-repeat="done in listDone" class="row zebra-lines small-padding">
         <div class="col-sm-4">
-          <a ng-href="https://cms-pdmv.cern.ch/mcm/requests?prepid={{done.url}}" target="_blank">{{done.r}}</a>
+          <a ng-href="{{done.url}}" target="_blank">{{done.r}}</a>
           <small title="Number of events estimated from {{done.est}}" style="color:red" ng-if="done.est"><br>(Estimate from {{done.est}})</small>
         </div>
         <div ng-if="!humanReadable" class="col-sm-2">

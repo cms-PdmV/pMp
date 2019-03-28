@@ -161,7 +161,7 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
                         if (entry.r.indexOf('ReReco') == -1 && entry.r.indexOf('CMSSW') == -1) {
                             entry.url = 'https://cms-pdmv.cern.ch/mcm/requests?prepid=' + entry.r
                         } else {
-                            entry.url = 'https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?prep_id=' + entry.r
+                            entry.url = 'https://cmsweb.cern.ch/reqmgr2/fetch?rid=' + entry.w
                         }
                         entry.perc = entry.d / entry.x * 100;
                     });
@@ -170,7 +170,7 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
                         if (entry.r.indexOf('ReReco') == -1 && entry.r.indexOf('CMSSW') == -1) {
                             entry.url = 'https://cms-pdmv.cern.ch/mcm/requests?prepid=' + entry.r
                         } else {
-                            entry.url = 'https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?prep_id=' + entry.r
+                            entry.url = 'https://cmsweb.cern.ch/reqmgr2/fetch?rid=' + entry.w
                         }
                         entry.perc = entry.d / entry.x * 100;
                     });

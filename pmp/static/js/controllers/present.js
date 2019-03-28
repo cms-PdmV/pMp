@@ -179,7 +179,7 @@ angular.module('pmpApp').controller('PresentController', ['$http',
                         if (entry.prepid.indexOf('ReReco') == -1 && entry.prepid.indexOf('CMSSW') == -1) {
                             entry.url = 'https://cms-pdmv.cern.ch/mcm/requests?prepid=' + entry.prepid
                         } else {
-                            entry.url = 'https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?prep_id=' + entry.prepid
+                            entry.url = 'https://cmsweb.cern.ch/reqmgr2/fetch?rid=' + entry.workflow
                         }
                     });
                     Data.setLoadedData(data.data.results.data, false);

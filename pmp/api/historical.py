@@ -143,6 +143,7 @@ class HistoricalAPI(APIBase):
                     response['status'] = mcm_document['status']
                     response['force_completed'] = mcm_document['force_completed']
                     response['dataset'] = mcm_document['output_dataset']
+                    response['reqmgr_name'] = mcm_document.get('reqmgr_name', [])
                     if 'estimate_from' in mcm_document:
                         response['estimate_from'] = mcm_document['estimate_from']
                 else:
@@ -152,6 +153,7 @@ class HistoricalAPI(APIBase):
                     response['status'] = None
                     response['force_completed'] = False
                     response['dataset'] = ''
+                    response['reqmgr_name'] = [stats_document['_id']]
 
                 # Check if there is a document from stats (i.e. the workflow was found)
                 if stats_document is not None:
@@ -260,13 +262,18 @@ class HistoricalAPI(APIBase):
             if not data_points:
                 data_points = [{'d': 0, 'e': 0}]
 
+            workflow_name = ''
+            if len(request.get('reqmgr_name', [])) > 0:
+                workflow_name = request['reqmgr_name'][0]
+
             new_data.append({'r': request['request'],
                              'p': request['priority'],
                              'ds': request['dataset'],
                              'x': data_points[-1]['x'],
                              'd': data_points[-1][key],
                              'fc': request['force_completed'],
-                             'est': request.get('estimate_from', None)})
+                             'est': request.get('estimate_from', None),
+                             'w': workflow_name})
 
         return new_data
 
