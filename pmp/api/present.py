@@ -56,6 +56,8 @@ class PresentAPI(APIBase):
 
     def prepare_response(self, query, estimate_completed_events):
         response_list = []
+        valid_tags = []
+        invalid_tags = []
         query = query.split(',')
         seen_prepids = set()
         for one in query:
@@ -65,6 +67,7 @@ class PresentAPI(APIBase):
                 # Skip empty values
                 continue
 
+            found_something = False
             # Process the db documents
             for stats_document, mcm_document in self.db_query(one, include_stats_document=True, estimate_completed_events=estimate_completed_events):
                 # skip legacy request with no prep_id
@@ -75,6 +78,7 @@ class PresentAPI(APIBase):
                     logging.warning('%s is already in seen_prepids. Why is it here again?' % (mcm_document['prepid']))
                     continue
 
+                found_something = True
                 completed_events = self.number_of_completed_events(stats_document, mcm_document['output_dataset'])
                 seen_prepids.add(mcm_document['prepid'])
                 workflow_name = ''
@@ -95,7 +99,13 @@ class PresentAPI(APIBase):
                                       'estimate_from': mcm_document.get('estimate_from'),
                                       'workflow': workflow_name})
 
-        return response_list
+            if found_something:
+                valid_tags.append(one)
+            else:
+                invalid_tags.append(one)
+                logging.warning('No data for %s' % (one))
+
+        return response_list, valid_tags, invalid_tags
 
     def get(self, query, chained_mode=False, estimate_completed_events=False, priority_filter=None, pwg_filter=None, status_filter=None):
 
@@ -121,15 +131,18 @@ class PresentAPI(APIBase):
         cache_key = 'present_%s_____%s' % (query, estimate_completed_events)
         if self.__cache.has(cache_key):
             logging.info('Found result in cache for key: %s' % cache_key)
-            response = self.__cache.get(cache_key)
+            response_tuple = self.__cache.get(cache_key)
         else:
             # Construct data by given query
-            response = self.prepare_response(query, estimate_completed_events)
-            self.__cache.set(cache_key,response)
+            response_tuple = self.prepare_response(query, estimate_completed_events)
+            self.__cache.set(cache_key, response_tuple)
 
+        response, valid_tags, invalid_tags = response_tuple
         # Apply priority, PWG and status filters
         response, pwgs, statuses = self.apply_filters(response, priority_filter, pwg_filter, status_filter)
         res = {'data': response,
+               'valid_tags': valid_tags,
+               'invalid_tags': invalid_tags,
                'pwg': pwgs,
                'status': statuses}
         logging.info('Will return')

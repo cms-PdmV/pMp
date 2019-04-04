@@ -68,7 +68,10 @@
   </div>
 </div>
 
-<div ng-hide="loadingData" ng-include="page.template"></div>
+<div ng-hide="loadingData || data.length == 0" ng-include="page.template"></div>
 <div ng-show="loadingData" class="mt-2">
   <p class="loading-data">Loading data<span>.</span><span>.</span><span>.</span></p>
+</div>
+<div ng-show="!loadingData && !firstLoad && data.length == 0" class="mt-2">
+  <p class="loading-data">No data to show</p>
 </div>

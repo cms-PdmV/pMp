@@ -39,5 +39,9 @@ angular.module('pmpApp').controller('TagsController', ['$rootScope', '$scope', '
         $scope.$on('onChangeNotification:InputTags', function () {
             $scope.inputTags = Data.getInputTags();
         });
+
+        $scope.$on('onChangeNotification:UpdateInputTags', function () {
+            $scope.inputTags = Data.getInputTags();
+        });
     }
 ]);

@@ -156,6 +156,7 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
                     Data.setLoadedData(data.data.results.data, false);
                     Data.setStatusFilter(data.data.results.status);
                     Data.setPWGFilter(data.data.results.pwg);
+                    Data.setValidTags(data.data.results.valid_tags);
                     $scope.loadTaskChain = false;
                     data.data.results.submitted_requests.forEach(function(entry) {
                         if (entry.r.indexOf('ReReco') == -1 && entry.r.indexOf('CMSSW') == -1) {
@@ -179,6 +180,9 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
                     $scope.setURL($scope, Data);
                     $scope.$broadcast('onChangeNotification:LoadedData');
                     $scope.loadingData = false;
+                    if (data.data.results.invalid_tags.length > 0) {
+                        $scope.showPopUp('warning', 'Nothing was found for ' + data.data.results.invalid_tags.join(', '));
+                    }
                 }, 100)
             }, function () {
                 $scope.showPopUp('error', 'Error loading requests');

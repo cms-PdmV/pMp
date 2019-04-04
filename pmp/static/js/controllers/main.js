@@ -39,6 +39,12 @@ angular.module('pmpApp').controller('MainController', ['$http', '$location',
          * @param {String} text to show
          */
         $scope.showPopUp = function (type, text) {
+            if ($scope.popUp && $scope.popUp.show) {
+                $timeout(function () {
+                    $scope.showPopUp(type, text);
+                }, 2000);
+                return;
+            }
             switch (type) {
             case 'error':
                 $scope.popUp = {
@@ -50,7 +56,7 @@ angular.module('pmpApp').controller('MainController', ['$http', '$location',
                 };
                 $timeout(function () {
                     $scope.popUp.show = false;
-                }, 2000);
+                }, 4000);
                 break;
             case 'warning':
                 $scope.popUp = {
@@ -62,7 +68,7 @@ angular.module('pmpApp').controller('MainController', ['$http', '$location',
                 };
                 $timeout(function () {
                     $scope.popUp.show = false;
-                }, 2000);
+                }, 4000);
                 break;
             case 'success':
                 $scope.popUp = {

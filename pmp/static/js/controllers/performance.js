@@ -80,6 +80,8 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
              // load graph data
             if (urlParameters.r !== '') {
                 Data.setInputTags(urlParameters.r.split(','));
+            } else {
+                Data.setInputTags([]);
             }
         };
 
@@ -151,6 +153,7 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
                     Data.setLoadedData(data.data.results.data, false);
                     Data.setStatusFilter(data.data.results.status);
                     Data.setPWGFilter(data.data.results.pwg);
+                    Data.setValidTags(data.data.results.valid_tags);
                     $scope.availableStatuses = data.data.results.all_statuses_in_history.slice()
                     if ($scope.availableStatuses.length == 0) {
                         $scope.subtrahend = undefined
@@ -167,6 +170,9 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
                     $scope.setURL($scope, Data);
                     $scope.$broadcast('onChangeNotification:LoadedData');
                     $scope.loadingData = false;
+                    if (data.data.results.invalid_tags.length > 0) {
+                        $scope.showPopUp('warning', 'Nothing was found for ' + data.data.results.invalid_tags.join(', '));
+                    }
                 }, 100)
             }, function () {
                 $scope.showPopUp('error', 'Error loading requests');

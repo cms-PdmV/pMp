@@ -64,6 +64,16 @@ angular.module('pmpApp').service('Data', ['$rootScope', function ($rootScope) {
             this.inputTags.splice(this.inputTags.indexOf(i), 1);
             $rootScope.$broadcast('onChangeNotification:InputTags');
         },
+        setValidTags: function(validTags) {
+            var newTags = []
+            for (var i in this.inputTags) {
+                if (validTags.includes(this.inputTags[i])) {
+                    newTags.push(this.inputTags[i])
+                }
+            }
+            this.inputTags = newTags;
+            $rootScope.$broadcast('onChangeNotification:UpdateInputTags');
+        },
         /**
          * @description Loaded data getter.
          * @return {Array} Array of loaded data objects.

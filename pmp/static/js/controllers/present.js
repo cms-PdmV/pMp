@@ -190,10 +190,14 @@ angular.module('pmpApp').controller('PresentController', ['$http',
                     Data.setLoadedData(data.data.results.data, false);
                     Data.setStatusFilter(data.data.results.status);
                     Data.setPWGFilter(data.data.results.pwg);
+                    Data.setValidTags(data.data.results.valid_tags);
                     $scope.data = Data.getLoadedData();
                     $scope.setURL($scope, Data);
                     $scope.$broadcast('onChangeNotification:LoadedData');
                     $scope.loadingData = false;
+                    if (data.data.results.invalid_tags.length > 0) {
+                        $scope.showPopUp('warning', 'Nothing was found for ' + data.data.results.invalid_tags.join(', '));
+                    }
                 }, 100)
             }, function () {
                 $scope.showPopUp('error', 'Error loading requests');

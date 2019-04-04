@@ -101,6 +101,8 @@ class HistoricalAPI(APIBase):
         Loop through all the workflow data, generate response
         """
         response_list = []
+        valid_tags = []
+        invalid_tags = []
         query = query.split(',')
         seen_prepids = []
         for one in query:
@@ -110,6 +112,7 @@ class HistoricalAPI(APIBase):
                 # Skip empty values
                 continue
 
+            found_something = False
             # Process the db documents
             for stats_document, mcm_document in self.db_query(one, include_stats_document=True, estimate_completed_events=estimate_completed_events):
                 if stats_document is None and mcm_document is None:
@@ -133,6 +136,7 @@ class HistoricalAPI(APIBase):
                     logging.info('Skipping %s because it was not submitted yet' % (mcm_document['prepid']))
                     continue
 
+                found_something = True
                 # create an array of requests to be processed
                 response = {'data': []}
 
@@ -206,9 +210,14 @@ class HistoricalAPI(APIBase):
                         seen_prepids.append(mcm_document['prepid'])
                         response_list.append(response)
 
+            if found_something:
+                valid_tags.append(one)
+            else:
+                invalid_tags.append(one)
+
         # logging.info('Prepare response length is %d' % (len(response_list)))
         # logging.info('Response list is %s' % (json.dumps(response_list, indent=4)))
-        return response_list
+        return response_list, valid_tags, invalid_tags
 
     def remove_useless_points(self, arr):
         """Compressing data: remove first data point of resubmissions and points
@@ -295,12 +304,13 @@ class HistoricalAPI(APIBase):
         cache_key = 'present_%s_____%s' % (query, estimate_completed_events)
         if self.__cache.has(cache_key):
             logging.info('Found result in cache for key: %s' % cache_key)
-            response = self.__cache.get(cache_key)
+            response_tuple = self.__cache.get(cache_key)
         else:
             # Construct data by given query
-            response = self.prepare_response(query, estimate_completed_events)
-            self.__cache.set(cache_key,response)
+            response_tuple = self.prepare_response(query, estimate_completed_events)
+            self.__cache.set(cache_key, response_tuple)
 
+        response, valid_tags, invalid_tags = response_tuple
         # Apply priority, PWG and status filters
         response, pwgs, statuses = self.apply_filters(response, priority_filter, pwg_filter, status_filter)
         # Get submitted and done requests separately
@@ -318,6 +328,8 @@ class HistoricalAPI(APIBase):
                                                                data_point_count))
         data = self.append_last_data_point(data)
         res = {'data': data,
+               'valid_tags': valid_tags,
+               'invalid_tags': invalid_tags,
                'pwg': pwgs,
                'status': statuses,
                'submitted_requests': submitted_requests,

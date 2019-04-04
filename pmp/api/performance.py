@@ -24,6 +24,8 @@ class PerformanceAPI(APIBase):
 
     def prepare_response(self, query):
         response_list = []
+        valid_tags = []
+        invalid_tags = []
         query = query.split(',')
         seen_prepids = set()
         for one in query:
@@ -33,6 +35,7 @@ class PerformanceAPI(APIBase):
                 # Skip empty values
                 continue
 
+            found_something = False
             # Process the db documents
             for _, mcm_document in self.db_query(one, include_stats_document=True):
                 # skip legacy request with no prep_id
@@ -50,6 +53,7 @@ class PerformanceAPI(APIBase):
                                                                                                     len(mcm_document.get('member_of_chain', []))))
                     continue
 
+                found_something = True
                 # duplicates fix ie. when request was reset
                 patch_history = {}
                 for history in mcm_document['history']:
@@ -68,7 +72,12 @@ class PerformanceAPI(APIBase):
                                       'priority': mcm_document['priority'],
                                       'workflow': workflow_name})
 
-        return response_list
+            if found_something:
+                valid_tags.append(one)
+            else:
+                invalid_tags.append(one)
+
+        return response_list, valid_tags, invalid_tags
 
     def get_all_statuses_in_history(self, data):
         """
@@ -105,18 +114,21 @@ class PerformanceAPI(APIBase):
         cache_key = 'performance_%s' % (query)
         if self.__cache.has(cache_key):
             logging.info('Found result in cache for key: %s' % cache_key)
-            response = self.__cache.get(cache_key)
+            response_tuple = self.__cache.get(cache_key)
         else:
             # Construct data by given query
-            response = self.prepare_response(query)
-            self.__cache.set(cache_key,response)
+            response_tuple = self.prepare_response(query)
+            self.__cache.set(cache_key, response_tuple)
 
+        response, valid_tags, invalid_tags = response_tuple
         logging.info('Requests before filtering %s' % (len(response)))
         # Apply priority, PWG and status filters
         response, pwgs, statuses = self.apply_filters(response, priority_filter, pwg_filter, status_filter)
         all_statuses_in_history = self.get_all_statuses_in_history(response)
         logging.info('Requests after filtering %s' % (len(response)))
         res = {'data': response,
+               'valid_tags': valid_tags,
+               'invalid_tags': invalid_tags,
                'pwg': pwgs,
                'status': statuses,
                'all_statuses_in_history': all_statuses_in_history}
