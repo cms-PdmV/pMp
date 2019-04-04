@@ -45,19 +45,19 @@
         <div class="collapse navbar-collapse" id="navigation-bar-collapse">
           <ul class="nav navbar-nav">
             <li class="nav-item" ng-class="{active: activeIndex == 1}">
-              <a class="nav-link" href="present" ng-click="nav('/present/')">
+              <a class="nav-link" href="present{{urlQuery}}" ng-click="nav('/present/')">
                 <i class="fa fa-bar-chart spacing-r"></i>
                 Present Statistics
               </a>
             </li>
             <li class="nav-item" ng-class="{active: activeIndex == 2}">
-              <a class="nav-link" href="historical" ng-click="nav('/historical/')"">
+              <a class="nav-link" href="historical{{urlQuery}}" ng-click="nav('/historical/')">
                 <i class="fa fa-line-chart spacing-r"></i>
                 Historical Statistics
               </a>
             </li>
             <li class="nav-item" ng-class="{active: activeIndex == 3}">
-              <a class="nav-link" href="performance" ng-click="nav('/performance/')">
+              <a class="nav-link" href="performance{{urlQuery}}" ng-click="nav('/performance/')">
                 <i class="fa fa-heartbeat spacing-r"></i>
                 Performance Statistics
               </a>

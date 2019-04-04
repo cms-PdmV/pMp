@@ -110,6 +110,8 @@ angular.module('pmpApp').controller('PresentController', ['$http',
             // load graph data
             if (urlParameters.r !== '') {
                 Data.setInputTags(urlParameters.r.split(','));
+            } else {
+                Data.setInputTags([]);
             }
         };
 

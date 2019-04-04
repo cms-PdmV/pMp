@@ -21,6 +21,7 @@ angular.module('pmpApp').controller('MainController', ['$http', '$location',
             } else if (link === '/performance/') {
                 $scope.changeActiveIndex(3)
             } else {
+                $scope.urlQuery = ''
                 $scope.changeActiveIndex(0)
             }
             if (previousIndex === $scope.activeIndex) {
@@ -170,6 +171,19 @@ angular.module('pmpApp').controller('MainController', ['$http', '$location',
             var params = $scope.constructURLQuery(scope, data)
             $location.search(params).replace();
             $scope.$broadcast('onChangeNotification:URL');
+            var urlQuery = ''
+            var keys = ['r', 'pwg', 'status', 'priority']
+            keys.forEach(function (param) {
+                if (param in params) {
+                    if (urlQuery.length == 0) {
+                        urlQuery += '?'
+                    } else {
+                        urlQuery += '&'
+                    }
+                    urlQuery += param + '=' + params[param]
+                }
+            });
+            $scope.urlQuery = urlQuery;
         };
 
         $scope.formatBigNumber = function (number) {
