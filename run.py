@@ -116,7 +116,7 @@ def api_historical():
 def api_performance():
     i = flask.request.args.get('r', '')
     priority = flask.request.args.get('priority', None)
-    if priority is not None is not None:
+    if priority is not None:
         priority = priority.split(',')
         if len(priority) < 2:
             priority = None
