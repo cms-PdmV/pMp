@@ -242,8 +242,9 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
             }
 
             var plot = (new XMLSerializer()).serializeToString(document.getElementById("plot"))
-            plot += '<text transform="translate(10, 520)">Generated: ' + (date.toDateString() + ' ' + date.toLocaleTimeString()) +'</text>'
-            plot += '<text transform="translate(10, 540)">For input: ' + Data.getInputTags().join(', ') + '</text>';
+            plot += '<text transform="translate(10, 520)">Generated: ' + (date.toDateString() + ' ' + date.toLocaleTimeString()) + '</text>'
+            plot += '<text transform="translate(10, 540)">Last update: ' + $scope.lastUpdate + '</text>'
+            plot += '<text transform="translate(10, 560)">For input: ' + Data.getInputTags().join(', ') + '</text>';
 
             // viewBox is needed for rsvg convert
             var xml = '<svg viewBox="0 -20 1160 600" font-family="sans-serif" xmlns="http://www.w3.org/2000/svg">' + 

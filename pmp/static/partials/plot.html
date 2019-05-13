@@ -1,14 +1,19 @@
 <div>
   <div class="row">
     <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 hidden-xs">
-       <h1 class="pull-right">
-         <strong>{{page.title}}</strong><strong ng-class="{'ng-hide': !growingMode}">&nbsp;(Growing Mode)</strong>
-       </h1>
+      <h1 class="pull-right">
+        <strong>{{page.title}}</strong><strong ng-class="{'ng-hide': !growingMode}">&nbsp;(Growing Mode)</strong>
+      </h1>
     </div>
     <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 visible-xs-block">
-       <h3 class="pull-right">
-         <strong>{{page.title}}</strong><strong ng-class="{'ng-hide': !growingMode}">&nbsp;(Growing Mode)</strong>
-       </h3>
+      <h3 class="pull-right">
+        <strong>{{page.title}}</strong><strong ng-class="{'ng-hide': !growingMode}">&nbsp;(Growing Mode)</strong>
+      </h3>
+    </div>
+    <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+      <h5 class="pull-right">
+        Last update: <strong>{{lastUpdateAgo}}</strong>
+      </h5>
     </div>
   </div>
   <div class="row">
