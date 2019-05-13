@@ -9,6 +9,7 @@ import os
 import logging
 import config
 from werkzeug.contrib.cache import SimpleCache
+import time
 
 
 class SuggestionsAPI(esadapter.InitConnection):
@@ -175,6 +176,31 @@ class OverallAPI(object):
 
         logging.info('OverallAPI results: %s' % (results))
         return json.dumps({"results": results}, sort_keys=True)
+
+
+class LastUpdateAPI(esadapter.InitConnection):
+    def __init__(self):
+        esadapter.InitConnection.__init__(self)
+        Utils.setup_console_logging()
+
+    def get(self):
+        search_results = self.es.search(q='*',
+                                        index='last_sequences')['hits']['hits']
+        last_sequences = [s['_source'] for s in search_results]
+        last_update = min([x['time'] for x in last_sequences]) / 1000.0
+        last_update_date = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(last_update))
+        current_time = time.time()
+        seconds_ago = current_time - last_update
+        if seconds_ago < 60:
+            ago = 'less than a minute ago'
+        else:
+            minutes_ago = int(seconds_ago / 60)
+            if minutes_ago < 60:
+                ago = '%d minutes ago' % (minutes_ago)
+            else:
+                ago = '%d hours and %d minutes ago' % (int(minutes_ago / 60), int(minutes_ago - (60 * int(minutes_ago / 60))))
+
+        return json.dumps({"results": {'timestamp': last_update, 'date': last_update_date, 'ago': ago}}, sort_keys=True)
 
 
 class APIBase(esadapter.InitConnection):

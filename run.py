@@ -7,7 +7,7 @@ from flask import Flask, make_response, redirect, request
 from pmp.api.historical import HistoricalAPI
 from pmp.api.performance import PerformanceAPI
 from pmp.api.present import PresentAPI
-from pmp.api.common import OverallAPI, SuggestionsAPI, ShortenAPI, ScreenshotAPI
+from pmp.api.common import OverallAPI, SuggestionsAPI, ShortenAPI, ScreenshotAPI, LastUpdateAPI
 
 import json
 import config
@@ -59,6 +59,15 @@ def api_overall():
     i = flask.request.args.get('r', '')
     i = sanitize(i).split(',')
     result = OverallAPI().get(i)
+
+    return result
+
+@app.route('/api/lastupdate')
+def api_lastupdate():
+    """
+    API to get date and time of last update
+    """
+    result = LastUpdateAPI().get()
 
     return result
 

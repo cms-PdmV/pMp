@@ -7,9 +7,11 @@ angular.module('pmpApp').controller('IndexController', ['$location', '$http', '$
     $location, $http, $scope, $interval) {
     $location.search({}); // ensure no params in URL
     $scope.updateLastUpdate = function () {
-        promise = $http.get("api/overall?r=requests,campaigns,workflows,rereco_requests,relval_requests,tags");
-            promise.then(function (data) {
+        $http.get("api/overall?r=requests,campaigns,workflows,rereco_requests,relval_requests,tags").then(function (data) {
             $scope.data = data.data.results;
+        });
+        $http.get("api/lastupdate").then(function (data) {
+            $scope.lastUpdateAgo = data.data.results.ago;
         });
     };
 
