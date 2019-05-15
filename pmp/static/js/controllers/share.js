@@ -12,7 +12,8 @@ angular.module('pmpApp').controller('ShareController', ['$http', '$location',
          * @description Issue API call for shortening the URL.
          */
         $scope.shortenURL = function () {
-            $http.get("api/shorten?r=" + $scope.url).then(function (data) {
+            var encodedUrl = encodeURIComponent($scope.url);
+            $http.get("api/shorten?r=" + encodedUrl).then(function (data) {
                 $scope.url = data.data;
             });
         };
