@@ -147,7 +147,7 @@ class HistoricalAPI(APIBase):
                     response['status'] = mcm_document['status']
                     response['force_completed'] = mcm_document['force_completed']
                     response['output_dataset'] = mcm_document['output_dataset']
-                    response['dataset'] = mcm_document['dataset_name']
+                    response['dataset'] = mcm_document.get('dataset_name', '')
                     response['reqmgr_name'] = mcm_document.get('reqmgr_name', [])
                     if 'estimate_from' in mcm_document:
                         response['estimate_from'] = mcm_document['estimate_from']
