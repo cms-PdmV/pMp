@@ -167,29 +167,30 @@
                 return valuesToBeJoined.join('___')
             }
 
+            var compare = function(a, b) {
+                var knownKeys = ['new', 'validation', 'defined', 'approved', 'submitted', 'done']
+                if (knownKeys.includes(a.key) && knownKeys.includes(b.key)) {
+                    return knownKeys.indexOf(a.key) - knownKeys.indexOf(b.key);
+                }
+                if (!isNaN(parseInt(a.key, 10)) && !isNaN(parseInt(b.key, 10))) {
+                    return parseInt(a.key, 10) - parseInt(b.key, 10);
+                }
+                if (a.key < b.key) {
+                    return -1;
+                } else if  (a.key > b.key) {
+                    return 1;
+                }
+                return 0;
+            }
+
             var dictToArray = function(dict) {
                 var arr = []
                 for (var key in dict) {
                     if (Array.isArray(dict[key])) {
-                        arr.push({'key': key, 'value': dict[key]})
+                        arr.push({'key': key, 'value': dict[key].sort(compare)})
                     } else {
                         arr.push({'key': key, 'value': dictToArray(dict[key])})
                     }
-                }
-                function compare(a, b) {
-                    var knownKeys = ['new', 'validation', 'defined', 'approved', 'submitted', 'done']
-                    if (knownKeys.includes(a.key) && knownKeys.includes(b.key)) {
-                        return knownKeys.indexOf(a.key) - knownKeys.indexOf(b.key);
-                    }
-                    if (!isNaN(parseInt(a.key, 10)) && !isNaN(parseInt(b.key, 10))) {
-                        return parseInt(a.key, 10) - parseInt(b.key, 10);
-                    }
-                    if (a.key < b.key) {
-                        return -1;
-                    } else if  (a.key > b.key) {
-                        return 1;
-                    }
-                    return 0;
                 }
                 arr = arr.sort(compare);
                 return arr;
@@ -202,6 +203,7 @@
                 var allColorByKeys = []
                 for (var i in data) {
                     var request = data[i]
+                    request.key = request.prepid
                     var groupByKey = makeKeyForAttributes(request, scope.groupBy)
                     var colorByKey = makeKeyForAttributes(request, scope.colorBy)
                     var stackByKey = makeKeyForAttributes(request, scope.stackBy)
@@ -250,6 +252,7 @@
                                         }
                                         if (adjustment > 0) {
                                             preparedData[newGroupBy][newColorBy][newStackBy].push({prepid: d.prepid,
+                                                                                                   key: d.prepid,
                                                                                                    total_events: realTotal,
                                                                                                    priority: d.priority,
                                                                                                    member_of_chain: d.member_of_chain,
