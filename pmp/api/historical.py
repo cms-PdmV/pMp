@@ -146,7 +146,8 @@ class HistoricalAPI(APIBase):
                     response['priority'] = mcm_document['priority']
                     response['status'] = mcm_document['status']
                     response['force_completed'] = mcm_document['force_completed']
-                    response['dataset'] = mcm_document['output_dataset']
+                    response['output_dataset'] = mcm_document['output_dataset']
+                    response['dataset'] = mcm_document['dataset_name']
                     response['reqmgr_name'] = mcm_document.get('reqmgr_name', [])
                     if 'estimate_from' in mcm_document:
                         response['estimate_from'] = mcm_document['estimate_from']
@@ -156,6 +157,7 @@ class HistoricalAPI(APIBase):
                     response['priority'] = stats_document['priority']
                     response['status'] = None
                     response['force_completed'] = False
+                    response['output_dataset'] = ''
                     response['dataset'] = ''
                     response['reqmgr_name'] = [stats_document['_id']]
 
@@ -277,6 +279,7 @@ class HistoricalAPI(APIBase):
 
             new_data.append({'r': request['request'],
                              'p': request['priority'],
+                             'ods': request['output_dataset'],
                              'ds': request['dataset'],
                              'x': data_points[-1]['x'],
                              'd': data_points[-1][key],
@@ -284,6 +287,7 @@ class HistoricalAPI(APIBase):
                              'est': request.get('estimate_from', None),
                              'w': workflow_name})
 
+        new_data = sorted(new_data, key=lambda k: k['r'])
         return new_data
 
     def get(self, query, data_point_count=100, estimate_completed_events=False, priority_filter=None, pwg_filter=None, status_filter=None):

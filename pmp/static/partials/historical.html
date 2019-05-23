@@ -12,6 +12,7 @@
       <div ng-repeat="submitted in listSubmitted" class="row zebra-lines small-padding">
         <div class="col-sm-4">
           <a ng-href="{{submitted.url}}" target="_blank">{{submitted.r}}</a>
+          <br><small>{{submitted.ds}}</small>
           <small title="Number of events estimated from {{submitted.est}}" style="color:red" ng-if="submitted.est"><br>(Estimate from {{submitted.est}})</small>
         </div>
         <div ng-if="!humanReadable" class="col-sm-2">
@@ -40,7 +41,7 @@
           </div>
         </div>
         <div class="col-sm-2">
-          <a ng-if="submitted.ds" ng-href="https://cmsweb.cern.ch/das/request?view=list&limit=50&instance=prod/global&input=dataset={{submitted.ds}}" target="_blank">Dataset in DAS</a>
+          <a ng-if="submitted.ds" ng-href="https://cmsweb.cern.ch/das/request?view=list&limit=50&instance=prod/global&input=dataset={{submitted.ods}}" target="_blank">Dataset in DAS</a>
         </div>
       </div>
     </div>
@@ -52,6 +53,7 @@
       <div ng-repeat="done in listDone" class="row zebra-lines small-padding">
         <div class="col-sm-4">
           <a ng-href="{{done.url}}" target="_blank">{{done.r}}</a>
+          <br><small>{{done.ds}}</small>
           <small title="Number of events estimated from {{done.est}}" style="color:red" ng-if="done.est"><br>(Estimate from {{done.est}})</small>
         </div>
         <div ng-if="!humanReadable" class="col-sm-2">
@@ -82,7 +84,7 @@
           </div>
         </div>
         <div class="col-sm-2">
-          <a ng-if="done.ds" ng-href="https://cmsweb.cern.ch/das/request?view=list&limit=50&instance=prod/global&input=dataset={{done.ds}}" target="_blank">Dataset in DAS</a>
+          <a ng-if="done.ds" ng-href="https://cmsweb.cern.ch/das/request?view=list&limit=50&instance=prod/global&input=dataset={{done.ods}}" target="_blank">Dataset in DAS</a>
         </div>
       </div>
     </div>

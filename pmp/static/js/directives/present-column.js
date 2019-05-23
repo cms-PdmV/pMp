@@ -257,6 +257,7 @@
                                                                                                    priority: d.priority,
                                                                                                    member_of_chain: d.member_of_chain,
                                                                                                    status: 'done',
+                                                                                                   dataset_name: d.dataset_name,
                                                                                                    growing_fake: true,
                                                                                                    completed_events: adjustment})
                                         }
