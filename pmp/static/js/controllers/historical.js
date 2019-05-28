@@ -185,6 +185,10 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
                     }
                 }, 100)
             }, function () {
+                Data.setLoadedData([]);
+                Data.setStatusFilter({});
+                Data.setPWGFilter({});
+                $scope.data = Data.getLoadedData();
                 $scope.showPopUp('error', 'Error loading requests');
                 $scope.loadingData = false;
             });
@@ -242,8 +246,8 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
             }
 
             var plot = (new XMLSerializer()).serializeToString(document.getElementById("plot"))
-            plot += '<text transform="translate(10, 520)">Generated: ' + (date.toDateString() + ' ' + date.toLocaleTimeString()) + '</text>'
-            plot += '<text transform="translate(10, 540)">Last update: ' + $scope.lastUpdate + '</text>'
+            plot += '<text transform="translate(10, 520)">Generated: ' + (date.toDateString() + ' ' + date.toLocaleTimeString('en-GB', {timeZoneName: "short"})) + '</text>'
+            plot += '<text transform="translate(10, 540)">Last update: ' + $scope.lastUpdate + ' CERN Time</text>'
             plot += '<text transform="translate(10, 560)">For input: ' + Data.getInputTags().join(', ') + '</text>';
 
             // viewBox is needed for rsvg convert

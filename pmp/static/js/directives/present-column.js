@@ -40,6 +40,7 @@
                     .append('svg:svg')
                     .attr("viewBox", "0 -20 " + config.customWidth + " " + config.customHeight)
                     .attr("xmlns", "http://www.w3.org/2000/svg")
+                    .attr("id", "plot-parent")
                     .append("svg:g")
                     .attr("id", "plot")
                     .attr("transform", "translate(" + config.margin.left + "," + config.margin.top + ")")
@@ -271,11 +272,11 @@
                 preparedData = dictToArray(preparedData)
                 var flatData = [];
                 var barMargin = 0.01;
-                var subBarMargin = 0.005;
-                var barWidth = (1.0 - (preparedData.length * barMargin)) / preparedData.length;
-                var colors = {}
+                var subBarMargin = 0.003;
+                var barWidth = (0.99 - (preparedData.length * barMargin)) / preparedData.length;
+                var usedColorKeys = [];
                 for (var i = 0; i < preparedData.length; i++) {
-                    preparedData[i].x0 = i * barWidth + (i + 1) * barMargin;
+                    preparedData[i].x0 = 0.01 + i * barWidth + (i + 1) * barMargin;
                     preparedData[i].x1 = preparedData[i].x0 + barWidth;
                     var subBarWidth = (barWidth - (preparedData[i].value.length * subBarMargin)) / preparedData[i].value.length;
                     for (var j = 0; j < preparedData[i].value.length; j++) {
@@ -285,21 +286,21 @@
                         if (colorKey === undefined || colorKey === '') {
                             color = '#2196f3'
                         } else {
-                            var color = colors[colorKey]
+                            color = colorMap[colorKey]
                             if (color === undefined) {
-                                color = colorMap[colorKey]
-                                if (color === undefined) {
-                                    color = getRandomColor()
-                                }
-                                colorMap[colorKey] = color
+                                color = getRandomColor()
+                            }
+                            colorMap[colorKey] = color
+                            if (!(usedColorKeys.includes(colorKey))) {
+                                usedColorKeys.push(colorKey)
                             }
                         }
                         
-                        var barY = 0;
+                        var barY = (scope.scale === 'log' ? 0.1 : 0);
                         for (var k = 0; k < preparedData[i].value[j].value.length; k++) {
                             preparedData[i].value[j].value[k].x0 = preparedData[i].value[j].x0;
                             preparedData[i].value[j].value[k].x1 = preparedData[i].value[j].x0 + subBarWidth;
-                            preparedData[i].value[j].value[k].y0 = barY == 0 ? 0.1 : barY
+                            preparedData[i].value[j].value[k].y0 = barY
                             var sum = 0;
                             if (scope.mode === 'events') {
                                 sum = d3.sum(preparedData[i].value[j].value[k].value, function(d) { return d.status === 'done' ? d.completed_events : d.total_events; })
@@ -308,7 +309,8 @@
                             } else {
                                 sum = preparedData[i].value[j].value[k].value.length;
                             }
-                            preparedData[i].value[j].value[k].y1 = barY + sum;
+                            sum = Math.max(0, sum)
+                            preparedData[i].value[j].value[k].y1 = preparedData[i].value[j].value[k].y0 + sum;
                             preparedData[i].value[j].value[k].color = color;
                             preparedData[i].value[j].value[k].sum = sum;
                             color = getTintedColor(color, parseInt(80.0 / preparedData[i].value[j].value.length));
@@ -317,6 +319,19 @@
                         }
                     }
                 }
+                var legendHeight = ((1 + parseInt(usedColorKeys.length / 4)) * 20);
+                for (var i = 0; i < usedColorKeys.length; i++) {
+                    usedColorKeys[i] = {index: i,
+                                        x: i % 4 * ((config.customWidth - 40) / 4),
+                                        y: parseInt(i / 4) * 20 - legendHeight,
+                                        key: usedColorKeys[i],
+                                        color: colorMap[usedColorKeys[i]]}
+                }
+
+                d3.select("#plot").attr("transform", "translate(80, " + (legendHeight + config.margin.top) + ")")
+                d3.select("#plot-parent").attr("viewBox", "0 -20 " + config.customWidth + " " + (config.customHeight + legendHeight))
+
+                usedColorKeys = usedColorKeys.sort(compare);
                 var xAxisLabels = [];
                 if (preparedData[0].key !== '') {
                     for (var i = 0; i < preparedData.length; i++) {
@@ -341,7 +356,7 @@
                     yAxis = yAxis.tickFormat(scope.bigNumberFormatter)
                 }
                 var maxValue = d3.max(flatData, function(d) { return d.y1; });
-                y = y.domain([0.1, maxValue * topMargin]).range([height, 0]);
+                y = y.domain([(scope.scale === 'log' ? 0.1 : 0), maxValue * topMargin]).range([height, 0]);
                 // xAxis.ticks(xAxisLabels.length)
                 xAxis.tickValues(Array.from(xAxisLabels, x => x.x - barMargin / 2))
                 xAxis.tickFormat(function(d, i) { return xAxisLabels[i].key; })
@@ -352,6 +367,8 @@
                 svg.selectAll("text.bar-size-label").remove()
                 svg.selectAll("g .x.axis").call(xAxis);
                 svg.selectAll("g .y.axis").call(yAxis);
+                svg.selectAll(".legend").remove()
+                svg.selectAll("circle").remove()
                 svg.select(".x.axis")
                    .selectAll('text')
                    .style("font-size","14px");
@@ -359,7 +376,7 @@
                    .selectAll('text')
                    .style("font-size","14px");
 
-                var rect = svg.selectAll("rect")
+                var rect = svg.selectAll("rect .bar")
                               .data(flatData)
                               .enter()
 
@@ -411,10 +428,10 @@
                     .attr("fill", function(d) { return d.color; })
                     .attr("class", "bar")
                     .attr("transform", function(d) {
-                       return "translate(" + x(d.x0 - barMargin / 2) + "," + y(d.y1) + ")";
+                        return "translate(" + x(d.x0 - barMargin / 2) + "," + y(d.y1) + ")";
                     })
                     .attr("width", function(d) { return Math.max(0, x(d.x1) - x(d.x0)); })
-                    .attr("height", function(d) { return y(d.y0) - y(d.y1); })
+                    .attr("height", function(d) { return Math.max(0, y(d.y0) - y(d.y1)); })
                     .on("mouseover", function() {
                         d3.select(this).style("fill", '#bdbdbd');
                     })
@@ -437,10 +454,35 @@
                     })
                     .append("svg:title").text(setTitle);
 
+                var legendCircle = svg.selectAll("circle")
+                                      .data(usedColorKeys)
+                                      .enter()
+
+                legendCircle.append("circle")
+                            .attr("cx", function(d) {return d.x })
+                            .attr("cy", function (d) { return d.y - 6})
+                            .attr("class", "legend")
+                            .attr("r", 8)
+                            .style("fill", function (d) { return d.color; })
+
+                legendCircle.append("text")
+                            .attr("transform", function (d) { return "translate(" + (d.x + 12) + ", " + d.y + ")"})
+                            .text(function (d) { return d.key; })
+                            .style("font-size", "15px")
+                            .attr("class", "legend")
+                            .style("fill", "black")
+
+                svg.append("text")
+                   .text(scope.mode.toUpperCase())
+                   .style("fill", "#333")
+                   .attr("class", "legend")
+                   .style("text-anchor"," end")
+                   .attr("transform", "rotate(-90) translate(-4, 16)")
+
                 svg.selectAll(".x.axis .tick>text")
                    .style("text-anchor"," end")
                    .attr("transform", "rotate(-32)")
-                   .style("font-weight", "lighter")
+                   .style("fill", "#333")
                    .style("text-transform", "uppercase")
             };
 

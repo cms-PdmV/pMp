@@ -200,6 +200,10 @@ angular.module('pmpApp').controller('PresentController', ['$http',
                     }
                 }, 100)
             }, function () {
+                Data.setLoadedData([]);
+                Data.setStatusFilter({});
+                Data.setPWGFilter({});
+                $scope.data = Data.getLoadedData();
                 $scope.showPopUp('error', 'Error loading requests');
                 $scope.loadingData = false;
             });
@@ -212,18 +216,19 @@ angular.module('pmpApp').controller('PresentController', ['$http',
          */
         $scope.takeScreenshot = function (format) {
             var date = new Date()
+            var lastUpdateDate = new Date($scope.lastUpdate)
 
             if (format === undefined) {
                 format = 'svg';
             }
 
+            var viewBox = document.getElementById("plot-parent").getAttribute("viewBox").split(' ')
             var plot = (new XMLSerializer()).serializeToString(document.getElementById("plot"))
-            plot += '<text transform="translate(10, 620)">Generated: ' + (date.toDateString() + ' ' + date.toLocaleTimeString()) +'</text>'
-            plot += '<text transform="translate(10, 640)">Last update: ' + $scope.lastUpdate + '</text>'
-            plot += '<text transform="translate(10, 660)">For input: ' + Data.getInputTags().join(', ') + '</text>';
-
+            plot += '<text transform="translate(10, ' + (parseInt(viewBox[3]) + 0) + ')">Generated: ' + (date.toDateString() + ' ' + date.toLocaleTimeString('en-GB', {timeZoneName: "short"})) + '</text>'
+            plot += '<text transform="translate(10, ' + (parseInt(viewBox[3]) + 20 ) + ')">Last update: ' + $scope.lastUpdate + ' CERN Time</text>'
+            plot += '<text transform="translate(10, ' + (parseInt(viewBox[3]) + 40 ) + ')">For input: ' + Data.getInputTags().join(', ') + '</text>';
             // viewBox is needed for rsvg convert
-            var xml = '<svg viewBox="0 -20 1160 700" font-family="sans-serif" xmlns="http://www.w3.org/2000/svg">' + 
+            var xml = '<svg viewBox="' + viewBox[0] + ' ' + viewBox[1] + ' ' + viewBox[2] + ' ' + (parseInt(viewBox[3]) + 80) + '" font-family="sans-serif" xmlns="http://www.w3.org/2000/svg">' +
                       plot +
                       '</svg>';
             $http({
