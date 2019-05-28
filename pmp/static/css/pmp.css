@@ -18,24 +18,24 @@ body {
 }
 
 .brand-adjust {
-    height: 30px;
-    margin: 10px;
+    height: 40px;
+    margin: 0;
     float: left;
 }
 
 .navbar {
     margin-bottom: 10px;
-	border-radius: 0;
+    border-radius: 0;
 }
 
 .ng-hide-remove {
-    -webkit-animation: fadeIn 0.5s;
-    animation: fadeIn 0.5s;
+    -webkit-animation: fadeIn 0.2s;
+    animation: fadeIn 0.2s;
 }
  
 .ng-hide-add {
-    -webkit-animation: fadeOut 1.0s;
-    animation: fadeOut 1.0s;
+    -webkit-animation: fadeOut 0.2s;
+    animation: fadeOut 0.2s;
     display: block !important;
 }
 
@@ -44,7 +44,7 @@ body {
 }
 
 .panel-body {
-    padding: 10px;
+    padding: 12px;
 }
 
 .pointer {
@@ -59,22 +59,6 @@ body {
     z-index: 2001;
 }
 
-.well {
-    margin-bottom: 5px;
-}
-
-.white {
-    color: white;
-}
-
-.spacing {
-    margin-bottom: 10px;
-}
-
-.spacing-r {
-    margin-right: 10px;
-}
-
 /*
  *Index
  */
@@ -84,82 +68,12 @@ body {
 }
 
 /*
- *Drag&Drop
- */
-
-.nav-header {
-    font-size: 16px;
-    font-weight: bold;
-    text-align: right;
-    text-transform: uppercase;
-}
-
-ul.nav li {
-    position: static;
-}
-
-ul.nav li.dragged {
-    position: absolute;
-    opacity: 0.7;
-    z-index: 100;
-}
-
-ul.nav li.placeholder {
-    position: relative;
-}
-
-ul.nav li.placeholder:before {
-    border: 5px solid transparent;
-    border-bottom: none;
-    border-top-color: black;
-    content: '';
-    margin-left: -6px;
-    position: absolute;
-    top: -3px;
-}
-
-/*
- *Present
- */
-
-.x path {
-    fill: none;
-    stroke: '#777777';
-}
-
-/*
- *Performance
- */
-.update {
-    fill: #b0bec5;
-}
-
-/*
  *Historical
  */
-rect.pane {
-    cursor: move;
-    fill: none;
-    pointer-events: all;
-}
 
-.legend {
-    margin: 3px;
-    float: left;
-    width: 13px;
-    height: 13px;
-    -webkit-border-radius: 7px;
-    -moz-border-radius: 7px;
-    border-radius: 7px;
-}
-
-.historical-drilldown > div {
-	width: 25%;
-	display: inline-block;
-}
-
-.small-padding {
-    padding: 10px;
+.zebra-lines {
+    padding-top: 6px;
+    padding-bottom: 6px;
 }
 
 .zebra-lines:nth-child(2n) {
@@ -170,34 +84,84 @@ rect.pane {
     background: #d4d7d8;
 }
 
-/*
- *Chains
- *Currently not available from frontend
- */
-
-/*.node {
-    cursor: pointer;
+.total-bar {
+    background-color: #9da3a7;
+    width:100%;
+    display: inline-block;
+    margin: 0 4px -5px 4px;
 }
 
-.node circle {
-    cursor: pointer;
-    stroke-width: 2px;
+.pmp-orange {
+    background-color: #f4bc91;
 }
 
-.node-text {
-    cursor: pointer;
-    fill: #000;
-    stroke: transparent;
-    font: bold 11px sans-serif;
-    text-shadow: 1px 1px #fff;
-    textLength: 20px;
-    display: none;
+.pmp-blue {
+    background-color: #8eb2cf;
 }
 
-.node.expanded circle {
-    fill: #fff;
+.pmp-radio-buttons > label.active {
+    background-color: #f4bc91 !important;
+    color: black !important;
 }
 
-.node.expanded .node-text {
-    display: none;
-}*/
+.zebra-lines > div {
+    padding-left: 5px;
+    padding-right: 5px;
+}
+
+.suggestions-type {
+    margin-left: 20px;
+    font-size: 0.8rem;
+}
+
+@keyframes blink {
+    0% {
+      opacity: .2;
+    }
+    20% {
+      opacity: 1;
+    }
+    100% {
+      opacity: .2;
+    }
+}
+
+.loading-data span {
+    animation-name: blink;
+    animation-duration: 1.4s;
+    animation-iteration-count: infinite;
+    animation-fill-mode: both;
+}
+
+.loading-data span:nth-child(2) {
+    animation-delay: .2s;
+}
+
+.loading-data span:nth-child(3) {
+    animation-delay: .4s;
+}
+
+#historical-drilldown>div {
+    width: 25%;
+    display: inline-block;
+}
+
+body:after{
+    content: "beta";
+    position: fixed;
+    width: 160px;
+    height: 40px;
+    background: red;
+    top: 20px;
+    right: -40px;
+    text-align: center;
+    font-size: 25px;
+    font-family: sans-serif;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: #fff;
+    line-height: 40px;
+    -ms-transform: rotate(45deg);
+    -webkit-transform: rotate(45deg);
+    transform: rotate(45deg);
+}

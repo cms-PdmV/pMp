@@ -11,8 +11,7 @@ angular.module('pmpApp').factory('browser', ['$window', function ($window) {
     var supportedBrowsers = {
         Chrome: /chrome/i,
         Safari: /safari/i,
-        Firefox: /firefox/i,
-        Opera: /Opera/i
+        Firefox: /firefox/i
     };
     for (var s in supportedBrowsers) {
         if (supportedBrowsers[s].test(userAgent)) return true;

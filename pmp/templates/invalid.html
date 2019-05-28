@@ -1,3 +1,37 @@
-<h3>you see what happens, larry?!!!<br>
-  this what happens when you type the url incorrectly!</h3>
-<img src="http://s3.amazonaws.com/s3.roosterteeth.com/images/stevie92466a6628c10c8.jpg">
+<!DOCTYPE html>
+<html lang="en" ng-app="pmpApp" id="ng-app">
+
+  <head>
+    <title>Production Monitoring Platform</title>
+    <base href="/pmp/"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+
+    <!--external CSS-->
+    <link href="static/build/depend.build.css" rel="stylesheet" type="text/css"/>
+    <link href="https://fonts.googleapis.com/css?family=Roboto:900,400,300" rel="stylesheet" type="text/css"/>
+
+    <!--pMp CSS-->
+    <link href="static/build/pmp.build.css" rel="stylesheet"/>
+    <link rel="shortcut icon" type="image/x-icon" href="static/ic_fav.png" />
+    <style type="text/css">
+      .centered {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+      }
+      img {
+        width: 500px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="centered">
+      <h2>You see what happens, Larry?!</h2>
+      <img src="static/stevie.jpg">
+      <h3>This what happens when you type the URL incorrectly!</h3>
+      <small style="color:#AAA">This is legacy image from the original pMp</small>
+    </div>
+  </body>
+</html>

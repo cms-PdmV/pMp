@@ -7,26 +7,26 @@
  */
 angular.module('pmpApp').filter('readableNumbers', function () {
     'use strict';
-    return function (d) {
-        var significantFigures = 3;
-        if (!d) {
-            return 0;
+    return function (number) {
+        var result = ''
+        if (number >= 1e9) {
+            result = (Math.round(number / 10000000.0) / 100.0).toFixed(2) + "G"
+        } else if (number >= 1e6) {
+            result = (Math.round(number / 10000.0) / 100.0).toFixed(2) + "M"
+        } else if (number >= 1e3) {
+            result = (Math.round(number / 10.0) / 100.0).toFixed(2) + "k"
+        } else {
+            result = (Math.round(number * 100.0).toFixed(2) / 100.0).toString()
         }
-        var l = ['G', 'M', 'k', ''];
-        var s, j = 0;
-        for (var i = 1e9; i >= 1; i = i / 1e3) {
-            s = (Math.round(d * 100 / i) / 100).toFixed(2);
-            if (s >= 1) {
-                if ((s + '').substring(0, significantFigures).indexOf(
-                        '.') === -1) {
-                    return (s + '').substring(0, significantFigures) +
-                        l[j];
-                }
-                return (s + '').substring(0, significantFigures + 1) +
-                    l[j];
-            }
-            j++;
-        }
-        return '';
+        return result.replace('.00', '')
+                     .replace('.10', '.1')
+                     .replace('.20', '.2')
+                     .replace('.30', '.3')
+                     .replace('.40', '.4')
+                     .replace('.50', '.5')
+                     .replace('.60', '.6')
+                     .replace('.70', '.7')
+                     .replace('.80', '.8')
+                     .replace('.90', '.9')
     };
 });

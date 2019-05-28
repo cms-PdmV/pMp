@@ -2,8 +2,8 @@ from logging import Formatter
 from logging.handlers import SMTPHandler
 from logging import handlers
 from flask import request, g
-from urllib2 import unquote
-from pmp import app
+from urllib.parse import unquote
+from run import app
 import os
 import config
 import logging

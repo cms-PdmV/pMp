@@ -1,6 +1,6 @@
 {
-  "name": "pmp",
-  "version": "0.0.0",
+  "name": "pMp",
+  "version": "2.0.0",
   "description": "provides monitoring of the workflow Monte Carlo request submission from PdmV/mccm to computing, and the advancement of the workflows in production",
   "main": "index.js",
   "scripts": {
@@ -17,10 +17,20 @@
   },
   "homepage": "https://github.com/cms-PdmV/pmp",
   "dependencies": {
-    "grunt": "^0.4.5"
+    "angular": "^1.7.7",
+    "angular-animate": "^1.7.7",
+    "angular-route": "^1.7.7",
+    "angular-ui-bootstrap": "^2.5.6",
+    "animate.css": "^3.7.0",
+    "bootstrap": "^3.3.7",
+    "clipboard": "^2.0.4",
+    "d3": "^5.9.0",
+    "font-awesome": "^4.7.0",
+    "grunt": "^0.4.5",
+    "jquery": "^3.3.1",
+    "popper.js": "^1.14.7"
   },
   "devDependencies": {
-    "bower": "^1.4.1",
     "grunt": "^0.4.5",
     "grunt-contrib-concat": "^0.5.1",
     "grunt-contrib-cssmin": "^0.12.3",

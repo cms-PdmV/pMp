@@ -7,22 +7,13 @@ angular.module('pmpApp').controller('ShareController', ['$http', '$location',
     '$scope',
     function ($http, $location, $scope) {
         'use strict';
-
-        /**
-         * @description Init method of the controller.
-         */
-        $scope.initShare = function () {
-            $scope.url = $location.absUrl();
-            new ZeroClipboard(document.getElementById('copy'), {
-                moviePath: 'bower_components/zeroclipboard/dist/ZeroClipboard.swf'
-            });
-        };
-
+        new ClipboardJS('.btn');
         /**
          * @description Issue API call for shortening the URL.
          */
         $scope.shortenURL = function () {
-            $http.get("shorten/" + $scope.url).then(function (data) {
+            var encodedUrl = encodeURIComponent($scope.url);
+            $http.get("api/shorten?r=" + encodedUrl).then(function (data) {
                 $scope.url = data.data;
             });
         };

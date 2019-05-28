@@ -1,30 +1,90 @@
-<div class="row" ng-show="data.length">
-  <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 text-center spacing" id="measure">
-    <linear-lifetime chart-data="data" task-chain="loadTaskChain" zoom-y="zoomOnY"
-                     human-readable-numbers="humanReadableNumbers" class="spacing"></linear-lifetime>
-    <p ng-hide="isEmpty(listSubmitted)">
-      List of requests on status submitted:
-    </p>
-    <div ng-repeat="(prepid, value) in listSubmitted" class="zebra-lines small-padding">
-      <div class="col-lg-3 col-md-3 col-sm-3">
-        <small>
-          <a ng-if="prepid.indexOf('ReReco') == -1" ng-href="/mcm/requests?prepid={{prepid}}" target="_blank">{{prepid}}</a>
-          <a ng-if="prepid.indexOf('ReReco') != -1" ng-href="https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?prep_id={{prepid}}" target="_blank">{{prepid}}</a>
-        </small>
-      </div>
-      <div class="col-lg-9 col-md-9 col-sm-9">
-        <div class="progress">
-          <div class="{{getSubmittedProgressClass(value['completion'])}}" role="progressbar" aria-valuenow="{{getSubmittedProgressWidth(value['completion'])}}" aria-valuemin="0" aria-valuemax="100" style="width: {{getSubmittedProgressWidth(value['completion'])}}%;">
-            {{getSubmittedProgressLabel(value['completion'])}}
+<div class="row" ng-hide="loadingData || !data || data.length == 0">
+  <div class="col-sm-12 text-center spacing pb-4" id="measure">
+    <linear-lifetime data="data"
+                     zoom-y="zoomY"
+                     human-readable-numbers="humanReadable"
+                     big-number-formatter="formatBigNumber"
+                     class="spacing"><div class="historical-drilldown" id="historical-drilldown"></div></linear-lifetime>
+    <div ng-if="listSubmitted.length != 0">
+      <p class="mt-4">
+        List of requests (<b>{{listSubmitted.length}}</b>) in status <b>submitted</b>
+      </p>
+      <div ng-repeat="submitted in listSubmitted" class="row zebra-lines small-padding">
+        <div class="col-sm-4">
+          <a ng-href="{{submitted.url}}" target="_blank">{{submitted.r}}</a>
+          <br><small>{{submitted.ds}}</small>
+          <small title="Number of events estimated from {{submitted.est}}" style="color:red" ng-if="submitted.est"><br>(Estimate from {{submitted.est}})</small>
+        </div>
+        <div ng-if="!humanReadable" class="col-sm-2">
+          Expected: <b>{{submitted.x}}</b>
+        </div>
+        <div ng-if="humanReadable" class="col-sm-2">
+          Expected: <b title="{{submitted.x}}">{{submitted.x | readableNumbers}}</b>
+        </div>
+        <div ng-if="!humanReadable" class="col-sm-2">
+          Produced: <b>{{submitted.d}}</b>
+        </div>
+        <div ng-if="humanReadable" class="col-sm-2">
+          Produced: <b title="{{submitted.d}}">{{submitted.d | readableNumbers}}</b>
+        </div>
+        <div class="col-sm-2">
+          <div class="progress total-bar">
+            <div class="font-shadow progress-bar pmp-orange"
+                 role="progressbar"
+                 aria-valuemin="0"
+                 aria-valuemax="100"
+                 style="color: black;
+                        max-width: 100%;
+                        width:{{submitted.perc}}%;">
+              {{submitted.perc | readableNumbers}}%
+            </div>
           </div>
         </div>
+        <div class="col-sm-2">
+          <a ng-if="submitted.ods" ng-href="https://cmsweb.cern.ch/das/request?view=list&limit=50&instance=prod/global&input=dataset={{submitted.ods}}" target="_blank">Dataset in DAS</a>
+        </div>
       </div>
-      <div class="row">
-        <div>
-          {{value['datasets'][0].substring(0, value['datasets'][0].lastIndexOf("/")+1)}}
-          <a ng-repeat="dataset in value['datasets']" ng-href="https://cmsweb.cern.ch/das/request?view=list&limit=50&instance=prod/global&input=dataset={{dataset}}" target="_blank">
-            {{dataset.split("/")[dataset.split("/").length-1]}};
-          </a>
+    </div>
+
+    <div ng-if="showDoneRequestsList && listDone.length != 0">
+      <p class="mt-4">
+        List of requests (<b>{{listDone.length}}</b>) in status <b>done</b>
+      </p>
+      <div ng-repeat="done in listDone" class="row zebra-lines small-padding">
+        <div class="col-sm-4">
+          <a ng-href="{{done.url}}" target="_blank">{{done.r}}</a>
+          <br><small>{{done.ds}}</small>
+          <small title="Number of events estimated from {{done.est}}" style="color:red" ng-if="done.est"><br>(Estimate from {{done.est}})</small>
+        </div>
+        <div ng-if="!humanReadable" class="col-sm-2">
+          Expected: <b>{{done.x}}</b>
+        </div>
+        <div ng-if="humanReadable" class="col-sm-2">
+          Expected: <b title="{{done.x}}">{{done.x | readableNumbers}}</b>
+        </div>
+        <div ng-if="!humanReadable" class="col-sm-2">
+          Done: <b>{{done.d}}</b>
+          <small title="Force completed" style="color:red" ng-if="done.fc">(FC)</small>
+        </div>
+        <div ng-if="humanReadable" class="col-sm-2">
+          Done: <b title="{{done.d}}">{{done.d | readableNumbers}}</b>
+          <small title="Force completed" style="color:red" ng-if="done.fc">(FC)</small>
+        </div>
+        <div class="col-sm-2">
+          <div class="progress total-bar">
+            <div class="font-shadow progress-bar pmp-blue"
+                 role="progressbar"
+                 aria-valuemin="0"
+                 aria-valuemax="100"
+                 style="color: black;
+                        max-width: 100%;
+                        width:{{done.perc}}%;">
+              {{done.perc | readableNumbers}}%
+            </div>
+          </div>
+        </div>
+        <div class="col-sm-2">
+          <a ng-if="done.ods" ng-href="https://cmsweb.cern.ch/das/request?view=list&limit=50&instance=prod/global&input=dataset={{done.ods}}" target="_blank">Dataset in DAS</a>
         </div>
       </div>
     </div>

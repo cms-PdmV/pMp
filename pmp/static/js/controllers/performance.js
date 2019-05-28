@@ -4,22 +4,28 @@
  * @description Performance Graph Controller
  */
 angular.module('pmpApp').controller('PerformanceController', ['$http',
-    '$interval', '$location', '$rootScope', '$scope', 'PageDetailsProvider', 'Data',
-    function ($http, $interval, $location, $rootScope, $scope, PageDetailsProvider,
-        Data) {
+                                                              '$interval',
+                                                              '$location',
+                                                              '$rootScope',
+                                                              '$scope',
+                                                              '$timeout',
+                                                              'PageDetailsProvider',
+                                                              'Data',
+    function ($http, $interval, $location, $rootScope, $scope, $timeout, PageDetailsProvider, Data) {
         'use strict';
 
-        // Information about default URL parameters
+        /**
+         * @description Holds information about parameter defaults
+         */
         $scope.defaults = {
             r: '', // search term
-            b: 10, // histogram bins
-            min: 'done', // minuend
-            sub: 'created', // subtrahend
-            l: 'true', // linear scale? false = log
-            t: 'false', // show last updated time?
-            x: ',', // priority filter
-            w: undefined, // pwg filter
-            s: undefined, // status filter
+            bins: 20, // histogram bins
+            subtrahend: 'created', // subtrahend
+            minuend: 'done', // minuend
+            scale: 'linear', // linear scale? false = log
+            priority: undefined, // priority filter
+            status: undefined, // status filter
+            pwg: undefined, // PWG filter
         };
 
         /**
@@ -28,93 +34,54 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
         $scope.init = function () {
             // get information about page
             $scope.page = PageDetailsProvider.performance;
+            $scope.selectedBin = [];
 
-            // reset data and filters
+            $scope.loadingData = false;
             Data.reset(true);
-
+            $scope.data = undefined;
+            $scope.firstLoad = true;
+            $scope.changeActiveIndex(3);
             // collect URL parameters together
-            var urlParameters = {};
-
-            ['r', 'b', 'min', 'sub', 'l', 't', 'x', 'w', 's'].forEach(
-                function (param, index, array) {
-                var urlValue = $location.search()[param];
-
-                // if the default is a number, expect a numerical parameter
-                if (urlValue === undefined
-                    || (angular.isNumber($scope.defaults[param]) && !angular.isNumber(urlValue))) {
-                    urlParameters[param] = $scope.defaults[param];
-                }
-                else {
-                    urlParameters[param] = urlValue;
-                }
-            });
-
+            var urlParameters = $scope.fillDefaults($location.search(), $scope.defaults)
             // define graph difference
-            $scope.difference = {
-                minuend: 'done',
-                subtrahend: 'created'
-            };
-            $scope.selections = ['validation', 'approved',
-                'submitted'
-            ];
-
-            var inx;
-            inx = $scope.selections.indexOf(urlParameters.min);
-            if (inx != -1) {
-                $scope.difference.minuend = urlParameters.min;
-                $scope.selections.splice(inx, 1);
-                $scope.selections.push('done');
-            }
-
-            inx = $scope.selections.indexOf(urlParameters.sub);
-            if (inx != -1) {
-                $scope.difference.subtrahend = urlParameters.sub;
-                $scope.selections.splice(inx, 1);
-                $scope.selections.push('created');
-            }
-
-            // if show time label
-            $scope.showDate = urlParameters.t === 'true';
-
+            $scope.minuend = urlParameters.minuend;
+            $scope.subtrahend = urlParameters.subtrahend;
+            $scope.availableStatuses = [];
+            $scope.availableScales = ['linear', 'log'];
             // if linear scale
-            if (urlParameters.l === 'false') {
-                $scope.scaleType = 'log';
-            } else {
-                $scope.scaleType = 'linear';
-            }
+            $scope.scale = urlParameters.scale;
 
             // set number of bins
-            $scope.bins = parseInt(urlParameters.b, 10);
+            $scope.bins = parseInt(urlParameters.bins, 10);
 
             // initialise filters
-            if (urlParameters.x !== undefined) {
-                Data.setPriorityFilter(urlParameters.x.split(','));
+            if (urlParameters.priority !== undefined) {
+                Data.setPriorityFilter(urlParameters.priority.split(','));
             }
 
-            if (urlParameters.s !== undefined) {
-                Data.initializeFilter(urlParameters.s.split(','), true);
-            }
-
-            if (urlParameters.w !== undefined) {
-                Data.initializeFilter(urlParameters.w.split(','), false);
-            }
-
-            // load graph data
-            if (urlParameters.r !== '') {
-                $rootScope.loadingData = true;
-                var tmp = urlParameters.r.split(',');
-                // if filter is empty, assume all true
-                var empty = [$scope.isEmpty(Data.getPWGFilter()),
-                    $scope.isEmpty(Data.getStatusFilter())
-                ];
+            if (urlParameters.status !== undefined) {
+                var s = {}
+                var tmp = urlParameters.status.split(',');
                 for (var i = 0; i < tmp.length; i++) {
-                    $scope.load(tmp[i], true, tmp.length, empty[0],
-                        empty[1]);
+                    s[tmp[i]] = true;
                 }
+                Data.setStatusFilter(s);
+            }
+
+            if (urlParameters.pwg !== undefined) {
+                var w = {}
+                var tmp = urlParameters.pwg.split(',');
+                for (var i = 0; i < tmp.length; i++) {
+                    w[tmp[i]] = true;
+                }
+                Data.setPWGFilter(w);
+            }
+
+             // load graph data
+            if (urlParameters.r !== '') {
+                Data.setInputTags(urlParameters.r.split(','));
             } else {
-                // if this is empty just change URL as some filters
-                // could have been initiated
-                $scope.setURL();
+                Data.setInputTags([]);
             }
         };
 
@@ -122,163 +89,178 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
          * @description Core: Query API
          * @param {String} request User input.
          * @param {Boolean} add Append results if true
-         * @param {Boolean} more Are there more requests in a queue
-         * @param {Boolean} defaultPWG When new PWG shows up what should be default filter value
-         * @param {Boolean} defaultStatus When new status shows up what should be default filter value
          */
-        $scope.load = function (input, add, more, defaultPWG,
-            defaultStatus) {
-            if (!input) {
-                $scope.showPopUp(PageDetailsProvider.messages.W0.type,
-                    PageDetailsProvider.messages.W0.message);
-            } else if (add && Data.getInputTags().indexOf(input) !==
-                -1) {
-                $scope.showPopUp(PageDetailsProvider.messages.W1.type,
-                    PageDetailsProvider.messages.W1.message);
+        $scope.load = function (request, add) {
+            if (!request) {
+                $scope.showPopUp('warning', 'Empty search field');
+                return;
+            }
+            if (request.constructor == Object) {
+                request = request.label;
+            }
+            if (add && Data.getInputTags().indexOf(request) !== -1) {
+                $scope.showPopUp('warning', 'Object is already loaded');
             } else {
-                $rootScope.loadingData = true;
-                var promise = $http.get("api/" + input +
-                    "/performance/_");
-                promise.then(function (data) {
-                    if (!data.data.results.data.length) {
-                        $scope.showPopUp(
-                            PageDetailsProvider.messages
-                            .W2.type,
-                            PageDetailsProvider.messages
-                            .W2.message);
-                        $rootScope.loadingData = false;
-                    } else {
-                        if (add) {
-                            Data.changeFilter(data.data.results.data,
-                                false, defaultStatus,
-                                true);
-                            Data.changeFilter(data.data.results.data,
-                                false, defaultPWG,
-                                false);
-                            Data.setLoadedData(data.data.results.data,
-                                true);
-                            $scope.showPopUp(
-                                PageDetailsProvider.messages
-                                .S1.type,
-                                PageDetailsProvider.messages
-                                .S1.message);
+                if (!add) {
+                    // Reset data and filters
+                    Data.reset(true);
+                }
+                Data.addInputTag(request);
+            }
+        };
+
+        /**
+         * @description Core: Parse filters to query API
+         * @param {Boolean} filter If filter data is present.
+         */
+        $scope.query = function () {
+            var inputTags = Data.getInputTags();
+            if (inputTags.length === 0) {
+                Data.setLoadedData([]);
+                Data.setStatusFilter({});
+                Data.setPWGFilter({});
+                $scope.data = Data.getLoadedData();
+                $scope.setURL($scope, Data);
+                $scope.$broadcast('onChangeNotification:LoadedData');
+                return null;
+            }
+            $scope.loadingData = true;
+            var priorityQuery = Data.getPriorityQuery();
+            var statusQuery = Data.getStatusQuery($scope.firstLoad);
+            var pwgQuery = Data.getPWGQuery($scope.firstLoad);
+            $scope.firstLoad = false;
+            var queryUrl = 'api/performance?r=' + inputTags.slice().sort().join(',');
+            if (priorityQuery !== undefined) {
+                queryUrl += '&priority=' + priorityQuery;
+            }
+            if (statusQuery !== undefined) {
+                queryUrl += '&status=' + statusQuery;
+            }
+            if (pwgQuery !== undefined) {
+                queryUrl += '&pwg=' + pwgQuery;
+            }
+            var promise = $http.get(queryUrl);
+            promise.then(function (data) {
+                $scope.showPopUp('success', 'Downloaded data. Drawing plot...');
+                setTimeout(function() {
+                    data.data.results.data.forEach(function(entry) {
+                        if (entry.prepid.indexOf('ReReco') == -1 && entry.prepid.indexOf('CMSSW') == -1) {
+                            entry.url = 'https://cms-pdmv.cern.ch/mcm/requests?prepid=' + entry.prepid
                         } else {
-                            Data.reset(false);
-                            Data.changeFilter(data.data.results.data,
-                                true, true, true);
-                            Data.changeFilter(data.data.results.data,
-                                true, true, false);
-                            Data.setLoadedData(data.data.results.data,
-                                false);
-                            $scope.showPopUp(
-                                PageDetailsProvider.messages
-                                .S0.type,
-                                PageDetailsProvider.messages
-                                .S0.message);
+                            entry.url = 'https://cmsweb.cern.ch/reqmgr2/fetch?rid=' + entry.workflow
                         }
-                        $scope.first_status = data.data.results.first_status;
-                        Data.setInputTags(input, true,
-                            false);
-                        $scope.setURL();
+                    });
+                    Data.setLoadedData(data.data.results.data, false);
+                    Data.setStatusFilter(data.data.results.status);
+                    Data.setPWGFilter(data.data.results.pwg);
+                    Data.setValidTags(data.data.results.valid_tags);
+                    $scope.availableStatuses = data.data.results.all_statuses_in_history.slice()
+                    if ($scope.availableStatuses.length == 0) {
+                        $scope.subtrahend = undefined
+                        $scope.minuend = undefined
+                    } else {
+                        if ($scope.availableStatuses.indexOf($scope.subtrahend) == -1) {
+                            $scope.subtrahend = $scope.availableStatuses[0];
+                        }
+                        if ($scope.availableStatuses.indexOf($scope.minuend) == -1) {
+                            $scope.minuend = $scope.availableStatuses[$scope.availableStatuses.length - 1];
+                        }
                     }
-                }, function () {
-                    $scope.showPopUp(PageDetailsProvider.messages
-                        .E1.type, PageDetailsProvider.messages
-                        .E1.message);
-                    $rootScope.loadingData = false;
-                });
-            }
+                    $scope.data = $scope.filterByMinuendSubtrahend(Data.getLoadedData(), $scope.subtrahend, $scope.minuend);
+                    $scope.setURL($scope, Data);
+                    $scope.$broadcast('onChangeNotification:LoadedData');
+                    $scope.loadingData = false;
+                    if (data.data.results.invalid_tags.length > 0) {
+                        $scope.showPopUp('warning', 'Nothing was found for ' + data.data.results.invalid_tags.join(', '));
+                    }
+                }, 100)
+            }, function () {
+                Data.setLoadedData([]);
+                Data.setStatusFilter({});
+                Data.setPWGFilter({});
+                $scope.data = Data.getLoadedData();
+                $scope.showPopUp('error', 'Error loading requests');
+                $scope.loadingData = false;
+            });
         };
 
-        /**
-         * @description Core: Change URL when data or filter changes
-         */
-        $scope.setURL = function () {
-            $location.path($location.path(), false);
-            var params = {}, r, b, min, sub, l, t, x, w, s;
+        $scope.binSelected = function(selectedBin) {
+            $scope.selectedBin = selectedBin.slice();
+            $timeout(function(){
+                $scope.$apply();
+            });
+        }
 
-            // collect user inputs
-            r = Data.getInputTags();
-            if (r.length) params.r = r.join(',');
+        $scope.minuendChange = function(minuend) {
+            $scope.minuend = minuend;
+            $scope.setURL($scope, Data);
+            $scope.data = $scope.filterByMinuendSubtrahend(Data.getLoadedData(), $scope.subtrahend, $scope.minuend);
+            $scope.binSelected([])
+        }
 
-            // number of bins
-            b = $scope.bins
+        $scope.subtrahendChange = function(subtrahend) {
+            $scope.subtrahend = subtrahend;
+            $scope.setURL($scope, Data);
+            $scope.data = $scope.filterByMinuendSubtrahend(Data.getLoadedData(), $scope.subtrahend, $scope.minuend);
+            $scope.binSelected([])
+        }
 
-            if (b !== $scope.defaults.b) {
-                params.b = b;
+        $scope.scaleChange = function(scale) {
+            $scope.scale = scale;
+            $scope.setURL($scope, Data);
+            $scope.data = $scope.filterByMinuendSubtrahend(Data.getLoadedData(), $scope.subtrahend, $scope.minuend);
+            $scope.binSelected([])
+        }
+
+        $scope.changeBins = function() {
+            $scope.setURL($scope, Data);
+            $scope.data = $scope.filterByMinuendSubtrahend(Data.getLoadedData(), $scope.subtrahend, $scope.minuend);
+            $scope.binSelected([])
+        }
+
+        $scope.filterByMinuendSubtrahend = function(data, min, max) {
+            if (min === undefined || max === undefined || $scope.availableStatuses.indexOf(min) >= $scope.availableStatuses.indexOf(max)) {
+                return []
             }
-
-            // setting minuend
-            min = $scope.difference.minuend;
-
-            if (min !== $scope.defaults.min) {
-                params.min = min;
+            var newData = []
+            for (var i = 0; i < data.length; i++) {
+                if (data[i].history !== undefined && data[i].history[min] !== undefined && data[i].history[max] !== undefined) {
+                    data[i].diff = data[i].history[max] - data[i].history[min]
+                    data[i].min = data[i].history[min]
+                    data[i].max = data[i].history[max]
+                    newData.push(data[i])
+                }
             }
+            return newData
+        }
 
-            // setting subtrahend
-            sub = $scope.difference.subtrahend;
+        $scope.$on('onChangeNotification:InputTags', function () {
+            $scope.query()
+        })
 
-            if (sub !== $scope.defaults.sub) {
-                params.sub = sub;
-            }
+        $scope.$on('onChangeNotification:ReInit', function () {
+            $location.url('/performance')
+            $scope.init()
+        })
 
-            // set scale
-            l = ($scope.scaleType === "linear") + "";
-
-            if (l !== $scope.defaults.l) {
-                params.l = l;
-            }
-
-            // if show the time block
-            t = $scope.showDate + '';
-
-            if (t !== $scope.defaults.t) {
-                params.t = t;
-            }
-
-            // set priority filter
-            x = Data.getPriorityFilter().join(',');
-
-            if (x !== $scope.defaults.x) {
-                params.x = x;
-            }
-
-            // set pwg filter
-            if (!Data.allPWGsEnabled()) {
-                params.w = $scope.getCSVPerFilter(Data.getPWGFilter());
-            }
-
-            // set status filter
-            if (!Data.allStatusesEnabled()) {
-                params.s = $scope.getCSVPerFilter(Data.getStatusFilter());
-            }
-
-            // reload url
-            $location.search(params);
-            // broadcast change notification
-            $scope.$broadcast('onChangeNotification:URL');
-        };
-
-        /**
-         * @description Core: Query server for a report of current view
-         * @param {String} format which will be requested (pdf/png/svg)
-         */
         $scope.takeScreenshot = function (format) {
-            $rootScope.loadingData = true;
-            if (format === undefined) format = 'svg';
-            var xml = (new XMLSerializer()).serializeToString(
-                    document.getElementById("ctn").getElementsByTagName(
-                        "svg")[0])
-                .replace('viewBox="0 -20 1170 300"',
-                    'viewBox="0 -20 1170 400" font-family="sans-serif"'
-                ).replace('</svg>',
-                    '<text transform="translate(0, 300)">Generated: ' +
-                    $scope.dt + '. For input: ' + Data.getInputTags()
-                    .join(', ') + '. Time difference between ' +
-                    $scope.difference.minuend + ' and ' + $scope.difference
-                    .subtrahend + '</text></svg>').replace(/\n/g, ' ');
+            var date = new Date()
+
+            if (format === undefined) {
+                format = 'svg';
+            }
+
+            var plot = (new XMLSerializer()).serializeToString(document.getElementById("plot"))
+            plot += '<text transform="translate(10, 620)">Generated: ' + (date.toDateString() + ' ' + date.toLocaleTimeString('en-GB', {timeZoneName: "short"})) + '</text>'
+            plot += '<text transform="translate(10, 640)">Last update: ' + $scope.lastUpdate + ' CERN Time</text>'
+            plot += '<text transform="translate(10, 660)">For input: ' + Data.getInputTags().join(', ') + '</text>';
+
+            // viewBox is needed for rsvg convert
+            var xml = '<svg viewBox="0 -20 1160 700" font-family="sans-serif" xmlns="http://www.w3.org/2000/svg">' + 
+                      plot +
+                      '</svg>';
             $http({
-                url: 'ts',
+                url: 'api/screenshot',
                 method: "POST",
                 data: {data: xml, ext: format}
             }).then(function (data) {
@@ -286,52 +268,5 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
                 $rootScope.loadingData = false;
             });
         };
-
-        /**
-         * @description Change histogram
-         */
-        $scope.applyHistogram = function (d, e) {
-            $scope.histogramData = d;
-            $scope.histogramDataExtended = e;
-        };
-
-        /**
-         * @description When differences are recalculated in derective
-         */
-        $scope.applyDifference = function (d) {
-            $scope.difference = d;
-            $scope.setURL();
-        };
-
-        /**
-         * @description On scale change 
-         */
-        $scope.changeScale = function (type) {
-            $scope.scaleType = type;
-            $scope.setURL();
-        };
-
-        // Broadcast receiver, change filtered data on loaded data change
-        $scope.$on('onChangeNotification:FilteredData', function () {
-            $rootScope.loadingData = false;
-            $scope.setURL();
-            $scope.data = Data.getFilteredData();
-
-            $scope.applyDifference({
-                minuend: $scope.difference.minuend,
-                subtrahend: $scope.first_status,
-            });
-        });
-
-        // Set interval update of time variables
-        var intervalUpdate1 = $interval($scope.updateCurrentDate, 1000);
-        var intervalUpdate2 = $interval(function () {
-            $scope.updateLastUpdate('requests');
-        }, 2 * 60 * 1000);
-        $scope.updateLastUpdate('requests');
-        $scope.$on('$destroy', function () {
-            $interval.cancel(intervalUpdate1);
-            $interval.cancel(intervalUpdate2);
-        });
     }
 ]);

@@ -18,29 +18,29 @@ angular.module('pmpApp', ['ngAnimate', 'ngRoute', 'ui.bootstrap', 'pmpCharts',
             'use strict';
             $routeProvider
                 .when('/', {
-                    templateUrl: 'build/index.min.html',
-                    controller: 'IndexController'
+                    templateUrl: 'static/build/index.min.html',
+                    controller: 'IndexController',
+                    reloadOnSearch: false
                 })
                 .when('/index', {
-                    templateUrl: 'build/index.min.html',
-                    controller: 'IndexController'
-                })
-                // chains plot is not used
-                .when('/chains', {
-                    templateUrl: 'build/plot.min.html',
-                    controller: 'ChainsController'
+                    templateUrl: 'static/build/index.min.html',
+                    controller: 'IndexController',
+                    reloadOnSearch: false
                 })
                 .when('/historical', {
-                    templateUrl: 'build/plot.min.html',
-                    controller: 'HistoricalController'
+                    templateUrl: 'static/build/plot.min.html',
+                    controller: 'HistoricalController',
+                    reloadOnSearch: false
                 })
                 .when('/performance', {
-                    templateUrl: 'build/plot.min.html',
-                    controller: 'PerformanceController'
+                    templateUrl: 'static/build/plot.min.html',
+                    controller: 'PerformanceController',
+                    reloadOnSearch: false
                 })
                 .when('/present', {
-                    templateUrl: 'build/plot.min.html',
-                    controller: 'PresentController'
+                    templateUrl: 'static/build/plot.min.html',
+                    controller: 'PresentController',
+                    reloadOnSearch: false
                 });
             $locationProvider.html5Mode(true);
         }

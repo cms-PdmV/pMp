@@ -1,56 +1,85 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="pmpApp" id="ng-app">
+
+  <head>
+    <title>Production Monitoring Platform</title>
+    <base href="/pmp/"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+
+    <!--external CSS-->
+    <link href="static/build/depend.build.css" rel="stylesheet" type="text/css"/>
+    <link href="node_modules/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css"/>
+    <link href="https://fonts.googleapis.com/css?family=Roboto:900,400,300" rel="stylesheet" type="text/css"/>
+
+    <!--pMp CSS-->
+    <link href="static/build/pmp.build.min.css" rel="stylesheet" type="text/css"/>
+
+    <!--external JS-->
+    <script type="text/javascript" src="static/build/depend.build.js"></script>
+
+    <!--pMp JS-->
+    <script type="text/javascript" src="static/build/directives.pmp.build.js"></script>
+    <script type="text/javascript" src="static/build/pmp.build.min.js"></script>
+
+    <link rel="shortcut icon" type="image/x-icon" href="static/ic_fav.png" />
+  </head>
   <body ng-controller="MainController">
 
-    <nav class="navbar navbar-inverse" role="navigation">
+    <nav class="navbar navbar-default  navbar-dark">
       <div class="container-fluid">
-        <a href="index" ng-click="nav('/index/')">
-          <img src="img/ic_fav.png" class="brand-adjust" alt="PMP"/>
-        </a>
         <div class="navbar-header">
-            <button type="button" data-target="#navbarCollapse" data-toggle="collapse" class="navbar-toggle">
-                <span class="sr-only">Toggle navigation</span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-            </button>
+          <button type="button"
+                  class="navbar-toggle collapsed"
+                  data-toggle="collapse"
+                  data-target="#navigation-bar-collapse"
+                  aria-expanded="false">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a href="index" class="navbar-brand" ng-click="nav('/index/')">
+            <!-- <img src="img/ic_fav.png" class="brand-adjust" alt="pMp Logo"/> -->
+            <span><b>pMp <sup style="color: red" title="Production Monitoring Platform: Second Edition">SE</sup></b></span>
+          </a>
         </div>
-        <ul id="navbarCollapse" class="collapse navbar-collapse nav navbar-header navbar-nav col-xs-12 col-sm-12 col-md-12 col-lg-12">
-          <li>
-            <a href="present" ng-click="nav('/present/')">
-              <i class="fa fa-bar-chart spacing-r"></i>
-              Present
-              <span class="hidden-sm"> Statistics</span>
-            </a>
-          </li>
-          <li>
-            <a href="historical" ng-click="nav('/historical/')">
-              <i class="fa fa-line-chart spacing-r"></i>
-              Historical
-              <span class="hidden-sm"> Statistics</span>
-            </a>
-          </li>
-          <li>
-            <a href="performance" ng-click="nav('/performance/')">
-              <i class="fa fa-heartbeat spacing-r"></i>
-              Performance
-              <span class="hidden-sm"> Statistics</span>
-            </a>
-          </li>
-          <li><a href="performance" ng-click="nav('/chains/')" ng-hide="true">
-              <i class="fa fa-share-alt spacing-r"></i>  
-              Chains Landscape</a></li>
-          <li><a href="https://github.com/cms-PdmV/pmp/issues" target="_blank">
-              <i class="fa fa-github spacing-r"></i>
-              Report</a></li>
-          <li><a href="https://twiki.cern.ch/twiki/bin/viewauth/CMS/PdmVpMp"
-                 target="_blank">
-              <i class="fa fa-info spacing-r"></i>  
-              About</a></li>
-        </ul>
+        <div class="collapse navbar-collapse" id="navigation-bar-collapse">
+          <ul class="nav navbar-nav">
+            <li class="nav-item" ng-class="{active: activeIndex == 1}">
+              <a class="nav-link" href="present{{urlQuery}}" ng-click="nav('/present/')">
+                <i class="fa fa-bar-chart spacing-r"></i>
+                Present Statistics
+              </a>
+            </li>
+            <li class="nav-item" ng-class="{active: activeIndex == 2}">
+              <a class="nav-link" href="historical{{urlQuery}}" ng-click="nav('/historical/')">
+                <i class="fa fa-line-chart spacing-r"></i>
+                Historical Statistics
+              </a>
+            </li>
+            <li class="nav-item" ng-class="{active: activeIndex == 3}">
+              <a class="nav-link" href="performance{{urlQuery}}" ng-click="nav('/performance/')">
+                <i class="fa fa-heartbeat spacing-r"></i>
+                Performance Statistics
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="https://github.com/cms-PdmV/pmp/issues" target="_blank">
+                <i class="fa fa-bug spacing-r"></i>
+                Report
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="https://twiki.cern.ch/twiki/bin/viewauth/CMS/PdmVpMp" target="_blank">
+                <i class="fa fa-info spacing-r"></i>
+                About
+              </a>
+            </li>
+          </ul>
+        </div>
       </div>
     </nav>
 
     <div class="container" id="ctn">
-
       <div class="panel {{popUp.style}} popup" ng-show="popUp.show">
         <div class="panel-heading text-uppercase">
           <i class="fa {{popUp.icon}} spacing-r"></i> 
@@ -78,22 +107,7 @@
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-body text-center">
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
             <p>You are using a web browser we do not support. Try one of the options below</p>
-            <a class="btn btn-default" href="http://www.google.com/chrome/" role="button">
-              <img height="20px" src="img/ic_chrome.png" /><br/>
-              Chrome
-            </a>
-            <a class="btn btn-default" href="https://www.mozilla.org/en-US/firefox/new/" role="button">
-              <img height="20px" src="img/ic_firefox.png" /><br/>
-              Firefox
-            </a>
-            <a class="btn btn-default" href="https://www.apple.com/safari/" role="button">
-              <img height="20px" src="img/ic_safari.png" /><br/>
-              Safari</a>
-            <a class="btn btn-default" href="http://www.opera.com/" role="button">
-              <img height="20px" src="img/ic_opera.png" /><br/>
-              Opera</a>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-default" data-dismiss="modal">Let me try pMp anyway</button>
