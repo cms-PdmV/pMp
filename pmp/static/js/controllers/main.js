@@ -19,17 +19,18 @@ angular.module('pmpApp').controller('MainController', ['$http', '$location',
 
         $scope.nav = function(link) {
             var previousIndex = $scope.activeIndex
+            var newIndex = previousIndex
             if (link === '/present/') {
-                $scope.changeActiveIndex(1)
+                newIndex = 1
             } else if (link === '/historical/') {
-                $scope.changeActiveIndex(2)
+                newIndex = 2
             } else if (link === '/performance/') {
-                $scope.changeActiveIndex(3)
+                newIndex = 3
             } else {
                 $scope.urlQuery = ''
-                $scope.changeActiveIndex(0)
+                newIndex = 0
             }
-            if (previousIndex === $scope.activeIndex) {
+            if (previousIndex === newIndex) {
                 $scope.$broadcast('onChangeNotification:ReInit')
             }
         }

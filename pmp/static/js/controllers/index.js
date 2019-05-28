@@ -14,6 +14,7 @@ angular.module('pmpApp').controller('IndexController', ['$location', '$http', '$
             $scope.lastUpdateAgo = data.data.results.ago;
         });
     };
+    $scope.changeActiveIndex(0);
 
     $scope.updateLastUpdate();
     $interval(function () {
