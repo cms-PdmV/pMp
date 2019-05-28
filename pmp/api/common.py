@@ -28,6 +28,7 @@ class SuggestionsAPI(esadapter.InitConnection):
         self.performance = (typeof == 'performance')
 
     def search(self, query, index):
+        logging.info('Query ' + query + ' index ' + index)
         try:
             return [s['_id'] for s in
                     self.es.search(q=query,
@@ -57,8 +58,9 @@ class SuggestionsAPI(esadapter.InitConnection):
         cache_key = 'suggestions_%s' % (query)
         if self.__cache.has(cache_key):
             results = self.__cache.get(cache_key)
-            logging.info('Found %s suggestions in cache for %s' % (len(results), cache_key))
-            return json.dumps({'results': results})
+            if len(results) > 0:
+                logging.info('Found %s suggestions in cache for %s' % (len(results), cache_key))
+                return json.dumps({'results': results})
 
         search = ('prepid:*%s*' % query)
 
@@ -246,9 +248,19 @@ class APIBase(esadapter.InitConnection):
             logging.info('Found result in cache for key: %s' % cache_key)
             return result
 
+        statuses = ['new',
+                    'validation',
+                    'defined',
+                    'approved',
+                    'submitted',
+                    'done']
+
         if query == 'all':
             # change all to wildcard or check if chain
             result = ('member_of_campaign', 'requests', 'request', '*')
+
+        elif query in statuses:
+            result = ('status', 'requests', 'request', query)
 
         elif self.is_instance(query, 'campaigns', 'campaign'):
             result = ('member_of_campaign', 'requests', 'request', query)
