@@ -103,6 +103,7 @@ class HistoricalAPI(APIBase):
         response_list = []
         valid_tags = []
         invalid_tags = []
+        messages = []
         query = query.split(',')
         seen_prepids = []
         for one in query:
@@ -214,12 +215,14 @@ class HistoricalAPI(APIBase):
 
             if found_something:
                 valid_tags.append(one)
+                if self.is_instance(one, 'mcm_datatiers', 'mcm_datatier'):
+                    messages.append('Note: results for %s include only submitted requests' % (one))
             else:
                 invalid_tags.append(one)
 
         # logging.info('Prepare response length is %d' % (len(response_list)))
         # logging.info('Response list is %s' % (json.dumps(response_list, indent=4)))
-        return response_list, valid_tags, invalid_tags
+        return response_list, valid_tags, invalid_tags, messages
 
     def remove_useless_points(self, arr):
         """Compressing data: remove first data point of resubmissions and points
@@ -294,6 +297,7 @@ class HistoricalAPI(APIBase):
         """
         Get the historical data based on query, data point count, priority and filter
         """
+        start_time = time.time()
         logging.info('%s (%s) | %s (%s) | %s (%s) | %s (%s) | %s (%s)' % (query,
                                                                          type(query),
                                                                          data_point_count,
@@ -314,7 +318,7 @@ class HistoricalAPI(APIBase):
             response_tuple = self.prepare_response(query, estimate_completed_events)
             self.__cache.set(cache_key, response_tuple)
 
-        response, valid_tags, invalid_tags = response_tuple
+        response, valid_tags, invalid_tags, messages = response_tuple
         # Apply priority, PWG and status filters
         response, pwgs, statuses = self.apply_filters(response, priority_filter, pwg_filter, status_filter)
         # Get submitted and done requests separately
@@ -337,6 +341,8 @@ class HistoricalAPI(APIBase):
                'pwg': pwgs,
                'status': statuses,
                'submitted_requests': submitted_requests,
-               'done_requests': done_requests}
-        logging.info('Will return')
+               'done_requests': done_requests,
+               'messages': messages}
+        end_time = time.time()
+        logging.info('Will return. Took %.4fs' % (end_time - start_time))
         return json.dumps({'results': res})

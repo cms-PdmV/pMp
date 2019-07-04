@@ -21,7 +21,7 @@ class SuggestionsAPI(esadapter.InitConnection):
 
     def __init__(self, typeof):
         esadapter.InitConnection.__init__(self)
-        self.max_results_in_index = 5
+        self.max_results_in_index = 20
         self.max_suggestions = 20
         self.present = (typeof == 'present')
         self.historical = (typeof == 'historical')
@@ -62,47 +62,46 @@ class SuggestionsAPI(esadapter.InitConnection):
                 logging.info('Found %s suggestions in cache for %s' % (len(results), cache_key))
                 return json.dumps({'results': results})
 
-        search = ('prepid:*%s*' % query)
+        search = 'prepid:*%s*' % (query)
 
         results = []
 
-        results += [{'type': 'CAMPAIGN', 'label': x} for x in self.search(search, 'campaigns')]
+        suggestion_queries = [{'type': 'CAMPAIGN', 'index': 'campaigns'},
+                              {'type': 'REQUEST', 'index': 'requests'},
+                              {'type': 'TAG', 'index': 'tags'},
+                              {'type': 'PPD TAG', 'index': 'ppd_tags'},
+                              {'type': 'FLOW', 'index': 'flows'},
+                              {'type': 'MCM DATASET', 'index': 'mcm_dataset_names'},
+                              {'type': 'DATATIER', 'index': 'mcm_datatiers'},
+                              {'type': 'RERECO', 'index': 'rereco_requests'},
+                              {'type': 'PROCESSING STRING', 'index': 'processing_strings'},
+                              {'type': 'RERECO CAMPAIGN', 'index': 'rereco_campaigns'},
+                              {'type': 'RELVAL', 'index': 'relval_requests'},
+                              {'type': 'RELVAL CMSSW', 'index': 'relval_cmssw_versions'},
+                              {'type': 'RELVAL CAMPAIGN', 'index': 'relval_campaigns'}]
 
-        if len(results) < self.max_suggestions:
-            results += [{'type': 'REQUEST', 'label': x} for x in self.search(search, 'requests')]
+        for suggestion_query in suggestion_queries:
+            suggestion_query['all_suggestions'] = [{'type': suggestion_query['type'], 'label': x} for x in self.search(search, suggestion_query['index'])]
+            suggestion_query['selected_suggestions'] = []
 
-        if len(results) < self.max_suggestions:
-            results += [{'type': 'TAG', 'label': x} for x in self.search(search, 'tags')]
+        found_suggestions = 0
+        for i in range(self.max_suggestions):
+            for suggestion_query in suggestion_queries:
+                if i < len(suggestion_query.get('all_suggestions', [])):
+                    suggestion_query['selected_suggestions'].append(suggestion_query['all_suggestions'][i])
+                    found_suggestions += 1
 
-        if len(results) < self.max_suggestions:
-            results += [{'type': 'PPD TAG', 'label': x} for x in self.search(search, 'ppd_tags')]
+                if found_suggestions >= self.max_suggestions:
+                    break
 
-        if self.historical or self.present:
-            if len(results) < self.max_suggestions:
-                results += [{'type': 'FLOW', 'label': x} for x in self.search(search, 'flows')]
+            if found_suggestions >= self.max_suggestions:
+                break
 
-        if len(results) < self.max_suggestions:
-            results += [{'type': 'MCM DATASET', 'label': x} for x in self.search(search, 'mcm_dataset_names')]
+        selected_results = []
+        for suggestion_query in suggestion_queries:
+            selected_results.extend(sorted(suggestion_query.get('selected_suggestions'), key=lambda x: x['label']))
 
-        if len(results) < self.max_suggestions:
-            results += [{'type': 'RERECO', 'label': x} for x in self.search(search, 'rereco_requests')]
-
-        if len(results) < self.max_suggestions:
-            results += [{'type': 'PROCESSING STRING', 'label': x} for x in self.search(search, 'processing_strings')]
-
-        if len(results) < self.max_suggestions:
-            results += [{'type': 'RERECO CAMPAIGN', 'label': x} for x in self.search(search, 'rereco_campaigns')]
-
-        if len(results) < self.max_suggestions:
-            results += [{'type': 'RELVAL', 'label': x} for x in self.search(search, 'relval_requests')]
-
-        if len(results) < self.max_suggestions:
-            results += [{'type': 'RELVAL CMSSW', 'label': x} for x in self.search(search, 'relval_cmssw_versions')]
-
-        if len(results) < self.max_suggestions:
-            results += [{'type': 'RELVAL CAMPAIGN', 'label': x} for x in self.search(search, 'relval_campaigns')]
-
-        # order of ext does matter because of the typeahead in bootstrap
+        results = selected_results
         logging.info('Found %s suggestions for %s' % (len(results), search))
 
         self.__cache.set(cache_key, results)
@@ -198,9 +197,12 @@ class LastUpdateAPI(esadapter.InitConnection):
         else:
             minutes_ago = int(seconds_ago / 60)
             if minutes_ago < 60:
-                ago = '%d minutes ago' % (minutes_ago)
+                m = minutes_ago
+                ago = '%d minute%s ago' % (m, '' if m == 1 else 's')
             else:
-                ago = '%d hours and %d minutes ago' % (int(minutes_ago / 60), int(minutes_ago - (60 * int(minutes_ago / 60))))
+                h = int(minutes_ago / 60)
+                m = int(minutes_ago - (60 * int(minutes_ago / 60)))
+                ago = '%d hour%s and %d minute%s ago' % (h, '' if h == 1 else 's', m, '' if m == 1 else 's')
 
         return json.dumps({"results": {'timestamp': last_update, 'date': last_update_date, 'ago': ago}}, sort_keys=True)
 
@@ -226,8 +228,7 @@ class APIBase(esadapter.InitConnection):
 
     def parse_query(self, query):
         """
-        Returns correct field, index name and doctype
-        Returns field, index name, doctype and query
+        Returns query, index name and doctype
         Order:
           campaign
           request
@@ -235,6 +236,7 @@ class APIBase(esadapter.InitConnection):
           tag
           flow
           mcm dataset name
+          mcm datatier
           rereco request
           rereco processing string
           rereco campaign
@@ -248,80 +250,59 @@ class APIBase(esadapter.InitConnection):
             logging.info('Found result in cache for key: %s' % cache_key)
             return result
 
-        statuses = ['new',
-                    'validation',
-                    'defined',
-                    'approved',
-                    'submitted',
-                    'done']
-
-        if query == 'all':
-            # change all to wildcard or check if chain
-            result = ('member_of_campaign', 'requests', 'request', '*')
-
-        elif query in statuses:
-            result = ('status', 'requests', 'request', query)
-
-        elif self.is_instance(query, 'campaigns', 'campaign'):
-            result = ('member_of_campaign', 'requests', 'request', query)
+        if self.is_instance(query, 'campaigns', 'campaign'):
+            result = ('member_of_campaign:%s' % (query), 'requests', 'request')
 
         elif self.is_instance(query, 'requests', 'request'):
-            result = (None, 'requests', 'request', query)
+            result = ('prepid:%s' % (query), 'requests', 'request')
 
         elif self.is_instance(query, 'tags', 'tag'):
-            result = ('tags', 'requests', 'request', query)
+            result = ('tags:%s' % (query), 'requests', 'request')
 
         elif self.is_instance(query, 'ppd_tags', 'ppd_tag'):
-            result = ('ppd_tags', 'requests', 'request', query)
+            result = ('ppd_tags:%s' % (query), 'requests', 'request')
 
         elif self.is_instance(query, 'flows', 'flow'):
-            result = ('flown_with', 'requests', 'request', query)
+            result = ('flown_with:%s' % (query), 'requests', 'request')
 
         elif self.is_instance(query, 'mcm_dataset_names', 'mcm_dataset_name'):
-            result = ('dataset_name', 'requests', 'request', query)
+            result = ('dataset_name:%s' % (query), 'requests', 'request')
+
+        elif self.is_instance(query, 'mcm_datatiers', 'mcm_datatier'):
+            result = ('datatiers:%s AND status:submitted' % (query), 'requests', 'request')
 
         elif self.is_instance(query, 'rereco_requests', 'rereco_request'):
-            result = (None, 'rereco_requests', 'rereco_request', query)
+            result = ('prepid:%s' % (query), 'rereco_requests', 'rereco_request')
 
         elif self.is_instance(query, 'processing_strings', 'processing_string'):
-            result = ('processing_string', 'rereco_requests', 'rereco_request', query)
+            result = ('processing_string:%s' % (query), 'rereco_requests', 'rereco_request')
 
         elif self.is_instance(query, 'rereco_campaigns', 'rereco_campaign'):
-            result = ('member_of_campaign', 'rereco_requests', 'rereco_request', query)
+            result = ('member_of_campaign:%s' % (query), 'rereco_requests', 'rereco_request')
 
         elif self.is_instance(query, 'relval_requests', 'relval_request'):
-            result = (None, 'relval_requests', 'relval_request', query)
+            result = ('prepid:%s' % (query), 'relval_requests', 'relval_request')
 
         elif self.is_instance(query, 'relval_cmssw_versions', 'relval_cmssw_version'):
-            result = ('cmssw_version', 'relval_requests', 'relval_request', query)
+            result = ('cmssw_version:%s' % (query), 'relval_requests', 'relval_request')
 
         elif self.is_instance(query, 'relval_campaigns', 'relval_campaign'):
-            result = ('member_of_campaign', 'relval_requests', 'relval_request', query)
+            result = ('member_of_campaign:s' % (query), 'relval_requests', 'relval_request')
 
         else:
-            result = (None, None, None, None)
+            result = (None, None, None)
 
         self.__cache.set(cache_key, result)
         return result
 
-    def fetch_objects(self, field, query, index, doctype):
+    def fetch_objects(self, query, index, doctype):
         """
         Fetch one object by given id, index name and doctype
         """
-        if field is not None:
-            # If field is present first find all results that have given value in
-            # that field. For example, if query is campaign, find  all requests
-            # that have that campaign in their member_of_campaign field
-            search_results = self.es.search(q='%s:%s' % (field, query),
-                                            index=index,
-                                            size=self.results_window_size)['hits']['hits']
-            req_arr = [s['_source'] for s in search_results]
-        else:
-            # Could be a request or a workflow
-            try:
-                req_arr = [self.es.get(index=index, doc_type=doctype, id=query)['_source']]
-            except elasticsearch.NotFoundError:
-                req_arr = []
+        search_results = self.es.search(q=query,
+                                        index=index,
+                                        size=self.results_window_size)['hits']['hits']
+        req_arr = [s['_source'] for s in search_results]
 
         return req_arr
 
@@ -350,8 +331,7 @@ class APIBase(esadapter.InitConnection):
         member_of_chains = req['member_of_chain']
         potential_results_with_events = []
         for member_of_chain in member_of_chains:
-            chained_requests = self.fetch_objects(field=None,
-                                                  query=member_of_chain,
+            chained_requests = self.fetch_objects(query='prepid:%s' % (member_of_chain),
                                                   index='chained_requests',
                                                   doctype='chained_request')
 
@@ -395,26 +375,26 @@ class APIBase(esadapter.InitConnection):
         """
 
         req_arr = []
-        field, index, doctype, query = self.parse_query(query)
-        logging.info('Field: %s, index: %s, doctype: %s, query: %s' % (field, index, doctype, query))
+        es_query, index, doctype = self.parse_query(query)
+        logging.info('Query: %s, index: %s, doctype: %s' % (es_query, index, doctype))
         if index is None:
             logging.info('Returning nothing because index for %s could not be found' % (query))
             return []
 
-        cache_key = 'db_query_%s_____%s______%s' % (str(query), include_stats_document, estimate_completed_events)
+        cache_key = 'db_query_%s_____%s______%s' % (str(es_query), include_stats_document, estimate_completed_events)
         if self.__cache.has(cache_key):
             results = self.__cache.get(cache_key)
             logging.info('Found result in cache for key: %s' % cache_key)
             return results
 
-        req_arr = self.fetch_objects(field, query, index, doctype)
+        req_arr = self.fetch_objects(es_query, index, doctype)
 
         if index == 'requests':
-            logging.info('Found %d requests for %s' % (len(req_arr), query))
+            logging.info('Found %d requests for %s' % (len(req_arr), es_query))
         elif index == 'relval_requests':
-            logging.info('Found %s RelVal requests from %s' % (len(req_arr), query))
+            logging.info('Found %s RelVal requests from %s' % (len(req_arr), es_query))
         elif index == 'rereco_requests':
-            logging.info('Found %d ReReco requests for %s' % (len(req_arr), query))
+            logging.info('Found %d ReReco requests for %s' % (len(req_arr), es_query))
 
         results = []
         # Iterate over array and collect details (McM documents)

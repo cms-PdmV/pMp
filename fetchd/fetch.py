@@ -118,6 +118,26 @@ def parse_request_history(details):
 
     return res
 
+def parse_datatiers_from_sequences(sequences):
+    """
+    Get list of all datatiers of a request sequence list
+    """
+    datatiers = []
+    if not sequences:
+        return datatiers
+
+    for sequence in sequences:
+        datatier = sequence.get('datatier', [])
+        if isinstance(datatier, str):
+            datatier = [datatier]
+
+        for one_datatier in datatier:
+            for split_datatier in one_datatier.split(','):
+                if split_datatier.strip():
+                    datatiers.append(split_datatier.strip())
+
+    return list(set(datatiers))
+
 
 def create_index(cfg):
     """Create index"""
@@ -138,6 +158,17 @@ def create_index(cfg):
     else:
         logging.error('Failed to increase result window for %s. Code %s' % (index_url + '/_settings', code))
 
+
+def create_index_and_mapping_if_needed(cfg):
+    index_url = cfg.pmp_index
+    # Remove last / if it exists as the last character
+    if index_url[-1:] == '/':
+        index_url = index_url[:-1]
+
+    _, code = Utils.curl('GET', index_url)
+    if code != 200:
+        create_index(cfg)
+        create_mapping(cfg)
 
 
 def create_mapping(cfg):
@@ -342,6 +373,14 @@ def process_request_tags(tags, tags_cfg):
         save(tag, {'prepid': tag}, tags_cfg)
 
 
+def process_request_datatiers(datatiers, datatiers_cfg):
+    """
+    Get list of datatiers and save them
+    """
+    for datatier in datatiers:
+        save(datatier, {'prepid': datatier}, datatiers_cfg)
+
+
 if __name__ == "__main__":
     Utils.setup_console_logging()
     index = sys.argv[1]
@@ -355,6 +394,9 @@ if __name__ == "__main__":
         relval_cfg = Config('relval_requests')
         relval_cmssw_cfg = Config('relval_cmssw_versions')
         relval_campaigns_cfg = Config('relval_campaigns')
+        for related_cfg in [rereco_cfg, process_string_cfg, rereco_campaigns_cfg, relval_cfg, relval_cmssw_cfg, relval_campaigns_cfg]:
+            create_index_and_mapping_if_needed(related_cfg)
+
         skippable_status = set(['rejected',
                                 'aborted',
                                 'failed',
@@ -366,10 +408,13 @@ if __name__ == "__main__":
         tags_cfg = Config('tags')
         ppd_tags_cfg = Config('ppd_tags')
         dataset_cfg = Config('mcm_dataset_name')
+        datatiers_cfg = Config('mcm_datatiers')
+        for related_cfg in [tags_cfg, ppd_tags_cfg, dataset_cfg, datatiers_cfg]:
+            create_index_and_mapping_if_needed(related_cfg)
 
     done = 0
     for object_id, deleted in get_changed_object_ids(cfg):
-        time.sleep(0.05)
+        time.sleep(0.005)
         done += 1
 
         logging.info('(%s) Processing %s. Deleted %s' % (done, object_id, 'YES' if deleted else 'NO'))
@@ -453,6 +498,13 @@ if __name__ == "__main__":
                             save(data['dataset_name'], {'prepid': data['dataset_name']}, dataset_cfg)
                         else:
                             data['dataset_name'] = None
+
+                        if 'sequences' in data:
+                            datatiers =  parse_datatiers_from_sequences(data['sequences'])
+                            data['datatiers'] = datatiers
+                            process_request_datatiers(datatiers, datatiers_cfg)
+                        else:
+                            data['datatiers'] = []
 
                     # Trim fields we don't want
                     data = pick_attributes(data, cfg.fetch_fields)

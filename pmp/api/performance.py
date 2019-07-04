@@ -26,6 +26,7 @@ class PerformanceAPI(APIBase):
         response_list = []
         valid_tags = []
         invalid_tags = []
+        messages = []
         query = query.split(',')
         seen_prepids = set()
         for one in query:
@@ -74,10 +75,12 @@ class PerformanceAPI(APIBase):
 
             if found_something:
                 valid_tags.append(one)
+                if self.is_instance(one, 'mcm_datatiers', 'mcm_datatier'):
+                    messages.append('Note: results for %s include only submitted requests' % (one))
             else:
                 invalid_tags.append(one)
 
-        return response_list, valid_tags, invalid_tags
+        return response_list, valid_tags, invalid_tags, messages
 
     def get_all_statuses_in_history(self, data):
         """
@@ -120,7 +123,7 @@ class PerformanceAPI(APIBase):
             response_tuple = self.prepare_response(query)
             self.__cache.set(cache_key, response_tuple)
 
-        response, valid_tags, invalid_tags = response_tuple
+        response, valid_tags, invalid_tags, messages = response_tuple
         logging.info('Requests before filtering %s' % (len(response)))
         # Apply priority, PWG and status filters
         response, pwgs, statuses = self.apply_filters(response, priority_filter, pwg_filter, status_filter)
@@ -131,6 +134,7 @@ class PerformanceAPI(APIBase):
                'invalid_tags': invalid_tags,
                'pwg': pwgs,
                'status': statuses,
-               'all_statuses_in_history': all_statuses_in_history}
+               'all_statuses_in_history': all_statuses_in_history,
+               'messages': messages}
         logging.info('Will return')
         return json.dumps({'results': res})

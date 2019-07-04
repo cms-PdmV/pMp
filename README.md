@@ -20,6 +20,7 @@ Search bar in pMp can be found in all statistics pages. Next to it, there are tw
 * Request tags (McM)
 * Flows (McM)
 * Dataset names (McM)
+* Datatiers (McM)
 * ReReco request prepids
 * ReReco processing strings
 * ReReco campaigns
@@ -175,6 +176,15 @@ Source - dataset names are extracted from requests (attribute `dataset_name`) wh
 
 * prepid - dataset name
 
+### Datatiers
+Index - `mcm_datatiers`.
+Document type - `mcm_datatier`.
+Source - datatiers are extracted from requests' sequences when pMp is fetching McM requests.
+
+##### Attributes:
+
+* prepid - datatier name
+
 ### Flows
 Index - `flows`.  
 Document type - `flow`.  
@@ -275,6 +285,7 @@ Source - requests are fetched from McM.
 ##### Attributes:
 
 * dataset_name - name of dataset from McM
+* datatiers - list of datatiers from McM's sequences
 * flown_with - name of flow that request is associated with
 * history - list of dictionaries that have keys 'action' (value is string) and 'time' (value is int - unix timestamp) that represent actions as they appear in McM ('created', 'approved', 'submitted', 'done', etc.)
 * member_of_campaign - name of campaign that this request is member of
