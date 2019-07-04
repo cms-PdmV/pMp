@@ -50,7 +50,12 @@
       </div>
       <div class="mt-3 mb-3" ng-hide="chainedMode">
         <input-tags></input-tags> 
-      </div> 
+      </div>
+      <div ng-hide="!messages || loadingData">
+        <div class="m-2" ng-repeat="message in messages">
+          <span style="color: red">{{message}}</span><br>
+        </div>
+      </div>
     </div>
     <div class="col-lg-4 col-md-4 col-sm-12 col-xs-12">
       <div class="btn-group pull-right" role="group">

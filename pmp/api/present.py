@@ -58,6 +58,7 @@ class PresentAPI(APIBase):
         response_list = []
         valid_tags = []
         invalid_tags = []
+        messages = []
         query = query.split(',')
         seen_prepids = set()
         for one in query:
@@ -101,11 +102,13 @@ class PresentAPI(APIBase):
 
             if found_something:
                 valid_tags.append(one)
+                if self.is_instance(one, 'mcm_datatiers', 'mcm_datatier'):
+                    messages.append('Note: results for %s include only submitted requests' % (one))
             else:
                 invalid_tags.append(one)
                 logging.warning('No data for %s' % (one))
 
-        return response_list, valid_tags, invalid_tags
+        return response_list, valid_tags, invalid_tags, messages
 
     def get(self, query, chained_mode=False, estimate_completed_events=False, priority_filter=None, pwg_filter=None, status_filter=None):
 
@@ -137,13 +140,14 @@ class PresentAPI(APIBase):
             response_tuple = self.prepare_response(query, estimate_completed_events)
             self.__cache.set(cache_key, response_tuple)
 
-        response, valid_tags, invalid_tags = response_tuple
+        response, valid_tags, invalid_tags, messages = response_tuple
         # Apply priority, PWG and status filters
         response, pwgs, statuses = self.apply_filters(response, priority_filter, pwg_filter, status_filter)
         res = {'data': response,
                'valid_tags': valid_tags,
                'invalid_tags': invalid_tags,
                'pwg': pwgs,
-               'status': statuses}
+               'status': statuses,
+               'messages': messages}
         logging.info('Will return')
         return json.dumps({'results': res})

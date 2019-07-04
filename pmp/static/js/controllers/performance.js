@@ -114,6 +114,7 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
          * @param {Boolean} filter If filter data is present.
          */
         $scope.query = function () {
+            $scope.messages = [];
             var inputTags = Data.getInputTags();
             if (inputTags.length === 0) {
                 Data.setLoadedData([]);
@@ -169,6 +170,7 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
                     $scope.data = $scope.filterByMinuendSubtrahend(Data.getLoadedData(), $scope.subtrahend, $scope.minuend);
                     $scope.setURL($scope, Data);
                     $scope.$broadcast('onChangeNotification:LoadedData');
+                    $scope.messages = data.data.results.messages;
                     $scope.loadingData = false;
                     if (data.data.results.invalid_tags.length > 0) {
                         $scope.showPopUp('warning', 'Nothing was found for ' + data.data.results.invalid_tags.join(', '));
