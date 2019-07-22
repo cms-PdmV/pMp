@@ -75,8 +75,12 @@ class HistoricalAPI(APIBase):
                     if details['t'] > newest_details['t']:
                         newest_details = details
 
-                for details in data[key]['data']:
-                    details['x'] = newest_details['d']
+                # If number of done (VALID) events are more or equal to number of
+                # produced, adjust expected to done value
+                # This prevents from setting expected to 0 when there are no done events
+                if newest_details['d'] >= newest_details['e']:
+                    for details in data[key]['data']:
+                        details['x'] = newest_details['d']
                 # Comment-out the above for loop and uncomment the line below
                 # to adjust only last detail (graph will show a decline)
                 # newest_details['x'] = newest_details['d']
