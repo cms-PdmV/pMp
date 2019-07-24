@@ -19,9 +19,9 @@
   <div class="row">
     <div class="col-lg-8 col-md-8 col-sm-12 col-xs-12" ng-controller="TypeaheadController">
       <script type="text/ng-template" id="customSuggestionsTemplate">
-        <a class="text-right">
-            <span class="pull-left" ng-bind-html="match.label | uibTypeaheadHighlight:query"></span>
-            <span class="suggestions-type">{{match.model.type}}</span>
+        <a style="display:flex; justify-content: space-between;">
+          <span ng-bind-html="match.label | uibTypeaheadHighlight:query"></span>
+          <div class="suggestions-type"> <span>{{match.model.type}}</span> </div>
         </a>
       </script>
       <div class="input-group">

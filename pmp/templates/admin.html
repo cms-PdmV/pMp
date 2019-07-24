@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="pmpApp" id="ng-app">
+
+  <head>
+    <title>Production Monitoring Platform</title>
+    <base href="/pmp/"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+
+    <!--external CSS-->
+    <link href="static/build/depend.build.css" rel="stylesheet" type="text/css"/>
+    <link href="https://fonts.googleapis.com/css?family=Roboto:900,400,300" rel="stylesheet" type="text/css"/>
+
+    <!--pMp CSS-->
+    <link href="static/build/pmp.build.css" rel="stylesheet"/>
+    <link rel="shortcut icon" type="image/x-icon" href="static/ic_fav.png" />
+    <style type="text/css">
+      .centered {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="row">
+        <div class="col-xs-12">
+          <h1 class="pull-right"><strong>Admin Panel</strong></h1>
+        </div>
+      </div>
+      <div class="row display-flex mt-2 text-center">
+        {% for key, value in data.items() %}
+          <div class="col-lg-2 col-md-4 col-sm-6 col-xs-12">
+            <div class="panel panel-default">
+              <div class="panel-heading">
+                <h1>{{value.total}}</h1>
+              </div>
+              <div class="panel-body">
+                <span class="text-uppercase">{{key}}</span>
+                {% if value.last_update %}<br>{{value.last_update}}{% endif %}
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </body>
+</html>

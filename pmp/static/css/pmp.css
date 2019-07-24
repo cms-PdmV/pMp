@@ -112,6 +112,7 @@ body {
 .suggestions-type {
     margin-left: 20px;
     font-size: 0.8rem;
+    padding-top: 0.8rem;
 }
 
 @keyframes blink {
@@ -164,4 +165,18 @@ body:after{
     -ms-transform: rotate(45deg);
     -webkit-transform: rotate(45deg);
     transform: rotate(45deg);
+}
+
+.row.display-flex {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.row.display-flex > [class*='col-'] {
+  display: flex;
+  flex-direction: column;
+}
+
+.row.display-flex > div > div {
+  height: 100%;
 }

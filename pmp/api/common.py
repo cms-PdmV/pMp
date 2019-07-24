@@ -44,6 +44,8 @@ class SuggestionsAPI(esadapter.InitConnection):
         Order:
           campaign
           request
+          chained campaign
+          chained request
           ppd tag
           tag
           flow
@@ -68,6 +70,8 @@ class SuggestionsAPI(esadapter.InitConnection):
 
         suggestion_queries = [{'type': 'CAMPAIGN', 'index': 'campaigns'},
                               {'type': 'REQUEST', 'index': 'requests'},
+                              {'type': 'CHAINED CAMPAIGN', 'index': 'chained_campaigns'},
+                              {'type': 'CHAINED REQUEST', 'index': 'chained_requests'},
                               {'type': 'TAG', 'index': 'tags'},
                               {'type': 'PPD TAG', 'index': 'ppd_tags'},
                               {'type': 'FLOW', 'index': 'flows'},
@@ -207,6 +211,33 @@ class LastUpdateAPI(esadapter.InitConnection):
         return json.dumps({"results": {'timestamp': last_update, 'date': last_update_date, 'ago': ago}}, sort_keys=True)
 
 
+class AdminAPI(esadapter.InitConnection):
+    def __init__(self):
+        esadapter.InitConnection.__init__(self)
+        Utils.setup_console_logging()
+
+    def get(self):
+        collections, _ = Utils.curl('GET', config.DATABASE_URL + '_aliases?pretty=false')
+        print(collections)
+        collections = collections.keys()
+        results = {}
+        for collection_name in collections:
+            response, _ = Utils.curl('GET', config.DATABASE_URL + collection_name + '/_count')
+            collection_name = collection_name.replace('_', ' ')
+            count = response.get('count', 0)
+            results[collection_name] = {}
+            results[collection_name]['total'] = count
+
+        last_sequences = self.es.search(q='*', index='last_sequences')['hits']['hits']
+        for last_sequence in last_sequences:
+            name = last_sequence['_id']
+            if name in results:
+                last_update = last_sequence.get('_source', {}).get('time', 0) / 1000.0
+                results[name]['last_update'] = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(last_update))
+
+        return results
+
+
 class APIBase(esadapter.InitConnection):
 
     __cache = SimpleCache(threshold=config.CACHE_SIZE, default_timeout=config.CACHE_TIMEOUT)
@@ -232,6 +263,8 @@ class APIBase(esadapter.InitConnection):
         Order:
           campaign
           request
+          chained campaign
+          chained request
           ppd tag
           tag
           flow
@@ -255,6 +288,12 @@ class APIBase(esadapter.InitConnection):
 
         elif self.is_instance(query, 'requests', 'request'):
             result = ('prepid:%s' % (query), 'requests', 'request')
+
+        elif self.is_instance(query, 'chained_campaigns', 'chained_campaign'):
+            result = ('member_of_campaign:%s' % (query), 'chained_requests', 'chained_request')
+
+        elif self.is_instance(query, 'chained_requests', 'chained_request'):
+            result = ('member_of_chain:%s' % (query), 'requests', 'request')
 
         elif self.is_instance(query, 'tags', 'tag'):
             result = ('tags:%s' % (query), 'requests', 'request')
@@ -387,7 +426,13 @@ class APIBase(esadapter.InitConnection):
             logging.info('Found result in cache for key: %s' % cache_key)
             return results
 
-        req_arr = self.fetch_objects(es_query, index, doctype)
+        if index == 'chained_requests':
+            chained_requests = self.fetch_objects(es_query, index, doctype)
+            for chained_request in chained_requests:
+                es_query, index, doctype = 'member_of_chain:%s' % (chained_request.get('prepid')), 'requests', 'request'
+                req_arr.extend(self.fetch_objects(es_query, index, doctype))
+        else:
+            req_arr = self.fetch_objects(es_query, index, doctype)
 
         if index == 'requests':
             logging.info('Found %d requests for %s' % (len(req_arr), es_query))

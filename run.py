@@ -3,11 +3,11 @@ pMp production run script
 Configuration file in config.py
 > sudo python run.py
 """
-from flask import Flask, make_response, redirect, request
+from flask import Flask, make_response, redirect, request, render_template
 from pmp.api.historical import HistoricalAPI
 from pmp.api.performance import PerformanceAPI
 from pmp.api.present import PresentAPI
-from pmp.api.common import OverallAPI, SuggestionsAPI, ShortenAPI, ScreenshotAPI, LastUpdateAPI
+from pmp.api.common import OverallAPI, SuggestionsAPI, ShortenAPI, ScreenshotAPI, LastUpdateAPI, AdminAPI
 
 import json
 import config
@@ -15,6 +15,7 @@ import flask
 
 
 app = Flask(__name__,
+            template_folder='./pmp/templates',
             static_url_path='',
             static_folder='./pmp')
 
@@ -40,6 +41,12 @@ def about():
     """Redirect to Twiki"""
     return redirect('https://twiki.cern.ch/twiki/bin/viewauth/CMS/PdmVpMp',
                     code=302)
+
+
+@app.route('/admin')
+def admin():
+    info = AdminAPI().get()
+    return render_template('admin.html', data=info)
 
 
 @app.route('/')

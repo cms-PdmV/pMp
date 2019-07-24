@@ -30,8 +30,7 @@ class PresentAPI(APIBase):
                 if not campaign or campaign in campaigns:
                     continue
 
-                chained_campaigns = self.fetch_objects(field='campaigns',
-                                                       query=campaign,
+                chained_campaigns = self.fetch_objects(query='prepid:%s' % (campaign),
                                                        index='chained_campaigns',
                                                        doctype='chained_campaign')
                 for chained_campaign in chained_campaigns:
@@ -131,7 +130,7 @@ class PresentAPI(APIBase):
             logging.info('Campaign Mode! Campaigns for query %s are %s' % (query, campaigns))
             query = ','.join(campaigns)
 
-        cache_key = 'present_%s_____%s' % (query, estimate_completed_events)
+        cache_key = 'present_%s_____%s_____%s' % (query, chained_mode, estimate_completed_events)
         if self.__cache.has(cache_key):
             logging.info('Found result in cache for key: %s' % cache_key)
             response_tuple = self.__cache.get(cache_key)

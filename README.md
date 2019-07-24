@@ -16,6 +16,8 @@ Search bar in pMp can be found in all statistics pages. Next to it, there are tw
 
 * Campaigns (McM)
 * Request prepids (McM)
+* Chained campaigns (McM)
+* Chained requests (McM)
 * PPD tags (McM)
 * Request tags (McM)
 * Flows (McM)
