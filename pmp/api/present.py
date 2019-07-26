@@ -30,7 +30,7 @@ class PresentAPI(APIBase):
                 if not campaign or campaign in campaigns:
                     continue
 
-                chained_campaigns = self.fetch_objects(query='prepid:%s' % (campaign),
+                chained_campaigns = self.fetch_objects(query='campaigns:%s' % (campaign),
                                                        index='chained_campaigns',
                                                        doctype='chained_campaign')
                 for chained_campaign in chained_campaigns:
