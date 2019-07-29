@@ -2,10 +2,11 @@
   <button ng-repeat="tag in inputTags"
           ng-disabled="loadingData"
           type="button"
-          class="btn btn-default btn-sm mr-1"
+          class="btn btn-default btn-sm mr-1 mt-1"
           ng-click="tagRemove(tag, page.id == 2)"
+          style="max-width: 100%; text-overflow: ellipsis; overflow: hidden; position: relative; padding-right: 20px"
           title="Click here to remove {{tag}}">
     <span>{{tag}}</span>
-    <i class="fa fa-times"></i>
+    <i style="position: absolute; right: 8px; line-height: 1.5;" class="fa fa-times"></i>
   </button>
 </div>
