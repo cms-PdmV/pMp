@@ -12,7 +12,7 @@ angular.module('pmpApp').controller('MainController', ['$http', '$location',
         $scope.showView = true; // controls visibility of page main container
         if (!isSupportedBrowser) $('#unsupportedModal').modal('show'); // show unsupported modal if the page is not supported
 
-        if ($location.host() && $location.host().includes('desv')) {
+        if ($location.host() && $location.host().includes('dev')) {
             $('body').addClass('dev-ribbon');
         }
 
