@@ -147,14 +147,14 @@ body {
     display: inline-block;
 }
 
-body:after{
-    content: "beta";
+body.dev-ribbon:after{
+    content: "development";
     position: fixed;
-    width: 160px;
+    width: 270px;
     height: 40px;
     background: red;
-    top: 20px;
-    right: -40px;
+    top: 58px;
+    right: -52px;
     text-align: center;
     font-size: 25px;
     font-family: sans-serif;
@@ -162,6 +162,7 @@ body:after{
     font-weight: 700;
     color: #fff;
     line-height: 40px;
+    opacity: 0.8;
     -ms-transform: rotate(45deg);
     -webkit-transform: rotate(45deg);
     transform: rotate(45deg);

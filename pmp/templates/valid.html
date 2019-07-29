@@ -80,7 +80,7 @@
     </nav>
 
     <div class="container" id="ctn">
-      <div class="panel {{popUp.style}} popup" ng-show="popUp.show">
+      <div style="bottom: 120px !important;" class="panel {{popUp.style}} popup ng-hide" ng-show="popUp.show">
         <div class="panel-heading text-uppercase">
           <i class="fa {{popUp.icon}} spacing-r"></i> 
           <strong>{{popUp.title}}</strong>
@@ -90,7 +90,7 @@
         </div>
       </div>
       
-      <div class="panel panel-danger popup" ng-show="showError">
+      <div class="panel panel-danger popup ng-hide" ng-show="showError">
         <div class="panel-heading text-uppercase">
           <i class="fa fa-frown-o spacing-r"></i> 
           <strong>Error</strong>

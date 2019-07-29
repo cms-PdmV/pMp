@@ -12,6 +12,10 @@ angular.module('pmpApp').controller('MainController', ['$http', '$location',
         $scope.showView = true; // controls visibility of page main container
         if (!isSupportedBrowser) $('#unsupportedModal').modal('show'); // show unsupported modal if the page is not supported
 
+        if ($location.host() && $location.host().includes('desv')) {
+            $('body').addClass('dev-ribbon');
+        }
+
         $http.get("api/lastupdate").then(function (data) {
             $scope.lastUpdateAgo = data.data.results.ago;
             $scope.lastUpdate = data.data.results.date;
