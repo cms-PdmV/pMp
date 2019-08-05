@@ -153,6 +153,9 @@ angular.module('pmpApp').controller('PresentController', ['$http',
                 $scope.data = Data.getLoadedData();
                 $scope.setURL($scope, Data);
                 $scope.$broadcast('onChangeNotification:LoadedData');
+                $timeout(function(){
+                    $scope.$apply();
+                });
                 return null;
             }
 

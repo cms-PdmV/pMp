@@ -19,20 +19,8 @@ angular.module('pmpApp').controller('TagsController', ['$rootScope', '$scope', '
          * @param {String} tagToREmove the input to be removed.
          * @param {Boolean} isServerSide the mark if to process the data or requery API.
          */
-        $scope.tagRemove = function (tagToRemove, isServerSide) {
-            $rootScope.loadingData = true;
-            var tmp = Data.getLoadedData();
-            var data = [];
-            setTimeout(function () {
-                for (var i = 0; i < tmp.length; i++) {
-                    if (tmp[i].input !== tagToRemove) {
-                        data.push(tmp[i]);
-                    }
-                }
-                Data.reloadFilters(data);
-                Data.removeInputTag(tagToRemove);
-                $scope.inputTags = Data.getInputTags();
-            }, 100);
+        $scope.tagRemove = function (tagToRemove) {
+            Data.removeInputTag(tagToRemove);
         };
 
         // Broadcast receiver, change input tags array

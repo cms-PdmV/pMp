@@ -7,10 +7,11 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
                                                              '$location',
                                                              '$rootScope',
                                                              '$scope',
+                                                             '$timeout',
                                                              '$interval',
                                                              'PageDetailsProvider',
                                                              'Data',
-    function ($http, $location, $rootScope, $scope, $interval, PageDetailsProvider, Data) {
+    function ($http, $location, $rootScope, $scope, $timeout, $interval, PageDetailsProvider, Data) {
         'use strict';
 
         /**
@@ -125,6 +126,9 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
                 $scope.data = Data.getLoadedData();
                 $scope.setURL($scope, Data);
                 $scope.$broadcast('onChangeNotification:LoadedData');
+                $timeout(function(){
+                    $scope.$apply();
+                });
                 return null;
             }
             $scope.loadingData = true;
