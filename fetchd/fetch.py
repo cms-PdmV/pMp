@@ -6,6 +6,7 @@ import logging
 import time
 import sys
 from utils import Config, Utils
+from elasticsearch import Elasticsearch
 
 
 def rename_attributes(index, data, config):
@@ -210,7 +211,7 @@ def get_changed_object_ids(cfg):
     if last_seq is None:
         last_seq = 0
 
-    results, code = Utils.curl('GET', '%s=%s' % (cfg.source_db_changes, last_seq), cookie=cfg.cookie)
+    results, code = Utils.curl('GET', '%s=%s' % (cfg.source_db_changes, last_seq))
     # logging.info('%s %s' % (results, code))
     last_seq = results['last_seq']
     results = results['results']
@@ -255,45 +256,82 @@ def save(object_id, data, cfg):
         logging.error('Error saving %s. Error: %s' % (object_id, ex))
 
 
+def create_fake_request(stats_doc, cfg):
+    """
+    Creates or updates a request-like object from a given stats object
+    """
+    prepid = stats_doc['PrepID']
+    workflow_name = stats_doc['RequestName']
+    fake_request, _ = Utils.curl('GET', cfg.pmp_type + prepid)
+    fake_request = fake_request.get('_source')
+    if not fake_request:
+        logging.info('Creating new request %s' % (prepid))
+        fake_request = {}
+        fake_request['prepid'] = stats_doc['PrepID']
+        fake_request['reqmgr_name'] = []
+        fake_request['reqmgr_status_history'] = []
+        fake_request['history'] = []
+    else:
+        logging.info('Editing existing request %s' % (prepid))
+
+    if workflow_name not in fake_request['reqmgr_name']:
+        fake_request['reqmgr_name'].append(workflow_name)
+        fake_request['reqmgr_name'] = sorted(fake_request['reqmgr_name'], key=lambda wf: '_'.join(wf.split('_')[-3:]))
+
+    if workflow_name == fake_request['reqmgr_name'][-1]:
+        # If this is the newest workflow, update things
+        fake_request['total_events'] = stats_doc['TotalEvents']
+        fake_request['priority'] = stats_doc['RequestPriority']
+        if len(stats_doc['Campaigns']) > 0:
+            campaign = stats_doc['Campaigns'][0]
+            if campaign:
+                logging.info('Found campaign %s in %s' % (campaign, fake_request['prepid']))
+                fake_request['member_of_campaign'] = campaign
+
+        fake_request['output_dataset'] = stats_doc['OutputDatasets']
+        # Translate ReqMgr2 statuses to McM-like statuses
+        workflow_to_mcm_statuses = {
+            'new': 'submitted',
+            'announced': 'done'
+        }
+        fake_request['history'] = []
+        # Fake requests history from transitions
+        for transition in stats_doc.get('RequestTransition', []):
+            if transition['status'] in workflow_to_mcm_statuses:
+                mcm_status = workflow_to_mcm_statuses[transition['status']]
+                update_time = transition['update_time']
+                fake_request['history'].append({
+                    'action': mcm_status,
+                    'time': update_time
+                })
+
+        fake_request['history'] = sorted(fake_request['history'], key=lambda e: e['time'])
+        if len(fake_request.get('history', [])) > 0:
+            fake_request['status'] = fake_request['history'][-1]['action']
+        else:
+            fake_request['status'] = 'unknown'
+
+    # Make transition history for the stats document
+    new_transition_history = []
+    for transition in stats_doc.get('RequestTransition', []):
+        new_transition_history.append(transition['status'])
+
+    # Delete existing transition history for current stats document
+    fake_request['reqmgr_status_history'] = [entry for entry in fake_request['reqmgr_status_history'] if entry['name'] != workflow_name]
+    fake_request['reqmgr_status_history'].append({'name': stats_doc['_id'], 'history':new_transition_history})
+
+    return fake_request
+
 def create_rereco_request(stats_doc, rereco_cfg, process_string_cfg, rereco_campaigns_cfg):
     """
-    Creates a request-like object from a given stats object
+    Creates or updates a request-like ReReco object from a given stats object
     """
-    fake_request = {}
-    fake_request['prepid'] = stats_doc['PrepID']
-    fake_request['total_events'] = stats_doc['TotalEvents']
-    fake_request['priority'] = stats_doc['RequestPriority']
-    if len(stats_doc['Campaigns']) > 0:
-        campaign = stats_doc['Campaigns'][0]
-        if campaign:
-            logging.info('Found campaign %s in %s' % (campaign, fake_request['prepid']))
-            fake_request['member_of_campaign'] = campaign
-            save(campaign, {'prepid': campaign}, rereco_campaigns_cfg)
-
-    fake_request['output_dataset'] = stats_doc['OutputDatasets']
-    fake_request['reqmgr_name'] = [stats_doc['_id']]
-    fake_request['reqmgr_status_history'] = [{'name': stats_doc['_id'], 'history':[]}]
-    fake_request['history'] = []
-
-    # Translate ReqMgr2 statuses to McM-like statuses
-    workflow_to_mcm_statuses = {
-        'new': 'submitted',
-        'announced': 'done'
-    }
-    for transition in stats_doc.get('RequestTransition', []):
-        fake_request['reqmgr_status_history'][0]['history'].append(transition['status'])
-        if transition['status'] in workflow_to_mcm_statuses:
-            fake_request['history'].append({
-                'action': workflow_to_mcm_statuses[transition['status']],
-                'time': transition['update_time']
-            })
-
-    if len(fake_request.get('history', [])) > 0:
-        fake_request['status'] = fake_request['history'][-1]['action']
-    else:
-        fake_request['status'] = 'unknown'
-
+    fake_request = create_fake_request(stats_doc, rereco_cfg)
     fake_request['pwg'] = 'ReReco'
+    campaign = fake_request.get('member_of_campaign', None)
+    if campaign:
+        save(campaign, {'prepid': campaign}, rereco_campaigns_cfg)
+
     processing_string = stats_doc.get('ProcessingString', None)
     if processing_string is not None:
         logging.info('Found processing string %s in %s' % (processing_string, fake_request['prepid']))
@@ -305,43 +343,14 @@ def create_rereco_request(stats_doc, rereco_cfg, process_string_cfg, rereco_camp
 
 def create_relval_request(stats_doc, relval_cfg, relval_cmssw_cfg, relval_campaigns_cfg):
     """
-    Creates a request-like object from a given stats object
+    Creates or updates a request-like RelVal object from a given stats object
     """
-    fake_request = {}
-    fake_request['prepid'] = stats_doc['PrepID']
-    fake_request['total_events'] = stats_doc['TotalEvents']
-    fake_request['priority'] = stats_doc['RequestPriority']
-    if len(stats_doc['Campaigns']) > 0:
-        campaign = stats_doc['Campaigns'][0]
-        if campaign:
-            logging.info('Found campaign %s in %s' % (campaign, fake_request['prepid']))
-            fake_request['member_of_campaign'] = campaign
-            save(campaign, {'prepid': campaign}, relval_campaigns_cfg)
-
-    fake_request['output_dataset'] = stats_doc['OutputDatasets']
-    fake_request['reqmgr_name'] = [stats_doc['_id']]
-    fake_request['reqmgr_status_history'] = [{'name': stats_doc['_id'], 'history':[]}]
-    fake_request['history'] = []
-
-    # Translate ReqMgr2 statuses to McM-like statuses
-    workflow_to_mcm_statuses = {
-        'new': 'submitted',
-        'announced': 'done'
-    }
-    for transition in stats_doc.get('RequestTransition', []):
-        fake_request['reqmgr_status_history'][0]['history'].append(transition['status'])
-        if transition['status'] in workflow_to_mcm_statuses:
-            fake_request['history'].append({
-                'action': workflow_to_mcm_statuses[transition['status']],
-                'time': transition['update_time']
-            })
-
-    if len(fake_request.get('history', [])) > 0:
-        fake_request['status'] = fake_request['history'][-1]['action']
-    else:
-        fake_request['status'] = 'unknown'
-
+    fake_request = create_fake_request(stats_doc, relval_cfg)
     fake_request['pwg'] = 'RelVal'
+    campaign = fake_request.get('member_of_campaign', None)
+    if campaign:
+        save(campaign, {'prepid': campaign}, relval_campaigns_cfg)
+
     cmssw_version = stats_doc.get('CMSSWVersion', None)
     if cmssw_version is not None:
         logging.info('Found CMSSW version %s in %s' % (cmssw_version, fake_request['prepid']))
@@ -349,6 +358,29 @@ def create_relval_request(stats_doc, relval_cfg, relval_cmssw_cfg, relval_campai
         save(cmssw_version, {'prepid': cmssw_version}, relval_cmssw_cfg)
 
     save(fake_request['prepid'], fake_request, relval_cfg)
+
+
+def delete_workflow_from_request(cfg, workflow_name):
+    index = cfg.pmp_index.strip('/').split('/')[-1]
+    es = Elasticsearch(cfg.db)
+    search_results = es.search(q='reqmgr_name:%s' % (workflow_name), index=index)['hits']['hits']
+    prepids = [s['_source']['prepid'] for s in search_results]
+    for prepid in prepids:
+        request, _ = Utils.curl('GET', cfg.pmp_type + prepid)
+        request = request.get('_source')
+        if request:
+            request['reqmgr_name'] = [name for name in request['reqmgr_name'] if name != workflow_name]
+            request['reqmgr_status_history'] = [entry for entry in request['reqmgr_status_history'] if entry['name'] != workflow_name]
+            if len(request['reqmgr_name']) == 0:
+                logging.info('Deleting %s' % (prepid))
+                # Delete it normally
+                _, status = Utils.curl('DELETE', '%s%s' % (cfg.pmp_type, prepid))
+                if status == 200:
+                    logging.info('Deleted %s (%s)' % (prepid, index))
+                elif status != 404:
+                    logging.error('Record %s (%s) was not deleted. Code: %s' % (prepid, index, status))
+            else:
+                save(prepid, request, cfg)
 
 
 def is_excluded_rereco(stats_doc):
@@ -359,6 +391,11 @@ def is_excluded_rereco(stats_doc):
         logging.error('Stats document is None. How?!')
 
     if stats_doc.get('PrepID', '') in ['', 'None']:
+        logging.info('%s will not be added to ReRecos because it\'s prepid is "%s"' % (stats_doc.get('_id'), stats_doc.get('PrepID')))
+        return True
+
+    if stats_doc.get('RequestType', '').lower() == 'resubmission':
+        logging.info('%s is Resubmission so it will not be added to ReRecos' % (stats_doc.get('RequestName')))
         return True
 
     # Fall through
@@ -416,13 +453,15 @@ if __name__ == "__main__":
     for object_id, deleted in get_changed_object_ids(cfg):
         time.sleep(0.005)
         done += 1
+        if index == 'workflows' and object_id.startswith('_design/'):
+            continue
 
         logging.info('(%s) Processing %s. Deleted %s' % (done, object_id, 'YES' if deleted else 'NO'))
         if object_id not in cfg.exclude_list:
             if not deleted:
                 # If it's not deleted, fetch it
                 thing_url = str(cfg.source_db + object_id)
-                data, status = Utils.curl('GET', thing_url, cookie=cfg.cookie, return_error=True)
+                data, status = Utils.curl('GET', thing_url, return_error=True)
 
             if not deleted and index == 'workflows':
                 # Check maybe it was rejected or aborted. If yes, delete it
@@ -434,19 +473,9 @@ if __name__ == "__main__":
 
             if deleted:
                 if index == 'workflows':
-                    # Try to delete it from ReReco index (maybe it's ReReco request)
-                    data, _ = Utils.curl('GET', cfg.pmp_type + object_id)
-                    prepid = data.get('RequestPrepid')
-                    if prepid:
-                        logging.info('Trying to delete %s as ReReco' % (prepid))
-                        _, status = Utils.curl('DELETE', rereco_cfg.pmp_type + prepid)
-                        if status == 200:
-                            logging.info('Deleted ReReco request %s' % (object_id))
-
-                        logging.info('Trying to delete %s as RelVal' % (prepid))
-                        _, status = Utils.curl('DELETE', relval_cfg.pmp_type + prepid)
-                        if status == 200:
-                            logging.info('Deleted RelVal request %s' % (object_id))
+                    # Try to delete it from ReReco and RelVal index
+                    delete_workflow_from_request(rereco_cfg, object_id)
+                    delete_workflow_from_request(relval_cfg, object_id)
 
                 # Delete it normally
                 _, status = Utils.curl('DELETE', '%s%s' % (cfg.pmp_type, object_id))

@@ -29,15 +29,10 @@ class Config(object):
         self.source_db_changes = parser.get(index, 'source_db_changes')
         self.fetch_fields = re.split(", ", parser.get(index, 'fetch_fields'))
         self.mapping = parser.get(index, 'mapping')
+        self.db = parser.get('pmp', 'db')
         self.pmp_index = parser.get('pmp', 'db') + parser.get(index, 'pmp_index')
         self.pmp_type = self.pmp_index + parser.get(index, 'pmp_type')
         self.last_seq = parser.get('pmp', 'last_seq') + index
-
-        # Cookie
-        if parser.has_option(index, 'cookie'):
-            self.cookie = parser.get(index, 'cookie')
-        else:
-            self.cookie = parser.get('credentials', 'cookie')
 
 
 class Utils(object):
@@ -54,7 +49,7 @@ class Utils(object):
         logging.basicConfig(format=CONSOLE_LOG_FORMAT, level=logging.INFO)
 
     @staticmethod
-    def curl(method, url, data=None, cookie=None, return_error=False, parse_json=True, retry_on_failure=True):
+    def curl(method, url, data=None, return_error=False, parse_json=True, retry_on_failure=True):
         """
         Perform CURL - return_error kwarg returns status after failure - defaults to None
         To install pycurl:
@@ -67,9 +62,6 @@ class Utils(object):
         curl.setopt(pycurl.SSL_VERIFYPEER, 0)
         curl.setopt(pycurl.SSL_VERIFYHOST, 0)
         curl.setopt(pycurl.FOLLOWLOCATION, 1)
-        if cookie is not None:
-            curl.setopt(pycurl.COOKIEFILE, cookie)
-            curl.setopt(pycurl.COOKIEJAR, cookie)
 
         if method == "GET" or method == "DELETE":
             curl.setopt(pycurl.CUSTOMREQUEST, method)
@@ -83,7 +75,6 @@ class Utils(object):
 
             curl.setopt(pycurl.HTTPHEADER, ['Content-Type:application/json'])
 
-        # logging.info('Will %s %s. Data %s. Cookie %s' % (method, url, data, cookie))
         curl.perform()
         try:
             if parse_json:
@@ -98,7 +89,7 @@ class Utils(object):
             if retry_on_failure:
                 time.sleep(5)
                 logging.info('Will retry %s to %s' % (method, url))
-                return Utils.curl(method, url, data, cookie, return_error, parse_json, retry_on_failure=False)
+                return Utils.curl(method, url, data, return_error, parse_json, retry_on_failure=False)
 
             if return_error:
                 return None, curl.getinfo(curl.RESPONSE_CODE)
