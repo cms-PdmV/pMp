@@ -11,28 +11,30 @@
       </p>
       <div ng-repeat="submitted in listSubmitted" class="row zebra-lines small-padding">
         <div class="col-sm-4">
-          <a ng-href="{{submitted.url}}" target="_blank">{{submitted.r}}</a>
-          <br><small>{{submitted.ds}}</small>
-          <small title="Number of events estimated from {{submitted.est}}" style="color:red" ng-if="submitted.est"><br>(Estimate from {{submitted.est}})</small>
+          <a ng-href="{{submitted.url}}" target="_blank">{{submitted.prepid}}</a>
+          <br><small>{{submitted.dataset}}</small>
+          <small title="Number of events estimated from {{submitted.estimated_from}}" style="color:red" ng-if="submitted.estimated_from"><br>(Estimate from {{submitted.estimated_from}})</small>
         </div>
         <div ng-if="!humanReadable" class="col-sm-2">
-          Expected: <b>{{submitted.x}}</b>
+          Expected: <b>{{submitted.expected}}</b>
         </div>
         <div ng-if="humanReadable" class="col-sm-2">
-          Expected: <b title="{{submitted.x}}">{{submitted.x | readableNumbers}}</b>
+          Expected: <b title="{{submitted.expected}}">{{submitted.expected | readableNumbers}}</b>
         </div>
         <div ng-if="!humanReadable" class="col-sm-2">
-          Produced: <b>{{submitted.d}}</b>
+          Produced: <b>{{submitted.done}}</b>
         </div>
         <div ng-if="humanReadable" class="col-sm-2">
-          Produced: <b title="{{submitted.d}}">{{submitted.d | readableNumbers}}</b>
+          Produced: <b title="{{submitted.done}}">{{submitted.done | readableNumbers}}</b>
         </div>
         <div class="col-sm-2">
           <div class="progress total-bar">
             <div class="font-shadow progress-bar pmp-orange"
+                 ng-class="{'pmp-orange': submitted.output_dataset_status != 'INVALID' && submitted.output_dataset_status != 'DELETED', 'pmp-red': submitted.output_dataset_status == 'INVALID' || submitted.output_dataset_status == 'DELETED'}"
                  role="progressbar"
                  aria-valuemin="0"
                  aria-valuemax="100"
+                 title="{{submitted.output_dataset}} is {{submitted.output_dataset_status}} at {{submitted.perc | readableNumbers}}%"
                  style="color: black;
                         max-width: 100%;
                         width:{{submitted.perc}}%;">
@@ -41,7 +43,7 @@
           </div>
         </div>
         <div class="col-sm-2">
-          <a ng-if="submitted.ods" ng-href="https://cmsweb.cern.ch/das/request?view=list&limit=50&instance=prod/global&input=dataset={{submitted.ods}}" target="_blank">Dataset in DAS</a>
+          <a ng-if="submitted.output_dataset" ng-href="https://cmsweb.cern.ch/das/request?view=list&limit=50&instance=prod/global&input=dataset={{submitted.output_dataset}}" target="_blank">Dataset in DAS</a>
         </div>
       </div>
     </div>
@@ -52,30 +54,32 @@
       </p>
       <div ng-repeat="done in listDone" class="row zebra-lines small-padding">
         <div class="col-sm-4">
-          <a ng-href="{{done.url}}" target="_blank">{{done.r}}</a>
-          <br><small>{{done.ds}}</small>
-          <small title="Number of events estimated from {{done.est}}" style="color:red" ng-if="done.est"><br>(Estimate from {{done.est}})</small>
+          <a ng-href="{{done.url}}" target="_blank">{{done.prepid}}</a>
+          <br><small>{{done.dataset}}</small>
+          <small title="Number of events estimated from {{done.estimated_from}}" style="color:red" ng-if="done.estimated_from"><br>(Estimate from {{done.estimated_from}})</small>
         </div>
         <div ng-if="!humanReadable" class="col-sm-2">
-          Expected: <b>{{done.x}}</b>
+          Expected: <b>{{done.expected}}</b>
         </div>
         <div ng-if="humanReadable" class="col-sm-2">
-          Expected: <b title="{{done.x}}">{{done.x | readableNumbers}}</b>
+          Expected: <b title="{{done.expected}}">{{done.expected | readableNumbers}}</b>
         </div>
         <div ng-if="!humanReadable" class="col-sm-2">
-          Done: <b>{{done.d}}</b>
-          <small title="Force completed" style="color:red" ng-if="done.fc">(FC)</small>
+          Done: <b>{{done.done}}</b>
+          <small title="Force completed" style="color:red" ng-if="done.force_completed">(FC)</small>
         </div>
         <div ng-if="humanReadable" class="col-sm-2">
-          Done: <b title="{{done.d}}">{{done.d | readableNumbers}}</b>
-          <small title="Force completed" style="color:red" ng-if="done.fc">(FC)</small>
+          Done: <b title="{{done.done}}">{{done.done | readableNumbers}}</b>
+          <small title="Force completed" style="color:red" ng-if="done.force_completed">(FC)</small>
         </div>
         <div class="col-sm-2">
           <div class="progress total-bar">
             <div class="font-shadow progress-bar pmp-blue"
+                 ng-class="{'pmp-blue': done.output_dataset_status != 'INVALID' && done.output_dataset_status != 'DELETED', 'pmp-red': done.output_dataset_status == 'INVALID' || done.output_dataset_status == 'DELETED'}"
                  role="progressbar"
                  aria-valuemin="0"
                  aria-valuemax="100"
+                 title="{{done.output_dataset}} is {{done.output_dataset_status}} at {{done.perc | readableNumbers}}%"
                  style="color: black;
                         max-width: 100%;
                         width:{{done.perc}}%;">
@@ -84,7 +88,7 @@
           </div>
         </div>
         <div class="col-sm-2">
-          <a ng-if="done.ods" ng-href="https://cmsweb.cern.ch/das/request?view=list&limit=50&instance=prod/global&input=dataset={{done.ods}}" target="_blank">Dataset in DAS</a>
+          <a ng-if="done.output_dataset" ng-href="https://cmsweb.cern.ch/das/request?view=list&limit=50&instance=prod/global&input=dataset={{done.output_dataset}}" target="_blank">Dataset in DAS</a>
         </div>
       </div>
     </div>

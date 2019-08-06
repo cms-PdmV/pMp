@@ -95,6 +95,9 @@ def api_historical():
         except:
             granularity = 100
 
+    if granularity < 1:
+        granularity = 100
+
     priority = flask.request.args.get('priority', None)
     if priority is not None:
         priority = priority.split(',')

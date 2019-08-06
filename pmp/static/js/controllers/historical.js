@@ -164,21 +164,21 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
                     Data.setValidTags(data.data.results.valid_tags);
                     $scope.loadTaskChain = false;
                     data.data.results.submitted_requests.forEach(function(entry) {
-                        if (entry.r.indexOf('ReReco') == -1 && entry.r.indexOf('CMSSW') == -1) {
-                            entry.url = 'https://cms-pdmv.cern.ch/mcm/requests?prepid=' + entry.r
+                        if (entry.prepid.indexOf('ReReco') == -1 && entry.prepid.indexOf('CMSSW') == -1) {
+                            entry.url = 'https://cms-pdmv.cern.ch/mcm/requests?prepid=' + entry.prepid
                         } else {
-                            entry.url = 'https://cmsweb.cern.ch/reqmgr2/fetch?rid=' + entry.w
+                            entry.url = 'https://cmsweb.cern.ch/reqmgr2/fetch?rid=' + entry.workflow
                         }
-                        entry.perc = entry.d / entry.x * 100;
+                        entry.perc = entry.done / entry.expected * 100;
                     });
                     $scope.listSubmitted = data.data.results.submitted_requests;
                     data.data.results.done_requests.forEach(function(entry) {
-                        if (entry.r.indexOf('ReReco') == -1 && entry.r.indexOf('CMSSW') == -1) {
-                            entry.url = 'https://cms-pdmv.cern.ch/mcm/requests?prepid=' + entry.r
+                        if (entry.prepid.indexOf('ReReco') == -1 && entry.prepid.indexOf('CMSSW') == -1) {
+                            entry.url = 'https://cms-pdmv.cern.ch/mcm/requests?prepid=' + entry.prepid
                         } else {
-                            entry.url = 'https://cmsweb.cern.ch/reqmgr2/fetch?rid=' + entry.w
+                            entry.url = 'https://cmsweb.cern.ch/reqmgr2/fetch?rid=' + entry.workflow
                         }
-                        entry.perc = entry.d / entry.x * 100;
+                        entry.perc = entry.done / entry.expected * 100;
                     });
                     $scope.listDone = data.data.results.done_requests
                     $scope.data = Data.getLoadedData();
@@ -241,11 +241,15 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
             var dataLabel = document.getElementById("historical-drilldown").getElementsByTagName("div")
             // lets get the labels text
             var date = new Date()
-            var dataLabelWidth = (1160 - 20)  / 4;
+            var dataLabelWidth = (1160 - 20)  / dataLabel.length;
             var time_line = '<text x="10" y="15">' + dataLabel[0].textContent + '</text>';
             var expected_evts = '<text x="' + (dataLabelWidth + 10) + '" y="15" style="fill: #263238;">' + dataLabel[1].textContent + '</text>';
             var evts_in_DAS = '<text x="' + (dataLabelWidth * 2 + 10) + '" y="15" style="fill: #ff6f00;">' + dataLabel[2].textContent + '</text>';
             var done_evts_in_DAS = '<text x="' + (dataLabelWidth * 3 + 10) + '" y="15" style="fill: #01579b;">' + dataLabel[3].textContent + '</text>';
+            var invalid_evts = '';
+            if (dataLabel.length === 5) {
+                invalid_evts = '<text x="' + (dataLabelWidth * 4 + 10) + '" y="15" style="fill: red;">' + dataLabel[4].textContent + '</text>';
+            }
 
             if (format === undefined) {
                 format = 'svg';
@@ -261,7 +265,8 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
                       time_line +
                       expected_evts +
                       evts_in_DAS +
-                      done_evts_in_DAS+
+                      done_evts_in_DAS +
+                      invalid_evts +
                       plot +
                       '</svg>';
             $http({

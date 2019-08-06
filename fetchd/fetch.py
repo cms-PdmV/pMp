@@ -92,6 +92,7 @@ def parse_request_reqmgr_list(details):
         except KeyError:
             continue
 
+    res = sorted(res, key=lambda k: '_'.join(k.split('_')[-3:]))
     return res
 
 

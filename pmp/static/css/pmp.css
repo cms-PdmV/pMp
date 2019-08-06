@@ -99,6 +99,10 @@ body {
     background-color: #8eb2cf;
 }
 
+.pmp-red {
+    background-color: #ff6b6b;
+}
+
 .pmp-radio-buttons > label.active {
     background-color: #f4bc91 !important;
     color: black !important;
@@ -143,7 +147,6 @@ body {
 }
 
 #historical-drilldown>div {
-    width: 25%;
     display: inline-block;
 }
 

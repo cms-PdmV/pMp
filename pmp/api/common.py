@@ -474,13 +474,13 @@ class APIBase(esadapter.InitConnection):
             # Get time of last transition to "submitted"
             for item in reversed(req['history']):
                 if item['action'] == 'submitted':
-                    req['submitted_time'] = item['time'] * 1000
+                    req['submitted_time'] = item['time']
                     break
 
             # Get the time of the *last* transition to status "done"
             for item in reversed(req['history']):
                 if item['action'] == 'done':
-                    req['done_time'] = item['time'] * 1000
+                    req['done_time'] = item['time']
                     break
 
             if not include_stats_document:
@@ -488,10 +488,9 @@ class APIBase(esadapter.InitConnection):
 
             # Iterate through all workflow names, starting from the newest one
             # and stopping once any valid workflow is found
-            req['reqmgr_name'] = sorted(req.get('reqmgr_name', []), key=lambda k: '_'.join(k.split('_')[-3:]), reverse=True)
-            logging.info('ReqMgr names for %s are %s' % (req['prepid'], req.get('reqmgr_name', [])))
+            logging.info('ReqMgr names for %s are %s' % (req['prepid'], req['reqmgr_name']))
             logging.info('Dataset for %s is %s' % (req['prepid'], dataset))
-            for reqmgr in req['reqmgr_name']:
+            for reqmgr in reversed(req['reqmgr_name']):
                 try:
                     stats_document = self.es.get(index='workflows', doc_type='workflow', id=reqmgr)['_source']
                 except elasticsearch.NotFoundError:
@@ -514,7 +513,6 @@ class APIBase(esadapter.InitConnection):
                 mcm_document.update({'expected': req['total_events'],
                                      'output_dataset': dataset})
                 results.append((None, mcm_document))
-
 
         self.__cache.set(cache_key, results)
         return results
