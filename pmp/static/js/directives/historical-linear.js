@@ -110,14 +110,14 @@
             var donePlot = d3.area()
                                  .curve(d3.curveStepAfter)
                                  .x(function(d) { return x(d.time); })
-                                 .y0(function(d) { return y(0); })
-                                 .y1(function(d) { return y(d.done); });
+                                 .y0(function(d) { return y(d.invalid); })
+                                 .y1(function(d) { return y(d.invalid + d.done); });
 
             var invalidPlot = d3.area()
                                  .curve(d3.curveStepAfter)
                                  .x(function(d) { return x(d.time); })
-                                 .y0(function(d) { return y(d.done); })
-                                 .y1(function(d) { return y(d.done + d.invalid); });
+                                 .y0(function(d) { return y(0); })
+                                 .y1(function(d) { return y(d.invalid); });
 
             var producedPlot = d3.area()
                                  .curve(d3.curveStepAfter)
@@ -132,7 +132,7 @@
                           d3.max(data, function(d) { return d.time; })]).range([0, width]);
                 // Max for y should be max of three numbers in case there are more events produced than expected
                 y.domain([0,
-                          d3.max(data, function(d) { return Math.max(d.produced, d.done, d.expected, d.invalid); }) * 1.05]).range([height, 0]);
+                          d3.max(data, function(d) { return Math.max(d.produced, d.done, d.expected, d.invalid, 10); }) * 1.05]).range([height, 0]);
                 xAxis.scale(x);
                 yAxis.scale(y);
                 svg.selectAll("g .x.axis").call(xAxis);

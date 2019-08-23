@@ -18,19 +18,14 @@ class HistoricalAPI(APIBase):
     def aggregate_requests(self, data):
         """
         Aggregate list of requests and data points into dictionary by request name
-        and sort data points by timestamp. Also remove useless data points
         """
         aggregated = {}
         for request_details in data:
-            request = request_details['request']
-            if request not in aggregated:
-                aggregated[request] = {}
-                aggregated[request]['data'] = []
-                aggregated[request]['force_completed'] = request_details['force_completed']
-
-            aggregated[request]['data'] += request_details['data']
-            aggregated[request]['data'] = sorted(aggregated[request]['data'], key=lambda i: i['time'])
-            aggregated[request]['data'] = self.remove_useless_points(aggregated[request]['data'])
+            prepid = request_details['request']
+            aggregated[prepid] = {}
+            aggregated[prepid]['data'] = []
+            aggregated[prepid]['force_completed'] = request_details['force_completed']
+            aggregated[prepid]['data'] = request_details['data']
 
         return aggregated
 
@@ -63,13 +58,10 @@ class HistoricalAPI(APIBase):
         """
         for key in data:
             if data[key].get('force_completed', False) and len(data[key]['data']) > 0:
-                newest_details =  data[key]['data'][-1]
-                # If number of done (VALID) events are more or equal to number of
-                # produced, adjust expected to done value
-                # This prevents from setting expected to 0 when there are no done events
-                if newest_details['done'] >= newest_details['produced']:
-                    for details in data[key]['data']:
-                        details['expected'] = newest_details['done']
+                newest_details = data[key]['data'][-1]
+                new_value = max(newest_details['done'], newest_details['invalid'], newest_details['produced'])
+                for details in data[key]['data']:
+                    details['expected'] = new_value
 
         return data
 
@@ -163,7 +155,9 @@ class HistoricalAPI(APIBase):
                             if history_record['dataset'] != mcm_document['output_dataset']:
                                 continue
 
-                            for entry in history_record.get('history', []):
+                            history = history_record.get('history', [])
+                            history = sorted(history, key=lambda i: i['time'])
+                            for entry in history:
                                 data_point = {
                                     'produced': 0,
                                     'done': 0,
@@ -180,7 +174,10 @@ class HistoricalAPI(APIBase):
                                     data_point['produced'] = events
 
                                 response['data'].append(data_point)
-                                response['output_dataset_status'] = entry['type']
+
+                            response['data'] = self.remove_useless_points(response['data'])
+                            if len(history) > 0:
+                                response['output_dataset_status'] = history[-1].get('type', 'NONE')
 
                             break
                         else:
@@ -229,13 +226,12 @@ class HistoricalAPI(APIBase):
     def sort_timestamps(self, data, limit):
         """Reduce the number of timestamps to limit"""
         times = []
-        # logging.info(json.dumps(data, indent=2))
         for details in data:
             times += [i['time'] for i in data[details]['data']]
 
         times = set(times)
 
-        if limit >= len(times):
+        if limit > len(times):
             # No point making more data points than we have the data for
             return sorted(times)
 
@@ -243,17 +239,14 @@ class HistoricalAPI(APIBase):
         latest = int(max(times))
         earliest = int(min(times))
 
-        data_points = list(range(earliest, latest, int(round((latest - earliest) / limit))))
-
-        # Ensure that the most recent data point is always included
-        if data_points[-1] != latest:
-            data_points.append(latest)
+        data_points = list(range(earliest, latest, int((latest - earliest) / (limit))))
+        if data_points[-1] < latest:
+            data_points[-1] = latest
 
         return sorted(data_points)
 
     def get_with_status(self, data, status):
         new_data = []
-        key = 'done' if status == 'done' else 'produced'
         for request in data:
             if request.get('status') != status:
                 continue
@@ -272,7 +265,7 @@ class HistoricalAPI(APIBase):
                              'output_dataset_status': request['output_dataset_status'],
                              'dataset': request['dataset'],
                              'expected': data_points[-1]['expected'],
-                             'done': max(data_points[-1][key], data_points[-1]['invalid']),
+                             'done': max(data_points[-1]['done'], data_points[-1]['produced'], data_points[-1]['invalid']),
                              'force_completed': request['force_completed'],
                              'estimate_from': request.get('estimate_from', None),
                              'workflow': workflow_name})
@@ -280,7 +273,7 @@ class HistoricalAPI(APIBase):
         new_data = sorted(new_data, key=lambda k: k['prepid'])
         return new_data
 
-    def get(self, query, data_point_count=100, estimate_completed_events=False, priority_filter=None, pwg_filter=None, status_filter=None):
+    def get(self, query, data_point_count=250, estimate_completed_events=False, priority_filter=None, pwg_filter=None, status_filter=None):
         """
         Get the historical data based on query, data point count, priority and filter
         """
@@ -311,7 +304,6 @@ class HistoricalAPI(APIBase):
         # Get submitted and done requests separately
         submitted_requests = self.get_with_status(response, 'submitted')
         done_requests = self.get_with_status(response, 'done')
-        # print(done_requests)
         # Continue aggregating data points for response
         logging.info('Will aggregate requests')
         response = self.aggregate_requests(response)
@@ -321,6 +313,8 @@ class HistoricalAPI(APIBase):
         timestamps = self.sort_timestamps(response, data_point_count)
         logging.info('Will adjust data points')
         data = self.aggregate_data_points(response, timestamps)
+        logging.info('Remove useless points for the last time')
+        data = self.remove_useless_points(data)
         logging.info('Will append last data point')
         data = self.append_last_data_point(data)
         res = {'data': data,

@@ -88,15 +88,15 @@ def api_historical():
     pwg - list of pwg to include (csv)
     """
     i = flask.request.args.get('r', '')
-    granularity = flask.request.args.get('granularity', 100)
+    granularity = flask.request.args.get('granularity', 250)
     if not isinstance(granularity, int):
         try:
             granularity = int(granularity)
         except:
-            granularity = 100
+            granularity = 250
 
     if granularity < 1:
-        granularity = 100
+        granularity = 250
 
     priority = flask.request.args.get('priority', None)
     if priority is not None:

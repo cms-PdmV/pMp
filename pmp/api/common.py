@@ -550,7 +550,11 @@ class APIBase(esadapter.InitConnection):
                 else:
                     all_statuses[status] = True
 
-            priority = item.get('priority')
+            try:
+                priority = int(item.get('priority'))
+            except:
+                priority = None
+
             if priority is not None:
                 if priority_filter is not None:
                     lower_priority = priority_filter[0]

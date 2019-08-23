@@ -107,9 +107,9 @@ URL parameter: `showDoneRequestsList`
 
 ### Granularity (only in Historical Statistics)
 
-This option controls how many data points are in the graph, that is, how many different x values are there.
+This value controls into how many pieces all data date range will be divided. It takes smallest and biggest timestamp of fetched results and divides by this value. List of ranges is then used to aggregate points of the plot.
 
-Default value: `100`  
+Default value: `250`
 URL parameter: `granularity`
 
 ### Bins (only in Performance Statistics)

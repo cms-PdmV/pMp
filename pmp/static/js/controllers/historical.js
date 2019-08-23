@@ -20,7 +20,7 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
         $scope.defaults = {
             r: '', // search term
             zoomY: false, // zoom on Y axis
-            granularity: 100, // granularity value
+            granularity: 250, // granularity value
             humanReadable: true, // human-readable numbers
             showDoneRequestsList: false,
             estimateCompleted: false,

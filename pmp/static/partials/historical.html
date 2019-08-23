@@ -23,14 +23,18 @@
         </div>
         <div ng-if="!humanReadable" class="col-sm-2">
           Produced: <b>{{submitted.done}}</b>
+          <small title="Force completed" style="color:red" ng-if="submitted.force_completed">(FC)</small>
         </div>
         <div ng-if="humanReadable" class="col-sm-2">
           Produced: <b title="{{submitted.done}}">{{submitted.done | readableNumbers}}</b>
+          <small title="Force completed" style="color:red" ng-if="submitted.force_completed">(FC)</small>
         </div>
         <div class="col-sm-2">
           <div class="progress total-bar">
             <div class="font-shadow progress-bar pmp-orange"
-                 ng-class="{'pmp-orange': submitted.output_dataset_status != 'INVALID' && submitted.output_dataset_status != 'DELETED', 'pmp-red': submitted.output_dataset_status == 'INVALID' || submitted.output_dataset_status == 'DELETED'}"
+                 ng-class="{'pmp-red': submitted.output_dataset_status == 'INVALID' || submitted.output_dataset_status == 'DELETED',
+                            'pmp-blue': submitted.output_dataset_status == 'VALID',
+                            'pmp-orange': submitted.output_dataset_status == 'PRODUCTION'}"
                  role="progressbar"
                  aria-valuemin="0"
                  aria-valuemax="100"
@@ -75,7 +79,9 @@
         <div class="col-sm-2">
           <div class="progress total-bar">
             <div class="font-shadow progress-bar pmp-blue"
-                 ng-class="{'pmp-blue': done.output_dataset_status != 'INVALID' && done.output_dataset_status != 'DELETED', 'pmp-red': done.output_dataset_status == 'INVALID' || done.output_dataset_status == 'DELETED'}"
+                 ng-class="{'pmp-red': done.output_dataset_status == 'INVALID' || done.output_dataset_status == 'DELETED',
+                            'pmp-blue': done.output_dataset_status == 'VALID',
+                            'pmp-orange': done.output_dataset_status == 'PRODUCTION'}"
                  role="progressbar"
                  aria-valuemin="0"
                  aria-valuemax="100"
