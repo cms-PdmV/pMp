@@ -248,7 +248,7 @@
                 };
 
                 var updateDataLabel = function(data) {
-                    data[0] = data[0].toDateString() + ' ' + data[0].toLocaleTimeString();
+                    data[0] = dateFormat(data[0], "ddd, mmm dS, yyyy, HH:MM");
 
                     var html = ''
                     var width = (data[4] === 0 ? 25 : 20);

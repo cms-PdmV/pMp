@@ -19,6 +19,7 @@ angular.module('pmpApp').controller('MainController', ['$http', '$location',
         $http.get("api/lastupdate").then(function (data) {
             $scope.lastUpdateAgo = data.data.results.ago;
             $scope.lastUpdate = data.data.results.date;
+            $scope.lastUpdateTimestamp = data.data.results.timestamp;
         });
 
         $scope.nav = function(link) {

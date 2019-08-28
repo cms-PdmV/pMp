@@ -229,8 +229,8 @@ angular.module('pmpApp').controller('PresentController', ['$http',
 
             var viewBox = document.getElementById("plot-parent").getAttribute("viewBox").split(' ')
             var plot = (new XMLSerializer()).serializeToString(document.getElementById("plot"))
-            plot += '<text transform="translate(10, ' + (parseInt(viewBox[3]) + 0) + ')">Generated: ' + (date.toDateString() + ' ' + date.toLocaleTimeString('en-GB', {timeZoneName: "short"})) + '</text>'
-            plot += '<text transform="translate(10, ' + (parseInt(viewBox[3]) + 20 ) + ')">Last update: ' + $scope.lastUpdate + ' CERN Time</text>'
+            plot += '<text transform="translate(10, ' + (parseInt(viewBox[3]) + 0) + ')">Generated: ' + (dateFormat(date, "dddd, mmmm dS, yyyy, HH:MM")) + '</text>'
+            plot += '<text transform="translate(10, ' + (parseInt(viewBox[3]) + 20 ) + ')">Last update: ' + (dateFormat($scope.lastUpdateTimestamp * 1000, "dddd, mmmm dS, yyyy, HH:MM")) + '</text>'
             plot += '<text transform="translate(10, ' + (parseInt(viewBox[3]) + 40 ) + ')">For input: ' + Data.getInputTags().join(', ') + '</text>';
             // viewBox is needed for rsvg convert
             var xml = '<svg viewBox="' + viewBox[0] + ' ' + viewBox[1] + ' ' + viewBox[2] + ' ' + (parseInt(viewBox[3]) + 80) + '" font-family="sans-serif" xmlns="http://www.w3.org/2000/svg">' +

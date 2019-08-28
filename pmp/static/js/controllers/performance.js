@@ -256,8 +256,8 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
             }
 
             var plot = (new XMLSerializer()).serializeToString(document.getElementById("plot"))
-            plot += '<text transform="translate(10, 620)">Generated: ' + (date.toDateString() + ' ' + date.toLocaleTimeString('en-GB', {timeZoneName: "short"})) + '</text>'
-            plot += '<text transform="translate(10, 640)">Last update: ' + $scope.lastUpdate + ' CERN Time</text>'
+            plot += '<text transform="translate(10, 620)">Generated: ' + (dateFormat(date, "dddd, mmmm dS, yyyy, HH:MM")) + '</text>'
+            plot += '<text transform="translate(10, 640)">Last update: ' + (dateFormat($scope.lastUpdateTimestamp * 1000, "dddd, mmmm dS, yyyy, HH:MM")) + '</text>'
             plot += '<text transform="translate(10, 660)">For input: ' + Data.getInputTags().join(', ') + '</text>';
 
             // viewBox is needed for rsvg convert

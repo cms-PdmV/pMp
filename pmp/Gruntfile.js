@@ -41,7 +41,8 @@ module.exports = function(grunt) {
           'node_modules/angular-route/angular-route.min.js',
           'node_modules/angular-ui-bootstrap/dist/ui-bootstrap-tpls.js',
           'node_modules/d3/dist/d3.min.js',
-          'node_modules/clipboard/dist/clipboard.min.js'],
+          'node_modules/clipboard/dist/clipboard.min.js',
+          'node_modules/dateformat/lib/dateformat.js'],
     dest: 'static/build/depend.build.js'
    },
    pmpcss: {
