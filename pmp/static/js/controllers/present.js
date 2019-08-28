@@ -21,7 +21,6 @@ angular.module('pmpApp').controller('PresentController', ['$http',
         $scope.defaults = {
             r: '', // query value (from search box)
             growingMode: false, // growing mode (boolean)
-            chainedMode: false, // chained mode (boolean)
             humanReadable: true, // show human-readable numbers (boolean)
             estimateCompleted: false,
             priority: undefined, // priority filter
@@ -53,9 +52,6 @@ angular.module('pmpApp').controller('PresentController', ['$http',
 
             // enable growing mode?
             $scope.growingMode = urlParameters.growingMode === 'true';
-
-            // enable chained mode?
-            $scope.chainedMode = urlParameters.chainedMode === 'true';
 
             // show human-readable numbers?
             $scope.humanReadable = urlParameters.humanReadable === 'true';
@@ -177,7 +173,6 @@ angular.module('pmpApp').controller('PresentController', ['$http',
             if ($scope.estimateCompleted) {
                 queryUrl += '&estimateCompleted=true';
             }
-            queryUrl += '&chainedMode=' + $scope.chainedMode;
 
             // query for linear chart data
             var promise = $http.get(queryUrl);
@@ -302,11 +297,6 @@ angular.module('pmpApp').controller('PresentController', ['$http',
             $timeout(function(){
                 $scope.$apply();
             });
-        }
-
-        $scope.changeChainedMode = function() {
-            $scope.setURL($scope, Data);
-            $scope.query();
         }
 
         $scope.changeGrowingMode = function() {

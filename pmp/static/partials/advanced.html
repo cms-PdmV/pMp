@@ -6,17 +6,6 @@
         <div class="col-xs-12">
           <label class="checkbox-inline col-lg-12 col-md-12 col-sm-12"
                  ng-show="page.id == 1"
-                 title="Get all campaigns that are chained with search object's campaign">
-            <input type="checkbox"
-                   ng-model="$parent.chainedMode"
-                   ng-change="changeChainedMode();"
-                   ng-disabled="loadingData">
-            Display Chains
-          </label>
-        </div>
-        <div class="col-xs-12">
-          <label class="checkbox-inline col-lg-12 col-md-12 col-sm-12"
-                 ng-show="page.id == 1"
                  title="Count produced events as 'Done' even if request is still submitted">
             <input type="checkbox"
                    ng-model="$parent.growingMode"

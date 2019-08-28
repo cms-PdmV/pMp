@@ -56,13 +56,6 @@ Performance statistics in pMp show how much time it took for requests to get fro
 
 ## Options in pMp
 
-### Display chains (only in Present Statistics)
-
-Fetch all campaigns from all chained campaigns that contain campaigns of all requests for user given search query. In other words: fetch all requests for user given search term. Take all campaigns from there requests. Find all chained campaigns for these campaigns. Take all campaigns from these chained campaigns. Fetch results for all these campaigns from chained campaigns. This may return more results than expected and can be very slow. Results may conatain up to tens of thousands of requests. 
-
-Default value: `false`  
-URL parameter: `chainedMode`
-
 ### Growing mode (only in Present Statistics)
 
 For each `submitted` request create a corresponding "fake" request with same prepid that would have status `done` and number of done events would be number of produced events in `submitted` request. For example there is a `submitted` request that has 1000 expected events of which 200 are already produced. Then this request would have 800 total events (this is show as "Left" in table) and there would be another request with same prepid and status `done` that would have 1000 expected events and 200 done events. This option works only if plot mode is set to "Events".

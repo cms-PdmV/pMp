@@ -14,34 +14,6 @@ class PresentAPI(APIBase):
     def __init__(self):
         APIBase.__init__(self)
 
-    def get_campaigns_from_query(self, query):
-        campaigns = set()
-        for one in query.split(','):
-            one = one.strip()
-            if not one:
-                # Skip empty values
-                continue
-
-            for _, mcm_document in self.db_query(one, include_stats_document=False):
-                if mcm_document is None:
-                    # Well, there's nothing to do, is there?
-                    continue
-
-                campaign = mcm_document.get('member_of_campaign')
-                if not campaign or campaign in campaigns:
-                    continue
-
-                chained_campaigns = self.fetch_objects(query='campaigns:%s' % (campaign),
-                                                       index='chained_campaigns',
-                                                       doctype='chained_campaign')
-                for chained_campaign in chained_campaigns:
-                    for campaign_flow_pair in chained_campaign.get('campaigns'):
-                        campaigns.add(campaign_flow_pair[0])
-
-        # Return only unique values
-        logging.info('Campaigns from query "%s" are %s' % (query, campaigns))
-        return list(campaigns)
-
     def sum(self, thing):
         if thing is None:
             return 0
@@ -106,29 +78,22 @@ class PresentAPI(APIBase):
 
         return response_list, valid_tags, invalid_tags, messages
 
-    def get(self, query, chained_mode=False, estimate_completed_events=False, priority_filter=None, pwg_filter=None, status_filter=None):
+    def get(self, query, estimate_completed_events=False, priority_filter=None, pwg_filter=None, status_filter=None):
 
         """
         Get the historical data based on query, data point count, priority and filter
         """
         start_time = time.time()
-        logging.info('query=%s (%s) | chained_mode=%s (%s) | priority_filter=%s (%s) | pwg_filter=%s (%s) | status_filter=%s (%s)' % (query,
-                                                                                                                                      type(query),
-                                                                                                                                      chained_mode,
-                                                                                                                                      type(chained_mode),
-                                                                                                                                      priority_filter,
-                                                                                                                                      type(priority_filter),
-                                                                                                                                      pwg_filter,
-                                                                                                                                      type(pwg_filter),
-                                                                                                                                      status_filter,
-                                                                                                                                      type(status_filter)))
+        logging.info('query=%s (%s) | priority_filter=%s (%s) | pwg_filter=%s (%s) | status_filter=%s (%s)' % (query,
+                                                                                                               type(query),
+                                                                                                               priority_filter,
+                                                                                                               type(priority_filter),
+                                                                                                               pwg_filter,
+                                                                                                               type(pwg_filter),
+                                                                                                               status_filter,
+                                                                                                               type(status_filter)))
 
-        if chained_mode:
-            campaigns = self.get_campaigns_from_query(query)
-            logging.info('Campaign Mode! Campaigns for query %s are %s' % (query, campaigns))
-            query = ','.join(campaigns)
-
-        cache_key = 'present_%s_____%s_____%s' % (query, chained_mode, estimate_completed_events)
+        cache_key = 'present_%s_____%s' % (query, estimate_completed_events)
         if self.__cache.has(cache_key):
             logging.info('Found result in cache for key: %s' % cache_key)
             response_tuple = self.__cache.get(cache_key)

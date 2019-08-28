@@ -116,9 +116,6 @@ angular.module('pmpApp').controller('MainController', ['$http', '$location',
             if ('s' in values && !('status' in values)) {
                 values['status'] = values['s']
             }
-            if ('c' in values && !('chainedMode' in values)) {
-                values['chainedMode'] = values['c']
-            }
             if ('m' in values && !('growingMode' in values)) {
                 values['growingMode'] = values['m']
             }

@@ -201,12 +201,10 @@ def api_present():
     if status is not None:
         status = status.split(',')
 
-    chained_mode = flask.request.args.get('chainedMode', '').lower() == 'true'
     estimate_completed_events = flask.request.args.get('estimateCompleted', '').lower() == 'true'
 
     i = sanitize(i)
     result = PresentAPI().get(i,
-                              chained_mode=chained_mode,
                               estimate_completed_events=estimate_completed_events,
                               priority_filter=priority,
                               pwg_filter=pwg,
