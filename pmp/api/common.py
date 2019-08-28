@@ -184,7 +184,7 @@ class LastUpdateAPI(esadapter.InitConnection):
     def get(self):
         last_sequences = self.search(query='*',
                                      index='last_sequences',
-                                     max_results=1)
+                                     max_results=1000)
         last_update = min([x['time'] for x in last_sequences]) / 1000.0
         last_update_date = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(last_update))
         current_time = time.time()
@@ -201,7 +201,7 @@ class LastUpdateAPI(esadapter.InitConnection):
                 m = int(minutes_ago - (60 * int(minutes_ago / 60)))
                 ago = '%d hour%s and %d minute%s ago' % (h, '' if h == 1 else 's', m, '' if m == 1 else 's')
 
-        return json.dumps({"results": {'timestamp': last_update, 'date': last_update_date, 'ago': ago}}, sort_keys=True)
+        return {"results": {'timestamp': last_update, 'date': last_update_date, 'ago': ago}}
 
 
 class AdminAPI(esadapter.InitConnection):
@@ -230,6 +230,17 @@ class AdminAPI(esadapter.InitConnection):
                 results[name]['last_update'] = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(last_update))
 
         return results
+
+
+class ObjectListAPI(esadapter.InitConnection):
+    def __init__(self):
+        esadapter.InitConnection.__init__(self)
+        Utils.setup_console_logging()
+
+    def get(self, collection_name):
+        return [x['_id'] for x in self.search(query='*',
+                                              index=collection_name,
+                                              max_results=10000)]
 
 
 class APIBase(esadapter.InitConnection):

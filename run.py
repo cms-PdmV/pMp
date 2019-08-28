@@ -3,11 +3,11 @@ pMp production run script
 Configuration file in config.py
 > sudo python run.py
 """
-from flask import Flask, make_response, redirect, request, render_template
+from flask import Flask, make_response, redirect, request, render_template, jsonify
 from pmp.api.historical import HistoricalAPI
 from pmp.api.performance import PerformanceAPI
 from pmp.api.present import PresentAPI
-from pmp.api.common import OverallAPI, SuggestionsAPI, ShortenAPI, ScreenshotAPI, LastUpdateAPI, AdminAPI
+from pmp.api.common import OverallAPI, SuggestionsAPI, ShortenAPI, ScreenshotAPI, LastUpdateAPI, AdminAPI, ObjectListAPI
 
 import json
 import config
@@ -69,6 +69,21 @@ def api_overall():
 
     return result
 
+
+@app.route('/api/objects')
+def api_objects():
+    """
+    API call to get list of objects in certain collection
+    """
+    i = flask.request.args.get('r', '')
+    i = sanitize(i).split(',')
+    if len(i) > 0:
+        result = ObjectListAPI().get(i[0])
+        return jsonify(result)
+
+    return jsonify([])
+
+
 @app.route('/api/lastupdate')
 def api_lastupdate():
     """
@@ -76,7 +91,7 @@ def api_lastupdate():
     """
     result = LastUpdateAPI().get()
 
-    return result
+    return jsonify(result)
 
 @app.route('/api/historical')
 def api_historical():
