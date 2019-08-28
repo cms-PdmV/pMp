@@ -193,7 +193,7 @@
                    .attr("clip-path", "url(#clip)")
                    .attr("class", "clipping-class")
                    .append("path")
-                   .data([data.filter(function(p) {return p.invalid > 0; })])
+                   .data([data])
                    .attr("class", "invalid-graph-data")
                    .attr("d", invalidPlot)
                    .style("opacity", "0.4")
