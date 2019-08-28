@@ -27,17 +27,6 @@ class SuggestionsAPI(esadapter.InitConnection):
         self.historical = (typeof == 'historical')
         self.performance = (typeof == 'performance')
 
-    def search(self, query, index):
-        logging.info('Query ' + query + ' index ' + index)
-        try:
-            return [s['_id'] for s in
-                    self.es.search(q=query,
-                                   index=index,
-                                   size=self.max_results_in_index)['hits']['hits']]
-        except elasticsearch.NotFoundError as ex:
-            logging.error(str(ex))
-            return []
-
     def get(self, query):
         """
         Get suggestions for the query
@@ -85,7 +74,11 @@ class SuggestionsAPI(esadapter.InitConnection):
                               {'type': 'RELVAL CAMPAIGN', 'index': 'relval_campaigns'}]
 
         for suggestion_query in suggestion_queries:
-            suggestion_query['all_suggestions'] = [{'type': suggestion_query['type'], 'label': x} for x in self.search(search, suggestion_query['index'])]
+            suggestion_results = [x['_id'] for x in self.search(search,
+                                                                suggestion_query['index'],
+                                                                self.max_suggestions,
+                                                                self.max_suggestions)]
+            suggestion_query['all_suggestions'] = [{'type': suggestion_query['type'], 'label': x} for x in suggestion_results]
             suggestion_query['selected_suggestions'] = []
 
         found_suggestions = 0
@@ -189,9 +182,9 @@ class LastUpdateAPI(esadapter.InitConnection):
         Utils.setup_console_logging()
 
     def get(self):
-        search_results = self.es.search(q='*',
-                                        index='last_sequences')['hits']['hits']
-        last_sequences = [s['_source'] for s in search_results]
+        last_sequences = self.search(query='*',
+                                     index='last_sequences',
+                                     max_results=1)
         last_update = min([x['time'] for x in last_sequences]) / 1000.0
         last_update_date = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(last_update))
         current_time = time.time()
@@ -218,7 +211,6 @@ class AdminAPI(esadapter.InitConnection):
 
     def get(self):
         collections, _ = Utils.curl('GET', config.DATABASE_URL + '_aliases?pretty=false')
-        print(collections)
         collections = collections.keys()
         results = {}
         for collection_name in collections:
@@ -228,11 +220,13 @@ class AdminAPI(esadapter.InitConnection):
             results[collection_name] = {}
             results[collection_name]['total'] = count
 
-        last_sequences = self.es.search(q='*', index='last_sequences')['hits']['hits']
+        last_sequences = self.search(query='*',
+                                     index='last_sequences',
+                                     max_results=1)
         for last_sequence in last_sequences:
             name = last_sequence['_id']
             if name in results:
-                last_update = last_sequence.get('_source', {}).get('time', 0) / 1000.0
+                last_update = last_sequence.get('time', 0) / 1000.0
                 results[name]['last_update'] = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(last_update))
 
         return results
@@ -251,7 +245,7 @@ class APIBase(esadapter.InitConnection):
         Checks if prepid matches any typeof in the index
         """
         try:
-            self.es.get(index=index, doc_type=doc_type, id=prepid)['_source']
+            self.es.get_source(index=index, doc_type=doc_type, id=prepid)
         except elasticsearch.NotFoundError:
             return False
 
@@ -259,7 +253,10 @@ class APIBase(esadapter.InitConnection):
 
     def parse_query(self, query):
         """
-        Returns query, index name and doctype
+        Returns query and index name
+        First it checks if there are wildcards in query
+        If there are wildcards, it checks for matching requests and rereco requests
+        If there are no wildcards, check for exact matches in following order
         Order:
           campaign
           request
@@ -283,67 +280,78 @@ class APIBase(esadapter.InitConnection):
             logging.info('Found result in cache for key: %s' % cache_key)
             return result
 
-        if self.is_instance(query, 'campaigns', 'campaign'):
-            result = ('member_of_campaign:%s' % (query), 'requests', 'request')
+        allowed_characters = ('abcdefghijklmnopqrstuvwxyz'
+                              'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+                              '01234567890-_*')
+        query_allowed_characters = ''.join([x for x in query if x in allowed_characters])
+        if len(query_allowed_characters.replace('*', '')) < 0:
+            # If there are less than 8 non *  characters, do not search
+            # This is done to avoid things like *-*-*
+            return None, None
 
-        elif self.is_instance(query, 'requests', 'request'):
-            result = ('prepid:%s' % (query), 'requests', 'request')
+        if '*' in query:
+            # Wildcard search
+            # Lord have mercy on poor pMp
+            if self.search(query, 'requests', page_size=1, max_results=1):
+                result = ('prepid:%s' % (query), 'requests')
 
-        elif self.is_instance(query, 'chained_campaigns', 'chained_campaign'):
-            result = ('member_of_campaign:%s' % (query), 'chained_requests', 'chained_request')
+            elif self.search(query, 'rereco_requests', page_size=1, max_results=1):
+                result = ('prepid:%s' % (query), 'rereco_requests')
 
-        elif self.is_instance(query, 'chained_requests', 'chained_request'):
-            result = ('member_of_chain:%s' % (query), 'requests', 'request')
-
-        elif self.is_instance(query, 'tags', 'tag'):
-            result = ('tags:%s' % (query), 'requests', 'request')
-
-        elif self.is_instance(query, 'ppd_tags', 'ppd_tag'):
-            result = ('ppd_tags:%s' % (query), 'requests', 'request')
-
-        elif self.is_instance(query, 'flows', 'flow'):
-            result = ('flown_with:%s' % (query), 'requests', 'request')
-
-        elif self.is_instance(query, 'mcm_dataset_names', 'mcm_dataset_name'):
-            result = ('dataset_name:%s' % (query), 'requests', 'request')
-
-        elif self.is_instance(query, 'mcm_datatiers', 'mcm_datatier'):
-            result = ('datatiers:%s AND status:submitted' % (query), 'requests', 'request')
-
-        elif self.is_instance(query, 'rereco_requests', 'rereco_request'):
-            result = ('prepid:%s' % (query), 'rereco_requests', 'rereco_request')
-
-        elif self.is_instance(query, 'processing_strings', 'processing_string'):
-            result = ('processing_string:%s' % (query), 'rereco_requests', 'rereco_request')
-
-        elif self.is_instance(query, 'rereco_campaigns', 'rereco_campaign'):
-            result = ('member_of_campaign:%s' % (query), 'rereco_requests', 'rereco_request')
-
-        elif self.is_instance(query, 'relval_requests', 'relval_request'):
-            result = ('prepid:%s' % (query), 'relval_requests', 'relval_request')
-
-        elif self.is_instance(query, 'relval_cmssw_versions', 'relval_cmssw_version'):
-            result = ('cmssw_version:%s' % (query), 'relval_requests', 'relval_request')
-
-        elif self.is_instance(query, 'relval_campaigns', 'relval_campaign'):
-            result = ('member_of_campaign:s' % (query), 'relval_requests', 'relval_request')
-
+            else:
+                result = (None, None)
         else:
-            result = (None, None, None)
+            # Exact match
+            if self.is_instance(query, 'campaigns', 'campaign'):
+                result = ('member_of_campaign:%s' % (query), 'requests')
+
+            elif self.is_instance(query, 'requests', 'request'):
+                result = ('prepid:%s' % (query), 'requests')
+
+            elif self.is_instance(query, 'chained_campaigns', 'chained_campaign'):
+                result = ('member_of_campaign:%s' % (query), 'chained_requests')
+
+            elif self.is_instance(query, 'chained_requests', 'chained_request'):
+                result = ('member_of_chain:%s' % (query), 'requests')
+
+            elif self.is_instance(query, 'tags', 'tag'):
+                result = ('tags:%s' % (query), 'requests')
+
+            elif self.is_instance(query, 'ppd_tags', 'ppd_tag'):
+                result = ('ppd_tags:%s' % (query), 'requests')
+
+            elif self.is_instance(query, 'flows', 'flow'):
+                result = ('flown_with:%s' % (query), 'requests')
+
+            elif self.is_instance(query, 'mcm_dataset_names', 'mcm_dataset_name'):
+                result = ('dataset_name:%s' % (query), 'requests')
+
+            elif self.is_instance(query, 'mcm_datatiers', 'mcm_datatier'):
+                result = ('datatiers:%s AND status:submitted' % (query), 'requests')
+
+            elif self.is_instance(query, 'rereco_requests', 'rereco_request'):
+                result = ('prepid:%s' % (query), 'rereco_requests')
+
+            elif self.is_instance(query, 'processing_strings', 'processing_string'):
+                result = ('processing_string:%s' % (query), 'rereco_requests')
+
+            elif self.is_instance(query, 'rereco_campaigns', 'rereco_campaign'):
+                result = ('member_of_campaign:%s' % (query), 'rereco_requests')
+
+            elif self.is_instance(query, 'relval_requests', 'relval_request'):
+                result = ('prepid:%s' % (query), 'relval_requests')
+
+            elif self.is_instance(query, 'relval_cmssw_versions', 'relval_cmssw_version'):
+                result = ('cmssw_version:%s' % (query), 'relval_requests')
+
+            elif self.is_instance(query, 'relval_campaigns', 'relval_campaign'):
+                result = ('member_of_campaign:s' % (query), 'relval_requests')
+
+            else:
+                result = (None, None)
 
         self.__cache.set(cache_key, result)
         return result
-
-    def fetch_objects(self, query, index, doctype):
-        """
-        Fetch one object by given id, index name and doctype
-        """
-        search_results = self.es.search(q=query,
-                                        index=index,
-                                        size=self.results_window_size)['hits']['hits']
-        req_arr = [s['_source'] for s in search_results]
-
-        return req_arr
 
     def number_of_completed_events(self, stats_document, output_dataset):
         completed_events = 0
@@ -370,9 +378,8 @@ class APIBase(esadapter.InitConnection):
         member_of_chains = req['member_of_chain']
         potential_results_with_events = []
         for member_of_chain in member_of_chains:
-            chained_requests = self.fetch_objects(query='prepid:%s' % (member_of_chain),
-                                                  index='chained_requests',
-                                                  doctype='chained_request')
+            chained_requests = self.search(query='prepid:%s' % (member_of_chain),
+                                           index='chained_requests')
 
             logging.info('Will look in %s chained requests for %s estimate' % (len(chained_requests), req['prepid']))
             for chained_request in chained_requests:
@@ -407,15 +414,15 @@ class APIBase(esadapter.InitConnection):
 
         return None, None, None
 
-    def db_query(self, query, include_stats_document=True, estimate_completed_events=False):
+    def db_query(self, query, include_stats_document=True, estimate_completed_events=False, skip_prepids=None, request_filter=None):
         """
         Query DB and return array of raw documents
         Tuple of three things is returned: stats document, mcm document
         """
 
         req_arr = []
-        es_query, index, doctype = self.parse_query(query)
-        logging.info('Query: %s, index: %s, doctype: %s' % (es_query, index, doctype))
+        es_query, index = self.parse_query(query)
+        logging.info('Query: %s, index: %s' % (es_query, index))
         if index is None:
             logging.info('Returning nothing because index for %s could not be found' % (query))
             return []
@@ -427,12 +434,12 @@ class APIBase(esadapter.InitConnection):
             return results
 
         if index == 'chained_requests':
-            chained_requests = self.fetch_objects(es_query, index, doctype)
+            chained_requests = self.search(es_query, index)
             for chained_request in chained_requests:
-                es_query, index, doctype = 'member_of_chain:%s' % (chained_request.get('prepid')), 'requests', 'request'
-                req_arr.extend(self.fetch_objects(es_query, index, doctype))
+                es_query, index = ('member_of_chain:%s' % (chained_request.get('prepid')), 'requests')
+                req_arr.extend(self.search(es_query, index))
         else:
-            req_arr = self.fetch_objects(es_query, index, doctype)
+            req_arr = self.search(es_query, index)
 
         if index == 'requests':
             logging.info('Found %d requests for %s' % (len(req_arr), es_query))
@@ -441,19 +448,35 @@ class APIBase(esadapter.InitConnection):
         elif index == 'rereco_requests':
             logging.info('Found %d ReReco requests for %s' % (len(req_arr), es_query))
 
-        results = []
         # Iterate over array and collect details (McM documents)
+        if index == 'rereco_requests' or index == 'relval_requests':
+            output_dataset_index = -1
+        else:
+            output_dataset_index = 0
+
+        results = []
+        if skip_prepids is None:
+            skip_prepids = set()
+
+        if request_filter:
+            logging.info('Requests before request filter %s' % (len(req_arr)))
+            req_arr = [req for req in req_arr if request_filter(req)]
+            logging.info('Requests after request filter %s' % (len(req_arr)))
+
+        req_mgr_names_set = set()
+        req_mgr_names_map = {}
         for req in req_arr:
-            dataset_list = req['output_dataset']
+            if req.get('prepid', '') in skip_prepids:
+                logging.info('Skipping %s as it is in skippable prepids list' % (req.get('prepid', '')))
+                continue
+
+            dataset_list = req.get('output_dataset', [])
             if len(dataset_list) > 0:
-                if index == 'rereco_requests' or index == 'relval_requests':
-                    dataset = dataset_list[-1]
-                else:
-                    dataset = dataset_list[0]
+                dataset = dataset_list[output_dataset_index]
             else:
                 dataset = None
 
-            if not dataset and estimate_completed_events and index == 'requests':
+            if not dataset and estimate_completed_events and index == 'requests' and include_stats_document:
                 logging.info('Will try to find closest estimate for %s' % (req['prepid']))
                 closest_request, closest_output_dataset, closest_request_manager = self.get_info_for_estimate(req)
                 if closest_request and closest_output_dataset and closest_request_manager:
@@ -466,6 +489,8 @@ class APIBase(esadapter.InitConnection):
                     req['estimate_from'] = closest_request
 
             req['force_completed'] = False
+            req['expected'] = req['total_events']
+            req['output_dataset'] = dataset
             for reqmgr_dict in req.get('reqmgr_status_history', []):
                 if 'force-complete' in reqmgr_dict['history']:
                     req['force_completed'] = True
@@ -485,37 +510,52 @@ class APIBase(esadapter.InitConnection):
 
             if not include_stats_document:
                 req['reqmgr_name'] = []
-
-            # Iterate through all workflow names, starting from the newest one
-            # and stopping once any valid workflow is found
-            logging.info('ReqMgr names for %s are %s' % (req['prepid'], req['reqmgr_name']))
-            logging.info('Dataset for %s is %s' % (req['prepid'], dataset))
-            for reqmgr in reversed(req['reqmgr_name']):
-                try:
-                    stats_document = self.es.get(index='workflows', doc_type='workflow', id=reqmgr)['_source']
-                except elasticsearch.NotFoundError:
-                    logging.warning('%s is not found' % (reqmgr))
-                    continue
-
-                if stats_document.get('request_type').lower() == 'resubmission':
-                    continue
-
-                # Add reqmgr as name and output dataset to request
-                mcm_document = dict(req)
-                mcm_document.update({'expected': req['total_events'],
-                                     'name': reqmgr,
-                                     'output_dataset': dataset})
-                results.append((stats_document, mcm_document))
-                break
             else:
-                # Add reqmgr as name and output dataset to request
-                mcm_document = dict(req)
-                mcm_document.update({'expected': req['total_events'],
-                                     'output_dataset': dataset})
-                results.append((None, mcm_document))
+                # Collect all reqmgr_names
+                for reqmgr in req['reqmgr_name']:
+                    req_mgr_names_set.add(reqmgr)
 
-        self.__cache.set(cache_key, results)
-        return results
+            if len(req_mgr_names_set) > 10000:
+                self.fetch_workflows_into_dictionary(list(req_mgr_names_set), req_mgr_names_map)
+                req_mgr_names_set = set()
+
+        self.fetch_workflows_into_dictionary(list(req_mgr_names_set), req_mgr_names_map)
+        results_to_return = []
+        for res in req_arr:
+            for reqmgr in reversed(res['reqmgr_name']):
+                if reqmgr in req_mgr_names_map:
+                    res['name'] = reqmgr
+                    results_to_return.append((req_mgr_names_map[reqmgr], res))
+                    break
+            else:
+                results_to_return.append((None, res))
+
+        self.__cache.set(cache_key, results_to_return)
+        return results_to_return
+
+    def fetch_workflows_into_dictionary(self, workflow_ids, result_dictionary):
+        """
+        Fetch workflows using workflow_ids list of ids and fill result dictionary
+        with results where workflow id is a key and it's _source is value
+        Skip workflows that are resubmissions
+        """
+        if len(workflow_ids) == 0:
+            return
+
+        logging.info('Will try to get %s workflows' % len(workflow_ids))
+        workflows = self.es.mget(index='workflows',
+                                 doc_type='workflow',
+                                 body={'ids': workflow_ids})['docs']
+
+        found = 0
+        for workflow in workflows:
+            if workflow['found']:
+                workflow_source = workflow['_source']
+                if workflow_source.get('request_type').lower() != 'resubmission':
+                    found += 1
+                    result_dictionary[workflow['_id']] = workflow['_source']
+
+        logging.info('Got %s workflows' % (found))
 
     def apply_filters(self, data, priority_filter, pwg_filter, status_filter):
         """

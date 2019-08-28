@@ -39,13 +39,14 @@ class HistoricalAPI(APIBase):
         for timestamp in timestamps:
             point = {'done': 0, 'produced': 0, 'expected': 0, 'invalid': 0, 'time': timestamp * 1000}
             for key in data:
-                for details in reversed(data[key]['data']):
-                    if details['time'] <= timestamp:
-                        point['done'] += details['done']
-                        point['produced'] += details['produced']
-                        point['expected'] += details['expected']
-                        point['invalid'] += details['invalid']
-                        break
+                if data[key]['data'][0]['time'] <= timestamp:
+                    for details in reversed(data[key]['data']):
+                        if details['time'] <= timestamp:
+                            point['done'] += details['done']
+                            point['produced'] += details['produced']
+                            point['expected'] += details['expected']
+                            point['invalid'] += details['invalid']
+                            break
 
             points.append(point)
 
@@ -79,6 +80,9 @@ class HistoricalAPI(APIBase):
 
         return data
 
+    def request_filter(self, request):
+        return request.get('status') in ['submitted', 'done']
+
     def prepare_response(self, query, estimate_completed_events):
         """
         Loop through all the workflow data, generate response
@@ -88,9 +92,10 @@ class HistoricalAPI(APIBase):
         invalid_tags = []
         messages = []
         query = query.split(',')
-        seen_prepids = []
+        seen_prepids = set()
         types_for_done_events = set(['VALID'])
         types_for_invalid_events = set(['INVALID', 'DELETED'])
+        valid_status = set(['submitted', 'done'])
         for one in query:
             # Keep track of the prepids we've seen, so that we only add submission data points once
             logging.info('Processing %s' % (one))
@@ -100,7 +105,7 @@ class HistoricalAPI(APIBase):
 
             found_something = False
             # Process the db documents
-            for stats_document, mcm_document in self.db_query(one, include_stats_document=True, estimate_completed_events=estimate_completed_events):
+            for stats_document, mcm_document in self.db_query(one, include_stats_document=True, estimate_completed_events=estimate_completed_events, skip_prepids=seen_prepids, request_filter=self.request_filter):
                 if stats_document is None and mcm_document is None:
                     # Well, there's nothing to do, is there?
                     continue
@@ -114,16 +119,12 @@ class HistoricalAPI(APIBase):
                     logging.info('No McM document for %s, skipping' % (one))
                     continue
 
-                if mcm_document.get('status') not in ['submitted', 'done']:
+                if mcm_document.get('status') not in valid_status:
                     logging.info('Skipping %s because it is %s' % (mcm_document['prepid'], mcm_document['status']))
                     continue
 
                 if 'submitted_time' not in mcm_document:
                     logging.info('Skipping %s because it was not submitted yet' % (mcm_document['prepid']))
-                    continue
-
-                if mcm_document['prepid'] in seen_prepids:
-                    logging.warning('%s is already in seen_prepids. Why is it here again?' % (mcm_document['prepid']))
                     continue
 
                 found_something = True
@@ -148,7 +149,7 @@ class HistoricalAPI(APIBase):
 
                 # Check if there is a document from stats (i.e. the workflow was found)
                 if stats_document is not None and mcm_document['output_dataset']:
-                    logging.info('Workflow name %s' % (stats_document['request_name']))
+                    # logging.info('Workflow name %s' % (stats_document['request_name']))
 
                     if 'event_number_history' in stats_document:
                         for history_record in stats_document['event_number_history']:
@@ -193,7 +194,7 @@ class HistoricalAPI(APIBase):
                     logging.info('Stats document for %s is none' % (mcm_document.get('prepid', '--')))
 
                 # In any case, we still want to create a submission data point (first point with expected events)
-                seen_prepids.append(mcm_document['prepid'])
+                seen_prepids.add(mcm_document['prepid'])
                 response_list.append(response)
 
             if found_something:

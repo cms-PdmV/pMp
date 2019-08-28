@@ -13,3 +13,4 @@ curl -XPUT "http://localhost:9200/processing_strings/_settings" -d '{ "index" : 
 curl -XPUT "http://localhost:9200/tags/_settings" -d '{ "index" : { "max_result_window" : 1000000 } }' -H 'Content-Type: application/json'
 curl -XPUT "http://localhost:9200/ppd_tags/_settings" -d '{ "index" : { "max_result_window" : 1000000 } }' -H 'Content-Type: application/json'
 curl -XPUT "http://localhost:9200/mcm_dataset_names/_settings" -d '{ "index" : { "max_result_window" : 1000000 } }' -H 'Content-Type: application/json'
+curl -XPUT "http://localhost:9200/last_sequences/_settings" -d '{ "index" : { "max_result_window" : 1000000 } }' -H 'Content-Type: application/json'

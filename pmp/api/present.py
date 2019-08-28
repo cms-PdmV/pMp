@@ -4,6 +4,7 @@ import json
 import logging
 from werkzeug.contrib.cache import SimpleCache
 import config
+import time
 
 
 class PresentAPI(APIBase):
@@ -69,13 +70,9 @@ class PresentAPI(APIBase):
 
             found_something = False
             # Process the db documents
-            for stats_document, mcm_document in self.db_query(one, include_stats_document=True, estimate_completed_events=estimate_completed_events):
+            for stats_document, mcm_document in self.db_query(one, include_stats_document=True, estimate_completed_events=estimate_completed_events, skip_prepids=seen_prepids):
                 # skip legacy request with no prep_id
                 if len(mcm_document.get('prepid', '')) == 0:
-                    continue
-
-                if mcm_document['prepid'] in seen_prepids:
-                    logging.warning('%s is already in seen_prepids. Why is it here again?' % (mcm_document['prepid']))
                     continue
 
                 found_something = True
@@ -114,6 +111,7 @@ class PresentAPI(APIBase):
         """
         Get the historical data based on query, data point count, priority and filter
         """
+        start_time = time.time()
         logging.info('query=%s (%s) | chained_mode=%s (%s) | priority_filter=%s (%s) | pwg_filter=%s (%s) | status_filter=%s (%s)' % (query,
                                                                                                                                       type(query),
                                                                                                                                       chained_mode,
@@ -148,5 +146,6 @@ class PresentAPI(APIBase):
                'pwg': pwgs,
                'status': statuses,
                'messages': messages}
-        logging.info('Will return')
+        end_time = time.time()
+        logging.info('Will return. Took %.4fs' % (end_time - start_time))
         return json.dumps({'results': res})

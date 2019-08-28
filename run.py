@@ -234,7 +234,7 @@ if __name__ == '__main__':
     Utils.setup_console_logging()
     app.run(host='0.0.0.0',
             port=config.PORT,
-            debug=True,
+            debug=config.DEBUG,
             threaded=True,
             ssl_context=(config.CERTFILE, config.KEYFILE))
 
