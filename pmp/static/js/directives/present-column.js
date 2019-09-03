@@ -271,12 +271,12 @@
                                                         
                 preparedData = dictToArray(preparedData)
                 var flatData = [];
-                var barMargin = 0.01;
-                var subBarMargin = 0.003;
-                var barWidth = (0.99 - (preparedData.length * barMargin)) / preparedData.length;
+                var barMargin = 0.001;
+                var subBarMargin = 0.0;
+                var barWidth = (0.98 - (preparedData.length * barMargin)) / preparedData.length;
                 var usedColorKeys = [];
                 for (var i = 0; i < preparedData.length; i++) {
-                    preparedData[i].x0 = 0.01 + i * barWidth + (i + 1) * barMargin;
+                    preparedData[i].x0 = 0.02 + i * barWidth + (i + 1) * barMargin;
                     preparedData[i].x1 = preparedData[i].x0 + barWidth;
                     var subBarWidth = (barWidth - (preparedData[i].value.length * subBarMargin)) / preparedData[i].value.length;
                     for (var j = 0; j < preparedData[i].value.length; j++) {

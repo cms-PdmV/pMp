@@ -21,7 +21,6 @@ angular.module('pmpApp').controller('PresentController', ['$http',
         $scope.defaults = {
             r: '', // query value (from search box)
             growingMode: false, // growing mode (boolean)
-            chainedMode: false, // chained mode (boolean)
             humanReadable: true, // show human-readable numbers (boolean)
             estimateCompleted: false,
             priority: undefined, // priority filter
@@ -53,9 +52,6 @@ angular.module('pmpApp').controller('PresentController', ['$http',
 
             // enable growing mode?
             $scope.growingMode = urlParameters.growingMode === 'true';
-
-            // enable chained mode?
-            $scope.chainedMode = urlParameters.chainedMode === 'true';
 
             // show human-readable numbers?
             $scope.humanReadable = urlParameters.humanReadable === 'true';
@@ -177,7 +173,6 @@ angular.module('pmpApp').controller('PresentController', ['$http',
             if ($scope.estimateCompleted) {
                 queryUrl += '&estimateCompleted=true';
             }
-            queryUrl += '&chainedMode=' + $scope.chainedMode;
 
             // query for linear chart data
             var promise = $http.get(queryUrl);
@@ -229,8 +224,8 @@ angular.module('pmpApp').controller('PresentController', ['$http',
 
             var viewBox = document.getElementById("plot-parent").getAttribute("viewBox").split(' ')
             var plot = (new XMLSerializer()).serializeToString(document.getElementById("plot"))
-            plot += '<text transform="translate(10, ' + (parseInt(viewBox[3]) + 0) + ')">Generated: ' + (date.toDateString() + ' ' + date.toLocaleTimeString('en-GB', {timeZoneName: "short"})) + '</text>'
-            plot += '<text transform="translate(10, ' + (parseInt(viewBox[3]) + 20 ) + ')">Last update: ' + $scope.lastUpdate + ' CERN Time</text>'
+            plot += '<text transform="translate(10, ' + (parseInt(viewBox[3]) + 0) + ')">Generated: ' + (dateFormat(date, "dddd, mmmm dS, yyyy, HH:MM")) + '</text>'
+            plot += '<text transform="translate(10, ' + (parseInt(viewBox[3]) + 20 ) + ')">Last update: ' + (dateFormat($scope.lastUpdateTimestamp * 1000, "dddd, mmmm dS, yyyy, HH:MM")) + '</text>'
             plot += '<text transform="translate(10, ' + (parseInt(viewBox[3]) + 40 ) + ')">For input: ' + Data.getInputTags().join(', ') + '</text>';
             // viewBox is needed for rsvg convert
             var xml = '<svg viewBox="' + viewBox[0] + ' ' + viewBox[1] + ' ' + viewBox[2] + ' ' + (parseInt(viewBox[3]) + 80) + '" font-family="sans-serif" xmlns="http://www.w3.org/2000/svg">' +
@@ -302,11 +297,6 @@ angular.module('pmpApp').controller('PresentController', ['$http',
             $timeout(function(){
                 $scope.$apply();
             });
-        }
-
-        $scope.changeChainedMode = function() {
-            $scope.setURL($scope, Data);
-            $scope.query();
         }
 
         $scope.changeGrowingMode = function() {

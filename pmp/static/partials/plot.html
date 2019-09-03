@@ -42,13 +42,13 @@
           <button type="button"
                   class="btn btn-primary"
                   ng-click="load(searchString, true)"
-                  ng-disabled="loadingData || chainedMode">
+                  ng-disabled="loadingData">
             <i class="hidden-lg hidden-md fa fa-plus"></i>
             <span> Append</span>
           </button>
         </div>
       </div>
-      <div class="mt-3 mb-3" ng-hide="chainedMode">
+      <div class="mt-3 mb-3">
         <input-tags></input-tags> 
       </div>
       <div ng-hide="!messages || loadingData">

@@ -38,13 +38,9 @@ class PerformanceAPI(APIBase):
 
             found_something = False
             # Process the db documents
-            for _, mcm_document in self.db_query(one, include_stats_document=True):
+            for _, mcm_document in self.db_query(one, include_stats_document=True, skip_prepids=seen_prepids):
                 # skip legacy request with no prep_id
                 if len(mcm_document.get('prepid', '')) == 0:
-                    continue
-
-                if mcm_document['prepid'] in seen_prepids:
-                    logging.warning('%s is already in seen_prepids. Why is it here again?' % (mcm_document['prepid']))
                     continue
 
                 # Remove new and unchained to clean up output plots

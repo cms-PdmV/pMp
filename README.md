@@ -30,9 +30,16 @@ Search bar in pMp can be found in all statistics pages. Next to it, there are tw
 * RelVal CMSSW versions
 * RelVal campaigns
 
-Suggestions in search are shown as prepids of objects in the list above. pMp does not have wildcard (asterisk - *) search, so queries must contain complete tags, campaigns, prepids, etc, i.e. search terms must be full identifiers of objects. If multiple objects in different indexes (of different types) have the same identifier, i.e. there is a PPD tag `TAG1` and a request tag `TAG1` then pMp fill treat `TAG1` as PPD tag and fetch only requests that have `TAG1` as a PPD tag because PPD tags are higher in the list above. Objects in pMp are stored in indexes - databases for each type. Once user enters a search term, pMp first needs to figure out which type of object is user searching for and then look into appropriate index in Elasticsearch. List above shows order in which indexes are checked for an object with given id to determine object type (whether it's a campaign, PPD tag, tag, CMSSW version or etc.). Search in pMp is case-sensitive. 
+Suggestions in search are shown as prepids of objects in the list above. pMp has a partial and very limited wildcard (asterisk - *) search, so preferably queries must contain complete tags, campaigns, prepids, etc, i.e. search terms must be full identifiers of objects. If multiple objects in different indexes (of different types) have the same identifier, i.e. there is a PPD tag `TAG1` and a request tag `TAG1` then pMp fill treat `TAG1` as PPD tag and fetch only requests that have `TAG1` as a PPD tag because PPD tags are higher in the list above. Objects in pMp are stored in indexes - databases for each type. Once user enters a search term, pMp first needs to figure out which type of object is user searching for and then look into appropriate index in Elasticsearch. List above shows order in which indexes are checked for an object with given id to determine object type (whether it's a campaign, PPD tag, tag, CMSSW version or etc.). Search in pMp is case-sensitive. 
 
 If multiple search terms are given then requests that fit any of these terms are shown, in other words, terms in search are joined with OR. For example if user searches by `TAG1` and `TAG2` then requests that have `TAG1` or `TAG2` (or both) are shown. If a request fits multiple terms in the search, it is still added to results only once.
+
+Wildcards (asterisk - *) are supported only for Request prepids and ReReco request prepids. They can appear at any point of search term and there can be multiple asterisks in one term. One limitation is that term *MUST* contain at least 8 non-asterisk characters. This is done to prevent people from searching using too broad queries and overloading pMp. Examples:
+
+* `*` - would not work, not enough non-* characters
+* `*AOD*` - would not work, not enough non-* characters
+* `PWG-Campaign-001*` - would work
+* `*SomeString*` - would work
 
 ## Present Statistics
 
@@ -44,9 +51,9 @@ At the bottom there are three tables. First one shows requests that are at least
 
 ## Historical Statistics
 
-Historical statistics in pMp show how number of events grew over time. Only requests with status `submitted` or `done` are shown in this plot. There are three colors in graph - gray, orange and blue. Gray area represent requested (expected) events. Orange area represent events that are produced, but the dataset is not yet in 'VALID' state (not completed). Blue area represent events that are produced and dataset is 'VALID'. Usually gray area is a bit higher than orange and blue area. In the end, blue area should be the same height as orange area. If request is force completed (it's workflow has `force-complete` in request transitions) then number of expected events for that request is set to done events (blue value). User can use mouse wheel to zoom in and out and drag graph to move it.
+Historical statistics in pMp show how number of events grew over time. Only requests with status `submitted` or `done` are shown in this plot. There are four colors in graph - gray, orange, blue and red. Gray area represent requested (expected) events. Orange area represent events that are produced, but the dataset is not yet in 'VALID' state (not completed). Blue area represent events that are produced and dataset is 'VALID'. Red area represent events that are in datasets that are either `INVALID` or `DELETED`. Usually gray area is a bit higher than orange and blue area. In the end, blue area should be the same height as orange area. If request is force completed (it's workflow has `force-complete` in request transitions) then number of expected events for that request is set to done events (blue value). User can use mouse wheel to zoom in and out and drag graph to move it.
 
-Below the main plot there are two tables\* that show all requests that were used to produce said plot. Requests that were force completed will have '(FC)' next to done events in table of done requests.
+Below the main plot there are two tables\* that show all requests that were used to produce said plot. Requests that were force completed will have '(FC)' next to done events in table of done requests. Progress bars in table show completness based on expected and produced events. Bar can be either orange, blue or red. Color meaning is the same as in main plot - orange is not-yet-`VALID`, blue is `VALID` and red is `INVALID` or `DELETED`.
 
 \* _second table can be turned on by checking 'Show list of done requests' option_
 
@@ -55,13 +62,6 @@ Below the main plot there are two tables\* that show all requests that were used
 Performance statistics in pMp show how much time it took for requests to get from one status to another. All data is grouped in equal width (number of seconds) bins. Lowest value in x axis is the smallest amount of time of all requests to change status while highest value is the largest amount of time. User can see which requests are in the bar by clicking on it in the histogram. Users can choose histogram scale - Linear or Logarithmic. If there are less requests than bins (bars), then number of bins (bars) is reduced to number of requests.
 
 ## Options in pMp
-
-### Display chains (only in Present Statistics)
-
-Fetch all campaigns from all chained campaigns that contain campaigns of all requests for user given search query. In other words: fetch all requests for user given search term. Take all campaigns from there requests. Find all chained campaigns for these campaigns. Take all campaigns from these chained campaigns. Fetch results for all these campaigns from chained campaigns. This may return more results than expected and can be very slow. Results may conatain up to tens of thousands of requests. 
-
-Default value: `false`  
-URL parameter: `chainedMode`
 
 ### Growing mode (only in Present Statistics)
 
@@ -107,9 +107,9 @@ URL parameter: `showDoneRequestsList`
 
 ### Granularity (only in Historical Statistics)
 
-This option controls how many data points are in the graph, that is, how many different x values are there.
+This value controls into how many pieces all data date range will be divided. It takes smallest and biggest timestamp of fetched results and divides by this value. List of ranges is then used to aggregate points of the plot.
 
-Default value: `100`  
+Default value: `250`
 URL parameter: `granularity`
 
 ### Bins (only in Performance Statistics)
@@ -121,17 +121,35 @@ URL parameter: `bins`
 
 ## Filtering in pMp
 
+pMp allows to apply filters on fetched results.
+
 ### Priority filter
+
+URL parameter: `priority`
+
+Priority filter will filter out requests that have priority that is not withing given range. Range is inclusive, either end can be "open", that is, not specified value is negative infinity for lower range and positive infinity for upper range.
 
 ### Status filter
 
+URL parameter: `status`
+
+Status filter allows to keep results that have only certain status.
+
 ### PWG filter
+
+URL parameter: `pwg`
+
+PWG filter allows to keep results that belong only to certain PWG(s).
 
 ## Sharing in pMp
 
 ### Share a link
 
+Share a link field contains a url to current page. "Shorten" button will use tinyurl service to create a shorter link.
+
 ### Download an image
+
+Download an image button will convert currently shown plot to PDF, PNG or SVG and open that file.
 
 ## Database structure (for advanced users)
 
@@ -246,7 +264,7 @@ Source - RelVal requests are created when pMp is fetching workflows. If attribut
 * prepid - prepid of rereco request
 * priority - priority of request's workflow in ReqMgr2
 * pwg - constant value 'RelVal'
-* reqmgr_name - list of one element which is workflow name that was used to create this request
+* reqmgr_name - list of workflow names that were used to create this request
 * reqmgr_status_history - list of dictionaries that have keys 'history' (value is list) and 'name' (value is string). 'history' contain list of workflow statuses from ReqMgr2 ('new', 'assignment-approved', 'announced', etc). 'name' is workflow name.
 * status - 'action' of last record in 'history' of request ('submitted', 'done', etc.)
 * total_events - number of total events of request
@@ -274,7 +292,7 @@ Source - ReReco requests are created when pMp is fetching workflows. If attribut
 * priority - priority of request's workflow in ReqMgr2
 * processing_string - processing string of a request
 * pwg - constant value 'ReReco'
-* reqmgr_name - list of one element which is workflow name that was used to create this request
+* reqmgr_name - list of workflow names that were used to create this request
 * reqmgr_status_history - list of dictionaries that have keys 'history' (value is list) and 'name' (value is string). 'history' contain list of workflow statuses from ReqMgr2 ('new', 'assignment-approved', 'announced', etc). 'name' is workflow name.
 * status - 'action' of last record in 'history' of request ('submitted', 'done', etc.)
 * total_events - number of total events of request

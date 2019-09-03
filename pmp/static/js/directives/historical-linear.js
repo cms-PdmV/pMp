@@ -80,20 +80,18 @@
                 svg.select("g.hover-line").remove();
                 hoverLineGroup = undefined;
 
+                var transformString = undefined;
+                gx.call(xAxis.scale(d3.event.transform.rescaleX(x)));
                 if (scope.zoomY) {
-                    gx.call(xAxis.scale(d3.event.transform.rescaleX(x)));
                     gy.call(yAxis.scale(d3.event.transform.rescaleY(y)));
-                    var transformString = "translate(" + dx + "," + dy + ") scale(" + dk + "," + dk + ")";
-                    svg.select("path.expected-graph-data").attr("transform", transformString)
-                    svg.select("path.done-graph-data").attr("transform", transformString)
-                    svg.select("path.produced-graph-data").attr("transform", transformString)
+                    transformString = "translate(" + dx + "," + dy + ") scale(" + dk + "," + dk + ")";
                 } else {
-                    gx.call(xAxis.scale(d3.event.transform.rescaleX(x)));
-                    var transformString = "translate(" + dx + ",0) scale(" + dk + ",1)";
-                    svg.select("path.expected-graph-data").attr("transform", transformString)
-                    svg.select("path.done-graph-data").attr("transform", transformString)
-                    svg.select("path.produced-graph-data").attr("transform", transformString)
+                    transformString = "translate(" + dx + ",0) scale(" + dk + ",1)";
                 }
+                svg.select("path.expected-graph-data").attr("transform", transformString)
+                svg.select("path.done-graph-data").attr("transform", transformString)
+                svg.select("path.produced-graph-data").attr("transform", transformString)
+                svg.select("path.invalid-graph-data").attr("transform", transformString)
                 svg.select(".x.axis")
                    .selectAll('text')
                    .style("font-size","14px");
@@ -105,30 +103,36 @@
 
             var expectedPlot = d3.area()
                                  .curve(d3.curveStepAfter)
-                                 .x(function(d) { return x(d.t); })
-                                 .y0(function(d) { return y(d.x < 0 ? 0 : d.e); })
-                                 .y1(function(d) { return y(d.x); });
+                                 .x(function(d) { return x(d.time); })
+                                 .y0(function(d) { return y(d.expected < 0 ? 0 : d.produced + d.done + d.invalid); })
+                                 .y1(function(d) { return y(d.expected); });
 
             var donePlot = d3.area()
                                  .curve(d3.curveStepAfter)
-                                 .x(function(d) { return x(d.t); })
+                                 .x(function(d) { return x(d.time); })
+                                 .y0(function(d) { return y(d.invalid); })
+                                 .y1(function(d) { return y(d.invalid + d.done); });
+
+            var invalidPlot = d3.area()
+                                 .curve(d3.curveStepAfter)
+                                 .x(function(d) { return x(d.time); })
                                  .y0(function(d) { return y(0); })
-                                 .y1(function(d) { return y(d.d); });
+                                 .y1(function(d) { return y(d.invalid); });
 
             var producedPlot = d3.area()
                                  .curve(d3.curveStepAfter)
-                                 .x(function(d) { return x(d.t); })
-                                 .y0(function(d) { return y(d.d); })
-                                 .y1(function(d) { return y(d.e); });
+                                 .x(function(d) { return x(d.time); })
+                                 .y0(function(d) { return y(d.done + d.invalid); })
+                                 .y1(function(d) { return y(d.done + d.invalid + d.produced); });
 
             var prepareData = function(data) {
                 scope.dataCopy = angular.copy(data);
                 // Update ranges of axis according to new data
-                x.domain([d3.min(data, function(d) { return d.t; }),
-                          d3.max(data, function(d) { return d.t; })]).range([0, width]);
+                x.domain([d3.min(data, function(d) { return d.time; }),
+                          d3.max(data, function(d) { return d.time; })]).range([0, width]);
                 // Max for y should be max of three numbers in case there are more events produced than expected
                 y.domain([0,
-                          d3.max(data, function(d) { return Math.max(d.e, d.d, d.x); }) * 1.05]).range([height, 0]);
+                          d3.max(data, function(d) { return Math.max(d.produced, d.done, d.expected, d.invalid, 10); }) * 1.05]).range([height, 0]);
                 xAxis.scale(x);
                 yAxis.scale(y);
                 svg.selectAll("g .x.axis").call(xAxis);
@@ -142,6 +146,7 @@
                 svg.select("path.expected-graph-data").remove()
                 svg.select("path.done-graph-data").remove()
                 svg.select("path.produced-graph-data").remove()
+                svg.select("path.invalid-graph-data").remove()
                 svg.selectAll("clipping-class").remove()
                 svg.select("g.hover-line").remove();
                 svg.select("#lifetime").remove();
@@ -183,6 +188,19 @@
                    .style("stroke-width", "1")
                    .style("stroke", "#ff6f00")
                    .style("fill", "#ff6f00");
+
+                svg.append("g")
+                   .attr("clip-path", "url(#clip)")
+                   .attr("class", "clipping-class")
+                   .append("path")
+                   .data([data])
+                   .attr("class", "invalid-graph-data")
+                   .attr("d", invalidPlot)
+                   .style("opacity", "0.4")
+                   .style("vector-effect", "non-scaling-stroke")
+                   .style("stroke-width", "1")
+                   .style("stroke", "red")
+                   .style("fill", "red");
 
                 svg.append("rect")
                     .attr('id', 'lifetime')
@@ -230,13 +248,17 @@
                 };
 
                 var updateDataLabel = function(data) {
-                    data[0] = data[0].toDateString() + ' ' + data[0].toLocaleTimeString();
+                    data[0] = dateFormat(data[0], "ddd, mmm dS, yyyy, HH:MM");
 
                     var html = ''
-                    html += '<div style="color: #90a4ae;">Time: ' + data[0] + "</div>"
-                    html += '<div style="color: #263238;" title="' + data[1] + '">Expected events: ' + (scope.humanReadableNumbers && data[1] > 0 ? scope.bigNumberFormatter(data[1]) : data[1]) + "</div>"
-                    html += '<div style="color: #ff6f00;" title="' + data[2] + '">Events in DAS: ' + (scope.humanReadableNumbers && data[2] > 0 ? scope.bigNumberFormatter(data[2]) : data[2]) + "</div>"
-                    html += '<div style="color: #01579b;" title="' + data[3] + '">Done events in DAS: ' + (scope.humanReadableNumbers && data[3] > 0 ? scope.bigNumberFormatter(data[3]) : data[3]) + "</div>"
+                    var width = (data[4] === 0 ? 25 : 20);
+                    html += '<div style="color: #90a4ae; width: ' + width + '%">Time: ' + data[0] + "</div>"
+                    html += '<div style="color: #263238; width: ' + width + '%" title="' + data[1] + '">Expected events: ' + (scope.humanReadableNumbers && data[1] > 0 ? scope.bigNumberFormatter(data[1]) : data[1]) + "</div>"
+                    html += '<div style="color: #ff6f00; width: ' + width + '%" title="' + data[2] + '">Events in DAS: ' + (scope.humanReadableNumbers && data[2] > 0 ? scope.bigNumberFormatter(data[2]) : data[2]) + "</div>"
+                    html += '<div style="color: #01579b; width: ' + width + '%" title="' + data[3] + '">Done events in DAS: ' + (scope.humanReadableNumbers && data[3] > 0 ? scope.bigNumberFormatter(data[3]) : data[3]) + "</div>"
+                    if (data[4] !== 0) {
+                      html += '<div style="color: red; width: ' + width + '%" title="' + data[4] + '">Deleted/Invalid events: ' + (scope.humanReadableNumbers && data[4] > 0 ? scope.bigNumberFormatter(data[4]) : data[4]) + "</div>"
+                    }
                     $("#historical-drilldown").html(html);
                 };
 
@@ -252,16 +274,17 @@
                     var closestIndex = 0;
                     var smallestDiff = 1e12;
                     for (var i = 0; i < local.length; i++) {
-                        var newDiff = Math.abs(tmp - local[i].t)
+                        var newDiff = Math.abs(tmp - local[i].time)
                         if (newDiff < smallestDiff) {
                             smallestDiff = newDiff;
                             closestIndex = i;
                         }
                     }
-                    data[0] = local[closestIndex].t;
-                    data[1] = local[closestIndex].x;
-                    data[2] = local[closestIndex].e;
-                    data[3] = local[closestIndex].d;
+                    data[0] = local[closestIndex].time;
+                    data[1] = local[closestIndex].expected;
+                    data[2] = local[closestIndex].produced + local[closestIndex].done + local[closestIndex].invalid;
+                    data[3] = local[closestIndex].done;
+                    data[4] = local[closestIndex].invalid;
                     data[0] = new Date(data[0]);
                     tmp = (data[0] - min) / ((max - min) / width);
                     updateIndicatorPosition(tmp);

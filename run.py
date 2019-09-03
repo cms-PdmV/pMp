@@ -3,11 +3,11 @@ pMp production run script
 Configuration file in config.py
 > sudo python run.py
 """
-from flask import Flask, make_response, redirect, request, render_template
+from flask import Flask, make_response, redirect, request, render_template, jsonify
 from pmp.api.historical import HistoricalAPI
 from pmp.api.performance import PerformanceAPI
 from pmp.api.present import PresentAPI
-from pmp.api.common import OverallAPI, SuggestionsAPI, ShortenAPI, ScreenshotAPI, LastUpdateAPI, AdminAPI
+from pmp.api.common import OverallAPI, SuggestionsAPI, ShortenAPI, ScreenshotAPI, LastUpdateAPI, AdminAPI, ObjectListAPI
 
 import json
 import config
@@ -69,6 +69,21 @@ def api_overall():
 
     return result
 
+
+@app.route('/api/objects')
+def api_objects():
+    """
+    API call to get list of objects in certain collection
+    """
+    i = flask.request.args.get('r', '')
+    i = sanitize(i).split(',')
+    if len(i) > 0:
+        result = ObjectListAPI().get(i[0])
+        return jsonify(result)
+
+    return jsonify([])
+
+
 @app.route('/api/lastupdate')
 def api_lastupdate():
     """
@@ -76,7 +91,7 @@ def api_lastupdate():
     """
     result = LastUpdateAPI().get()
 
-    return result
+    return jsonify(result)
 
 @app.route('/api/historical')
 def api_historical():
@@ -88,12 +103,15 @@ def api_historical():
     pwg - list of pwg to include (csv)
     """
     i = flask.request.args.get('r', '')
-    granularity = flask.request.args.get('granularity', 100)
+    granularity = flask.request.args.get('granularity', 250)
     if not isinstance(granularity, int):
         try:
             granularity = int(granularity)
         except:
-            granularity = 100
+            granularity = 250
+
+    if granularity < 1:
+        granularity = 250
 
     priority = flask.request.args.get('priority', None)
     if priority is not None:
@@ -183,12 +201,10 @@ def api_present():
     if status is not None:
         status = status.split(',')
 
-    chained_mode = flask.request.args.get('chainedMode', '').lower() == 'true'
     estimate_completed_events = flask.request.args.get('estimateCompleted', '').lower() == 'true'
 
     i = sanitize(i)
     result = PresentAPI().get(i,
-                              chained_mode=chained_mode,
                               estimate_completed_events=estimate_completed_events,
                               priority_filter=priority,
                               pwg_filter=pwg,
@@ -231,7 +247,7 @@ if __name__ == '__main__':
     Utils.setup_console_logging()
     app.run(host='0.0.0.0',
             port=config.PORT,
-            debug=True,
+            debug=config.DEBUG,
             threaded=True,
             ssl_context=(config.CERTFILE, config.KEYFILE))
 
