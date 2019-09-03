@@ -295,7 +295,7 @@ class APIBase(esadapter.InitConnection):
                               'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
                               '01234567890-_*')
         query_allowed_characters = ''.join([x for x in query if x in allowed_characters])
-        if len(query_allowed_characters.replace('*', '')) < 0:
+        if len(query_allowed_characters.replace('*', '')) < 8:
             # If there are less than 8 non *  characters, do not search
             # This is done to avoid things like *-*-*
             return None, None
