@@ -493,7 +493,7 @@ if __name__ == "__main__":
                         request_type = data.get('RequestType', '')
                         request_name = data.get('RequestName', '')
                         request_prepid = data.get('PrepID', '')
-                        if request_type and request_type.lower() == 'rereco' and not is_excluded_rereco(data):
+                        if ((request_type and request_type.lower() == 'rereco') or (request_prepid and request_prepid.lower().startswith('rereco-'))) and not is_excluded_rereco(data):
                             logging.info('Creating mock ReReco request for %s' % (object_id))
                             create_rereco_request(data, rereco_cfg, process_string_cfg, rereco_campaigns_cfg)
                         elif request_name and '_rvcmssw_' in request_name.lower() and request_prepid and 'cmssw_' in request_prepid.lower():
