@@ -64,9 +64,20 @@ angular.module('pmpApp').controller('PresentController', ['$http',
 
             $scope.availableModes = ['events', 'requests', 'seconds']
 
-            $scope.scale = urlParameters.scale;
+            urlParameters.scale = urlParameters.scale.toLowerCase().trim();
+            urlParameters.mode = urlParameters.mode.toLowerCase().trim();
 
-            $scope.mode = urlParameters.mode;
+            if ($scope.availableScales.includes(urlParameters.scale)) {
+                $scope.scale = urlParameters.scale;
+            } else {
+                $scope.scale = $scope.defaults.scale;
+            }
+
+            if ($scope.availableModes.includes(urlParameters.mode)) {
+                $scope.mode = urlParameters.mode;
+            } else {
+                $scope.mode = $scope.defaults.mode;
+            }
 
             $scope.availableSelections = {'member_of_campaign': 'Campaign',
                                           'total_events': 'Total Events',
@@ -76,9 +87,10 @@ angular.module('pmpApp').controller('PresentController', ['$http',
                                           'is_member_of_chain': 'In chain',
                                           'pwg': 'PWG'}
 
-            $scope.groupBy = urlParameters.groupBy.split(',').filter(e => e.length > 0)
-            $scope.colorBy = urlParameters.colorBy.split(',').filter(e => e.length > 0)
-            $scope.stackBy = urlParameters.stackBy.split(',').filter(e => e.length > 0)
+            let availableSelectionsKeys = Object.keys($scope.availableSelections);
+            $scope.groupBy = urlParameters.groupBy.split(',').filter(e => e.length > 0 && availableSelectionsKeys.includes(e))
+            $scope.colorBy = urlParameters.colorBy.split(',').filter(e => e.length > 0 && availableSelectionsKeys.includes(e))
+            $scope.stackBy = urlParameters.stackBy.split(',').filter(e => e.length > 0 && availableSelectionsKeys.includes(e))
 
             // initialise filters
             if (urlParameters.priority !== undefined) {
