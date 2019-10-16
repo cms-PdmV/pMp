@@ -56,7 +56,6 @@ class SuggestionsAPI(esadapter.InitConnection):
         search = 'prepid:*%s*' % (query)
 
         results = []
-
         suggestion_queries = [{'type': 'CAMPAIGN', 'index': 'campaigns'},
                               {'type': 'REQUEST', 'index': 'requests'},
                               {'type': 'CHAINED CAMPAIGN', 'index': 'chained_campaigns'},
@@ -81,17 +80,19 @@ class SuggestionsAPI(esadapter.InitConnection):
             suggestion_query['all_suggestions'] = [{'type': suggestion_query['type'], 'label': x} for x in suggestion_results]
             suggestion_query['selected_suggestions'] = []
 
-        found_suggestions = 0
+        used_suggestions = set()
         for i in range(self.max_suggestions):
             for suggestion_query in suggestion_queries:
                 if i < len(suggestion_query.get('all_suggestions', [])):
-                    suggestion_query['selected_suggestions'].append(suggestion_query['all_suggestions'][i])
-                    found_suggestions += 1
+                    suggestion = suggestion_query['all_suggestions'][i]
+                    if suggestion['label'] not in used_suggestions:
+                        suggestion_query['selected_suggestions'].append(suggestion)
+                        used_suggestions.add(suggestion['label'])
 
-                if found_suggestions >= self.max_suggestions:
+                if len(used_suggestions) >= self.max_suggestions:
                     break
 
-            if found_suggestions >= self.max_suggestions:
+            if len(used_suggestions) >= self.max_suggestions:
                 break
 
         selected_results = []
@@ -376,7 +377,7 @@ class APIBase(esadapter.InitConnection):
 
                 newest_entry = sorted(history_record.get('history', []), key=lambda k: k['time'])[-1]
                 if newest_entry['type'] == 'VALID' or newest_entry['type'] == 'PRODUCTION':
-                     completed_events = newest_entry.get('events', 0)
+                    completed_events = newest_entry.get('events', 0)
 
         return completed_events
 
@@ -438,12 +439,6 @@ class APIBase(esadapter.InitConnection):
             logging.info('Returning nothing because index for %s could not be found' % (query))
             return []
 
-        cache_key = 'db_query_%s_____%s______%s' % (str(es_query), include_stats_document, estimate_completed_events)
-        if self.__cache.has(cache_key):
-            results = self.__cache.get(cache_key)
-            logging.info('Found result in cache for key: %s' % cache_key)
-            return results
-
         if index == 'chained_requests':
             chained_requests = self.search(es_query, index)
             for chained_request in chained_requests:
@@ -465,7 +460,6 @@ class APIBase(esadapter.InitConnection):
         else:
             output_dataset_index = 0
 
-        results = []
         if skip_prepids is None:
             skip_prepids = set()
 
@@ -541,7 +535,6 @@ class APIBase(esadapter.InitConnection):
             else:
                 results_to_return.append((None, res))
 
-        self.__cache.set(cache_key, results_to_return)
         return results_to_return
 
     def fetch_workflows_into_dictionary(self, workflow_ids, result_dictionary):
