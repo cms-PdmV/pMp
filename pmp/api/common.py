@@ -61,8 +61,8 @@ class SuggestionsAPI(esadapter.InitConnection):
                               {'type': 'REQUEST', 'index': 'requests'},
                               {'type': 'CHAINED CAMPAIGN', 'index': 'chained_campaigns'},
                               {'type': 'CHAINED REQUEST', 'index': 'chained_requests'},
-                              {'type': 'TAG', 'index': 'tags'},
                               {'type': 'PPD TAG', 'index': 'ppd_tags'},
+                              {'type': 'TAG', 'index': 'tags'},
                               {'type': 'FLOW', 'index': 'flows'},
                               {'type': 'MCM DATASET', 'index': 'mcm_dataset_names'},
                               {'type': 'DATATIER', 'index': 'mcm_datatiers'},
@@ -325,11 +325,11 @@ class APIBase(esadapter.InitConnection):
             elif self.is_instance(query, 'chained_requests', 'chained_request'):
                 result = ('member_of_chain:%s' % (query), 'requests')
 
-            elif self.is_instance(query, 'tags', 'tag'):
-                result = ('tags:%s' % (query), 'requests')
-
             elif self.is_instance(query, 'ppd_tags', 'ppd_tag'):
                 result = ('ppd_tags:%s' % (query), 'requests')
+
+            elif self.is_instance(query, 'tags', 'tag'):
+                result = ('tags:%s' % (query), 'requests')
 
             elif self.is_instance(query, 'flows', 'flow'):
                 result = ('flown_with:%s' % (query), 'requests')
