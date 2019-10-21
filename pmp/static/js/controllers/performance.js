@@ -230,6 +230,9 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
             var newData = []
             for (var i = 0; i < data.length; i++) {
                 if (data[i].history !== undefined && data[i].history[min] !== undefined && data[i].history[max] !== undefined) {
+                    if (data[i].history[max] - data[i].history[min] < 0) {
+                        continue
+                    }
                     data[i].diff = data[i].history[max] - data[i].history[min]
                     data[i].min = data[i].history[min]
                     data[i].max = data[i].history[max]

@@ -80,6 +80,16 @@
                 return result
             }
 
+            function getXTicks(numberOfTicks) {
+                let step = 1 / numberOfTicks;
+                var ticks = [];
+                for (var i = 0; i < numberOfTicks; i++) {
+                    ticks.push(i * step)
+                }
+                ticks.push(1)
+                return ticks
+            }
+
             // axes
             var x = d3.scaleLinear().range([0, width]);
             var xAxis = d3.axisBottom(x).ticks(10).tickFormat(formatTimestamp);
@@ -100,7 +110,7 @@
                 scope.minDiff = d3.min(data, function(d) { return d.diff; })
                 scope.maxDiff = d3.max(data, function(d) { return d.diff; })
                 scope.range = scope.maxDiff - scope.minDiff
-                var bins = Math.min(data.length, scope.numberOfBins)
+                var bins = Math.max(1, Math.min(data.length, scope.numberOfBins))
                 var binWidth = scope.range / bins;
                 var fullBins = []
                 for (var i = 0; i < bins; i++) {
@@ -116,7 +126,8 @@
                 }
                 scope.selectedBin = -1;
                 scope.binSelectedCallback([])
-                xAxis.ticks(Math.min(10, bins))
+                xAxis.tickValues(getXTicks(Math.min(bins, 30)))
+                xAxis.scale(x)
                 if (scope.scale === 'log') {
                     y = d3.scaleLog()
                     yAxis = yAxis.tickFormat(scope.bigNumberFormatterLog)
@@ -124,7 +135,8 @@
                     y = d3.scaleLinear()
                     yAxis = yAxis.tickFormat(scope.bigNumberFormatter)
                 }
-                y = y.domain([0.1, d3.max(fullBins, function(d) { return d.values.length; }) + 1]).range([height, 0]);
+                let maxValue = d3.max(fullBins, function(d) { return d.values.length; }) * (scope.scale === 'log' ? 10 : 1.05)
+                y = y.domain([(scope.scale === 'log' ? 0.1 : 0), maxValue]).range([height, 0]);
                 yAxis.scale(y);
                 svg.selectAll("rect.bar").remove()
                 svg.selectAll("text.bar-size-label").remove()
@@ -184,8 +196,8 @@
                     });
 
                 svg.selectAll(".x.axis .tick>text")
-                   .style("text-anchor","center")
-                   .attr("transform", "rotate(-20) translate(0, 15)")
+                   .style("text-anchor","end")
+                   .attr("transform", "rotate(-32) translate(0, 5)")
                    .style("font-weight", "lighter")
             };
 
