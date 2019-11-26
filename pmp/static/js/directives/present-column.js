@@ -169,16 +169,40 @@
             }
 
             var compare = function(a, b) {
+                let aKey = a;
+                let bKey = b;
+                if (typeof a === 'object') {
+                    aKey = a.key;
+                }
+                if (typeof b === 'object') {
+                    bKey = b.key;
+                }
+                console.log(aKey);
+                console.log(bKey);
+                if (aKey.includes('___') && bKey.includes('___')) {
+                    let aParts = aKey.split('___');
+                    let bParts = bKey.split('___');
+                    if (aParts.length != bParts.length) {
+                        return aParts.length - bParts.length;
+                    }
+                    for (let i = 0; i < aParts.length; i++) {
+                        let partDiff = compare(aParts[i], bParts[i]);
+                        if (partDiff != 0) {
+                            return partDiff;
+                        }
+                    }
+                    return 0;
+                }
                 var knownKeys = ['new', 'validation', 'defined', 'approved', 'submitted', 'done']
-                if (knownKeys.includes(a.key) && knownKeys.includes(b.key)) {
-                    return knownKeys.indexOf(a.key) - knownKeys.indexOf(b.key);
+                if (knownKeys.includes(aKey) && knownKeys.includes(bKey)) {
+                    return knownKeys.indexOf(aKey) - knownKeys.indexOf(bKey);
                 }
-                if (!isNaN(parseInt(a.key, 10)) && !isNaN(parseInt(b.key, 10))) {
-                    return parseInt(a.key, 10) - parseInt(b.key, 10);
+                if (!isNaN(parseInt(aKey, 10)) && !isNaN(parseInt(bKey, 10))) {
+                    return parseInt(aKey, 10) - parseInt(bKey, 10);
                 }
-                if (a.key < b.key) {
+                if (aKey < bKey) {
                     return -1;
-                } else if  (a.key > b.key) {
+                } else if  (aKey > bKey) {
                     return 1;
                 }
                 return 0;
