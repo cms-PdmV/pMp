@@ -430,19 +430,19 @@
                     for (var i in scope.groupBy) {
                         var key = scope.groupBy[i]
                         if (key in keys) {
-                            title += keys[key] + ': ' + d.value[0][key].replace('Block ', '') + '\n'
+                            title += keys[key] + ': ' + d.value[0][key].toString().replace('Block ', '') + '\n'
                         }
                     }
                     for (var i in scope.colorBy) {
                         var key = scope.colorBy[i]
                         if (key in keys) {
-                            title += keys[key] + ': ' + d.value[0][key].replace('Block ', '') + '\n'
+                            title += keys[key] + ': ' + d.value[0][key].toString().replace('Block ', '') + '\n'
                         }
                     }
                     for (var i in scope.stackBy) {
                         var key = scope.stackBy[i]
                         if (key in keys) {
-                            title += keys[key] + ': ' + d.value[0][key].replace('Block ', '') + '\n'
+                            title += keys[key] + ': ' + d.value[0][key].toString().replace('Block ', '') + '\n'
                         }
                     }
                     return title;
