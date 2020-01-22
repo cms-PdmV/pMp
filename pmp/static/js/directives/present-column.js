@@ -177,8 +177,6 @@
                 if (typeof b === 'object') {
                     bKey = b.key;
                 }
-                console.log(aKey);
-                console.log(bKey);
                 if (aKey.includes('___') && bKey.includes('___')) {
                     let aParts = aKey.split('___');
                     let bParts = bKey.split('___');
@@ -280,6 +278,7 @@
                                                                                                    key: d.prepid,
                                                                                                    total_events: realTotal,
                                                                                                    priority: d.priority,
+                                                                                                   priority_block: d.priority_block,
                                                                                                    member_of_chain: d.member_of_chain,
                                                                                                    status: 'done',
                                                                                                    dataset_name: d.dataset_name,
@@ -421,28 +420,29 @@
                         title += 'Requests: ' + forrmattedSum + '\n';
                     }
                     var keys = {'member_of_campaign': 'Campaign',
-                                'total_events': 'Total Events',
+                                'total_events': 'Total events',
                                 'prepid': 'Prepid',
                                 'status': 'Status',
                                 'priority': 'Priority',
+                                'priority_block': 'Priority block',
                                 'pwg': 'PWG',
                                 'is_member_of_chain': 'Member of chain'}
                     for (var i in scope.groupBy) {
                         var key = scope.groupBy[i]
                         if (key in keys) {
-                            title += keys[key] + ': ' + d.value[0][key] + '\n'
+                            title += keys[key] + ': ' + d.value[0][key].replace('Block ', '') + '\n'
                         }
                     }
                     for (var i in scope.colorBy) {
                         var key = scope.colorBy[i]
                         if (key in keys) {
-                            title += keys[key] + ': ' + d.value[0][key] + '\n'
+                            title += keys[key] + ': ' + d.value[0][key].replace('Block ', '') + '\n'
                         }
                     }
                     for (var i in scope.stackBy) {
                         var key = scope.stackBy[i]
                         if (key in keys) {
-                            title += keys[key] + ': ' + d.value[0][key] + '\n'
+                            title += keys[key] + ': ' + d.value[0][key].replace('Block ', '') + '\n'
                         }
                     }
                     return title;

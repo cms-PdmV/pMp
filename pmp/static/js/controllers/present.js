@@ -84,6 +84,7 @@ angular.module('pmpApp').controller('PresentController', ['$http',
                                           'prepid': 'Prepid',
                                           'status': 'Status',
                                           'priority': 'Priority',
+                                          'priority_block': 'Priority Block',
                                           'is_member_of_chain': 'In chain',
                                           'pwg': 'PWG'}
 
@@ -196,6 +197,19 @@ angular.module('pmpApp').controller('PresentController', ['$http',
                             entry.url = 'https://cms-pdmv.cern.ch/mcm/requests?prepid=' + entry.prepid
                         } else {
                             entry.url = 'https://cmsweb.cern.ch/reqmgr2/fetch?rid=' + entry.workflow
+                        }
+                        if (entry.priority >= 110000) {
+                            entry.priority_block = 'Block 1';
+                        } else if (entry.priority >= 90000) {
+                            entry.priority_block = 'Block 2';
+                        } else if (entry.priority >= 85000) {
+                            entry.priority_block = 'Block 3';
+                        } else if (entry.priority >= 80000) {
+                            entry.priority_block = 'Block 4';
+                        } else if (entry.priority >= 70000) {
+                            entry.priority_block = 'Block 5';
+                        } else {
+                            entry.priority_block = 'Block 6';
                         }
                     });
                     Data.setLoadedData(data.data.results.data, false);
