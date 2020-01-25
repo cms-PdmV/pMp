@@ -280,6 +280,7 @@
                                                                                                    priority: d.priority,
                                                                                                    priority_block: d.priority_block,
                                                                                                    member_of_chain: d.member_of_chain,
+                                                                                                   member_of_campaign: d.member_of_campaign,
                                                                                                    status: 'done',
                                                                                                    dataset_name: d.dataset_name,
                                                                                                    growing_fake: true,
@@ -430,19 +431,31 @@
                     for (var i in scope.groupBy) {
                         var key = scope.groupBy[i]
                         if (key in keys) {
-                            title += keys[key] + ': ' + d.value[0][key].toString().replace('Block ', '') + '\n'
+                            let value = d.value[0][key]
+                            if (value) {
+                                value = value.toString().replace('Block ', '')
+                            }
+                            title += keys[key] + ': ' + value + '\n'
                         }
                     }
                     for (var i in scope.colorBy) {
                         var key = scope.colorBy[i]
                         if (key in keys) {
-                            title += keys[key] + ': ' + d.value[0][key].toString().replace('Block ', '') + '\n'
+                            let value = d.value[0][key]
+                            if (value) {
+                                value = value.toString().replace('Block ', '')
+                            }
+                            title += keys[key] + ': ' + value + '\n'
                         }
                     }
                     for (var i in scope.stackBy) {
                         var key = scope.stackBy[i]
                         if (key in keys) {
-                            title += keys[key] + ': ' + d.value[0][key].toString().replace('Block ', '') + '\n'
+                            let value = d.value[0][key]
+                            if (value) {
+                                value = value.toString().replace('Block ', '')
+                            }
+                            title += keys[key] + ': ' + value + '\n'
                         }
                     }
                     return title;
