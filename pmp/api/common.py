@@ -21,8 +21,8 @@ class SuggestionsAPI(esadapter.InitConnection):
 
     def __init__(self, typeof):
         esadapter.InitConnection.__init__(self)
-        self.max_results_in_index = 20
-        self.max_suggestions = 20
+        self.max_results_in_index = 200
+        self.max_suggestions = 200
         self.present = (typeof == 'present')
         self.historical = (typeof == 'historical')
         self.performance = (typeof == 'performance')
@@ -46,6 +46,7 @@ class SuggestionsAPI(esadapter.InitConnection):
           relval cmssw version
           relval campaign
         """
+        query = query.replace(' ', '*')
         cache_key = 'suggestions_%s' % (query)
         if self.__cache.has(cache_key):
             results = self.__cache.get(cache_key)
@@ -56,21 +57,22 @@ class SuggestionsAPI(esadapter.InitConnection):
         search = 'prepid:*%s*' % (query)
 
         results = []
-        suggestion_queries = [{'type': 'CAMPAIGN', 'index': 'campaigns'},
-                              {'type': 'REQUEST', 'index': 'requests'},
-                              {'type': 'CHAINED CAMPAIGN', 'index': 'chained_campaigns'},
-                              {'type': 'CHAINED REQUEST', 'index': 'chained_requests'},
+        suggestion_queries = [{'type': 'RERECO CAMPAIGN', 'index': 'rereco_campaigns'},
+                              {'type': 'CAMPAIGN', 'index': 'campaigns'},
+                              # {'type': 'REQUEST', 'index': 'requests'},
+                              # {'type': 'CHAINED CAMPAIGN', 'index': 'chained_campaigns'},
+                              # {'type': 'CHAINED REQUEST', 'index': 'chained_requests'},
                               {'type': 'PPD TAG', 'index': 'ppd_tags'},
                               {'type': 'TAG', 'index': 'tags'},
-                              {'type': 'FLOW', 'index': 'flows'},
-                              {'type': 'MCM DATASET', 'index': 'mcm_dataset_names'},
+                              # {'type': 'FLOW', 'index': 'flows'},
+                              # {'type': 'MCM DATASET', 'index': 'mcm_dataset_names'},
                               {'type': 'DATATIER', 'index': 'mcm_datatiers'},
-                              {'type': 'RERECO', 'index': 'rereco_requests'},
+                              # {'type': 'RERECO', 'index': 'rereco_requests'},
                               {'type': 'PROCESSING STRING', 'index': 'processing_strings'},
-                              {'type': 'RERECO CAMPAIGN', 'index': 'rereco_campaigns'},
-                              {'type': 'RELVAL', 'index': 'relval_requests'},
-                              {'type': 'RELVAL CMSSW', 'index': 'relval_cmssw_versions'},
-                              {'type': 'RELVAL CAMPAIGN', 'index': 'relval_campaigns'}]
+                              # {'type': 'RELVAL', 'index': 'relval_requests'},
+                              # {'type': 'RELVAL CMSSW', 'index': 'relval_cmssw_versions'},
+                              # {'type': 'RELVAL CAMPAIGN', 'index': 'relval_campaigns'}]
+                             ]
 
         for suggestion_query in suggestion_queries:
             suggestion_results = [x['_id'] for x in self.search(search,
