@@ -143,6 +143,7 @@
                 svg.selectAll(".selected-bar").remove()
                 svg.selectAll("g .x.axis").call(xAxis);
                 svg.selectAll("g .y.axis").call(yAxis);
+                svg.selectAll(".grayline").remove();
                 svg.select(".x.axis")
                    .selectAll('text')
                    .style("font-size","14px");
@@ -153,6 +154,16 @@
                 var rect = svg.selectAll("rect")
                               .data(fullBins)
                               .enter()
+
+                svg.selectAll('line .grayline')
+                   .data(yAxis.scale().ticks().filter(Boolean))
+                   .enter()
+                   .append('line')
+                   .attr('class', 'grayline')
+                   .attr('x1', 0)
+                   .attr('y1', function(d) { return y(d) })
+                   .attr('x2', width)
+                   .attr('y2', function(d) { return y(d) })
 
                 rect.append("rect")
                     .attr("fill", "#2196f3")
