@@ -52,8 +52,8 @@
                         unchainedRequests[campaign][status] += amount
                         if (scope.growingMode && scope.mode == 'events' && status === 'submitted') {
                             var adjustment = data[i].completed_events
-                            chainedRequests[campaign]['submitted'] -= Math.min(adjustment, data[i].total_events)
-                            chainedRequests[campaign]['done'] += adjustment
+                            unchainedRequests[campaign]['submitted'] -= Math.min(adjustment, data[i].total_events)
+                            unchainedRequests[campaign]['done'] += adjustment
                         }
                     }
                 }
