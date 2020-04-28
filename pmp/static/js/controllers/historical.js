@@ -27,6 +27,10 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
             priority: undefined, // priority filter
             status: undefined, // status filter
             pwg: undefined, // PWG filter
+            sortSubmittedOn: 'prepid', // Field to sort submitted list on
+            sortSubmittedOrder: 1, // Sort ascending (1) or descending (-1)
+            sortDoneOn: 'prepid', // Field to sort done list on
+            sortDoneOrder: 1, // Sort ascending (1) or descending (-1)
         };
 
         /**
@@ -56,6 +60,14 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
             $scope.showDoneRequestsList = urlParameters.showDoneRequestsList === 'true';
 
             $scope.estimateCompleted = urlParameters.estimateCompleted === 'true';
+
+            $scope.sortSubmittedOn = urlParameters.sortSubmittedOn;
+
+            $scope.sortSubmittedOrder = parseInt(urlParameters.sortSubmittedOrder, 10) === -1 ? -1 : 1;
+
+            $scope.sortDoneOn = urlParameters.sortDoneOn;
+
+            $scope.sortDoneOrder = parseInt(urlParameters.sortDoneOrder, 10) === -1 ? -1 : 1;
 
             // initialise filters
             if (urlParameters.priority !== undefined) {
@@ -169,18 +181,18 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
                         } else {
                             entry.url = 'https://cmsweb.cern.ch/reqmgr2/fetch?rid=' + entry.workflow
                         }
-                        entry.perc = entry.done / entry.expected * 100;
+                        entry.percentage = entry.done / entry.expected * 100;
                     });
-                    $scope.listSubmitted = data.data.results.submitted_requests;
+                    $scope.listSubmitted = data.data.results.submitted_requests.sort($scope.compareSubmitted);
                     data.data.results.done_requests.forEach(function(entry) {
                         if (entry.prepid.indexOf('ReReco') == -1 && entry.prepid.indexOf('CMSSW') == -1) {
                             entry.url = 'https://cms-pdmv.cern.ch/mcm/requests?prepid=' + entry.prepid
                         } else {
                             entry.url = 'https://cmsweb.cern.ch/reqmgr2/fetch?rid=' + entry.workflow
                         }
-                        entry.perc = entry.done / entry.expected * 100;
+                        entry.percentage = entry.done / entry.expected * 100;
                     });
-                    $scope.listDone = data.data.results.done_requests
+                    $scope.listDone = data.data.results.done_requests.sort($scope.compareDone);
                     $scope.data = Data.getLoadedData();
                     $scope.setURL($scope, Data);
                     $scope.$broadcast('onChangeNotification:LoadedData');
@@ -221,6 +233,48 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
 
         $scope.changeEstimateCompleted = function() {
             $scope.query();
+        }
+
+        $scope.compareSubmitted = function(a, b) {
+            if (a[$scope.sortSubmittedOn] < b[$scope.sortSubmittedOn]) {
+                return -$scope.sortSubmittedOrder;
+            } else if (a[$scope.sortSubmittedOn] > b[$scope.sortSubmittedOn]) {
+                return $scope.sortSubmittedOrder;
+            } else {
+                return 0;
+            }
+        }
+
+        $scope.compareDone = function(a, b) {
+            if (a[$scope.sortDoneOn] < b[$scope.sortDoneOn]) {
+                return -$scope.sortDoneOrder;
+            } else if (a[$scope.sortDoneOn] > b[$scope.sortDoneOn]) {
+                return $scope.sortDoneOrder;
+            } else {
+                return 0;
+            }
+        }
+
+        $scope.changeSubmittedSort = function(column) {
+            if (column == $scope.sortSubmittedOn) {
+                $scope.sortSubmittedOrder *= -1;
+            } else {
+                $scope.sortSubmittedOn = column;
+                $scope.sortSubmittedOrder = 1;
+            }
+            $scope.listSubmitted = $scope.listSubmitted.sort($scope.compareSubmitted);
+            $scope.setURL($scope, Data);
+        }
+
+        $scope.changeDoneSort = function(column) {
+            if (column == $scope.sortDoneOn) {
+                $scope.sortDoneOrder *= -1;
+            } else {
+                $scope.sortDoneOn = column;
+                $scope.sortDoneOrder = 1;
+            }
+            $scope.listDone = $scope.listDone.sort($scope.compareDone);
+            $scope.setURL($scope, Data);
         }
 
         $scope.$on('onChangeNotification:InputTags', function () {

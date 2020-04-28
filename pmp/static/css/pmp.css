@@ -124,6 +124,27 @@ body {
     padding-top: 0.8rem;
 }
 
+.btn-sort {
+    background-color: transparent;
+    border: none;
+    padding: 0 !important;
+}
+
+.btn-sort:focus {
+    outline:0;
+}
+
+.btn-sort > i {
+    padding: 4px;
+    border-radius: 3px;
+}
+
+.sort-selected {
+    background-color: rgb(51, 51, 51);
+    color: #eceff1;
+}
+
+
 @keyframes blink {
     0% {
       opacity: .2;
