@@ -9,6 +9,36 @@
       <p class="mt-4">
         List of requests (<b>{{listSubmitted.length}}</b>) in status <b>submitted</b>
       </p>
+            <div class="row small-padding">
+        <div class="col-sm-4">
+          <button type="button" class="btn btn-sort m-2" ng-click="changeSubmittedSort('prepid')">
+            <i ng-if="sortSubmittedOn != 'prepid'" class="fa fa-sort-amount-asc spacing-r" title="Click to sort ascending by prepid"></i>
+            <i ng-if="sortSubmittedOn == 'prepid' && sortSubmittedOrder == 1" class="fa fa-sort-amount-asc spacing-r sort-selected" title="Click to sort descending by prepid"></i>
+            <i ng-if="sortSubmittedOn == 'prepid' && sortSubmittedOrder == -1" class="fa fa-sort-amount-desc spacing-r sort-selected" title="Click to sort ascending by prepid"></i>
+          </button>
+        </div>
+        <div class="col-sm-2">
+          <button type="button" class="btn btn-sort m-2" ng-click="changeSubmittedSort('expected')">
+            <i ng-if="sortSubmittedOn != 'expected'" class="fa fa-sort-numeric-asc spacing-r" title="Click to sort ascending by expected events"></i>
+            <i ng-if="sortSubmittedOn == 'expected' && sortSubmittedOrder == 1" class="fa fa-sort-numeric-asc spacing-r sort-selected" title="Click to sort descending by expected events"></i>
+            <i ng-if="sortSubmittedOn == 'expected' && sortSubmittedOrder == -1" class="fa fa-sort-numeric-desc spacing-r sort-selected" title="Click to sort ascending by expected events"></i>
+          </button>
+        </div>
+        <div class="col-sm-2">
+          <button type="button" class="btn btn-sort m-2" ng-click="changeSubmittedSort('done')">
+            <i ng-if="sortSubmittedOn != 'done'" class="fa fa-sort-numeric-asc spacing-r" title="Click to sort ascending by done events"></i>
+            <i ng-if="sortSubmittedOn == 'done' && sortSubmittedOrder == 1" class="fa fa-sort-numeric-asc spacing-r sort-selected" title="Click to sort descending by done events"></i>
+            <i ng-if="sortSubmittedOn == 'done' && sortSubmittedOrder == -1" class="fa fa-sort-numeric-desc spacing-r sort-selected" title="Click to sort ascending by done events"></i>
+          </button>
+        </div>
+        <div class="col-sm-2">
+          <button type="button" class="btn btn-sort m-2" ng-click="changeSubmittedSort('percentage')">
+            <i ng-if="sortSubmittedOn != 'percentage'" class="fa fa-sort-numeric-asc spacing-r" title="Click to sort ascending by progress"></i>
+            <i ng-if="sortSubmittedOn == 'percentage' && sortSubmittedOrder == 1" class="fa fa-sort-numeric-asc spacing-r sort-selected" title="Click to sort descending by progress"></i>
+            <i ng-if="sortSubmittedOn == 'percentage' && sortSubmittedOrder == -1" class="fa fa-sort-numeric-desc spacing-r sort-selected" title="Click to sort ascending by progress"></i>
+          </button>
+        </div>
+      </div>
       <div ng-repeat="submitted in listSubmitted" class="row zebra-lines small-padding">
         <div class="col-sm-4">
           <a ng-href="{{submitted.url}}" target="_blank">{{submitted.prepid}}</a>
@@ -38,11 +68,11 @@
                  role="progressbar"
                  aria-valuemin="0"
                  aria-valuemax="100"
-                 title="{{submitted.output_dataset}} is {{submitted.output_dataset_status}} at {{submitted.perc | readableNumbers}}%"
+                 title="{{submitted.output_dataset}} is {{submitted.output_dataset_status}} at {{submitted.percentage | readableNumbers}}%"
                  style="color: black;
                         max-width: 100%;
-                        width:{{submitted.perc}}%;">
-              {{submitted.perc | readableNumbers}}%
+                        width:{{submitted.percentage}}%;">
+              {{submitted.percentage | readableNumbers}}%
             </div>
           </div>
         </div>
@@ -57,6 +87,36 @@
       <p class="mt-4">
         List of requests (<b>{{listDone.length}}</b>) in status <b>done</b>
       </p>
+      <div class="row small-padding">
+        <div class="col-sm-4">
+          <button type="button" class="btn btn-sort m-2" ng-click="changeDoneSort('prepid')">
+            <i ng-if="sortDoneOn != 'prepid'" class="fa fa-sort-amount-asc spacing-r" title="Click to sort ascending by prepid"></i>
+            <i ng-if="sortDoneOn == 'prepid' && sortDoneOrder == 1" class="fa fa-sort-amount-asc spacing-r sort-selected" title="Click to sort descending by prepid"></i>
+            <i ng-if="sortDoneOn == 'prepid' && sortDoneOrder == -1" class="fa fa-sort-amount-desc spacing-r sort-selected" title="Click to sort ascending by prepid"></i>
+          </button>
+        </div>
+        <div class="col-sm-2">
+          <button type="button" class="btn btn-sort m-2" ng-click="changeDoneSort('expected')">
+            <i ng-if="sortDoneOn != 'expected'" class="fa fa-sort-numeric-asc spacing-r" title="Click to sort ascending by expected events"></i>
+            <i ng-if="sortDoneOn == 'expected' && sortDoneOrder == 1" class="fa fa-sort-numeric-asc spacing-r sort-selected" title="Click to sort descending by expected events"></i>
+            <i ng-if="sortDoneOn == 'expected' && sortDoneOrder == -1" class="fa fa-sort-numeric-desc spacing-r sort-selected" title="Click to sort ascending by expected events"></i>
+          </button>
+        </div>
+        <div class="col-sm-2">
+          <button type="button" class="btn btn-sort m-2" ng-click="changeDoneSort('done')">
+            <i ng-if="sortDoneOn != 'done'" class="fa fa-sort-numeric-asc spacing-r" title="Click to sort ascending by done events"></i>
+            <i ng-if="sortDoneOn == 'done' && sortDoneOrder == 1" class="fa fa-sort-numeric-asc spacing-r sort-selected" title="Click to sort descending by done events"></i>
+            <i ng-if="sortDoneOn == 'done' && sortDoneOrder == -1" class="fa fa-sort-numeric-desc spacing-r sort-selected" title="Click to sort ascending by done events"></i>
+          </button>
+        </div>
+        <div class="col-sm-2">
+          <button type="button" class="btn btn-sort m-2" ng-click="changeDoneSort('percentage')">
+            <i ng-if="sortDoneOn != 'percentage'" class="fa fa-sort-numeric-asc spacing-r" title="Click to sort ascending by progress"></i>
+            <i ng-if="sortDoneOn == 'percentage' && sortDoneOrder == 1" class="fa fa-sort-numeric-asc spacing-r sort-selected" title="Click to sort descending by progress"></i>
+            <i ng-if="sortDoneOn == 'percentage' && sortDoneOrder == -1" class="fa fa-sort-numeric-desc spacing-r sort-selected" title="Click to sort ascending by progress"></i>
+          </button>
+        </div>
+      </div>
       <div ng-repeat="done in listDone" class="row zebra-lines small-padding">
         <div class="col-sm-4">
           <a ng-href="{{done.url}}" target="_blank">{{done.prepid}}</a>
@@ -86,11 +146,11 @@
                  role="progressbar"
                  aria-valuemin="0"
                  aria-valuemax="100"
-                 title="{{done.output_dataset}} is {{done.output_dataset_status}} at {{done.perc | readableNumbers}}%"
+                 title="{{done.output_dataset}} is {{done.output_dataset_status}} at {{done.percentage | readableNumbers}}%"
                  style="color: black;
                         max-width: 100%;
-                        width:{{done.perc}}%;">
-              {{done.perc | readableNumbers}}%
+                        width:{{done.percentage}}%;">
+              {{done.percentage | readableNumbers}}%
             </div>
           </div>
         </div>
