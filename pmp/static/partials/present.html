@@ -30,6 +30,40 @@
   </div>
   <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 text-center" ng-if="selectedBin.length">
     <p>Requests (<b>{{selectedBin.length}}</b>) in selected bar</p>
+    <div class="row">
+      <div class="col-sm-4">
+        <button type="button" class="btn btn-sort m-2" ng-click="changeSelectedSort('prepid')">
+          <i ng-if="sortSelectedOn != 'prepid'" class="fa fa-sort-amount-asc spacing-r" title="Click to sort ascending by prepid"></i>
+          <i ng-if="sortSelectedOn == 'prepid' && sortSelectedOrder == 1" class="fa fa-sort-amount-asc spacing-r sort-selected" title="Click to sort descending by prepid"></i>
+          <i ng-if="sortSelectedOn == 'prepid' && sortSelectedOrder == -1" class="fa fa-sort-amount-desc spacing-r sort-selected" title="Click to sort ascending by prepid"></i>
+        </button>
+      </div>
+      <div class="col-sm-2">
+        <button type="button" class="btn btn-sort m-2" ng-click="changeSelectedSort('total_events')">
+          <i ng-if="sortSelectedOn != 'total_events'" class="fa fa-sort-numeric-asc spacing-r" title="Click to sort ascending by expected events"></i>
+          <i ng-if="sortSelectedOn == 'total_events' && sortSelectedOrder == 1" class="fa fa-sort-numeric-asc spacing-r sort-selected" title="Click to sort descending by expected events"></i>
+          <i ng-if="sortSelectedOn == 'total_events' && sortSelectedOrder == -1" class="fa fa-sort-numeric-desc spacing-r sort-selected" title="Click to sort ascending by expected events"></i>
+        </button>
+      </div>
+      <div class="col-sm-2">
+        <button type="button" class="btn btn-sort m-2" ng-click="changeSelectedSort('completed_events')">
+          <i ng-if="sortSelectedOn != 'completed_events'" class="fa fa-sort-numeric-asc spacing-r" title="Click to sort ascending by completed events"></i>
+          <i ng-if="sortSelectedOn == 'completed_events' && sortSelectedOrder == 1" class="fa fa-sort-numeric-asc spacing-r sort-selected" title="Click to sort descending by completed events"></i>
+          <i ng-if="sortSelectedOn == 'completed_events' && sortSelectedOrder == -1" class="fa fa-sort-numeric-desc spacing-r sort-selected" title="Click to sort ascending by completed events"></i>
+        </button>
+      </div>
+      <div class="col-sm-1">
+      </div>
+      <div class="col-sm-2">
+        <button type="button" class="btn btn-sort m-2" ng-click="changeSelectedSort('priority')">
+          <i ng-if="sortSelectedOn != 'priority'" class="fa fa-sort-numeric-asc spacing-r" title="Click to sort ascending by priority"></i>
+          <i ng-if="sortSelectedOn == 'priority' && sortSelectedOrder == 1" class="fa fa-sort-numeric-asc spacing-r sort-selected" title="Click to sort descending by priority"></i>
+          <i ng-if="sortSelectedOn == 'priority' && sortSelectedOrder == -1" class="fa fa-sort-numeric-desc spacing-r sort-selected" title="Click to sort ascending by priority"></i>
+        </button>
+      </div>
+      <div class="col-sm-1">
+      </div>
+    </div>
     <div ng-repeat="binEntry in selectedBin" class="row zebra-lines small-padding">
       <div class="col-sm-4">
         <a ng-href="{{binEntry.url}}" target="_blank">{{binEntry.prepid}}</a>

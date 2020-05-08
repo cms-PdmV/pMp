@@ -32,6 +32,22 @@
 
   <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 text-center pb-4" ng-show="selectedBin.length">
     <p>Requests (<b>{{selectedBin.length}}</b>) in selected bar (Time taken from <b>{{subtrahend}}</b> to <b>{{minuend}}</b>)</p>
+    <div class="row">
+      <div class="col-sm-6">
+        <button type="button" class="btn btn-sort m-2" ng-click="changeSelectedSort('prepid')">
+          <i ng-if="sortSelectedOn != 'prepid'" class="fa fa-sort-amount-asc spacing-r" title="Click to sort ascending by prepid"></i>
+          <i ng-if="sortSelectedOn == 'prepid' && sortSelectedOrder == 1" class="fa fa-sort-amount-asc spacing-r sort-selected" title="Click to sort descending by prepid"></i>
+          <i ng-if="sortSelectedOn == 'prepid' && sortSelectedOrder == -1" class="fa fa-sort-amount-desc spacing-r sort-selected" title="Click to sort ascending by prepid"></i>
+        </button>
+      </div>
+      <div class="col-sm-6">
+        <button type="button" class="btn btn-sort m-2" ng-click="changeSelectedSort('diff')">
+          <i ng-if="sortSelectedOn != 'diff'" class="fa fa-sort-numeric-asc spacing-r" title="Click to sort ascending by time"></i>
+          <i ng-if="sortSelectedOn == 'diff' && sortSelectedOrder == 1" class="fa fa-sort-numeric-asc spacing-r sort-selected" title="Click to sort descending by time"></i>
+          <i ng-if="sortSelectedOn == 'diff' && sortSelectedOrder == -1" class="fa fa-sort-numeric-desc spacing-r sort-selected" title="Click to sort ascending by time"></i>
+        </button>
+      </div>
+    </div>
     <div ng-repeat="binEntry in selectedBin" class="row zebra-lines small-padding">
       <div class="col-sm-6">
         <a ng-href="{{binEntry.url}}" target="_blank">{{binEntry.prepid}}</a>

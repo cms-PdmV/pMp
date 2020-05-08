@@ -54,6 +54,9 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
             // set number of bins
             $scope.bins = parseInt(urlParameters.bins, 10);
 
+            $scope.sortSelectedOn = 'prepid';
+            $scope.sortSelectedOrder = 1;
+
             // initialise filters
             if (urlParameters.priority !== undefined) {
                 Data.setPriorityFilter(urlParameters.priority.split(','));
@@ -190,7 +193,7 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
         };
 
         $scope.binSelected = function(selectedBin) {
-            $scope.selectedBin = selectedBin.slice();
+            $scope.selectedBin = selectedBin.slice().sort($scope.compareSelected);
             $timeout(function(){
                 $scope.$apply();
             });
@@ -240,6 +243,29 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
                 }
             }
             return newData
+        }
+
+        $scope.compareSelected = function(a, b) {
+            if (a[$scope.sortSelectedOn] < b[$scope.sortSelectedOn]) {
+                return -$scope.sortSelectedOrder;
+            } else if (a[$scope.sortSelectedOn] > b[$scope.sortSelectedOn]) {
+                return $scope.sortSelectedOrder;
+            } else {
+                return 0;
+            }
+        }
+
+        $scope.changeSelectedSort = function(column) {
+            if (column == $scope.sortSelectedOn) {
+                $scope.sortSelectedOrder *= -1;
+            } else {
+                $scope.sortSelectedOn = column;
+                $scope.sortSelectedOrder = 1;
+            }
+            $scope.selectedBin = $scope.selectedBin.sort($scope.compareSelected);
+            $timeout(function(){
+                $scope.$apply();
+            });
         }
 
         $scope.$on('onChangeNotification:InputTags', function () {
