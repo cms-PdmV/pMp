@@ -31,11 +31,18 @@
             <i ng-if="sortSubmittedOn == 'done' && sortSubmittedOrder == -1" class="fa fa-sort-numeric-desc spacing-r sort-selected" title="Click to sort ascending by done events"></i>
           </button>
         </div>
-        <div class="col-sm-2">
+        <div class="col-sm-1">
           <button type="button" class="btn btn-sort m-2" ng-click="changeSubmittedSort('percentage')">
             <i ng-if="sortSubmittedOn != 'percentage'" class="fa fa-sort-numeric-asc spacing-r" title="Click to sort ascending by progress"></i>
             <i ng-if="sortSubmittedOn == 'percentage' && sortSubmittedOrder == 1" class="fa fa-sort-numeric-asc spacing-r sort-selected" title="Click to sort descending by progress"></i>
             <i ng-if="sortSubmittedOn == 'percentage' && sortSubmittedOrder == -1" class="fa fa-sort-numeric-desc spacing-r sort-selected" title="Click to sort ascending by progress"></i>
+          </button>
+        </div>
+        <div class="col-sm-2">
+          <button type="button" class="btn btn-sort m-2" ng-click="changeSubmittedSort('priority')">
+            <i ng-if="sortSubmittedOn != 'priority'" class="fa fa-sort-numeric-asc spacing-r" title="Click to sort ascending by priority"></i>
+            <i ng-if="sortSubmittedOn == 'priority' && sortSubmittedOrder == 1" class="fa fa-sort-numeric-asc spacing-r sort-selected" title="Click to sort descending by priority"></i>
+            <i ng-if="sortSubmittedOn == 'priority' && sortSubmittedOrder == -1" class="fa fa-sort-numeric-desc spacing-r sort-selected" title="Click to sort ascending by priority"></i>
           </button>
         </div>
       </div>
@@ -45,21 +52,14 @@
           <br><small>{{submitted.dataset}}</small>
           <small title="Number of events estimated from {{submitted.estimated_from}}" style="color:red" ng-if="submitted.estimated_from"><br>(Estimate from {{submitted.estimated_from}})</small>
         </div>
-        <div ng-if="!humanReadable" class="col-sm-2">
-          Expected: <b>{{submitted.expected}}</b>
-        </div>
-        <div ng-if="humanReadable" class="col-sm-2">
-          Expected: <b title="{{submitted.expected}}">{{submitted.expected | readableNumbers}}</b>
-        </div>
-        <div ng-if="!humanReadable" class="col-sm-2">
-          Produced: <b>{{submitted.done}}</b>
-          <small title="Force completed" style="color:red" ng-if="submitted.force_completed">(FC)</small>
-        </div>
-        <div ng-if="humanReadable" class="col-sm-2">
-          Produced: <b title="{{submitted.done}}">{{submitted.done | readableNumbers}}</b>
-          <small title="Force completed" style="color:red" ng-if="submitted.force_completed">(FC)</small>
+        <div class="col-sm-2">
+          Expected: <b title="{{submitted.expected}}">{{humanReadable ? (submitted.expected | readableNumbers) : submitted.expected}}</b>
         </div>
         <div class="col-sm-2">
+          Produced: <b title="{{submitted.done}}">{{humanReadable ? (submitted.done | readableNumbers) : submitted.done}}</b>
+          <small title="Force completed" style="color:red" ng-if="submitted.force_completed">(FC)</small>
+        </div>
+        <div class="col-sm-1">
           <div class="progress total-bar" ng-show="submitted.expected > 0">
             <div class="font-shadow progress-bar pmp-orange"
                  ng-class="{'pmp-red': submitted.output_dataset_status == 'INVALID' || submitted.output_dataset_status == 'DELETED',
@@ -77,8 +77,11 @@
           </div>
         </div>
         <div class="col-sm-2">
-          <a ng-if="submitted.output_dataset" ng-href="https://cmsweb.cern.ch/das/request?view=list&limit=50&instance=prod/global&input=dataset={{submitted.output_dataset}}" target="_blank">Dataset in DAS</a><br>
-          <a ng-if="submitted.workflow" ng-href="https://cms-pdmv.cern.ch/stats?workflow_name={{submitted.workflow}}" target="_blank">Workflow in Stats</a>
+          Priority: <b>{{submitted.priority}}</b>
+        </div>
+        <div class="col-sm-1">
+          <a ng-if="submitted.output_dataset" ng-href="https://cmsweb.cern.ch/das/request?view=list&limit=50&instance=prod/global&input=dataset={{submitted.output_dataset}}" target="_blank">Show in DAS</a><br>
+          <a ng-if="submitted.workflow" ng-href="https://cms-pdmv.cern.ch/stats?workflow_name={{submitted.workflow}}" target="_blank">Show in Stats</a>
         </div>
       </div>
     </div>
@@ -109,11 +112,18 @@
             <i ng-if="sortDoneOn == 'done' && sortDoneOrder == -1" class="fa fa-sort-numeric-desc spacing-r sort-selected" title="Click to sort ascending by done events"></i>
           </button>
         </div>
-        <div class="col-sm-2">
+        <div class="col-sm-1">
           <button type="button" class="btn btn-sort m-2" ng-click="changeDoneSort('percentage')">
             <i ng-if="sortDoneOn != 'percentage'" class="fa fa-sort-numeric-asc spacing-r" title="Click to sort ascending by progress"></i>
             <i ng-if="sortDoneOn == 'percentage' && sortDoneOrder == 1" class="fa fa-sort-numeric-asc spacing-r sort-selected" title="Click to sort descending by progress"></i>
             <i ng-if="sortDoneOn == 'percentage' && sortDoneOrder == -1" class="fa fa-sort-numeric-desc spacing-r sort-selected" title="Click to sort ascending by progress"></i>
+          </button>
+        </div>
+        <div class="col-sm-2">
+          <button type="button" class="btn btn-sort m-2" ng-click="changeDoneSort('priority')">
+            <i ng-if="sortDoneOn != 'priority'" class="fa fa-sort-numeric-asc spacing-r" title="Click to sort ascending by priority"></i>
+            <i ng-if="sortDoneOn == 'priority' && sortDoneOrder == 1" class="fa fa-sort-numeric-asc spacing-r sort-selected" title="Click to sort descending by priority"></i>
+            <i ng-if="sortDoneOn == 'priority' && sortDoneOrder == -1" class="fa fa-sort-numeric-desc spacing-r sort-selected" title="Click to sort ascending by priority"></i>
           </button>
         </div>
       </div>
@@ -123,21 +133,14 @@
           <br><small>{{done.dataset}}</small>
           <small title="Number of events estimated from {{done.estimated_from}}" style="color:red" ng-if="done.estimated_from"><br>(Estimate from {{done.estimated_from}})</small>
         </div>
-        <div ng-if="!humanReadable" class="col-sm-2">
-          Expected: <b>{{done.expected}}</b>
-        </div>
-        <div ng-if="humanReadable" class="col-sm-2">
-          Expected: <b title="{{done.expected}}">{{done.expected | readableNumbers}}</b>
-        </div>
-        <div ng-if="!humanReadable" class="col-sm-2">
-          Done: <b>{{done.done}}</b>
-          <small title="Force completed" style="color:red" ng-if="done.force_completed">(FC)</small>
-        </div>
-        <div ng-if="humanReadable" class="col-sm-2">
-          Done: <b title="{{done.done}}">{{done.done | readableNumbers}}</b>
-          <small title="Force completed" style="color:red" ng-if="done.force_completed">(FC)</small>
+        <div class="col-sm-2">
+          Expected: <b title="{{done.expected}}">{{humanReadable ? (done.expected | readableNumbers) : done.expected}}</b>
         </div>
         <div class="col-sm-2">
+          Done: <b title="{{done.done}}">{{humanReadable ? (done.done | readableNumbers) : done.done}}</b>
+          <small title="Force completed" style="color:red" ng-if="done.force_completed">(FC)</small>
+        </div>
+        <div class="col-sm-1">
           <div class="progress total-bar" ng-show="done.expected > 0">
             <div class="font-shadow progress-bar pmp-blue"
                  ng-class="{'pmp-red': done.output_dataset_status == 'INVALID' || done.output_dataset_status == 'DELETED',
@@ -155,8 +158,11 @@
           </div>
         </div>
         <div class="col-sm-2">
-          <a ng-if="done.output_dataset" ng-href="https://cmsweb.cern.ch/das/request?view=list&limit=50&instance=prod/global&input=dataset={{done.output_dataset}}" target="_blank">Dataset in DAS</a><br>
-          <a ng-if="done.workflow" ng-href="https://cms-pdmv.cern.ch/stats?workflow_name={{done.workflow}}" target="_blank">Workflow in Stats</a>
+          Priority: <b>{{done.priority}}</b>
+        </div>
+        <div class="col-sm-1">
+          <a ng-if="done.output_dataset" ng-href="https://cmsweb.cern.ch/das/request?view=list&limit=50&instance=prod/global&input=dataset={{done.output_dataset}}" target="_blank">Show in DAS</a><br>
+          <a ng-if="done.workflow" ng-href="https://cms-pdmv.cern.ch/stats?workflow_name={{done.workflow}}" target="_blank">Show in Stats</a>
         </div>
       </div>
     </div>

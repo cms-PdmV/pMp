@@ -12,11 +12,11 @@
             // graph configuration
             config = {
                 customWidth: 1160,
-                customHeight: 500,
+                customHeight: 510,
                 margin: {
                     top: 40,
                     right: 10,
-                    bottom: 50,
+                    bottom: 55,
                     left: 80
                 }
             };
