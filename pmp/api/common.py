@@ -359,7 +359,7 @@ class APIBase(esadapter.InitConnection):
                 result = ('cmssw_version:%s' % (query), 'relval_requests')
 
             elif self.is_instance(query, 'relval_campaigns', 'relval_campaign'):
-                result = ('member_of_campaign:s' % (query), 'relval_requests')
+                result = ('member_of_campaign:%s' % (query), 'relval_requests')
 
             else:
                 result = (None, None)
