@@ -250,7 +250,7 @@ def save(object_id, data, cfg):
     try:
         response, status = Utils.curl('POST', '%s%s' % (cfg.pmp_type, object_id), data)
         if status in [200, 201]:
-            logging.info('New record %s (%s)' % (object_id, cfg.pmp_type.split('/')[-2]))
+            logging.info('Saved %s (%s)' % (object_id, cfg.pmp_type.split('/')[-2]))
         else:
             logging.error('Failed to update %s. Reason %s.' % (object_id, response))
     except Exception as ex:
@@ -523,6 +523,13 @@ if __name__ == "__main__":
                             process_request_tags(data['ppd_tags'], ppd_tags_cfg)
                         else:
                             data['ppd_tags'] = []
+
+                        if 'interested_pwg' in data:
+                            interested_pwg = [x.strip().upper() for x in data.get('interested_pwg', []) if x.strip()]
+                            interested_pwg = sorted(list(set(interested_pwg)))
+                            data['interested_pwg'] = interested_pwg
+                        else:
+                            data['interested_pwg'] = [data['prepid'].split('-')[0]]
 
                         if data.get('dataset_name'):
                             save(data['dataset_name'], {'prepid': data['dataset_name']}, dataset_cfg)

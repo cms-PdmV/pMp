@@ -9,7 +9,8 @@ angular.module('pmpApp').service('Data', ['$rootScope', function ($rootScope) {
         inputTags = [], // query elements
         priorityFilter = [undefined, undefined], // array of min and max values of priority
         statusFilter = [], // array of enabled statuses
-        pwgFilter = []; // array of enabled PWGs
+        pwgFilter = [], // array of enabled PWGs
+        interestedPWGFilter = []; // array of enabled interested PWGs
 
     /**
      * @description Tests whether all items in a {key:boolean} object are true
@@ -124,6 +125,20 @@ angular.module('pmpApp').service('Data', ['$rootScope', function ($rootScope) {
             this.pwgFilter = i;
         },
         /**
+         * @description Interested PWG filter getter.
+         * @return {Object} PWG filter object in a form {pwg_name:{boolean}}.
+         */
+        getInterestedPWGFilter: function () {
+            return this.interestedPWGFilter;
+        },
+        /**
+         * @description Interested PWG filter setter.
+         * @params {Object} i the PWG filter object in a form {pwg_name:{boolean}}.
+         */
+        setInterestedPWGFilter: function (i) {
+            this.interestedPWGFilter = i;
+        },
+        /**
          * @description Status filter getter.
          * @return {Object} Status filter object in a form {status_name:{boolean}}.
          */
@@ -145,17 +160,18 @@ angular.module('pmpApp').service('Data', ['$rootScope', function ($rootScope) {
             return allEnabled(this.pwgFilter);
         },
         /**
+         * @description Test whether all interested PWGs are enabled
+         * @return {Boolean} True if all interested PWGs are enabled, false otherwise
+         */
+        allInterestedPWGsEnabled: function () {
+            return allEnabled(this.interestedPWGFilter);
+        },
+        /**
          * @description Test whether all statuses are enabled
          * @return {Boolean} True iff all statuses are enabled
          */
         allStatusesEnabled: function () {
             return allEnabled(this.statusFilter);
-        },
-        allPWGsDisabled: function() {
-            return allDisabled(this.pwgFilter);
-        },
-        allStatusesDisabled: function() {
-            return allDisabled(this.statusFilter);
         },
         getPriorityQuery: function () {
             var dataPriorityFilter = this.getPriorityFilter();
@@ -179,6 +195,21 @@ angular.module('pmpApp').service('Data', ['$rootScope', function ($rootScope) {
             }
             return w.join(',');
         },
+        getInterestedPWGQuery: function (alwaysReturnQuery) {
+            var filter = this.getInterestedPWGFilter();
+            if (this.allInterestedPWGsEnabled()) {
+                if (!alwaysReturnQuery || Object.keys(filter).length == 0) {
+                    return undefined;
+                }
+            }
+            var w = [];
+            for (var interested_pwg in filter) {
+                if (filter[interested_pwg]) {
+                    w.push(interested_pwg);
+                }
+            }
+            return w.join(',');
+        },
         getStatusQuery: function(alwaysReturnQuery) {
             // add status filter
             var filter = this.getStatusFilter();
@@ -196,35 +227,6 @@ angular.module('pmpApp').service('Data', ['$rootScope', function ($rootScope) {
             return s.join(',');
         },
         /**
-         * @description Change filter object, status or pwg.
-         * @params {Array} data the loaded data array.
-         * @params {Boolean} reset the cleaning filter switch.
-         * @params {Boolean} value the default boolean assigned to new keys.
-         * @params {Boolean} isStatusFilter if true change status filter, otherwise change pwg.
-         */
-
-        /**
-         * @description When removing data, reload filters.
-         * @params {Array} data the loaded data array.
-         */
-        reloadFilters: function (data) {
-            var iter, newStatus = {},
-                newPWG = {};
-            for (var i = 0; i < data.length; i++) {
-                iter = data[i].status;
-                if (newStatus[iter] === undefined) {
-                    newStatus[iter] = this.statusFilter[iter];
-                }
-                iter = data[i].pwg;
-                if (newPWG[iter] === undefined) {
-                    newPWG[iter] = this.pwgFilter[iter];
-                }
-            }
-            this.setStatusFilter(newStatus);
-            this.setPWGFilter(newPWG);
-            this.setLoadedData(data);
-        },
-        /**
          * @description Resets data objects shared in this service.
          * @params {Boolean} resetFilters the reset filters marker.
          */
@@ -235,6 +237,7 @@ angular.module('pmpApp').service('Data', ['$rootScope', function ($rootScope) {
                 this.priorityFilter = [];
                 this.statusFilter = {};
                 this.pwgFilter = {};
+                this.interestedPWGFilter = {};
             }
         }
     };

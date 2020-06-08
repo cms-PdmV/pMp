@@ -57,6 +57,7 @@ class PresentAPI(APIBase):
                 response_list.append({'member_of_campaign': mcm_document['member_of_campaign'],
                                       'prepid': mcm_document['prepid'],
                                       'pwg': mcm_document['pwg'],
+                                      'interested_pwg': mcm_document['interested_pwg'],
                                       'status': mcm_document['status'],
                                       'priority': mcm_document['priority'],
                                       'member_of_chain': mcm_document.get('member_of_chain', []),
@@ -78,20 +79,22 @@ class PresentAPI(APIBase):
 
         return response_list, valid_tags, invalid_tags, messages
 
-    def get(self, query, estimate_completed_events=False, priority_filter=None, pwg_filter=None, status_filter=None):
+    def get(self, query, estimate_completed_events=False, priority_filter=None, pwg_filter=None, interested_pwg_filter=None, status_filter=None):
 
         """
         Get the historical data based on query, data point count, priority and filter
         """
         start_time = time.time()
-        logging.info('query=%s (%s) | priority_filter=%s (%s) | pwg_filter=%s (%s) | status_filter=%s (%s)' % (query,
-                                                                                                               type(query),
-                                                                                                               priority_filter,
-                                                                                                               type(priority_filter),
-                                                                                                               pwg_filter,
-                                                                                                               type(pwg_filter),
-                                                                                                               status_filter,
-                                                                                                               type(status_filter)))
+        logging.info('%s (%s) | %s (%s) | %s (%s) | %s (%s) | %s (%s)' % (query,
+                                                                          type(query),
+                                                                          priority_filter,
+                                                                          type(priority_filter),
+                                                                          pwg_filter,
+                                                                          type(pwg_filter),
+                                                                          interested_pwg_filter,
+                                                                          type(interested_pwg_filter),
+                                                                          status_filter,
+                                                                          type(status_filter)))
 
         cache_key = 'present_%s_____%s' % (query, estimate_completed_events)
         if self.__cache.has(cache_key):
@@ -104,11 +107,12 @@ class PresentAPI(APIBase):
 
         response, valid_tags, invalid_tags, messages = response_tuple
         # Apply priority, PWG and status filters
-        response, pwgs, statuses = self.apply_filters(response, priority_filter, pwg_filter, status_filter)
+        response, pwgs, interested_pwgs, statuses = self.apply_filters(response, priority_filter, pwg_filter, interested_pwg_filter, status_filter)
         res = {'data': response,
                'valid_tags': valid_tags,
                'invalid_tags': invalid_tags,
                'pwg': pwgs,
+               'interested_pwg': interested_pwgs,
                'status': statuses,
                'messages': messages}
         end_time = time.time()

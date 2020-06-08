@@ -26,6 +26,7 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
             priority: undefined, // priority filter
             status: undefined, // status filter
             pwg: undefined, // PWG filter
+            interested_pwg: undefined, // Interested PWG filter
         };
 
         /**
@@ -80,6 +81,15 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
                 Data.setPWGFilter(w);
             }
 
+            if (urlParameters.interested_pwg !== undefined) {
+                var w = {}
+                var tmp = urlParameters.interested_pwg.split(',');
+                for (var i = 0; i < tmp.length; i++) {
+                    w[tmp[i]] = true;
+                }
+                Data.setInterestedPWGFilter(w);
+            }
+
              // load graph data
             if (urlParameters.r !== '') {
                 Data.setInputTags(urlParameters.r.split(','));
@@ -123,6 +133,7 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
                 Data.setLoadedData([]);
                 Data.setStatusFilter({});
                 Data.setPWGFilter({});
+                Data.setInterestedPWGFilter({});
                 $scope.data = Data.getLoadedData();
                 $scope.setURL($scope, Data);
                 $scope.$broadcast('onChangeNotification:LoadedData');
@@ -135,6 +146,7 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
             var priorityQuery = Data.getPriorityQuery();
             var statusQuery = Data.getStatusQuery($scope.firstLoad);
             var pwgQuery = Data.getPWGQuery($scope.firstLoad);
+            var interestedPWGQuery = Data.getInterestedPWGQuery($scope.firstLoad);
             $scope.firstLoad = false;
             var queryUrl = 'api/performance?r=' + inputTags.slice().sort().join(',');
             if (priorityQuery !== undefined) {
@@ -145,6 +157,9 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
             }
             if (pwgQuery !== undefined) {
                 queryUrl += '&pwg=' + pwgQuery;
+            }
+            if (interestedPWGQuery !== undefined) {
+                queryUrl += '&interested_pwg=' + interestedPWGQuery;
             }
             var promise = $http.get(queryUrl);
             promise.then(function (data) {
@@ -160,6 +175,7 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
                     Data.setLoadedData(data.data.results.data, false);
                     Data.setStatusFilter(data.data.results.status);
                     Data.setPWGFilter(data.data.results.pwg);
+                    Data.setInterestedPWGFilter(data.data.results.interested_pwg);
                     Data.setValidTags(data.data.results.valid_tags);
                     $scope.availableStatuses = data.data.results.all_statuses_in_history.slice()
                     if ($scope.availableStatuses.length == 0) {
@@ -186,6 +202,7 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
                 Data.setLoadedData([]);
                 Data.setStatusFilter({});
                 Data.setPWGFilter({});
+                Data.setInterestedPWGFilter({});
                 $scope.data = Data.getLoadedData();
                 $scope.showPopUp('error', 'Error loading requests');
                 $scope.loadingData = false;

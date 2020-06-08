@@ -137,6 +137,7 @@ class HistoricalAPI(APIBase):
 
                 response['request'] = mcm_document['prepid']
                 response['pwg'] = mcm_document['pwg']
+                response['interested_pwg'] = mcm_document['interested_pwg']
                 response['priority'] = mcm_document['priority']
                 response['status'] = mcm_document['status']
                 response['force_completed'] = mcm_document['force_completed']
@@ -274,21 +275,23 @@ class HistoricalAPI(APIBase):
         new_data = sorted(new_data, key=lambda k: k['prepid'])
         return new_data
 
-    def get(self, query, data_point_count=250, estimate_completed_events=False, priority_filter=None, pwg_filter=None, status_filter=None):
+    def get(self, query, data_point_count=250, estimate_completed_events=False, priority_filter=None, pwg_filter=None, interested_pwg_filter=None, status_filter=None):
         """
         Get the historical data based on query, data point count, priority and filter
         """
         start_time = time.time()
-        logging.info('%s (%s) | %s (%s) | %s (%s) | %s (%s) | %s (%s)' % (query,
-                                                                         type(query),
-                                                                         data_point_count,
-                                                                         type(data_point_count),
-                                                                         priority_filter,
-                                                                         type(priority_filter),
-                                                                         pwg_filter,
-                                                                         type(pwg_filter),
-                                                                         status_filter,
-                                                                         type(status_filter)))
+        logging.info('%s (%s) | %s (%s) | %s (%s) | %s (%s) | %s (%s) | %s (%s)' % (query,
+                                                                                    type(query),
+                                                                                    data_point_count,
+                                                                                    type(data_point_count),
+                                                                                    priority_filter,
+                                                                                    type(priority_filter),
+                                                                                    pwg_filter,
+                                                                                    type(pwg_filter),
+                                                                                    interested_pwg_filter,
+                                                                                    type(interested_pwg_filter),
+                                                                                    status_filter,
+                                                                                    type(status_filter)))
 
         cache_key = 'present_%s_____%s' % (query, estimate_completed_events)
         if self.__cache.has(cache_key):
@@ -301,7 +304,7 @@ class HistoricalAPI(APIBase):
 
         response, valid_tags, invalid_tags, messages = response_tuple
         # Apply priority, PWG and status filters
-        response, pwgs, statuses = self.apply_filters(response, priority_filter, pwg_filter, status_filter)
+        response, pwgs, interested_pwgs, statuses = self.apply_filters(response, priority_filter, pwg_filter, interested_pwg_filter, status_filter)
         # Get submitted and done requests separately
         submitted_requests = self.get_with_status(response, 'submitted')
         done_requests = self.get_with_status(response, 'done')
@@ -322,6 +325,7 @@ class HistoricalAPI(APIBase):
                'valid_tags': valid_tags,
                'invalid_tags': invalid_tags,
                'pwg': pwgs,
+               'interested_pwg': interested_pwgs,
                'status': statuses,
                'submitted_requests': submitted_requests,
                'done_requests': done_requests,
