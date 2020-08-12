@@ -167,6 +167,11 @@ angular.module('pmpApp').controller('MainController', ['$http', '$location',
                     if (pwgQuery !== undefined) {
                         params.pwg = pwgQuery;
                     }
+                } else if (param === 'interested_pwg') {
+                    var interestedPwgQuery = data.getInterestedPWGQuery();
+                    if (interestedPwgQuery !== undefined) {
+                        params.interested_pwg = interestedPwgQuery;
+                    }
                 } else if ( param === 'status') {
                     var statusQuery = data.getStatusQuery();
                     if (statusQuery !== undefined) {
@@ -186,7 +191,7 @@ angular.module('pmpApp').controller('MainController', ['$http', '$location',
             $location.search(params).replace();
             $scope.$broadcast('onChangeNotification:URL');
             var urlQuery = ''
-            var keys = ['r', 'pwg', 'status', 'priority']
+            var keys = ['r', 'pwg', 'interested_pwg', 'status', 'priority']
             keys.forEach(function (param) {
                 if (param in params) {
                     if (urlQuery.length == 0) {

@@ -31,7 +31,10 @@ angular.module('pmpApp').controller('FilterController', ['$rootScope', '$scope',
             };
             $scope.priorityFilter = Data.getPriorityFilter();
             $scope.statusFilter = Data.getStatusFilter();
+            $scope.interestedPWGFilter = Data.getInterestedPWGFilter();
             $scope.pwgFilter = Data.getPWGFilter();
+            $scope.interestedPWGFilterKeys = Object.keys($scope.interestedPWGFilter || {}).sort();
+            $scope.pwgFilterKeys = Object.keys($scope.pwgFilter || {}).sort();
         };
 
         /**
@@ -52,7 +55,10 @@ angular.module('pmpApp').controller('FilterController', ['$rootScope', '$scope',
         $scope.$on('onChangeNotification:LoadedData', function (event, data) {
             $scope.priorityFilter = Data.getPriorityFilter();
             $scope.pwgFilter = Data.getPWGFilter();
+            $scope.interestedPWGFilter = Data.getInterestedPWGFilter();
             $scope.statusFilter = Data.getStatusFilter();
+            $scope.interestedPWGFilterKeys = Object.keys($scope.interestedPWGFilter || {}).sort();
+            $scope.pwgFilterKeys = Object.keys($scope.pwgFilter || {}).sort();
         });
     }
 ]);

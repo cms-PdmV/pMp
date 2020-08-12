@@ -75,7 +75,7 @@
         <b>PWG FILTER</b>
         <div class="input-group mt-2" style="width: 100%;">
           <form class="input-group" style="width: 100%;">
-            <div class="col-lg-4 col-md-4 col-sm-2 col-xs-4" ng-repeat="(key, _) in pwgFilter">
+            <div class="col-lg-4 col-md-4 col-sm-2 col-xs-4" ng-repeat="key in pwgFilterKeys">
               <label class="checkbox-inline">
                 <input type="checkbox" ng-change="applyFilterChanges(page.id == 2)" ng-disabled="loadingData" ng-model="pwgFilter[key]">{{key}}
               </label>
@@ -85,6 +85,26 @@
             <div style="display: inline-block;">
               <button class="btn btn-primary btn-xs" style="min-width: 100px" ng-click="setAllFilterValues(pwgFilter, true, page.id == 2)">Select All</button>
               <button class="btn btn-primary btn-xs" style="min-width: 100px" ng-click="setAllFilterValues(pwgFilter, false, page.id == 2)">Select None</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-xs-12">
+        <hr class="line mt-2 mb-3"/>
+        <b>INTERESTED PWG FILTER</b>
+        <div class="input-group mt-2" style="width: 100%;">
+          <form class="input-group" style="width: 100%;">
+            <div class="col-lg-4 col-md-4 col-sm-2 col-xs-4" ng-repeat="key in interestedPWGFilterKeys">
+              <label class="checkbox-inline">
+                <input type="checkbox" ng-change="applyFilterChanges(page.id == 2)" ng-disabled="loadingData" ng-model="interestedPWGFilter[key]">{{key}}
+              </label>
+            </div>
+          </form>
+          <div class="text-center mt-3" style="width: 100%; padding-left: 15px; padding-right: 15px;">
+            <div style="display: inline-block;">
+              <button class="btn btn-primary btn-xs" style="min-width: 100px" ng-click="setAllFilterValues(interestedPWGFilter, true, page.id == 2)">Select All</button>
+              <button class="btn btn-primary btn-xs" style="min-width: 100px" ng-click="setAllFilterValues(interestedPWGFilter, false, page.id == 2)">Select None</button>
             </div>
           </div>
         </div>

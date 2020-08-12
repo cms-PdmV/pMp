@@ -563,7 +563,7 @@ class APIBase(esadapter.InitConnection):
 
         logging.info('Got %s workflows' % (found))
 
-    def apply_filters(self, data, priority_filter, pwg_filter, status_filter):
+    def apply_filters(self, data, priority_filter, pwg_filter, interested_pwg_filter, status_filter):
         """
         Priority filter is an array of min and max priorities
         PWG filter is list of strings (pwg) of requests to include
@@ -576,10 +576,14 @@ class APIBase(esadapter.InitConnection):
         if pwg_filter is not None:
             pwg_filter = [x.upper() for x in pwg_filter if x]
 
+        if interested_pwg_filter is not None:
+            interested_pwg_filter = [x.upper() for x in interested_pwg_filter if x]
+
         if status_filter is not None:
             status_filter = [x.lower() for x in status_filter if x]
 
         all_pwgs = {}
+        all_interested_pwgs = {}
         all_statuses = {}
         for item in data:
             pwg = item.get('pwg', '').upper()
@@ -588,6 +592,14 @@ class APIBase(esadapter.InitConnection):
                     all_pwgs[pwg] = pwg in pwg_filter
                 else:
                     all_pwgs[pwg] = True
+
+            interested_pwgs = set(item.get('interested_pwg', []))
+            for interested_pwg in interested_pwgs:
+                if interested_pwg not in all_interested_pwgs:
+                    if interested_pwg_filter is not None:
+                        all_interested_pwgs[interested_pwg] = interested_pwg in interested_pwg_filter
+                    else:
+                        all_interested_pwgs[interested_pwg] = True
 
             status = item.get('status', '').lower()
             if status not in all_statuses:
@@ -612,7 +624,13 @@ class APIBase(esadapter.InitConnection):
                         continue
 
             if all_pwgs[pwg] and all_statuses[status]:
-                new_data.append(item)
+                if interested_pwg_filter is None:
+                    new_data.append(item)
+                else:
+                    for interested_pwg in interested_pwgs:
+                        if all_interested_pwgs[interested_pwg]:
+                            new_data.append(item)
+                            break
 
         logging.info('Requests after filtering %s' % (len(new_data)))
-        return new_data, all_pwgs, all_statuses
+        return new_data, all_pwgs, all_interested_pwgs, all_statuses

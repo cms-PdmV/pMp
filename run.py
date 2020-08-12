@@ -129,6 +129,10 @@ def api_historical():
     if pwg is not None:
         pwg = pwg.split(',')
 
+    interested_pwg = flask.request.args.get('interested_pwg', None)
+    if interested_pwg is not None:
+        interested_pwg = interested_pwg.split(',')
+
     status = flask.request.args.get('status', None)
     if status is not None:
         status = status.split(',')
@@ -141,6 +145,7 @@ def api_historical():
                                  estimate_completed_events=estimate_completed_events,
                                  priority_filter=priority,
                                  pwg_filter=pwg,
+                                 interested_pwg_filter=interested_pwg,
                                  status_filter=status)
 
     return result
@@ -165,6 +170,10 @@ def api_performance():
     if pwg is not None:
         pwg = pwg.split(',')
 
+    interested_pwg = flask.request.args.get('interested_pwg', None)
+    if interested_pwg is not None:
+        interested_pwg = interested_pwg.split(',')
+
     status = flask.request.args.get('status', None)
     if status is not None:
         status = status.split(',')
@@ -173,6 +182,7 @@ def api_performance():
     result = PerformanceAPI().get(i,
                                  priority_filter=priority,
                                  pwg_filter=pwg,
+                                 interested_pwg_filter=interested_pwg,
                                  status_filter=status)
 
     return result
@@ -197,6 +207,10 @@ def api_present():
     if pwg is not None:
         pwg = pwg.split(',')
 
+    interested_pwg = flask.request.args.get('interested_pwg', None)
+    if interested_pwg is not None:
+        interested_pwg = interested_pwg.split(',')
+
     status = flask.request.args.get('status', None)
     if status is not None:
         status = status.split(',')
@@ -208,6 +222,7 @@ def api_present():
                               estimate_completed_events=estimate_completed_events,
                               priority_filter=priority,
                               pwg_filter=pwg,
+                              interested_pwg_filter=interested_pwg,
                               status_filter=status)
 
     return result
