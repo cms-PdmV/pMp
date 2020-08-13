@@ -329,6 +329,7 @@ def create_rereco_request(stats_doc, rereco_cfg, process_string_cfg, rereco_camp
     """
     fake_request = create_fake_request(stats_doc, rereco_cfg)
     fake_request['pwg'] = 'ReReco'
+    fake_request['interested_pwg'] = 'ReReco'
     campaign = fake_request.get('member_of_campaign', None)
     if campaign:
         save(campaign, {'prepid': campaign}, rereco_campaigns_cfg)
@@ -348,6 +349,7 @@ def create_relval_request(stats_doc, relval_cfg, relval_cmssw_cfg, relval_campai
     """
     fake_request = create_fake_request(stats_doc, relval_cfg)
     fake_request['pwg'] = 'RelVal'
+    fake_request['interested_pwg'] = 'RelVal'
     campaign = fake_request.get('member_of_campaign', None)
     if campaign:
         save(campaign, {'prepid': campaign}, relval_campaigns_cfg)
