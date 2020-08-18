@@ -50,7 +50,7 @@
         <div class="col-sm-4">
           <a ng-href="{{submitted.url}}" target="_blank">{{submitted.prepid}}</a>
           <br><small>{{submitted.dataset}}</small>
-          <small title="Number of events estimated from {{submitted.estimated_from}}" style="color:red" ng-if="submitted.estimated_from"><br>(Estimate from {{submitted.estimated_from}})</small>
+          <small title="Number of events estimated from {{submitted.estimate_from}}" style="color:red" ng-if="submitted.estimate_from"><br>(Estimate from {{submitted.estimate_from}})</small>
         </div>
         <div class="col-sm-2">
           Expected: <b title="{{submitted.expected}}">{{humanReadable ? (submitted.expected | readableNumbers) : submitted.expected}}</b>
@@ -80,7 +80,8 @@
           Priority: <b>{{submitted.priority}}</b>
         </div>
         <div class="col-sm-1">
-          <a ng-if="submitted.output_dataset" ng-href="https://cmsweb.cern.ch/das/request?view=list&limit=50&instance=prod/global&input=dataset={{submitted.output_dataset}}" target="_blank">Show in DAS</a><br>
+          <a ng-if="submitted.output_dataset" ng-href="https://cmsweb.cern.ch/das/request?view=list&limit=50&instance=prod/global&input=dataset={{submitted.output_dataset}}" target="_blank">Show in DAS<br></a>
+          <span ng-if="!submitted.output_dataset">No output<br></span>
           <a ng-if="submitted.workflow" ng-href="https://cms-pdmv.cern.ch/stats?workflow_name={{submitted.workflow}}" target="_blank">Show in Stats</a>
         </div>
       </div>
@@ -131,7 +132,7 @@
         <div class="col-sm-4">
           <a ng-href="{{done.url}}" target="_blank">{{done.prepid}}</a>
           <br><small>{{done.dataset}}</small>
-          <small title="Number of events estimated from {{done.estimated_from}}" style="color:red" ng-if="done.estimated_from"><br>(Estimate from {{done.estimated_from}})</small>
+          <small title="Number of events estimated from {{done.estimate_from}}" style="color:red" ng-if="done.estimate_from"><br>(Estimate from {{done.estimate_from}})</small>
         </div>
         <div class="col-sm-2">
           Expected: <b title="{{done.expected}}">{{humanReadable ? (done.expected | readableNumbers) : done.expected}}</b>
@@ -161,7 +162,8 @@
           Priority: <b>{{done.priority}}</b>
         </div>
         <div class="col-sm-1">
-          <a ng-if="done.output_dataset" ng-href="https://cmsweb.cern.ch/das/request?view=list&limit=50&instance=prod/global&input=dataset={{done.output_dataset}}" target="_blank">Show in DAS</a><br>
+          <a ng-if="done.output_dataset" ng-href="https://cmsweb.cern.ch/das/request?view=list&limit=50&instance=prod/global&input=dataset={{done.output_dataset}}" target="_blank">Show in DAS<br></a>
+          <span ng-if="!done.output_dataset">No output<br></span>
           <a ng-if="done.workflow" ng-href="https://cms-pdmv.cern.ch/stats?workflow_name={{done.workflow}}" target="_blank">Show in Stats</a>
         </div>
       </div>

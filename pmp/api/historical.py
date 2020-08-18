@@ -149,10 +149,12 @@ class HistoricalAPI(APIBase):
                     response['estimate_from'] = mcm_document['estimate_from']
 
                 # Check if there is a document from stats (i.e. the workflow was found)
-                if stats_document is not None and mcm_document['output_dataset']:
+                if stats_document is not None:
                     # logging.info('Workflow name %s' % (stats_document['request_name']))
+                    if stats_document.get('request_name'):
+                        response['reqmgr_name'] = [stats_document['request_name']]
 
-                    if 'event_number_history' in stats_document:
+                    if mcm_document['output_dataset'] and 'event_number_history' in stats_document:
                         for history_record in stats_document['event_number_history']:
                             if history_record['dataset'] != mcm_document['output_dataset']:
                                 continue
@@ -259,7 +261,7 @@ class HistoricalAPI(APIBase):
 
             workflow_name = ''
             if len(request.get('reqmgr_name', [])) > 0:
-                workflow_name = request['reqmgr_name'][0]
+                workflow_name = request['reqmgr_name'][-1]
 
             new_data.append({'prepid': request['request'],
                              'priority': request['priority'],
