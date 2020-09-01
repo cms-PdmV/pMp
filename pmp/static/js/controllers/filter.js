@@ -22,12 +22,13 @@ angular.module('pmpApp').controller('FilterController', ['$rootScope', '$scope',
          */
         $scope.initFilter = function () {
             $scope.priorityPerBlock = {
-                1: 110000,
-                2: 90000,
-                3: 85000,
-                4: 80000,
-                5: 70000,
-                6: 63000
+                // 'Block 0': 130000,
+                'Block 1': 110000,
+                'Block 2': 90000,
+                'Block 3': 85000,
+                'Block 4': 80000,
+                'Block 5': 70000,
+                'Block 6': 63000,
             };
             $scope.priorityFilter = Data.getPriorityFilter();
             $scope.statusFilter = Data.getStatusFilter();

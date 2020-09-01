@@ -191,7 +191,7 @@
                     }
                     return 0;
                 }
-                var knownKeys = ['new', 'validation', 'defined', 'approved', 'submitted', 'done']
+                var knownKeys = ['new', 'validation', 'defined', 'approved', 'submitted', 'done'];
                 if (knownKeys.includes(aKey) && knownKeys.includes(bKey)) {
                     return knownKeys.indexOf(aKey) - knownKeys.indexOf(bKey);
                 }

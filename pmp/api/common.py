@@ -620,7 +620,7 @@ class APIBase(esadapter.InitConnection):
                     if lower_priority is not None and priority < lower_priority:
                         continue
 
-                    if upper_priority is not None and priority > upper_priority:
+                    if upper_priority is not None and priority >= upper_priority:
                         continue
 
             if all_pwgs[pwg] and all_statuses[status]:
