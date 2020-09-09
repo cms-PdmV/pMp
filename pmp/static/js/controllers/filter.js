@@ -22,7 +22,7 @@ angular.module('pmpApp').controller('FilterController', ['$rootScope', '$scope',
          */
         $scope.initFilter = function () {
             $scope.priorityPerBlock = {
-                // 'Block 0': 130000,
+                'Block 0': 130000,
                 'Block 1': 110000,
                 'Block 2': 90000,
                 'Block 3': 85000,

@@ -217,7 +217,9 @@ angular.module('pmpApp').controller('PresentController', ['$http',
                         } else {
                             entry.url = 'https://cmsweb.cern.ch/reqmgr2/fetch?rid=' + entry.workflow
                         }
-                        if (entry.priority >= 110000) {
+                        if (entry.priority >= 130000) {
+                            entry.priority_block = 'Block 0';
+                        } else if (entry.priority >= 110000) {
                             entry.priority_block = 'Block 1';
                         } else if (entry.priority >= 90000) {
                             entry.priority_block = 'Block 2';
@@ -227,8 +229,10 @@ angular.module('pmpApp').controller('PresentController', ['$http',
                             entry.priority_block = 'Block 4';
                         } else if (entry.priority >= 70000) {
                             entry.priority_block = 'Block 5';
-                        } else {
+                        } else if (entry.priority >= 63000) {
                             entry.priority_block = 'Block 6';
+                        } else {
+                            entry.priority_block = 'Block 7';
                         }
                     });
                     Data.setLoadedData(data.data.results.data, false);
