@@ -204,6 +204,9 @@ class HistoricalAPI(APIBase):
                 valid_tags.append(one)
                 if self.is_instance(one, 'mcm_datatiers', 'mcm_datatier'):
                     messages.append('Note: results for %s include only submitted requests' % (one))
+
+                if one == 'submitted':
+                    messages.append('Note: this picks only the last submitted request in each chained request. This does NOT show ALL submitted requests in the system')
             else:
                 invalid_tags.append(one)
 

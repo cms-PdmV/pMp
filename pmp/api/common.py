@@ -303,10 +303,7 @@ class APIBase(esadapter.InitConnection):
             # This is done to avoid things like *-*-*
             return None, None
 
-        if query.lower() in ('new', 'validation', 'defined', 'approved', 'submitted'):
-            # Search for MC requests by their status
-            result = ('status:%s' % (query), 'requests')
-        elif '*' in query:
+        if '*' in query:
             # Wildcard search
             # Lord have mercy on poor pMp
             if self.search(query, 'requests', page_size=1, max_results=1):
@@ -438,19 +435,49 @@ class APIBase(esadapter.InitConnection):
         """
 
         req_arr = []
-        es_query, index = self.parse_query(query)
-        logging.info('Query: %s, index: %s' % (es_query, index))
-        if index is None:
-            logging.info('Returning nothing because index for %s could not be found' % (query))
-            return []
+        if query == 'submitted':
+            index = 'requests'
+            es_query = 'status:submitted'
+            requests = {x['prepid']: x for x in self.search(es_query, index)}
+            chained_reqs = set()
+            logging.info('Found %s submitted requests', len(requests))
+            for _, req in requests.items():
+                chained_reqs.update(req.get('member_of_chain', []))
 
-        if index == 'chained_requests':
-            chained_requests = self.search(es_query, index)
-            for chained_request in chained_requests:
-                es_query, index = ('member_of_chain:%s' % (chained_request.get('prepid')), 'requests')
-                req_arr.extend(self.search(es_query, index))
+            logging.info('Collected %s chained requests from these campaigns', len(chained_reqs))
+            chained_reqs = self.es.mget(index='chained_requests',
+                                        doc_type='chained_request',
+                                        body={'ids': list(chained_reqs)})['docs']
+            logging.info('Feched %s chained requests', len(chained_reqs))
+            added_reqs = set()
+            for chained_req in chained_reqs:
+                chain = chained_req['_source']['chain']
+                for prepid in reversed(chain):
+                    req = requests.get(prepid)
+                    if not req:
+                        continue
+
+                    if prepid not in added_reqs:
+                        req_arr.append(req)
+                        added_reqs.add(prepid)
+
+                    break
+
+            logging.info('Picked %s requests in these chaied requests', len(req_arr))
         else:
-            req_arr = self.search(es_query, index)
+            es_query, index = self.parse_query(query)
+            logging.info('Query: %s, index: %s' % (es_query, index))
+            if index is None:
+                logging.info('Returning nothing because index for %s could not be found' % (query))
+                return []
+
+            if index == 'chained_requests':
+                chained_requests = self.search(es_query, index)
+                for chained_request in chained_requests:
+                    es_query, index = ('member_of_chain:%s' % (chained_request.get('prepid')), 'requests')
+                    req_arr.extend(self.search(es_query, index))
+            else:
+                req_arr = self.search(es_query, index)
 
         if index == 'requests':
             logging.info('Found %d requests for %s' % (len(req_arr), es_query))
@@ -477,10 +504,19 @@ class APIBase(esadapter.InitConnection):
         req_mgr_names_map = {}
         for req in req_arr:
             if req.get('prepid', '') in skip_prepids:
-                logging.info('Skipping %s as it is in skippable prepids list' % (req.get('prepid', '')))
+                logging.info('Skipping %s as it is in skippable prepids list',
+                             req.get('prepid', ''))
                 continue
 
             dataset_list = req.get('output_dataset', [])
+            if dataset_list == None:
+                # For some reason output dataset becomes null
+                refetched = self.es.get_source(index='requests',
+                                               doc_type='request',
+                                               id=req['prepid'])
+                logging.info('Refetched %s because output datasets were null', req['prepid'])
+                dataset_list = refetched.get('output_dataset', [])
+
             if len(dataset_list) > 0:
                 dataset = dataset_list[output_dataset_index]
             else:
