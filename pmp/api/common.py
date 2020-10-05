@@ -303,7 +303,10 @@ class APIBase(esadapter.InitConnection):
             # This is done to avoid things like *-*-*
             return None, None
 
-        if '*' in query:
+        if query.lower() in ('new', 'validation', 'defined', 'approved', 'submitted'):
+            # Search for MC requests by their status
+            result = ('status:%s' % (query), 'requests')
+        elif '*' in query:
             # Wildcard search
             # Lord have mercy on poor pMp
             if self.search(query, 'requests', page_size=1, max_results=1):
