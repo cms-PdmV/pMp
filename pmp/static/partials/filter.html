@@ -55,7 +55,7 @@
         <b>STATUS FILTER</b>
         <div class="input-group mt-2" style="width: 100%;">
           <form class="input-group" style="width: 100%;">
-            <div class="col-lg-4 col-md-4 col-sm-2 col-xs-4" ng-repeat="(key, _) in statusFilter">
+            <div class="col-lg-4 col-md-4 col-sm-2 col-xs-4" ng-repeat="key in statusFilterKeys">
               <label class="checkbox-inline">
                 <input type="checkbox" ng-change="applyFilterChanges(page.id == 2)" ng-disabled="loadingData" ng-model="statusFilter[key]">{{key}}
               </label>
