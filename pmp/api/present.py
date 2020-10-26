@@ -51,8 +51,21 @@ class PresentAPI(APIBase):
                 completed_events = self.number_of_completed_events(stats_document, mcm_document['output_dataset'])
                 seen_prepids.add(mcm_document['prepid'])
                 workflow_name = ''
-                if len(mcm_document.get('reqmgr_name', [])) > 0:
-                    workflow_name = mcm_document['reqmgr_name'][0]
+                workflow_status = 'n/a'
+                if stats_document:
+                    workflow_name = stats_document['request_name']
+                elif len(mcm_document.get('reqmgr_name', [])) > 0:
+                    workflow_name = mcm_document['reqmgr_name'][-1]
+
+                if workflow_name:
+                    reqmgr_status_history = mcm_document.get('reqmgr_status_history', [])
+                    for history_entry in reqmgr_status_history:
+                        if history_entry['name'] == workflow_name:
+                            statuses = history_entry['history']
+                            if statuses:
+                                workflow_status = statuses[-1]
+
+                            break
 
                 response_list.append({'member_of_campaign': mcm_document['member_of_campaign'],
                                       'prepid': mcm_document['prepid'],
@@ -67,7 +80,8 @@ class PresentAPI(APIBase):
                                       'dataset_name': mcm_document.get('dataset_name', ''),
                                       'completed_events': completed_events,
                                       'estimate_from': mcm_document.get('estimate_from'),
-                                      'workflow': workflow_name})
+                                      'workflow': workflow_name,
+                                      'workflow_status': workflow_status})
 
             if found_something:
                 valid_tags.append(one)
@@ -76,6 +90,9 @@ class PresentAPI(APIBase):
 
                 if one == 'submitted':
                     messages.append('Note: this picks only the last submitted request in each chained request. This does NOT show ALL submitted requests in the system')
+                elif one == 'submitted-no-nano':
+                    messages.append('Note: this picks only the last submitted request in each chained request while ignoring NanoAOD requests')
+
             else:
                 invalid_tags.append(one)
                 logging.warning('No data for %s' % (one))

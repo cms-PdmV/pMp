@@ -435,35 +435,43 @@ class APIBase(esadapter.InitConnection):
         """
 
         req_arr = []
-        if query == 'submitted':
+        if query in ('submitted', 'submitted-no-nano', 'submitted-all'):
             index = 'requests'
             es_query = 'status:submitted'
             requests = {x['prepid']: x for x in self.search(es_query, index)}
-            chained_reqs = set()
-            logging.info('Found %s submitted requests', len(requests))
-            for _, req in requests.items():
-                chained_reqs.update(req.get('member_of_chain', []))
+            if query == 'submitted-no-nano':
+                requests = {prepid: request for prepid, request in requests.items() if 'nanoaod' not in prepid.lower()}
+                logging.info('Removed NanoAOD requests')
 
-            logging.info('Collected %s chained requests from these campaigns', len(chained_reqs))
-            chained_reqs = self.es.mget(index='chained_requests',
-                                        doc_type='chained_request',
-                                        body={'ids': list(chained_reqs)})['docs']
-            logging.info('Feched %s chained requests', len(chained_reqs))
-            added_reqs = set()
-            for chained_req in chained_reqs:
-                chain = chained_req['_source']['chain']
-                for prepid in reversed(chain):
-                    req = requests.get(prepid)
-                    if not req:
-                        continue
+            if query in ('submitted', 'submitted-no-nano'):
+                chained_reqs = set()
+                logging.info('Found %s submitted requests', len(requests))
+                for _, req in requests.items():
+                    chained_reqs.update(req.get('member_of_chain', []))
 
-                    if prepid not in added_reqs:
-                        req_arr.append(req)
-                        added_reqs.add(prepid)
+                logging.info('Collected %s chained requests from these campaigns', len(chained_reqs))
+                chained_reqs = self.es.mget(index='chained_requests',
+                                            doc_type='chained_request',
+                                            body={'ids': list(chained_reqs)})['docs']
+                logging.info('Feched %s chained requests', len(chained_reqs))
+                added_reqs = set()
+                for chained_req in chained_reqs:
+                    chain = chained_req['_source']['chain']
+                    for prepid in reversed(chain):
+                        req = requests.get(prepid)
+                        if not req:
+                            continue
 
-                    break
+                        if prepid not in added_reqs:
+                            req_arr.append(req)
+                            added_reqs.add(prepid)
 
-            logging.info('Picked %s requests in these chaied requests', len(req_arr))
+                        break
+
+                logging.info('Picked %s requests in these chaied requests', len(req_arr))
+            else:
+                req_arr = [req for _, req in requests.items()]
+                logging.info('Taking all %s submitted requests', len(req_arr))
         else:
             es_query, index = self.parse_query(query)
             logging.info('Query: %s, index: %s' % (es_query, index))

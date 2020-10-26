@@ -77,6 +77,8 @@ class PerformanceAPI(APIBase):
 
                 if one == 'submitted':
                     messages.append('Note: this picks only the last submitted request in each chained request. This does NOT show ALL submitted requests in the system')
+                elif one == 'submitted-no-nano':
+                    messages.append('Note: this picks only the last submitted request in each chained request while ignoring NanoAOD requests')
             else:
                 invalid_tags.append(one)
 
