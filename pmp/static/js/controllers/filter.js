@@ -30,10 +30,13 @@ angular.module('pmpApp').controller('FilterController', ['$rootScope', '$scope',
                 'Block 5': 70000,
                 'Block 6': 63000,
             };
+            $scope.statusOrder = ['new', 'validation', 'defined', 'approved', 'submitted', 'done'];
+            $scope.statusSort = function(a, b,) { return $scope.statusOrder.indexOf(a) - $scope.statusOrder.indexOf(b);}
             $scope.priorityFilter = Data.getPriorityFilter();
             $scope.statusFilter = Data.getStatusFilter();
             $scope.interestedPWGFilter = Data.getInterestedPWGFilter();
             $scope.pwgFilter = Data.getPWGFilter();
+            $scope.statusFilterKeys = Object.keys($scope.statusFilter || {}).sort($scope.statusSort);
             $scope.interestedPWGFilterKeys = Object.keys($scope.interestedPWGFilter || {}).sort();
             $scope.pwgFilterKeys = Object.keys($scope.pwgFilter || {}).sort();
         };
@@ -60,6 +63,7 @@ angular.module('pmpApp').controller('FilterController', ['$rootScope', '$scope',
             $scope.statusFilter = Data.getStatusFilter();
             $scope.interestedPWGFilterKeys = Object.keys($scope.interestedPWGFilter || {}).sort();
             $scope.pwgFilterKeys = Object.keys($scope.pwgFilter || {}).sort();
+            $scope.statusFilterKeys = Object.keys($scope.statusFilter || {}).sort($scope.statusSort);
         });
     }
 ]);
