@@ -16,7 +16,7 @@ angular.module('pmpApp').controller('MainController', ['$http', '$location',
             $('body').addClass('dev-ribbon');
         }
 
-        const mcRegex = RegExp("^[A-Z]{3}-.*-[0-9]{5}$");
+        const mcRegex = RegExp("^[A-Z0-9]{3}-.*-[0-9]{5}$");
         const rerecoRegex = RegExp("^ReReco-.*-[0-9]{5}$");
         const relvalRegex = RegExp("^CMSSW_.*-[0-9]{5}$");
 
