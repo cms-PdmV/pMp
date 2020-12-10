@@ -16,6 +16,23 @@ angular.module('pmpApp').controller('MainController', ['$http', '$location',
             $('body').addClass('dev-ribbon');
         }
 
+        const mcRegex = RegExp("^[A-Z]{3}-.*-[0-9]{5}$");
+        const rerecoRegex = RegExp("^ReReco-.*-[0-9]{5}$");
+        const relvalRegex = RegExp("^CMSSW_.*-[0-9]{5}$");
+
+        $scope.getUrlForPrepid = function(prepid, workflow) {
+            if (mcRegex.test(prepid)) {
+                return 'https://cms-pdmv.cern.ch/mcm/requests?prepid=' + prepid;
+            }
+            if (rerecoRegex.test(prepid)) {
+                return 'https://cms-pdmv.cern.ch/rereco/requests?prepid=' + prepid;
+            }
+            if (relvalRegex.test(prepid)) {
+                return 'https://cms-pdmv.cern.ch/relval/relvals?prepid=' + prepid;
+            }
+            return 'https://cmsweb.cern.ch/reqmgr2/fetch?rid=' + workflow;
+        };
+
         $http.get("api/lastupdate").then(function (data) {
             $scope.lastUpdateAgo = data.data.results.ago;
             $scope.lastUpdate = data.data.results.date;

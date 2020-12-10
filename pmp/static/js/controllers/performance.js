@@ -166,11 +166,7 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
                 $scope.showPopUp('success', 'Downloaded data. Drawing plot...');
                 setTimeout(function() {
                     data.data.results.data.forEach(function(entry) {
-                        if (entry.prepid.indexOf('ReReco') == -1 && entry.prepid.indexOf('CMSSW') == -1) {
-                            entry.url = 'https://cms-pdmv.cern.ch/mcm/requests?prepid=' + entry.prepid
-                        } else {
-                            entry.url = 'https://cmsweb.cern.ch/reqmgr2/fetch?rid=' + entry.workflow
-                        }
+                        entry.url = $scope.getUrlForPrepid(entry.prepid, entry.workflow);
                     });
                     Data.setLoadedData(data.data.results.data, false);
                     Data.setStatusFilter(data.data.results.status);

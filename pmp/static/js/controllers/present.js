@@ -212,11 +212,7 @@ angular.module('pmpApp').controller('PresentController', ['$http',
                 $scope.showPopUp('success', 'Downloaded data. Drawing plots...');
                 setTimeout(function() {
                     data.data.results.data.forEach(function(entry) {
-                        if (entry.prepid.indexOf('ReReco') == -1 && entry.prepid.indexOf('CMSSW') == -1) {
-                            entry.url = 'https://cms-pdmv.cern.ch/mcm/requests?prepid=' + entry.prepid
-                        } else {
-                            entry.url = 'https://cmsweb.cern.ch/reqmgr2/fetch?rid=' + entry.workflow
-                        }
+                        entry.url = $scope.getUrlForPrepid(entry.prepid, entry.workflow);
                         if (entry.priority >= 130000) {
                             entry.priority_block = 'Block 0';
                         } else if (entry.priority >= 110000) {

@@ -176,25 +176,26 @@ body {
     display: inline-block;
 }
 
-body.dev-ribbon:after{
-    content: "development";
+body.dev-ribbon:after {
+    content: "Development";
     position: fixed;
-    width: 270px;
-    height: 40px;
+    width: 400px;
+    height: 50px;
     background: red;
-    top: 58px;
-    right: -52px;
+    top: 85px;
+    right: -85px;
     text-align: center;
-    font-size: 25px;
-    font-family: sans-serif;
+    font-size: 32px;
     text-transform: uppercase;
     font-weight: 700;
     color: #fff;
-    line-height: 40px;
-    opacity: 0.8;
+    line-height: 50px;
+    opacity: .8;
     -ms-transform: rotate(45deg);
     -webkit-transform: rotate(45deg);
     transform: rotate(45deg);
+    z-index: 9999;
+    font-family: "Roboto", sans-serif;
 }
 
 .row.display-flex {

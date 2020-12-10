@@ -192,20 +192,12 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
                     Data.setValidTags(data.data.results.valid_tags);
                     $scope.loadTaskChain = false;
                     data.data.results.submitted_requests.forEach(function(entry) {
-                        if (entry.prepid.indexOf('ReReco') == -1 && entry.prepid.indexOf('CMSSW') == -1) {
-                            entry.url = 'https://cms-pdmv.cern.ch/mcm/requests?prepid=' + entry.prepid
-                        } else {
-                            entry.url = 'https://cmsweb.cern.ch/reqmgr2/fetch?rid=' + entry.workflow
-                        }
+                        entry.url = $scope.getUrlForPrepid(entry.prepid, entry.workflow);
                         entry.percentage = entry.done / entry.expected * 100;
                     });
                     $scope.listSubmitted = data.data.results.submitted_requests.sort($scope.compareSubmitted);
                     data.data.results.done_requests.forEach(function(entry) {
-                        if (entry.prepid.indexOf('ReReco') == -1 && entry.prepid.indexOf('CMSSW') == -1) {
-                            entry.url = 'https://cms-pdmv.cern.ch/mcm/requests?prepid=' + entry.prepid
-                        } else {
-                            entry.url = 'https://cmsweb.cern.ch/reqmgr2/fetch?rid=' + entry.workflow
-                        }
+                        entry.url = $scope.getUrlForPrepid(entry.prepid, entry.workflow);
                         entry.percentage = entry.done / entry.expected * 100;
                     });
                     $scope.listDone = data.data.results.done_requests.sort($scope.compareDone);
