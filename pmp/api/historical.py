@@ -80,6 +80,25 @@ class HistoricalAPI(APIBase):
 
         return data
 
+    def group_requests(self, data):
+        """
+        Group requests by PWG and then by priority block
+        """
+        grouped = {}
+        for request_details in data:
+            pwg = request_details['pwg'].upper()
+            if pwg not in grouped:
+                grouped[pwg] = {}
+
+            priority_block = self.get_priority_block(request_details['priority'])
+            priority_block = 'block%s' % (priority_block)
+            if priority_block not in grouped[pwg]:
+                grouped[pwg][priority_block] = []
+
+            grouped[pwg][priority_block].append(request_details)
+
+        return grouped
+
     def request_filter(self, request):
         return request.get('status') in ['submitted', 'done']
 
@@ -282,7 +301,7 @@ class HistoricalAPI(APIBase):
         new_data = sorted(new_data, key=lambda k: k['prepid'])
         return new_data
 
-    def get(self, query, data_point_count=250, estimate_completed_events=False, priority_filter=None, pwg_filter=None, interested_pwg_filter=None, status_filter=None):
+    def get(self, query, data_point_count=250, estimate_completed_events=False, priority_filter=None, pwg_filter=None, interested_pwg_filter=None, status_filter=None, aggregate=True):
         """
         Get the historical data based on query, data point count, priority and filter
         """
@@ -315,19 +334,41 @@ class HistoricalAPI(APIBase):
         # Get submitted and done requests separately
         submitted_requests = self.get_with_status(response, 'submitted')
         done_requests = self.get_with_status(response, 'done')
-        # Continue aggregating data points for response
-        logging.info('Will aggregate requests')
-        response = self.aggregate_requests(response)
-        logging.info('Will adjust for force complete')
-        response = self.adjust_for_force_complete(response)
-        logging.info('Will sort timestamps')
-        timestamps = self.sort_timestamps(response, data_point_count)
-        logging.info('Will adjust data points')
-        data = self.aggregate_data_points(response, timestamps)
-        logging.info('Remove useless points for the last time')
-        data = self.remove_useless_points(data)
-        logging.info('Will append last data point')
-        data = self.append_last_data_point(data)
+
+        if not aggregate:
+            grouped_requests = self.group_requests(response)
+            data = {}
+            for pwg, pwg_data in grouped_requests.items():
+                data[pwg] = {}
+                for block, block_data in pwg_data.items():
+                    logging.info('Will aggregate requests of of %s of %s', block, pwg)
+                    block_data = self.aggregate_requests(block_data)
+                    logging.info('Will adjust for force complete of %s of %s', block, pwg)
+                    block_data = self.adjust_for_force_complete(block_data)
+                    logging.info('Will sort timestamps of %s of %s', block, pwg)
+                    timestamps = self.sort_timestamps(block_data, data_point_count)
+                    logging.info('Will adjust data points of %s of %s', block, pwg)
+                    data[pwg][block] = self.aggregate_data_points(block_data, timestamps)
+                    logging.info('Remove useless points for the last time of %s of %s', block, pwg)
+                    data[pwg][block] = self.remove_useless_points(data[pwg][block])
+                    logging.info('Will append last data point of %s of %s', block, pwg)
+                    data[pwg][block] = self.append_last_data_point(data[pwg][block])
+
+        else:
+            # Continue aggregating data points for response
+            logging.info('Will aggregate requests')
+            response = self.aggregate_requests(response)
+            logging.info('Will adjust for force complete')
+            response = self.adjust_for_force_complete(response)
+            logging.info('Will sort timestamps')
+            timestamps = self.sort_timestamps(response, data_point_count)
+            logging.info('Will adjust data points')
+            data = self.aggregate_data_points(response, timestamps)
+            logging.info('Remove useless points for the last time')
+            data = self.remove_useless_points(data)
+            logging.info('Will append last data point')
+            data = self.append_last_data_point(data)
+
         res = {'data': data,
                'valid_tags': valid_tags,
                'invalid_tags': invalid_tags,

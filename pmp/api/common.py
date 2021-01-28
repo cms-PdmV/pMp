@@ -681,3 +681,31 @@ class APIBase(esadapter.InitConnection):
 
         logging.info('Requests after filtering %s' % (len(new_data)))
         return new_data, all_pwgs, all_interested_pwgs, all_statuses
+
+    def get_priority_block(self, priority):
+        """
+        Return priority block for given priority
+        """
+        priority = int(priority)
+        if priority >= 130000:
+            return 0
+
+        if priority >= 110000:
+            return 1
+
+        if priority >= 90000:
+            return 2
+
+        if priority >= 85000:
+            return 3
+
+        if priority >= 80000:
+            return 4
+
+        if priority >= 70000:
+            return 5
+
+        if priority >= 63000:
+            return 6
+
+        return 7

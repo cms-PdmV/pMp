@@ -138,6 +138,7 @@ def api_historical():
         status = status.split(',')
 
     estimate_completed_events = flask.request.args.get('estimateCompleted', '').lower() == 'true'
+    aggregate = flask.request.args.get('aggregate', 'true').lower() != 'false'
 
     i = sanitize(i)
     result = HistoricalAPI().get(i,
@@ -146,7 +147,8 @@ def api_historical():
                                  priority_filter=priority,
                                  pwg_filter=pwg,
                                  interested_pwg_filter=interested_pwg,
-                                 status_filter=status)
+                                 status_filter=status,
+                                 aggregate=aggregate)
 
     return result
 
