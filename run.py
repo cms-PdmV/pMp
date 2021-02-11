@@ -9,9 +9,11 @@ from pmp.api.performance import PerformanceAPI
 from pmp.api.present import PresentAPI
 from pmp.api.common import OverallAPI, SuggestionsAPI, ShortenAPI, ScreenshotAPI, LastUpdateAPI, AdminAPI, ObjectListAPI
 
+import os
 import json
 import config
 import flask
+import logging
 
 
 app = Flask(__name__,
@@ -262,6 +264,13 @@ def api_screenshot():
 if __name__ == '__main__':
     from fetchd.utils import Utils
     Utils.setup_console_logging()
+    if os.environ.get('WERKZEUG_RUN_MAIN') != 'true':
+        # Do only once, before the reloader
+        pid = os.getpid()
+        logging.info('PID: %s', pid)
+        with open('pmp.pid', 'w') as pid_file:
+            pid_file.write(str(pid))
+
     app.run(host='0.0.0.0',
             port=config.PORT,
             debug=config.DEBUG,
