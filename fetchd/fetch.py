@@ -9,6 +9,9 @@ from utils import Config, Utils
 from elasticsearch import Elasticsearch
 
 
+changed_during_update = []
+
+
 def rename_attributes(index, data, config):
     """
     Rename given attributes of dictionary
@@ -230,6 +233,9 @@ def get_changed_object_ids(cfg):
             for record in results:
                 yield record['id'], ('deleted' in record)
 
+            for object_id in changed_during_update:
+                yield object_id, False
+
         else:
             logging.info('No changes since last update')
 
@@ -383,6 +389,11 @@ def delete_workflow_from_request(cfg, workflow_name):
                 elif status != 404:
                     logging.error('Record %s (%s) was not deleted. Code: %s' % (prepid, index, status))
             else:
+                new_reqmgr_name = request['reqmgr_name'][-1]
+                changed_during_update.append(new_reqmgr_name)
+                if workflow_name in changed_during_update:
+                    changed_during_update.remove(workflow_name)
+
                 save(prepid, request, cfg)
 
 
