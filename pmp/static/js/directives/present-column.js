@@ -191,7 +191,10 @@
                     }
                     return 0;
                 }
-                var knownKeys = ['new', 'validation', 'defined', 'approved', 'submitted', 'done'];
+                var knownKeys = ['new', 'validation', 'defined', 'approved', 'submitted', 'done',
+                                 'n/a', 'assignment-approved', 'assigned', 'staging', 'staged', 'acquired', 'running-open',
+                                 'running-closed', 'force-complete', 'completed', 'closed-out', 'announced', 'normal-archived',
+                                 'rejected', 'rejected-archived', 'failed', 'aborted', 'aborted-completed', 'aborted-archived'];
                 if (knownKeys.includes(aKey) && knownKeys.includes(bKey)) {
                     return knownKeys.indexOf(aKey) - knownKeys.indexOf(bKey);
                 }

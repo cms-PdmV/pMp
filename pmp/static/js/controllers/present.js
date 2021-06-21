@@ -90,7 +90,8 @@ angular.module('pmpApp').controller('PresentController', ['$http',
                                           'priority': 'Priority',
                                           'priority_block': 'Priority Block',
                                           'is_member_of_chain': 'In chain',
-                                          'pwg': 'PWG'}
+                                          'pwg': 'PWG',
+                                          'workflow_status': 'Workflow Status'}
 
             let availableSelectionsKeys = Object.keys($scope.availableSelections);
             $scope.groupBy = urlParameters.groupBy.split(',').filter(e => e.length > 0 && availableSelectionsKeys.includes(e))
