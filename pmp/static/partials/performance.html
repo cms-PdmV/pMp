@@ -8,6 +8,13 @@
                              on-value-change="scaleChange"></radio-selections>
   </div>
   <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 m-2" >
+    Tool: <radio-selections style="text-transform: capitalize;"
+                            class="ml-2"
+                            options="availableToolNames"
+                            selected="toolName"
+                            on-value-change="toolNameChange"></radio-selections>
+  </div>
+  <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 m-2" >
     Subtrahend (From): <radio-selections style="text-transform: capitalize;"
                                          class="ml-2"
                                          options="availableStatuses"
@@ -21,7 +28,7 @@
                                     selected="minuend"
                                     on-value-change="minuendChange"></radio-selections>
   </div>
-  <div ng-show="data.length" class="col-xs-12 col-sm-12 col-md-12 col-lg-12 text-center">
+  <div ng-show="data.length && data[0]" class="col-xs-12 col-sm-12 col-md-12 col-lg-12 text-center">
     <performance-histogram data="data"
                            scale="scale"
                            number-of-bins="bins"

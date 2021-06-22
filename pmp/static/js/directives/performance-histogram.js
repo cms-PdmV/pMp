@@ -213,7 +213,7 @@
             };
 
             scope.$watch('data', function(data) {
-                if (data !== undefined && data.length) {
+                if (data !== undefined && data.length && data[0]) {
                     prepareData(data);
                 }
             });

@@ -23,6 +23,7 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
             subtrahend: 'created', // subtrahend
             minuend: 'done', // minuend
             scale: 'linear', // linear scale? false = log
+            toolName: 'mcm',
             priority: undefined, // priority filter
             status: undefined, // status filter
             pwg: undefined, // PWG filter
@@ -49,8 +50,10 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
             $scope.subtrahend = urlParameters.subtrahend;
             $scope.availableStatuses = [];
             $scope.availableScales = ['linear', 'log'];
+            $scope.availableToolNames = ['mcm', 'reqmgr2'];
             // if linear scale
             $scope.scale = urlParameters.scale;
+            $scope.toolName = urlParameters.toolName;
 
             // set number of bins
             $scope.bins = parseInt(urlParameters.bins, 10);
@@ -147,6 +150,7 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
             var statusQuery = Data.getStatusQuery($scope.firstLoad);
             var pwgQuery = Data.getPWGQuery($scope.firstLoad);
             var interestedPWGQuery = Data.getInterestedPWGQuery($scope.firstLoad);
+            var toolName = $scope.toolName;
             $scope.firstLoad = false;
             var queryUrl = 'api/performance?r=' + inputTags.slice().sort().join(',');
             if (priorityQuery !== undefined) {
@@ -161,6 +165,9 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
             if (interestedPWGQuery !== undefined) {
                 queryUrl += '&interested_pwg=' + interestedPWGQuery;
             }
+            if (toolName !== undefined) {
+                queryUrl += '&tool_name=' + toolName;
+            }
             var promise = $http.get(queryUrl);
             promise.then(function (data) {
                 $scope.showPopUp('success', 'Downloaded data. Drawing plot...');
@@ -168,21 +175,24 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
                     data.data.results.data.forEach(function(entry) {
                         entry.url = $scope.getUrlForPrepid(entry.prepid, entry.workflow);
                     });
+                    data.data.results.data = data.data.results.data.filter(x => x.history && Object.keys(x.history).length);
                     Data.setLoadedData(data.data.results.data, false);
                     Data.setStatusFilter(data.data.results.status);
                     Data.setPWGFilter(data.data.results.pwg);
                     Data.setInterestedPWGFilter(data.data.results.interested_pwg);
                     Data.setValidTags(data.data.results.valid_tags);
-                    $scope.availableStatuses = data.data.results.all_statuses_in_history.slice()
-                    if ($scope.availableStatuses.length == 0) {
+                    $scope.allAvailableStatuses = data.data.results.all_statuses_in_history;
+                    $scope.availableStatuses = $scope.allAvailableStatuses[$scope.toolName];
+                    let statuses = $scope.availableStatuses;
+                    if (statuses.length == 0) {
                         $scope.subtrahend = undefined
                         $scope.minuend = undefined
                     } else {
-                        if ($scope.availableStatuses.indexOf($scope.subtrahend) == -1) {
-                            $scope.subtrahend = $scope.availableStatuses[0];
+                        if (statuses.indexOf($scope.subtrahend) == -1) {
+                            $scope.subtrahend = statuses[0];
                         }
-                        if ($scope.availableStatuses.indexOf($scope.minuend) == -1) {
-                            $scope.minuend = $scope.availableStatuses[$scope.availableStatuses.length - 1];
+                        if (statuses.indexOf($scope.minuend) == -1) {
+                            $scope.minuend = statuses[statuses.length - 1];
                         }
                     }
                     $scope.data = $scope.filterByMinuendSubtrahend(Data.getLoadedData(), $scope.subtrahend, $scope.minuend);
@@ -233,6 +243,16 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
             $scope.binSelected([])
         }
 
+        $scope.toolNameChange = function(toolName) {
+            $scope.toolName = toolName;
+            $scope.availableStatuses = $scope.allAvailableStatuses[toolName];
+            $scope.subtrahend = $scope.availableStatuses[0];
+            $scope.minuend = $scope.availableStatuses[$scope.availableStatuses.length - 1];
+            $scope.setURL($scope, Data);
+            $scope.data = $scope.filterByMinuendSubtrahend(Data.getLoadedData(), $scope.subtrahend, $scope.minuend);
+            $scope.binSelected([])
+        }
+
         $scope.changeBins = function() {
             $scope.setURL($scope, Data);
             $scope.data = $scope.filterByMinuendSubtrahend(Data.getLoadedData(), $scope.subtrahend, $scope.minuend);
@@ -240,20 +260,37 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
         }
 
         $scope.filterByMinuendSubtrahend = function(data, min, max) {
-            if (min === undefined || max === undefined || $scope.availableStatuses.indexOf(min) >= $scope.availableStatuses.indexOf(max)) {
-                return []
+            let toolName = $scope.toolName;
+            let statuses = $scope.availableStatuses;
+            if (!min || !max || statuses.indexOf(min) > statuses.indexOf(max)) {
+                return [undefined]
             }
             var newData = []
-            for (var i = 0; i < data.length; i++) {
-                if (data[i].history !== undefined && data[i].history[min] !== undefined && data[i].history[max] !== undefined) {
-                    if (data[i].history[max] - data[i].history[min] < 0) {
+            let maxIsNow = statuses.indexOf(min) == statuses.indexOf(max);
+            let now = Date.now() / 1000;
+            for (let item of data) {
+                let history = item.history[toolName];
+                let historyMin = history[min];
+                let historyMax = history[max];
+                if (maxIsNow) {
+                    let lastStatus = Object.keys(history).reduce((a, b) => history[a] > history[b] ? a : b);
+                    if (lastStatus != min) {
                         continue
                     }
-                    data[i].diff = data[i].history[max] - data[i].history[min]
-                    data[i].min = data[i].history[min]
-                    data[i].max = data[i].history[max]
-                    newData.push(data[i])
+                    historyMax = now;
                 }
+                if (historyMin && historyMax) {
+                    if (historyMax - historyMin < 0) {
+                        continue
+                    }
+                    item.diff = historyMax - historyMin;
+                    item.min = historyMin;
+                    item.max = historyMax;
+                    newData.push(item);
+                }
+            }
+            if (newData.length == 0) {
+                return [undefined];
             }
             return newData
         }

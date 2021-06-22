@@ -9,13 +9,10 @@ import config
 class PerformanceAPI(APIBase):
     """Return list of requests with history points"""
 
-    status_order = {
-        'created': 0,
-        'validation': 1,
-        'approved': 2,
-        'submitted': 3,
-        'done': 4
-    }
+    status_order = ['n/a', 'new', 'validation', 'defined', 'approved', 'submitted', 'done',
+                    'assignment-approved', 'assigned', 'staging', 'staged', 'acquired', 'running-open',
+                    'running-closed', 'force-complete', 'completed', 'closed-out', 'announced', 'normal-archived',
+                    'rejected', 'rejected-archived', 'failed', 'aborted', 'aborted-completed', 'aborted-archived']
 
     __cache = SimpleCache(threshold=config.CACHE_SIZE, default_timeout=config.CACHE_TIMEOUT)
 
@@ -38,7 +35,7 @@ class PerformanceAPI(APIBase):
 
             found_something = False
             # Process the db documents
-            for _, mcm_document in self.db_query(one, include_stats_document=True, skip_prepids=seen_prepids):
+            for stats_document, mcm_document in self.db_query(one, skip_prepids=seen_prepids):
                 # skip legacy request with no prep_id
                 if len(mcm_document.get('prepid', '')) == 0:
                     continue
@@ -52,15 +49,19 @@ class PerformanceAPI(APIBase):
 
                 found_something = True
                 # duplicates fix ie. when request was reset
-                patch_history = {}
-                for history in mcm_document['history']:
-                    patch_history[history['action']] = history['time']
+                history = {'mcm': {}, 'reqmgr2': {}}
+                if stats_document:
+                    for history_entry in stats_document['request_transition']:
+                        history['reqmgr2'][history_entry['status']] = history_entry['update_time']
+
+                for history_entry in mcm_document['history']:
+                    history['mcm'][history_entry['action']] = history_entry['time']
 
                 workflow_name = ''
                 if len(mcm_document.get('reqmgr_name', [])) > 0:
                     workflow_name = mcm_document['reqmgr_name'][0]
 
-                mcm_document['history'] = patch_history
+                mcm_document['history'] = history
                 seen_prepids.add(mcm_document['prepid'])
                 response_list.append({'history': mcm_document['history'],
                                       'prepid': mcm_document['prepid'],
@@ -88,19 +89,15 @@ class PerformanceAPI(APIBase):
         """
         Get list of all possible statuses in data
         """
-        all_possible = set(['created', 'validation', 'approved', 'submitted', 'done'])
-        statuses = set()
+        statuses = {}
         for item in data:
-            for history_key in item.get('history', []):
-                status = history_key.lower()
-                if status not in statuses:
-                    statuses.add(status)
-                    all_possible.remove(status)
+            for tool_name, entries in item['history'].items():
+                tool_statuses = statuses.setdefault(tool_name, set())
+                for status in entries.keys():
+                    tool_statuses.add(status.lower())
 
-            if len(all_possible) == 0:
-                break
-
-        statuses = sorted(statuses, key=lambda i: self.status_order.get(i, -1))
+        order = {name: i for i, name in enumerate(self.status_order)}
+        statuses = {name: sorted(entries, key=lambda i: order.get(i, -1)) for name, entries in statuses.items()}
         return statuses
 
     def get(self, query, priority_filter=None, pwg_filter=None, interested_pwg_filter=None, status_filter=None):
