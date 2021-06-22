@@ -270,6 +270,9 @@ angular.module('pmpApp').controller('PerformanceController', ['$http',
             let now = Date.now() / 1000;
             for (let item of data) {
                 let history = item.history[toolName];
+                if (!Object.keys(history).length) {
+                    continue
+                }
                 let historyMin = history[min];
                 let historyMax = history[max];
                 if (maxIsNow) {
