@@ -191,8 +191,9 @@
                     }
                     return 0;
                 }
-                var knownKeys = ['new', 'validation', 'defined', 'approved', 'submitted', 'done',
-                                 'n/a', 'assignment-approved', 'assigned', 'staging', 'staged', 'acquired', 'running-open',
+                var knownKeys = ['n/a',
+                                 'new', 'validation', 'defined', 'approved', 'submitted', 'done',
+                                 'assignment-approved', 'assigned', 'staging', 'staged', 'acquired', 'running-open',
                                  'running-closed', 'force-complete', 'completed', 'closed-out', 'announced', 'normal-archived',
                                  'rejected', 'rejected-archived', 'failed', 'aborted', 'aborted-completed', 'aborted-archived'];
                 if (knownKeys.includes(aKey) && knownKeys.includes(bKey)) {
@@ -432,7 +433,8 @@
                                 'priority': 'Priority',
                                 'priority_block': 'Priority block',
                                 'pwg': 'PWG',
-                                'is_member_of_chain': 'Member of chain'}
+                                'is_member_of_chain': 'Member of chain',
+                                'workflow_status': 'Workflow status'}
                     for (var i in scope.groupBy) {
                         var key = scope.groupBy[i]
                         if (key in keys) {
@@ -463,7 +465,7 @@
                             title += keys[key] + ': ' + value + '\n'
                         }
                     }
-                    return title;
+                    return title.trim();
                 }
 
                 svg.selectAll('line .grayline')
