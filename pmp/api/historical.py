@@ -124,7 +124,7 @@ class HistoricalAPI(APIBase):
 
             found_something = False
             # Process the db documents
-            for stats_document, mcm_document in self.db_query(one, include_stats_document=True, estimate_completed_events=estimate_completed_events, skip_prepids=seen_prepids, request_filter=self.request_filter):
+            for stats_document, mcm_document in self.db_query(one, estimate_completed_events=estimate_completed_events, skip_prepids=seen_prepids, request_filter=self.request_filter):
                 if stats_document is None and mcm_document is None:
                     # Well, there's nothing to do, is there?
                     continue
@@ -306,18 +306,14 @@ class HistoricalAPI(APIBase):
         Get the historical data based on query, data point count, priority and filter
         """
         start_time = time.time()
-        logging.info('%s (%s) | %s (%s) | %s (%s) | %s (%s) | %s (%s) | %s (%s)' % (query,
-                                                                                    type(query),
-                                                                                    data_point_count,
-                                                                                    type(data_point_count),
-                                                                                    priority_filter,
-                                                                                    type(priority_filter),
-                                                                                    pwg_filter,
-                                                                                    type(pwg_filter),
-                                                                                    interested_pwg_filter,
-                                                                                    type(interested_pwg_filter),
-                                                                                    status_filter,
-                                                                                    type(status_filter)))
+        logging.info('Historical: q=%s, point=%s estimate=%s, prio=%s, pwg=%s, i_pwg=%s, status=%s, agg=%s' % (query,
+                                                                                                               data_point_count,
+                                                                                                               estimate_completed_events,
+                                                                                                               priority_filter,
+                                                                                                               pwg_filter,
+                                                                                                               interested_pwg_filter,
+                                                                                                               status_filter,
+                                                                                                               aggregate))
 
         cache_key = 'present_%s_____%s' % (query, estimate_completed_events)
         if self.__cache.has(cache_key):

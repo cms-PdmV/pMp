@@ -94,6 +94,9 @@
         In chains: <b>{{binEntry.member_of_chain.length}}</b>
       </div>
     </div>
+    <div style="text-align: right;">
+      <a style="cursor: pointer" ng-click="makeCSV(selectedBin)">Download as CSV</a>
+    </div>
   </div>
   <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 mt-5 text-center">
     <present-stats-table mode="mode"

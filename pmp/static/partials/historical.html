@@ -85,6 +85,9 @@
           <a ng-if="submitted.workflow" ng-href="https://cms-pdmv.cern.ch/stats?workflow_name={{submitted.workflow}}" target="_blank">Show in Stats</a>
         </div>
       </div>
+      <div style="text-align: right;">
+        <a style="cursor: pointer" ng-click="makeCSV(listSubmitted)">Download as CSV</a>
+      </div>
     </div>
 
     <div ng-if="showDoneRequestsList && listDone.length != 0">
@@ -166,6 +169,9 @@
           <span ng-if="!done.output_dataset">No output<br></span>
           <a ng-if="done.workflow" ng-href="https://cms-pdmv.cern.ch/stats?workflow_name={{done.workflow}}" target="_blank">Show in Stats</a>
         </div>
+      </div>
+      <div style="text-align: right;">
+        <a style="cursor: pointer" ng-click="makeCSV(listDone)">Download as CSV</a>
       </div>
     </div>
   </div>

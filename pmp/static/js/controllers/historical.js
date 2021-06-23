@@ -341,5 +341,34 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
                 $rootScope.loadingData = false;
             });
         };
+
+        $scope.makeCSV = function(inputData) {
+            let header = ['PrepID', 'Total Events', 'Done Events', 'Priority', 'Output dataset', 'Output dataset status', 'Link', 'Stats2'];
+            header = header.map(e => '"' + e + '"');
+            let lineMaker = function(line) {
+                let l = [line['prepid'],
+                         line['expected'],
+                         line['done'],
+                         line['priority'],
+                         line['output_dataset'],
+                         line['output_dataset_status'],
+                         line['url']]
+                if (line['workflow'].length) {
+                    l.push('https://cms-pdmv.cern.ch/stats?workflow_name=' + line['workflow']);
+                } else {
+                    l.push('');
+                }
+                l = l.map(e => '"' + e + '"');
+                return l.join(',');
+            }
+            let csvContent = "data:text/csv;charset=utf-8," + header.join(',') + '\n' + inputData.map(e => lineMaker(e)).join("\n");
+            let encodedUri = encodeURI(csvContent);
+            let link = document.createElement('a');
+            link.setAttribute('href', encodedUri);
+            link.setAttribute('download', 'HistoricalStatistics.csv');
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+        }
     }
 ]);

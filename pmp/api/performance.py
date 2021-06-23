@@ -4,6 +4,7 @@ import json
 import logging
 from werkzeug.contrib.cache import SimpleCache
 import config
+import time
 
 
 class PerformanceAPI(APIBase):
@@ -24,31 +25,23 @@ class PerformanceAPI(APIBase):
         valid_tags = []
         invalid_tags = []
         messages = []
-        query = query.split(',')
+        query = [x.strip() for x in query.split(',') if x.strip()]
+        # Keep track of the prepids we've seen, so that we only add submission data points once
         seen_prepids = set()
         for one in query:
-            # Keep track of the prepids we've seen, so that we only add submission data points once
             logging.info('Processing %s' % (one))
-            if not one:
-                # Skip empty values
-                continue
-
             found_something = False
             # Process the db documents
             for stats_document, mcm_document in self.db_query(one, skip_prepids=seen_prepids):
                 # skip legacy request with no prep_id
-                if len(mcm_document.get('prepid', '')) == 0:
+                if not mcm_document.get('prepid'):
                     continue
 
-                # Remove new and unchained to clean up output plots
-                if mcm_document['status'] == 'new' and len(mcm_document.get('member_of_chain', [])) == 0:
-                    logging.info('Skipping %s because status is %s OR it is member of %s chains' % (mcm_document['prepid'],
-                                                                                                    mcm_document['status'],
-                                                                                                    len(mcm_document.get('member_of_chain', []))))
+                if mcm_document['status'] == 'new':
                     continue
 
                 found_something = True
-                # duplicates fix ie. when request was reset
+                # Get McM status history and ReqMgr2 status history
                 history = {'mcm': {}, 'reqmgr2': {}}
                 if stats_document:
                     for history_entry in stats_document['request_transition']:
@@ -58,8 +51,10 @@ class PerformanceAPI(APIBase):
                     history['mcm'][history_entry['action']] = history_entry['time']
 
                 workflow_name = ''
-                if len(mcm_document.get('reqmgr_name', [])) > 0:
-                    workflow_name = mcm_document['reqmgr_name'][0]
+                if stats_document:
+                    workflow_name = stats_document['request_name']
+                elif len(mcm_document.get('reqmgr_name', [])) > 0:
+                    workflow_name = mcm_document['reqmgr_name'][-1]
 
                 mcm_document['history'] = history
                 seen_prepids.add(mcm_document['prepid'])
@@ -104,16 +99,12 @@ class PerformanceAPI(APIBase):
         """
         Get the historical data based on query, data point count, priority and filter
         """
-        logging.info('%s (%s) | %s (%s) | %s (%s) | %s (%s) | %s (%s)' % (query,
-                                                                          type(query),
-                                                                          priority_filter,
-                                                                          type(priority_filter),
-                                                                          pwg_filter,
-                                                                          type(pwg_filter),
-                                                                          interested_pwg_filter,
-                                                                          type(interested_pwg_filter),
-                                                                          status_filter,
-                                                                          type(status_filter)))
+        start_time = time.time()
+        logging.info('Performance: q=%s, prio=%s, pwg=%s, i_pwg=%s, status=%s' % (query,
+                                                                                  priority_filter,
+                                                                                  pwg_filter,
+                                                                                  interested_pwg_filter,
+                                                                                  status_filter))
 
         cache_key = 'performance_%s' % (query)
         if self.__cache.has(cache_key):
@@ -138,5 +129,6 @@ class PerformanceAPI(APIBase):
                'status': statuses,
                'all_statuses_in_history': all_statuses_in_history,
                'messages': messages}
-        logging.info('Will return')
+        end_time = time.time()
+        logging.info('Will return. Took %.4fs' % (end_time - start_time))
         return json.dumps({'results': res})

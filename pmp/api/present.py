@@ -31,25 +31,20 @@ class PresentAPI(APIBase):
         valid_tags = []
         invalid_tags = []
         messages = []
-        query = query.split(',')
+        query = [x.strip() for x in query.split(',') if x.strip()]
+        # Keep track of the prepids we've seen, so that we only add submission data points once
         seen_prepids = set()
         for one in query:
-            # Keep track of the prepids we've seen, so that we only add submission data points once
             logging.info('Processing %s' % (one))
-            if not one:
-                # Skip empty values
-                continue
-
             found_something = False
             # Process the db documents
-            for stats_document, mcm_document in self.db_query(one, include_stats_document=True, estimate_completed_events=estimate_completed_events, skip_prepids=seen_prepids):
+            for stats_document, mcm_document in self.db_query(one, estimate_completed_events=estimate_completed_events, skip_prepids=seen_prepids):
                 # skip legacy request with no prep_id
-                if len(mcm_document.get('prepid', '')) == 0:
+                if not mcm_document.get('prepid'):
                     continue
 
                 found_something = True
                 completed_events = self.number_of_completed_events(stats_document, mcm_document['output_dataset'])
-                seen_prepids.add(mcm_document['prepid'])
                 workflow_name = ''
                 workflow_status = 'n/a'
                 if stats_document:
@@ -67,6 +62,7 @@ class PresentAPI(APIBase):
 
                             break
 
+                seen_prepids.add(mcm_document['prepid'])
                 response_list.append({'member_of_campaign': mcm_document['member_of_campaign'],
                                       'prepid': mcm_document['prepid'],
                                       'pwg': mcm_document['pwg'],
@@ -105,16 +101,12 @@ class PresentAPI(APIBase):
         Get the historical data based on query, data point count, priority and filter
         """
         start_time = time.time()
-        logging.info('%s (%s) | %s (%s) | %s (%s) | %s (%s) | %s (%s)' % (query,
-                                                                          type(query),
-                                                                          priority_filter,
-                                                                          type(priority_filter),
-                                                                          pwg_filter,
-                                                                          type(pwg_filter),
-                                                                          interested_pwg_filter,
-                                                                          type(interested_pwg_filter),
-                                                                          status_filter,
-                                                                          type(status_filter)))
+        logging.info('Present: q=%s, estimate=%s, prio=%s, pwg=%s, i_pwg=%s, status=%s' % (query,
+                                                                                               estimate_completed_events,
+                                                                                               priority_filter,
+                                                                                               pwg_filter,
+                                                                                               interested_pwg_filter,
+                                                                                               status_filter))
 
         cache_key = 'present_%s_____%s' % (query, estimate_completed_events)
         if self.__cache.has(cache_key):
@@ -126,8 +118,10 @@ class PresentAPI(APIBase):
             self.__cache.set(cache_key, response_tuple)
 
         response, valid_tags, invalid_tags, messages = response_tuple
+        logging.info('Requests before filtering %s' % (len(response)))
         # Apply priority, PWG and status filters
         response, pwgs, interested_pwgs, statuses = self.apply_filters(response, priority_filter, pwg_filter, interested_pwg_filter, status_filter)
+        logging.info('Requests after filtering %s' % (len(response)))
         res = {'data': response,
                'valid_tags': valid_tags,
                'invalid_tags': invalid_tags,

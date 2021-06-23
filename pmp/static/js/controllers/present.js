@@ -400,5 +400,34 @@ angular.module('pmpApp').controller('PresentController', ['$http',
             $location.url('/present')
             $scope.init()
         })
+
+        $scope.makeCSV = function(inputData) {
+            let header = ['PrepID', 'Campaign', 'Total Events', 'Done Events', 'Status', 'Priority', 'Link', 'Stats2'];
+            header = header.map(e => '"' + e + '"');
+            let lineMaker = function(line) {
+                let l = [line['prepid'],
+                         line['member_of_campaign'],
+                         line['total_events'],
+                         line['completed_events'],
+                         line['status'],
+                         line['priority'],
+                         line['url']]
+                if (line['workflow'].length) {
+                    l.push('https://cms-pdmv.cern.ch/stats?workflow_name=' + line['workflow']);
+                } else {
+                    l.push('');
+                }
+                l = l.map(e => '"' + e + '"');
+                return l.join(',');
+            }
+            let csvContent = "data:text/csv;charset=utf-8," + header.join(',') + '\n' + inputData.map(e => lineMaker(e)).join("\n");
+            let encodedUri = encodeURI(csvContent);
+            let link = document.createElement('a');
+            link.setAttribute('href', encodedUri);
+            link.setAttribute('download', 'PresentStatistics.csv');
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+        }
     }
 ]);
