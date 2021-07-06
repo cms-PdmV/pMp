@@ -134,6 +134,26 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
             }
         };
 
+        $scope.msToDate = function (ms) {
+            var days = Math.floor(ms / 86400)
+            var hours = Math.floor((ms - (days * 86400)) / 3600)
+            var minutes = Math.round((ms - (days * 86400 + hours * 3600)) / 60)
+            if (days == 0 && hours == 0 && minutes == 0) {
+                return Math.round(ms / 1000) + 's'
+            }
+            var result = ''
+            if (days > 0) {
+                result += days + 'd '
+            }
+            if (hours > 0) {
+                result += hours + 'h '
+            }
+            if (minutes > 0) {
+                result += minutes + 'min'
+            }
+            return result
+        }
+
         /**
          * @description Core: Parse filters to query API
          * @param {Boolean} filter If filter data is present.
@@ -191,14 +211,19 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
                     Data.setInterestedPWGFilter(data.data.results.interested_pwg);
                     Data.setValidTags(data.data.results.valid_tags);
                     $scope.loadTaskChain = false;
+                    let now = parseInt(Date.now() / 1000);
                     data.data.results.submitted_requests.forEach(function(entry) {
                         entry.url = $scope.getUrlForPrepid(entry.prepid, entry.workflow);
                         entry.percentage = entry.done / entry.expected * 100;
+                        entry.statusTimestampNiceDate = dateFormat(entry.status_timestamp * 1000, "yyyy-mm-dd HH:MM");
+                        entry.statusTimestampNice = $scope.msToDate(now - entry.status_timestamp);
                     });
                     $scope.listSubmitted = data.data.results.submitted_requests.sort($scope.compareSubmitted);
                     data.data.results.done_requests.forEach(function(entry) {
                         entry.url = $scope.getUrlForPrepid(entry.prepid, entry.workflow);
                         entry.percentage = entry.done / entry.expected * 100;
+                        entry.statusTimestampNiceDate = dateFormat(entry.status_timestamp * 1000, "yyyy-mm-dd HH:MM");
+                        entry.statusTimestampNice = $scope.msToDate(now - entry.status_timestamp);
                     });
                     $scope.listDone = data.data.results.done_requests.sort($scope.compareDone);
                     $scope.data = Data.getLoadedData();
@@ -343,12 +368,14 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
         };
 
         $scope.makeCSV = function(inputData) {
-            let header = ['PrepID', 'Total Events', 'Done Events', 'Priority', 'Output dataset', 'Output dataset status', 'Link', 'Stats2'];
+            let header = ['PrepID', 'Total Events', 'Done Events', 'Current status for', 'Current status since', 'Priority', 'Output dataset', 'Output dataset status', 'Link', 'Stats2'];
             header = header.map(e => '"' + e + '"');
             let lineMaker = function(line) {
                 let l = [line['prepid'],
                          line['expected'],
                          line['done'],
+                         line['statusTimestampNice'],
+                         line['statusTimestampNiceDate'],
                          line['priority'],
                          line['output_dataset'],
                          line['output_dataset_status'],

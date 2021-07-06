@@ -10,7 +10,7 @@
         List of requests (<b>{{listSubmitted.length}}</b>) in status <b>submitted</b>
       </p>
       <div class="row small-padding">
-        <div class="col-sm-4">
+        <div class="col-sm-5">
           <button type="button" class="btn btn-sort m-2" ng-click="changeSubmittedSort('prepid')">
             <i ng-if="sortSubmittedOn != 'prepid'" class="fa fa-sort-amount-asc spacing-r" title="Click to sort ascending by prepid"></i>
             <i ng-if="sortSubmittedOn == 'prepid' && sortSubmittedOrder == 1" class="fa fa-sort-amount-asc spacing-r sort-selected" title="Click to sort descending by prepid"></i>
@@ -18,17 +18,16 @@
           </button>
         </div>
         <div class="col-sm-2">
-          <button type="button" class="btn btn-sort m-2" ng-click="changeSubmittedSort('expected')">
-            <i ng-if="sortSubmittedOn != 'expected'" class="fa fa-sort-numeric-asc spacing-r" title="Click to sort ascending by expected events"></i>
-            <i ng-if="sortSubmittedOn == 'expected' && sortSubmittedOrder == 1" class="fa fa-sort-numeric-asc spacing-r sort-selected" title="Click to sort descending by expected events"></i>
-            <i ng-if="sortSubmittedOn == 'expected' && sortSubmittedOrder == -1" class="fa fa-sort-numeric-desc spacing-r sort-selected" title="Click to sort ascending by expected events"></i>
-          </button>
-        </div>
-        <div class="col-sm-2">
           <button type="button" class="btn btn-sort m-2" ng-click="changeSubmittedSort('done')">
             <i ng-if="sortSubmittedOn != 'done'" class="fa fa-sort-numeric-asc spacing-r" title="Click to sort ascending by done events"></i>
             <i ng-if="sortSubmittedOn == 'done' && sortSubmittedOrder == 1" class="fa fa-sort-numeric-asc spacing-r sort-selected" title="Click to sort descending by done events"></i>
             <i ng-if="sortSubmittedOn == 'done' && sortSubmittedOrder == -1" class="fa fa-sort-numeric-desc spacing-r sort-selected" title="Click to sort ascending by done events"></i>
+          </button>
+          /
+          <button type="button" class="btn btn-sort m-2" ng-click="changeSubmittedSort('expected')">
+            <i ng-if="sortSubmittedOn != 'expected'" class="fa fa-sort-numeric-asc spacing-r" title="Click to sort ascending by expected events"></i>
+            <i ng-if="sortSubmittedOn == 'expected' && sortSubmittedOrder == 1" class="fa fa-sort-numeric-asc spacing-r sort-selected" title="Click to sort descending by expected events"></i>
+            <i ng-if="sortSubmittedOn == 'expected' && sortSubmittedOrder == -1" class="fa fa-sort-numeric-desc spacing-r sort-selected" title="Click to sort ascending by expected events"></i>
           </button>
         </div>
         <div class="col-sm-1">
@@ -39,6 +38,13 @@
           </button>
         </div>
         <div class="col-sm-2">
+          <button type="button" class="btn btn-sort m-2" ng-click="changeSubmittedSort('status_timestamp')">
+            <i ng-if="sortSubmittedOn != 'status_timestamp'" class="fa fa-sort-numeric-desc spacing-r" title="Click to sort descending by time in submitted status"></i>
+            <i ng-if="sortSubmittedOn == 'status_timestamp' && sortSubmittedOrder == 1" class="fa fa-sort-numeric-desc spacing-r sort-selected" title="Click to sort ascending by time in submitted status"></i>
+            <i ng-if="sortSubmittedOn == 'status_timestamp' && sortSubmittedOrder == -1" class="fa fa-sort-numeric-asc spacing-r sort-selected" title="Click to sort descending by time in submitted status"></i>
+          </button>
+        </div>
+        <div class="col-sm-1">
           <button type="button" class="btn btn-sort m-2" ng-click="changeSubmittedSort('priority')">
             <i ng-if="sortSubmittedOn != 'priority'" class="fa fa-sort-numeric-asc spacing-r" title="Click to sort ascending by priority"></i>
             <i ng-if="sortSubmittedOn == 'priority' && sortSubmittedOrder == 1" class="fa fa-sort-numeric-asc spacing-r sort-selected" title="Click to sort descending by priority"></i>
@@ -47,19 +53,20 @@
         </div>
       </div>
       <div ng-repeat="submitted in listSubmitted" class="row zebra-lines small-padding">
-        <div class="col-sm-4">
+        <div class="col-sm-5">
           <a ng-href="{{submitted.url}}" target="_blank">{{submitted.prepid}}</a>
           <br><small>{{submitted.dataset}}</small>
           <small title="Number of events estimated from {{submitted.estimate_from}}" style="color:red" ng-if="submitted.estimate_from"><br>(Estimate from {{submitted.estimate_from}})</small>
         </div>
         <div class="col-sm-2">
-          Expected: <b title="{{submitted.expected}}">{{humanReadable ? (submitted.expected | readableNumbers) : submitted.expected}}</b>
-        </div>
-        <div class="col-sm-2">
-          Produced: <b title="{{submitted.done}}">{{humanReadable ? (submitted.done | readableNumbers) : submitted.done}}</b>
+          <small>Events:</small><br>
+          <b title="{{submitted.done}}">{{humanReadable ? (submitted.done | readableNumbers) : submitted.done}}</b>
           <small title="Force completed" style="color:red" ng-if="submitted.force_completed">(FC)</small>
+          /
+          <b title="{{submitted.expected}}">{{humanReadable ? (submitted.expected | readableNumbers) : submitted.expected}}</b>
         </div>
         <div class="col-sm-1">
+          <small>Progress:</small><br>
           <div class="progress total-bar" ng-show="submitted.expected > 0">
             <div class="font-shadow progress-bar pmp-orange"
                  ng-class="{'pmp-red': submitted.output_dataset_status == 'INVALID' || submitted.output_dataset_status == 'DELETED',
@@ -77,7 +84,12 @@
           </div>
         </div>
         <div class="col-sm-2">
-          Priority: <b>{{submitted.priority}}</b>
+          <small>Submitted for:</small><br>
+          <b title="{{submitted.statusTimestampNiceDate}}">{{submitted.statusTimestampNice}}</b>
+        </div>
+        <div class="col-sm-1">
+          <small>Priority:</small><br>
+          <b>{{submitted.priority}}</b>
         </div>
         <div class="col-sm-1">
           <a ng-if="submitted.output_dataset" ng-href="https://cmsweb.cern.ch/das/request?view=list&limit=50&instance=prod/global&input=dataset={{submitted.output_dataset}}" target="_blank">Show in DAS<br></a>
@@ -95,7 +107,7 @@
         List of requests (<b>{{listDone.length}}</b>) in status <b>done</b>
       </p>
       <div class="row small-padding">
-        <div class="col-sm-4">
+        <div class="col-sm-5">
           <button type="button" class="btn btn-sort m-2" ng-click="changeDoneSort('prepid')">
             <i ng-if="sortDoneOn != 'prepid'" class="fa fa-sort-amount-asc spacing-r" title="Click to sort ascending by prepid"></i>
             <i ng-if="sortDoneOn == 'prepid' && sortDoneOrder == 1" class="fa fa-sort-amount-asc spacing-r sort-selected" title="Click to sort descending by prepid"></i>
@@ -103,17 +115,16 @@
           </button>
         </div>
         <div class="col-sm-2">
-          <button type="button" class="btn btn-sort m-2" ng-click="changeDoneSort('expected')">
-            <i ng-if="sortDoneOn != 'expected'" class="fa fa-sort-numeric-asc spacing-r" title="Click to sort ascending by expected events"></i>
-            <i ng-if="sortDoneOn == 'expected' && sortDoneOrder == 1" class="fa fa-sort-numeric-asc spacing-r sort-selected" title="Click to sort descending by expected events"></i>
-            <i ng-if="sortDoneOn == 'expected' && sortDoneOrder == -1" class="fa fa-sort-numeric-desc spacing-r sort-selected" title="Click to sort ascending by expected events"></i>
-          </button>
-        </div>
-        <div class="col-sm-2">
           <button type="button" class="btn btn-sort m-2" ng-click="changeDoneSort('done')">
             <i ng-if="sortDoneOn != 'done'" class="fa fa-sort-numeric-asc spacing-r" title="Click to sort ascending by done events"></i>
             <i ng-if="sortDoneOn == 'done' && sortDoneOrder == 1" class="fa fa-sort-numeric-asc spacing-r sort-selected" title="Click to sort descending by done events"></i>
             <i ng-if="sortDoneOn == 'done' && sortDoneOrder == -1" class="fa fa-sort-numeric-desc spacing-r sort-selected" title="Click to sort ascending by done events"></i>
+          </button>
+          /
+          <button type="button" class="btn btn-sort m-2" ng-click="changeDoneSort('expected')">
+            <i ng-if="sortDoneOn != 'expected'" class="fa fa-sort-numeric-asc spacing-r" title="Click to sort ascending by expected events"></i>
+            <i ng-if="sortDoneOn == 'expected' && sortDoneOrder == 1" class="fa fa-sort-numeric-asc spacing-r sort-selected" title="Click to sort descending by expected events"></i>
+            <i ng-if="sortDoneOn == 'expected' && sortDoneOrder == -1" class="fa fa-sort-numeric-desc spacing-r sort-selected" title="Click to sort ascending by expected events"></i>
           </button>
         </div>
         <div class="col-sm-1">
@@ -124,6 +135,13 @@
           </button>
         </div>
         <div class="col-sm-2">
+          <button type="button" class="btn btn-sort m-2" ng-click="changeDoneSort('status_timestamp')">
+            <i ng-if="sortDoneOn != 'status_timestamp'" class="fa fa-sort-numeric-desc spacing-r" title="Click to sort descending by time in done status"></i>
+            <i ng-if="sortDoneOn == 'status_timestamp' && sortDoneOrder == 1" class="fa fa-sort-numeric-desc spacing-r sort-selected" title="Click to sort ascending by time in done status"></i>
+            <i ng-if="sortDoneOn == 'status_timestamp' && sortDoneOrder == -1" class="fa fa-sort-numeric-asc spacing-r sort-selected" title="Click to sort descending by time in done status"></i>
+          </button>
+        </div>
+        <div class="col-sm-1">
           <button type="button" class="btn btn-sort m-2" ng-click="changeDoneSort('priority')">
             <i ng-if="sortDoneOn != 'priority'" class="fa fa-sort-numeric-asc spacing-r" title="Click to sort ascending by priority"></i>
             <i ng-if="sortDoneOn == 'priority' && sortDoneOrder == 1" class="fa fa-sort-numeric-asc spacing-r sort-selected" title="Click to sort descending by priority"></i>
@@ -132,19 +150,20 @@
         </div>
       </div>
       <div ng-repeat="done in listDone" class="row zebra-lines small-padding">
-        <div class="col-sm-4">
+        <div class="col-sm-5">
           <a ng-href="{{done.url}}" target="_blank">{{done.prepid}}</a>
           <br><small>{{done.dataset}}</small>
           <small title="Number of events estimated from {{done.estimate_from}}" style="color:red" ng-if="done.estimate_from"><br>(Estimate from {{done.estimate_from}})</small>
         </div>
         <div class="col-sm-2">
-          Expected: <b title="{{done.expected}}">{{humanReadable ? (done.expected | readableNumbers) : done.expected}}</b>
-        </div>
-        <div class="col-sm-2">
-          Done: <b title="{{done.done}}">{{humanReadable ? (done.done | readableNumbers) : done.done}}</b>
+          <small>Events:</small><br>
+          <b title="{{done.done}}">{{humanReadable ? (done.done | readableNumbers) : done.done}}</b>
           <small title="Force completed" style="color:red" ng-if="done.force_completed">(FC)</small>
+          /
+          <b title="{{done.expected}}">{{humanReadable ? (done.expected | readableNumbers) : done.expected}}</b>
         </div>
         <div class="col-sm-1">
+          <small>Progress:</small><br>
           <div class="progress total-bar" ng-show="done.expected > 0">
             <div class="font-shadow progress-bar pmp-blue"
                  ng-class="{'pmp-red': done.output_dataset_status == 'INVALID' || done.output_dataset_status == 'DELETED',
@@ -162,7 +181,12 @@
           </div>
         </div>
         <div class="col-sm-2">
-          Priority: <b>{{done.priority}}</b>
+          <small>Done for:</small><br>
+          <b title="{{done.statusTimestampNiceDate}}">{{done.statusTimestampNice}}</b>
+        </div>
+        <div class="col-sm-1">
+          <small>Priority:</small><br>
+          <b>{{done.priority}}</b>
         </div>
         <div class="col-sm-1">
           <a ng-if="done.output_dataset" ng-href="https://cmsweb.cern.ch/das/request?view=list&limit=50&instance=prod/global&input=dataset={{done.output_dataset}}" target="_blank">Show in DAS<br></a>

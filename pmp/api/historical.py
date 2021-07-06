@@ -167,6 +167,14 @@ class HistoricalAPI(APIBase):
                 if 'estimate_from' in mcm_document:
                     response['estimate_from'] = mcm_document['estimate_from']
 
+                status_timestamp = 0
+                for history_entry in reversed(mcm_document.get('history', [])):
+                    if history_entry.get('action') == mcm_document['status']:
+                        status_timestamp = history_entry['time']
+                        break
+
+                response['status_timestamp'] = status_timestamp
+
                 # Check if there is a document from stats (i.e. the workflow was found)
                 if stats_document is not None:
                     # logging.info('Workflow name %s' % (stats_document['request_name']))
@@ -296,7 +304,8 @@ class HistoricalAPI(APIBase):
                              'done': max(data_points[-1]['done'], data_points[-1]['produced'], data_points[-1]['invalid']),
                              'force_completed': request['force_completed'],
                              'estimate_from': request.get('estimate_from', None),
-                             'workflow': workflow_name})
+                             'workflow': workflow_name,
+                             'status_timestamp': request['status_timestamp']})
 
         new_data = sorted(new_data, key=lambda k: k['prepid'])
         return new_data
