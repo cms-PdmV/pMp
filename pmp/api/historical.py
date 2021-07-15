@@ -174,12 +174,19 @@ class HistoricalAPI(APIBase):
                         break
 
                 response['status_timestamp'] = status_timestamp
+                response['workflow_status'] = '<unknown>'
+                response['workflow_status_timestamp'] = 0
 
                 # Check if there is a document from stats (i.e. the workflow was found)
                 if stats_document is not None:
                     # logging.info('Workflow name %s' % (stats_document['request_name']))
                     if stats_document.get('request_name'):
                         response['reqmgr_name'] = [stats_document['request_name']]
+
+                    if stats_document.get('request_transition'):
+                        last_request_transition = stats_document['request_transition'][-1]
+                        response['workflow_status'] = last_request_transition['status']
+                        response['workflow_status_timestamp'] = last_request_transition['update_time']
 
                     if mcm_document['output_dataset'] and 'event_number_history' in stats_document:
                         for history_record in stats_document['event_number_history']:
@@ -305,7 +312,9 @@ class HistoricalAPI(APIBase):
                              'force_completed': request['force_completed'],
                              'estimate_from': request.get('estimate_from', None),
                              'workflow': workflow_name,
-                             'status_timestamp': request['status_timestamp']})
+                             'status_timestamp': request['status_timestamp'],
+                             'workflow_status': request['workflow_status'],
+                             'workflow_status_timestamp': request['workflow_status_timestamp']})
 
         new_data = sorted(new_data, key=lambda k: k['prepid'])
         return new_data

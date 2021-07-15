@@ -134,12 +134,12 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
             }
         };
 
-        $scope.msToDate = function (ms) {
-            var days = Math.floor(ms / 86400)
-            var hours = Math.floor((ms - (days * 86400)) / 3600)
-            var minutes = Math.round((ms - (days * 86400 + hours * 3600)) / 60)
+        $scope.secondsToDiff = function (s) {
+            var days = Math.floor(s / 86400)
+            var hours = Math.floor((s - (days * 86400)) / 3600)
+            var minutes = Math.round((s - (days * 86400 + hours * 3600)) / 60)
             if (days == 0 && hours == 0 && minutes == 0) {
-                return Math.round(ms / 1000) + 's'
+                return parseInt(s) + 's'
             }
             var result = ''
             if (days > 0) {
@@ -215,15 +215,23 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
                     data.data.results.submitted_requests.forEach(function(entry) {
                         entry.url = $scope.getUrlForPrepid(entry.prepid, entry.workflow);
                         entry.percentage = entry.done / entry.expected * 100;
-                        entry.statusTimestampNiceDate = dateFormat(entry.status_timestamp * 1000, "yyyy-mm-dd HH:MM");
-                        entry.statusTimestampNice = $scope.msToDate(now - entry.status_timestamp);
+                        entry.statusTimestamp = now - entry.status_timestamp;
+                        entry.statusTimestampDate = dateFormat(entry.status_timestamp, "yyyy-mm-dd HH:MM");
+                        entry.statusTimestampDiff = $scope.secondsToDiff(now - entry.status_timestamp);
+                        entry.workflowStatus = entry.workflow_status;
+                        entry.workflowTimestamp = now - entry.workflow_status_timestamp;
+                        entry.workflowTimestampDiff = $scope.secondsToDiff(entry.workflow_timestamp <= 0 ? 0 : entry.workflowTimestamp);
                     });
                     $scope.listSubmitted = data.data.results.submitted_requests.sort($scope.compareSubmitted);
                     data.data.results.done_requests.forEach(function(entry) {
                         entry.url = $scope.getUrlForPrepid(entry.prepid, entry.workflow);
                         entry.percentage = entry.done / entry.expected * 100;
-                        entry.statusTimestampNiceDate = dateFormat(entry.status_timestamp * 1000, "yyyy-mm-dd HH:MM");
-                        entry.statusTimestampNice = $scope.msToDate(now - entry.status_timestamp);
+                        entry.statusTimestamp = now - entry.status_timestamp;
+                        entry.statusTimestampDate = dateFormat(entry.status_timestamp, "yyyy-mm-dd HH:MM");
+                        entry.statusTimestampDiff = $scope.secondsToDiff(now - entry.status_timestamp);
+                        entry.workflowStatus = entry.workflow_status;
+                        entry.workflowTimestamp = now - entry.workflow_status_timestamp;
+                        entry.workflowTimestampDiff = $scope.secondsToDiff(entry.workflow_timestamp <= 0 ? 0 : entry.workflowTimestamp);
                     });
                     $scope.listDone = data.data.results.done_requests.sort($scope.compareDone);
                     $scope.data = Data.getLoadedData();

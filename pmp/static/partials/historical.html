@@ -38,10 +38,10 @@
           </button>
         </div>
         <div class="col-sm-2">
-          <button type="button" class="btn btn-sort m-2" ng-click="changeSubmittedSort('status_timestamp')">
-            <i ng-if="sortSubmittedOn != 'status_timestamp'" class="fa fa-sort-numeric-desc spacing-r" title="Click to sort descending by time in submitted status"></i>
-            <i ng-if="sortSubmittedOn == 'status_timestamp' && sortSubmittedOrder == 1" class="fa fa-sort-numeric-desc spacing-r sort-selected" title="Click to sort ascending by time in submitted status"></i>
-            <i ng-if="sortSubmittedOn == 'status_timestamp' && sortSubmittedOrder == -1" class="fa fa-sort-numeric-asc spacing-r sort-selected" title="Click to sort descending by time in submitted status"></i>
+          <button type="button" class="btn btn-sort m-2" ng-click="changeSubmittedSort('workflowTimestamp')">
+            <i ng-if="sortSubmittedOn != 'workflowTimestamp'" class="fa fa-sort-numeric-asc spacing-r" title="Click to sort ascending by time in current workflow status"></i>
+            <i ng-if="sortSubmittedOn == 'workflowTimestamp' && sortSubmittedOrder == 1" class="fa fa-sort-numeric-asc spacing-r sort-selected" title="Click to sort descending by time in current workflow status"></i>
+            <i ng-if="sortSubmittedOn == 'workflowTimestamp' && sortSubmittedOrder == -1" class="fa fa-sort-numeric-desc spacing-r sort-selected" title="Click to sort ascending by time in current workflow status"></i>
           </button>
         </div>
         <div class="col-sm-1">
@@ -84,8 +84,8 @@
           </div>
         </div>
         <div class="col-sm-2">
-          <small>Submitted for:</small><br>
-          <b title="{{submitted.statusTimestampNiceDate}}">{{submitted.statusTimestampNice}}</b>
+          <small>In <b>{{submitted.workflowStatus}}</b> for:</small><br>
+          <b>{{submitted.workflowTimestampDiff}}</b>
         </div>
         <div class="col-sm-1">
           <small>Priority:</small><br>
@@ -135,10 +135,10 @@
           </button>
         </div>
         <div class="col-sm-2">
-          <button type="button" class="btn btn-sort m-2" ng-click="changeDoneSort('status_timestamp')">
-            <i ng-if="sortDoneOn != 'status_timestamp'" class="fa fa-sort-numeric-desc spacing-r" title="Click to sort descending by time in done status"></i>
-            <i ng-if="sortDoneOn == 'status_timestamp' && sortDoneOrder == 1" class="fa fa-sort-numeric-desc spacing-r sort-selected" title="Click to sort ascending by time in done status"></i>
-            <i ng-if="sortDoneOn == 'status_timestamp' && sortDoneOrder == -1" class="fa fa-sort-numeric-asc spacing-r sort-selected" title="Click to sort descending by time in done status"></i>
+          <button type="button" class="btn btn-sort m-2" ng-click="changeDoneSort('statusTimestamp')">
+            <i ng-if="sortDoneOn != 'statusTimestamp'" class="fa fa-sort-numeric-asc spacing-r" title="Click to sort ascending by time in done status"></i>
+            <i ng-if="sortDoneOn == 'statusTimestamp' && sortDoneOrder == 1" class="fa fa-sort-numeric-asc spacing-r sort-selected" title="Click to sort descending by time in done status"></i>
+            <i ng-if="sortDoneOn == 'statusTimestamp' && sortDoneOrder == -1" class="fa fa-sort-numeric-desc spacing-r sort-selected" title="Click to sort ascending by time in done status"></i>
           </button>
         </div>
         <div class="col-sm-1">
@@ -182,7 +182,7 @@
         </div>
         <div class="col-sm-2">
           <small>Done for:</small><br>
-          <b title="{{done.statusTimestampNiceDate}}">{{done.statusTimestampNice}}</b>
+          <b>{{done.statusTimestampDiff}}</b>
         </div>
         <div class="col-sm-1">
           <small>Priority:</small><br>
