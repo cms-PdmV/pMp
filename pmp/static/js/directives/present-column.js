@@ -289,7 +289,8 @@
                                                                                                    dataset_name: d.dataset_name,
                                                                                                    growing_fake: true,
                                                                                                    completed_events: adjustment,
-                                                                                                   url: d.url})
+                                                                                                   url: d.url,
+                                                                                                   workflow: d.workflow})
                                         }
                                     }
                                 }
