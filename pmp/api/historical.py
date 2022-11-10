@@ -204,6 +204,7 @@ class HistoricalAPI(APIBase):
                                     'time': entry['time']
                                 }
                                 events = entry.get('events', 0)
+                                data_point['expected'] = events
                                 if entry['type'] in types_for_done_events:
                                     data_point['done'] = events
                                 elif entry['type'] in types_for_invalid_events:
