@@ -46,6 +46,7 @@ then
     # (cd $DIR && git pull)
     echo "Running grunt..."
     (cd $DIR/pmp/ && grunt &)
+    echo 'Starting service'
     (cd $DIR && ./pmp.sh start)
 fi
 

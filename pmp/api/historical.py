@@ -5,6 +5,16 @@ import time
 import logging
 from werkzeug.contrib.cache import SimpleCache
 import config
+import re
+
+# Disable expected events plot for the following processing strings
+expected_events_ps_to_disable = [
+    'PromptNanoAOD'
+]
+
+# Disable pattern
+ps_blacklist_expected_events = "|".join(expected_events_ps_to_disable)
+ps_blacklist_regex = re.compile(ps_blacklist_expected_events)
 
 
 class HistoricalAPI(APIBase):
@@ -37,7 +47,14 @@ class HistoricalAPI(APIBase):
         """
         points = []
         for timestamp in timestamps:
-            point = {'done': 0, 'produced': 0, 'expected': 0, 'invalid': 0, 'time': timestamp * 1000}
+            point = {
+                'done': 0,
+                'produced': 0,
+                'expected': 0,
+                'invalid': 0,
+                'time': timestamp * 1000,
+                'expected_events': True
+            }
             for key in data:
                 if data[key]['data'][0]['time'] <= timestamp:
                     for details in reversed(data[key]['data']):
@@ -46,6 +63,7 @@ class HistoricalAPI(APIBase):
                             point['produced'] += details['produced']
                             point['expected'] += details['expected']
                             point['invalid'] += details['invalid']
+                            point['expected_events'] = details.get('expected_events', True)
                             break
 
             points.append(point)
@@ -201,8 +219,15 @@ class HistoricalAPI(APIBase):
                                     'done': 0,
                                     'invalid': 0,
                                     'expected': mcm_document.get('expected', 0),
-                                    'time': entry['time']
+                                    'time': entry['time'],
+                                    'expected_events': True
                                 }
+
+                                # For some processing strings, disable the plotting of expected_events
+                                if ps_blacklist_regex.search(one):
+                                    logging.info('Query: %s is part of the processing strings which expected events must be disabled', one)
+                                    data_point['expected_events'] = False
+
                                 events = entry.get('events', 0)
                                 if entry['type'] in types_for_done_events:
                                     data_point['done'] = events
@@ -246,8 +271,8 @@ class HistoricalAPI(APIBase):
             else:
                 invalid_tags.append(one)
 
-        # logging.info('Prepare response length is %d' % (len(response_list)))
-        # logging.info('Response list is %s' % (json.dumps(response_list, indent=4)))
+        #logging.info('Prepare response length is %d' % (len(response_list)))
+        #logging.info('Response list is %s' % (json.dumps(response_list, indent=4)))
         return response_list, valid_tags, invalid_tags, messages
 
     def remove_useless_points(self, arr):
@@ -332,7 +357,7 @@ class HistoricalAPI(APIBase):
                                                                                                                interested_pwg_filter,
                                                                                                                status_filter,
                                                                                                                aggregate))
-
+        
         cache_key = 'present_%s_____%s' % (query, estimate_completed_events)
         if self.__cache.has(cache_key):
             logging.info('Found result in cache for key: %s' % cache_key)
@@ -342,6 +367,7 @@ class HistoricalAPI(APIBase):
             response_tuple = self.prepare_response(query, estimate_completed_events)
             self.__cache.set(cache_key, response_tuple)
 
+        response_tuple = self.prepare_response(query, estimate_completed_events)
         response, valid_tags, invalid_tags, messages = response_tuple
         # Apply priority, PWG and status filters
         response, pwgs, interested_pwgs, statuses = self.apply_filters(response, priority_filter, pwg_filter, interested_pwg_filter, status_filter)
