@@ -25,6 +25,9 @@
             scope.labelData = [];
             scope.dataCopy = [];
 
+            // Plot or not expected events
+            scope.plotExpectedEvents = true;
+
             // General attributes
             var width = config.customWidth - config.margin.left - config.margin.right;
             var height = config.customHeight - config.margin.top - config.margin.bottom;
@@ -126,7 +129,10 @@
                                  .y1(function(d) { return y(d.done + d.invalid + d.produced); });
 
             var prepareData = function(data) {
+                const includeExpectedEvents = (datapoint) => datapoint.expected_events === false;
                 scope.dataCopy = angular.copy(data);
+                scope.plotExpectedEvents = !scope.dataCopy.some(includeExpectedEvents);
+                
                 // Update ranges of axis according to new data
                 x.domain([d3.min(data, function(d) { return d.time; }),
                           d3.max(data, function(d) { return d.time; })]).range([0, width]);
@@ -150,13 +156,8 @@
                 svg.selectAll("clipping-class").remove()
                 svg.select("g.hover-line").remove();
                 svg.select("#lifetime").remove();
-                
-                console.log("Data points", data);
-                const includeExpectedEvents = (datapoint) => datapoint.expected_events === false;
-                const plotExpectedEvents = data.some(includeExpectedEvents);
-                console.log('Include expected events: ', !plotExpectedEvents);
 
-                if (!plotExpectedEvents) {
+                if (scope.plotExpectedEvents) {
                     svg.append("g")
                         .attr("clip-path", "url(#clip)")
                         .attr("class", "clipping-class")
@@ -260,8 +261,9 @@
                     var html = ''
                     var width = (data[4] === 0 ? 25 : 20);
                     html += '<div style="color: #90a4ae; width: ' + width + '%">Time: ' + data[0] + "</div>"
-                    html += '<div style="color: #263238; width: ' + width + '%" title="' + data[1] + '">Expected events: ' + (scope.humanReadableNumbers && data[1] > 0 ? scope.bigNumberFormatter(data[1]) : data[1]) + "</div>"
-                    if (data[5]) {}
+                    if (scope.plotExpectedEvents) {
+                        html += '<div style="color: #263238; width: ' + width + '%" title="' + data[1] + '">Expected events: ' + (scope.humanReadableNumbers && data[1] > 0 ? scope.bigNumberFormatter(data[1]) : data[1]) + "</div>"
+                    }
                     html += '<div style="color: #ff6f00; width: ' + width + '%" title="' + data[2] + '">Events in DAS: ' + (scope.humanReadableNumbers && data[2] > 0 ? scope.bigNumberFormatter(data[2]) : data[2]) + "</div>"
                     html += '<div style="color: #01579b; width: ' + width + '%" title="' + data[3] + '">Done events in DAS: ' + (scope.humanReadableNumbers && data[3] > 0 ? scope.bigNumberFormatter(data[3]) : data[3]) + "</div>"
                     if (data[4] !== 0) {
