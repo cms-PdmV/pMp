@@ -5,11 +5,17 @@ import time
 import logging
 from werkzeug.contrib.cache import SimpleCache
 import config
+import re
 
 # Disable expected events plot for the following processing strings
-expected_events_ps_to_disable = set([
-    'PromptNanoAODv10_v1'
-])
+expected_events_ps_to_disable = [
+    'PromptNanoAOD'
+]
+
+# Disable pattern
+ps_blacklist_expected_events = "|".join(expected_events_ps_to_disable)
+ps_blacklist_regex = re.compile(ps_blacklist_expected_events)
+
 
 class HistoricalAPI(APIBase):
     """Used to return list of points for historical plots"""
@@ -218,7 +224,7 @@ class HistoricalAPI(APIBase):
                                 }
 
                                 # For some processing strings, disable the plotting of expected_events
-                                if one in expected_events_ps_to_disable:
+                                if ps_blacklist_regex.search(one):
                                     logging.info('Query: %s is part of the processing strings which expected events must be disabled', one)
                                     data_point['expected_events'] = False
 
@@ -352,7 +358,6 @@ class HistoricalAPI(APIBase):
                                                                                                                status_filter,
                                                                                                                aggregate))
         
-        '''
         cache_key = 'present_%s_____%s' % (query, estimate_completed_events)
         if self.__cache.has(cache_key):
             logging.info('Found result in cache for key: %s' % cache_key)
@@ -361,7 +366,6 @@ class HistoricalAPI(APIBase):
             # Construct data by given query
             response_tuple = self.prepare_response(query, estimate_completed_events)
             self.__cache.set(cache_key, response_tuple)
-        '''
 
         response_tuple = self.prepare_response(query, estimate_completed_events)
         response, valid_tags, invalid_tags, messages = response_tuple
