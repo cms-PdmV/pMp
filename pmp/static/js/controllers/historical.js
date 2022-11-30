@@ -339,10 +339,20 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
             var date = new Date()
             var dataLabelWidth = (1160 - 20)  / dataLabel.length;
             var time_line = '<text x="10" y="15">' + dataLabel[0].textContent + '</text>';
-            var expected_evts = '<text x="' + (dataLabelWidth + 10) + '" y="15" style="fill: #263238;">' + dataLabel[1].textContent + '</text>';
-            var evts_in_DAS = '<text x="' + (dataLabelWidth * 2 + 10) + '" y="15" style="fill: #ff6f00;">' + dataLabel[2].textContent + '</text>';
-            var done_evts_in_DAS = '<text x="' + (dataLabelWidth * 3 + 10) + '" y="15" style="fill: #01579b;">' + dataLabel[3].textContent + '</text>';
+            var expected_evts = ''
+            var evts_in_DAS = ''
+            var done_evts_in_DAS = ''
             var invalid_evts = '';
+                        
+            if (dataLabel.length === 3) {
+                evts_in_DAS = '<text x="' + (dataLabelWidth * 2 + 10) + '" y="15" style="fill: #ff6f00;">' + dataLabel[1].textContent + '</text>';
+                done_evts_in_DAS = '<text x="' + (dataLabelWidth * 3 + 10) + '" y="15" style="fill: #01579b;">' + dataLabel[2].textContent + '</text>';    
+            }
+            if (dataLabel.length === 4) {
+                expected_evts = '<text x="' + (dataLabelWidth + 10) + '" y="15" style="fill: #263238;">' + dataLabel[1].textContent + '</text>';
+                evts_in_DAS = '<text x="' + (dataLabelWidth * 2 + 10) + '" y="15" style="fill: #ff6f00;">' + dataLabel[2].textContent + '</text>';
+                done_evts_in_DAS = '<text x="' + (dataLabelWidth * 3 + 10) + '" y="15" style="fill: #01579b;">' + dataLabel[3].textContent + '</text>';    
+            }
             if (dataLabel.length === 5) {
                 invalid_evts = '<text x="' + (dataLabelWidth * 4 + 10) + '" y="15" style="fill: red;">' + dataLabel[4].textContent + '</text>';
             }
