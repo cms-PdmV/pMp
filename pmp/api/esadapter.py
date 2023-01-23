@@ -25,7 +25,8 @@ class InitConnection(object):
             fetched_objects = self.es.search(q=query,
                                              index=index,
                                              size=page_size,
-                                             from_=page * page_size)['hits']['hits']
+                                             from_=page * page_size,
+                                             request_timeout=60)['hits']['hits']
             # logging.info('Found %s results in page %s for %s of index %s' % (len(fetched_objects), page, query, index))
             page += 1
             for fetched_object in fetched_objects:
