@@ -10,7 +10,7 @@ if not secret_key:
     secret_key = secrets.token_hex()
 
 ADMINS = ["pdmvserv@cern.ch"]
-DEBUG = True
+DEBUG = True if os.getenv("DEBUG") else False
 # Be aware of the latest slash when you set this environment variable
 DATABASE_URL = os.getenv("DATABASE_URL", "http://127.0.0.1:9200/")
 HOST = os.getenv("HOST", "127.0.0.1")
