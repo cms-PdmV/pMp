@@ -76,17 +76,17 @@
               .text('events');
 
             var zoom = d3.zoom().on("zoom", onZoom);
-            function onZoom(event) {
-                var dx = event.transform.x
-                var dy = event.transform.y
-                var dk = event.transform.k
+            function onZoom() {
+                var dx = d3.event.transform.x
+                var dy = d3.event.transform.y
+                var dk = d3.event.transform.k
                 svg.select("g.hover-line").remove();
                 hoverLineGroup = undefined;
 
                 var transformString = undefined;
-                gx.call(xAxis.scale(event.transform.rescaleX(x)));
+                gx.call(xAxis.scale(d3.event.transform.rescaleX(x)));
                 if (scope.zoomY) {
-                    gy.call(yAxis.scale(event.transform.rescaleY(y)));
+                    gy.call(yAxis.scale(d3.event.transform.rescaleY(y)));
                     transformString = "translate(" + dx + "," + dy + ") scale(" + dk + "," + dk + ")";
                 } else {
                     transformString = "translate(" + dx + ",0) scale(" + dk + ",1)";

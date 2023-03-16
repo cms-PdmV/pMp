@@ -1,10 +1,8 @@
 """
 pMp production run script
 Configuration file in config.py
-> sudo python run.py
 """
 from flask import Flask, make_response, redirect, request, render_template, jsonify
-from werkzeug.middleware.proxy_fix import ProxyFix
 from pmp.api.historical import HistoricalAPI
 from pmp.api.performance import PerformanceAPI
 from pmp.api.present import PresentAPI
@@ -23,7 +21,6 @@ import config
 import flask
 import logging
 
-
 app = Flask(
     __name__,
     template_folder="./pmp/templates",
@@ -31,9 +28,6 @@ app = Flask(
     static_url_path=""
 )
 app.url_map.strict_slashes = False
-
-# Handle redirections from a reverse proxy
-app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
 
 @app.errorhandler(404)
 def page_not_found(error):
