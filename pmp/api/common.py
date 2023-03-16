@@ -1,22 +1,21 @@
 """A list of classes for utils api"""
-from datetime import datetime
-from subprocess import call
-from fetchd.utils import Utils
-import pmp.api.esadapter as esadapter
-import elasticsearch
 import json
 import os
 import logging
 import config
-from werkzeug.contrib.cache import SimpleCache
 import time
+from datetime import datetime
+from subprocess import call
+from fetchd.utils import Utils
+import pmp.api.esadapter as esadapter
+from cachelib.simple import SimpleCache
+from elasticsearch import NotFoundError
 
 
 class SuggestionsAPI(esadapter.InitConnection):
     """
     Used to search in elastic index for similar PrepIDs as given
     """
-
     __cache = SimpleCache(threshold=config.CACHE_SIZE, default_timeout=config.CACHE_TIMEOUT)
 
     def __init__(self, typeof):
@@ -260,7 +259,7 @@ class APIBase(esadapter.InitConnection):
         """
         try:
             self.es.get_source(index=index, doc_type=doc_type, id=prepid)
-        except elasticsearch.NotFoundError:
+        except NotFoundError:
             return False
 
         return True

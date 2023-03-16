@@ -4,11 +4,19 @@ Configuration file in config.py
 > sudo python run.py
 """
 from flask import Flask, make_response, redirect, request, render_template, jsonify
+from werkzeug.middleware.proxy_fix import ProxyFix
 from pmp.api.historical import HistoricalAPI
 from pmp.api.performance import PerformanceAPI
 from pmp.api.present import PresentAPI
-from pmp.api.common import OverallAPI, SuggestionsAPI, ShortenAPI, ScreenshotAPI, LastUpdateAPI, AdminAPI, ObjectListAPI
-
+from pmp.api.common import (
+    OverallAPI,
+    SuggestionsAPI,
+    ShortenAPI,
+    ScreenshotAPI,
+    LastUpdateAPI,
+    AdminAPI,
+    ObjectListAPI,
+)
 import os
 import json
 import config
@@ -16,69 +24,74 @@ import flask
 import logging
 
 
-app = Flask(__name__,
-            template_folder='./pmp/templates',
-            static_url_path='',
-            static_folder='./pmp')
+app = Flask(
+    __name__,
+    template_folder="./pmp/templates",
+    static_folder="./pmp",
+    static_url_path=""
+)
+app.url_map.strict_slashes = False
 
+# Handle redirections from a reverse proxy
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
 
 @app.errorhandler(404)
 def page_not_found(error):
     """Return invalid template"""
-    return make_response(open('pmp/static/build/invalid.min.html').read()), 404
+    return make_response(open("pmp/static/build/invalid.min.html").read()), 404
 
 
 def sanitize(string):
     return string.replace("\\", "")
 
 
-@app.route('/404')
+@app.route("/404")
 def four_oh_four():
     """Redirect on 404"""
-    return make_response(open('pmp/static/build/invalid.min.html').read())
+    return make_response(open("pmp/static/build/invalid.min.html").read())
 
 
-@app.route('/about')
+@app.route("/about")
 def about():
     """Redirect to Twiki"""
-    return redirect('https://twiki.cern.ch/twiki/bin/viewauth/CMS/PdmVpMp',
-                    code=302)
+    return redirect("https://twiki.cern.ch/twiki/bin/viewauth/CMS/PdmVpMp", code=302)
 
 
-@app.route('/admin')
+@app.route("/admin")
 def admin():
     info = AdminAPI().get()
-    return render_template('admin.html', data=info)
+    return render_template("admin.html", data=info)
 
 
-@app.route('/')
-@app.route('/historical')
-@app.route('/index')
-@app.route('/performance')
-@app.route('/present')
+@app.route("/")
+@app.route("/historical")
+@app.route("/index")
+@app.route("/performance")
+@app.route("/present")
 def dashboard():
     """Redirect to graph template"""
-    return make_response(open('pmp/static/build/valid.min.html').read())
+    return make_response(open("pmp/static/build/valid.min.html").read())
 
-@app.route('/api/overall')
+
+@app.route("/api/overall")
 def api_overall():
     """
     API call to get statistics of pMp database
     """
-    i = flask.request.args.get('r', '')
-    i = sanitize(i).split(',')
+    i = flask.request.args.get("r", "")
+    i = sanitize(i).split(",")
     result = OverallAPI().get(i)
 
     return result
 
 
-@app.route('/api/objects')
+@app.route("/api/objects")
 def api_objects():
     """
     API call to get list of objects in certain collection
     """
-    i = flask.request.args.get('r', '')
-    i = sanitize(i).split(',')
+    i = flask.request.args.get("r", "")
+    i = sanitize(i).split(",")
     if len(i) > 0:
         result = ObjectListAPI().get(i[0])
         return jsonify(result)
@@ -86,7 +99,7 @@ def api_objects():
     return jsonify([])
 
 
-@app.route('/api/lastupdate')
+@app.route("/api/lastupdate")
 def api_lastupdate():
     """
     API to get date and time of last update
@@ -95,7 +108,8 @@ def api_lastupdate():
 
     return jsonify(result)
 
-@app.route('/api/historical')
+
+@app.route("/api/historical")
 def api_historical():
     """API call for complex historical queries
     i - list of inputs (csv)
@@ -104,8 +118,8 @@ def api_historical():
     status - list of statuses to include (csv)
     pwg - list of pwg to include (csv)
     """
-    i = flask.request.args.get('r', '')
-    granularity = flask.request.args.get('granularity', 250)
+    i = flask.request.args.get("r", "")
+    granularity = flask.request.args.get("granularity", 250)
     if not isinstance(granularity, int):
         try:
             granularity = int(granularity)
@@ -115,124 +129,134 @@ def api_historical():
     if granularity < 1:
         granularity = 250
 
-    priority = flask.request.args.get('priority', None)
+    priority = flask.request.args.get("priority", None)
     if priority is not None:
-        priority = priority.split(',')
+        priority = priority.split(",")
         if len(priority) < 2:
             priority = None
         else:
             try:
-                priority[0] = int(priority[0]) if priority[0] != '' else None
-                priority[1] = int(priority[1]) if priority[1] != '' else None
+                priority[0] = int(priority[0]) if priority[0] != "" else None
+                priority[1] = int(priority[1]) if priority[1] != "" else None
             except:
                 priority = None
 
-    pwg = flask.request.args.get('pwg', None)
+    pwg = flask.request.args.get("pwg", None)
     if pwg is not None:
-        pwg = pwg.split(',')
+        pwg = pwg.split(",")
 
-    interested_pwg = flask.request.args.get('interested_pwg', None)
+    interested_pwg = flask.request.args.get("interested_pwg", None)
     if interested_pwg is not None:
-        interested_pwg = interested_pwg.split(',')
+        interested_pwg = interested_pwg.split(",")
 
-    status = flask.request.args.get('status', None)
+    status = flask.request.args.get("status", None)
     if status is not None:
-        status = status.split(',')
+        status = status.split(",")
 
-    estimate_completed_events = flask.request.args.get('estimateCompleted', '').lower() == 'true'
-    aggregate = flask.request.args.get('aggregate', 'true').lower() != 'false'
+    estimate_completed_events = (
+        flask.request.args.get("estimateCompleted", "").lower() == "true"
+    )
+    aggregate = flask.request.args.get("aggregate", "true").lower() != "false"
 
     i = sanitize(i)
-    result = HistoricalAPI().get(i,
-                                 data_point_count=granularity,
-                                 estimate_completed_events=estimate_completed_events,
-                                 priority_filter=priority,
-                                 pwg_filter=pwg,
-                                 interested_pwg_filter=interested_pwg,
-                                 status_filter=status,
-                                 aggregate=aggregate)
+    result = HistoricalAPI().get(
+        i,
+        data_point_count=granularity,
+        estimate_completed_events=estimate_completed_events,
+        priority_filter=priority,
+        pwg_filter=pwg,
+        interested_pwg_filter=interested_pwg,
+        status_filter=status,
+        aggregate=aggregate,
+    )
 
     return result
 
 
-@app.route('/api/performance')
+@app.route("/api/performance")
 def api_performance():
-    i = flask.request.args.get('r', '')
-    priority = flask.request.args.get('priority', None)
+    i = flask.request.args.get("r", "")
+    priority = flask.request.args.get("priority", None)
     if priority is not None:
-        priority = priority.split(',')
+        priority = priority.split(",")
         if len(priority) < 2:
             priority = None
         else:
             try:
-                priority[0] = int(priority[0]) if priority[0] != '' else None
-                priority[1] = int(priority[1]) if priority[1] != '' else None
+                priority[0] = int(priority[0]) if priority[0] != "" else None
+                priority[1] = int(priority[1]) if priority[1] != "" else None
             except:
                 priority = None
 
-    pwg = flask.request.args.get('pwg', None)
+    pwg = flask.request.args.get("pwg", None)
     if pwg is not None:
-        pwg = pwg.split(',')
+        pwg = pwg.split(",")
 
-    interested_pwg = flask.request.args.get('interested_pwg', None)
+    interested_pwg = flask.request.args.get("interested_pwg", None)
     if interested_pwg is not None:
-        interested_pwg = interested_pwg.split(',')
+        interested_pwg = interested_pwg.split(",")
 
-    status = flask.request.args.get('status', None)
+    status = flask.request.args.get("status", None)
     if status is not None:
-        status = status.split(',')
+        status = status.split(",")
 
     i = sanitize(i)
-    result = PerformanceAPI().get(i,
-                                 priority_filter=priority,
-                                 pwg_filter=pwg,
-                                 interested_pwg_filter=interested_pwg,
-                                 status_filter=status)
+    result = PerformanceAPI().get(
+        i,
+        priority_filter=priority,
+        pwg_filter=pwg,
+        interested_pwg_filter=interested_pwg,
+        status_filter=status,
+    )
 
     return result
 
 
-@app.route('/api/present')
+@app.route("/api/present")
 def api_present():
-    i = flask.request.args.get('r', '')
-    priority = flask.request.args.get('priority', None)
+    i = flask.request.args.get("r", "")
+    priority = flask.request.args.get("priority", None)
     if priority is not None:
-        priority = priority.split(',')
+        priority = priority.split(",")
         if len(priority) < 2:
             priority = None
         else:
             try:
-                priority[0] = int(priority[0]) if priority[0] != '' else None
-                priority[1] = int(priority[1]) if priority[1] != '' else None
+                priority[0] = int(priority[0]) if priority[0] != "" else None
+                priority[1] = int(priority[1]) if priority[1] != "" else None
             except:
                 priority = None
 
-    pwg = flask.request.args.get('pwg', None)
+    pwg = flask.request.args.get("pwg", None)
     if pwg is not None:
-        pwg = pwg.split(',')
+        pwg = pwg.split(",")
 
-    interested_pwg = flask.request.args.get('interested_pwg', None)
+    interested_pwg = flask.request.args.get("interested_pwg", None)
     if interested_pwg is not None:
-        interested_pwg = interested_pwg.split(',')
+        interested_pwg = interested_pwg.split(",")
 
-    status = flask.request.args.get('status', None)
+    status = flask.request.args.get("status", None)
     if status is not None:
-        status = status.split(',')
+        status = status.split(",")
 
-    estimate_completed_events = flask.request.args.get('estimateCompleted', '').lower() == 'true'
+    estimate_completed_events = (
+        flask.request.args.get("estimateCompleted", "").lower() == "true"
+    )
 
     i = sanitize(i)
-    result = PresentAPI().get(i,
-                              estimate_completed_events=estimate_completed_events,
-                              priority_filter=priority,
-                              pwg_filter=pwg,
-                              interested_pwg_filter=interested_pwg,
-                              status_filter=status)
+    result = PresentAPI().get(
+        i,
+        estimate_completed_events=estimate_completed_events,
+        priority_filter=priority,
+        pwg_filter=pwg,
+        interested_pwg_filter=interested_pwg,
+        status_filter=status,
+    )
 
     return result
 
 
-@app.route('/api/suggest/<string:statistics_type>/<string:fragment>')
+@app.route("/api/suggest/<string:statistics_type>/<string:fragment>")
 def api_suggest(statistics_type, fragment):
     """A
     PI call for suggestions
@@ -243,37 +267,38 @@ def api_suggest(statistics_type, fragment):
     return result
 
 
-@app.route('/api/shorten')
+@app.route("/api/shorten")
 def api_shorten():
     """Shorten URL"""
-    url = flask.request.args.get('r', None)
+    url = flask.request.args.get("r", None)
     if url:
         return ShortenAPI().get(url)
     else:
         return {}
 
 
-@app.route('/api/screenshot', methods=['POST'])
+@app.route("/api/screenshot", methods=["POST"])
 def api_screenshot():
     """Take screenshot"""
-    data = request.data.decode('utf-8')
+    data = request.data.decode("utf-8")
     data = json.loads(data)
-    return ScreenshotAPI().get(data['data'], data['ext'])
+    return ScreenshotAPI().get(data["data"], data["ext"])
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     from fetchd.utils import Utils
+
     Utils.setup_console_logging()
-    if os.environ.get('WERKZEUG_RUN_MAIN') != 'true':
+    if os.environ.get("WERKZEUG_RUN_MAIN") != "true":
         # Do only once, before the reloader
         pid = os.getpid()
-        logging.info('PID: %s', pid)
-        with open('pmp.pid', 'w') as pid_file:
+        logging.info("PID: %s", pid)
+        with open("pmp.pid", "w") as pid_file:
             pid_file.write(str(pid))
 
-    app.run(host='0.0.0.0',
-            port=config.PORT,
-            debug=config.DEBUG,
-            threaded=True,
-            ssl_context=(config.CERTFILE, config.KEYFILE))
-
+    app.run(
+        host="0.0.0.0",
+        port=config.PORT,
+        debug=config.DEBUG,
+        threaded=True,
+    )

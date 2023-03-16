@@ -1,7 +1,7 @@
 """Module crating ElasticSearch object"""
-from elasticsearch import Elasticsearch
 import config
 import logging
+from elasticsearch import Elasticsearch
 
 
 class InitConnection(object):
