@@ -1,7 +1,8 @@
 """Module crating ElasticSearch object"""
 import config
-from opensearchpy import OpenSearch
+import logging
 from elasticsearch import Elasticsearch
+from opensearchpy import OpenSearch
 
 
 class InitConnection(object):
@@ -28,20 +29,26 @@ class InitConnection(object):
 
     def search(self, query, index, page_size=__PAGE_SIZE, max_results=-1):
         results = []
-        fetched_objects = [{}]
-        page = 0
-        while len(fetched_objects) > 0:
-            # logging.info('Will try to fetch page %s for %s of index %s' % (page, query, index))
-            fetched_objects = self.es.search(
-                q=query,
-                index=index,
-                size=page_size,
-                from_=page * page_size,
-                request_timeout=config.QUERY_TIMEOUT,
-            )["hits"]["hits"]
-            # logging.info('Found %s results in page %s for %s of index %s' % (len(fetched_objects), page, query, index))
-            page += 1
-            for fetched_object in fetched_objects:
+        batch = 0
+        scroll_default = "5m"
+
+        # Get first batch of results
+        query_results = self.es.search(
+            q=query,
+            index=index,
+            size=page_size,
+            scroll=scroll_default,
+            request_timeout=config.QUERY_TIMEOUT,
+        )
+        scroll_id = query_results["_scroll_id"]
+        docs = query_results["hits"]["hits"]
+
+        while len(docs) > 0:
+            logging.info(
+                "Found %s results in batch %s for %s of index %s"
+                % (len(docs), batch, query, index)
+            )
+            for fetched_object in docs:
                 fetched_object["_source"]["_id"] = fetched_object["_id"]
                 results.append(fetched_object["_source"])
                 if max_results > 0 and len(results) >= max_results:
@@ -50,6 +57,14 @@ class InitConnection(object):
             if max_results > 0 and len(results) >= max_results:
                 break
 
+            # Continue to next batch of results
+            batch += 1
+            query_results = self.es.scroll(scroll_id=scroll_id, scroll=scroll_default)
+            scroll_id = query_results["_scroll_id"]
+            docs = query_results["hits"]["hits"]
+
+        # Delete the scroll
+        self.es.clear_scroll(scroll_id=scroll_id)
         return results
 
     def get_source(self, index: str, id: str, doc_type: str = None):
