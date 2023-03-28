@@ -3,6 +3,7 @@ import os
 import re
 import logging
 import time
+import config
 from configparser import ConfigParser
 from datetime import datetime
 
@@ -62,22 +63,20 @@ class Utils(object):
         """
         Perform an HTTP request
         """
+        ca_cert = None
+        if config.OPENSEARCH:
+            credentials = config.search_engine_credentials()
+            ca_cert = credentials["ca_cert"]
         try:
             response = requests.request(
-                method=method,
-                url=url,
-                data=data,
-
+                method=method, url=url, data=data, verify=ca_cert
             )
             body = response.json() if parse_json else response.text
             status_code = response.status_code
             response.raise_for_status()
             return (body, status_code)
         except HTTPError:
-            logging.error(
-                "Status: %s/n%s",
-                status_code, body
-            )
+            logging.error("Status: %s/n%s", status_code, body)
             if retry_on_failure:
                 time.sleep(5)
                 logging.info("Will retry %s to %s", method, url)
