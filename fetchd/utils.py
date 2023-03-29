@@ -10,6 +10,7 @@ from datetime import datetime
 # Requests package
 import requests
 from requests.exceptions import HTTPError
+from requests_gssapi import HTTPSPNEGOAuth, OPTIONAL
 
 
 class Config(object):
@@ -63,13 +64,18 @@ class Utils(object):
         """
         Perform an HTTP request
         """
+        auth = None
         ca_cert = None
-        if config.OPENSEARCH:
-            credentials = config.search_engine_credentials()
-            ca_cert = credentials["ca_cert"]
+        using_opensearch = True if os.getenv("OPENSEARCH") else False
+        using_kerberos = True if os.getenv("KERBEROS_AUTH") else False
+
+        if using_opensearch:
+            ca_cert = os.getenv("CA_CERT")
+            if using_kerberos:
+                auth = HTTPSPNEGOAuth(mutual_authentication=OPTIONAL)
         try:
             response = requests.request(
-                method=method, url=url, data=data, verify=ca_cert
+                method=method, url=url, data=data, verify=ca_cert, auth=auth
             )
             body = response.json() if parse_json else response.text
             status_code = response.status_code

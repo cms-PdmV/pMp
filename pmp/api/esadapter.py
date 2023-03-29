@@ -1,6 +1,7 @@
 """Module crating ElasticSearch object"""
 import config
-from opensearchpy import OpenSearch
+from opensearchpy import OpenSearch, RequestsHttpConnection
+from requests_gssapi import HTTPSPNEGOAuth, OPTIONAL
 from elasticsearch import Elasticsearch
 
 
@@ -9,20 +10,29 @@ class InitConnection(object):
     This class initiates connection to the ElasticSearch and results overflow
     """
 
-    __PAGE_SIZE = 5000
+    __PAGE_SIZE = 25000
 
     def __init__(self):
         """Initiate connection
         Default cropping is 20, set overflow that will not crop results
         """
         if config.OPENSEARCH:
-            credentials = config.search_engine_credentials()
-            self.es = OpenSearch(
-                hosts=[config.DATABASE_URL],
-                use_ssl=True,
-                verify_cert=True,
-                ca_certs=credentials["ca_cert"],
-            )
+            if config.KERBEROS_AUTH:
+                self.es = OpenSearch(
+                    hosts=[config.DATABASE_URL],
+                    use_ssl=True,
+                    verify_cert=True,
+                    ca_certs=config.CA_CERT,
+                    connection_class=RequestsHttpConnection,
+                    http_auth=HTTPSPNEGOAuth(mutual_authentication=OPTIONAL),
+                )
+            else:
+                self.es = OpenSearch(
+                    hosts=[config.DATABASE_URL],
+                    use_ssl=True,
+                    verify_cert=True,
+                    ca_certs=config.CA_CERT,
+                )
         else:
             self.es = Elasticsearch(config.DATABASE_URL)
 
