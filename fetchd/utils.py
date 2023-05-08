@@ -3,7 +3,7 @@ import os
 import re
 import logging
 import time
-import config
+from fetchd.search_engine import search_engine, SearchEngine
 from configparser import ConfigParser
 from datetime import datetime
 
@@ -66,11 +66,11 @@ class Utils(object):
         """
         auth = None
         ca_cert = None
-        using_opensearch = True if os.getenv("OPENSEARCH") else False
-        using_kerberos = True if os.getenv("KERBEROS_AUTH") else False
+        using_opensearch = search_engine.engine_instance_of(SearchEngine.OPENSEARCH)
+        using_kerberos = search_engine.kerberos
 
         if using_opensearch:
-            ca_cert = os.getenv("CA_CERT")
+            ca_cert = search_engine.ca_cert
             if using_kerberos:
                 auth = HTTPSPNEGOAuth(mutual_authentication=OPTIONAL)
         try:

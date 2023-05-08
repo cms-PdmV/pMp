@@ -7,6 +7,7 @@ import time
 from datetime import datetime
 from subprocess import call
 from fetchd.utils import Utils
+from fetchd.search_engine import search_engine
 import pmp.api.esadapter as esadapter
 from cachelib.simple import SimpleCache
 from elasticsearch import NotFoundError as ElasticNotFoundError
@@ -202,7 +203,7 @@ class OverallAPI(object):
         results = {}
         for collection_name in collections:
             response, _ = Utils.curl(
-                "GET", config.DATABASE_URL + collection_name + "/_count"
+                "GET", search_engine.url + collection_name + "/_count"
             )
             count = response.get("count", 0)
             results[collection_name.replace("_", " ")] = count
@@ -254,14 +255,12 @@ class AdminAPI(esadapter.InitConnection):
         Utils.setup_console_logging()
 
     def get(self):
-        collections, _ = Utils.curl(
-            "GET", config.DATABASE_URL + "_aliases?pretty=false"
-        )
+        collections, _ = Utils.curl("GET", search_engine.url + "_aliases?pretty=false")
         collections = collections.keys()
         results = {}
         for collection_name in collections:
             response, _ = Utils.curl(
-                "GET", config.DATABASE_URL + collection_name + "/_count"
+                "GET", search_engine.url + collection_name + "/_count"
             )
             collection_name = collection_name.replace("_", " ")
             count = response.get("count", 0)
@@ -293,7 +292,6 @@ class ObjectListAPI(esadapter.InitConnection):
 
 
 class APIBase(esadapter.InitConnection):
-
     __cache = SimpleCache(
         threshold=config.CACHE_SIZE, default_timeout=config.CACHE_TIMEOUT
     )

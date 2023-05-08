@@ -1,8 +1,6 @@
 """Module crating ElasticSearch object"""
 import config
-from opensearchpy import OpenSearch, RequestsHttpConnection
-from requests_gssapi import HTTPSPNEGOAuth, OPTIONAL
-from elasticsearch import Elasticsearch
+from fetchd.search_engine import search_engine, SearchEngine
 
 
 class InitConnection(object):
@@ -16,25 +14,8 @@ class InitConnection(object):
         """Initiate connection
         Default cropping is 20, set overflow that will not crop results
         """
-        if config.OPENSEARCH:
-            if config.KERBEROS_AUTH:
-                self.es = OpenSearch(
-                    hosts=[config.DATABASE_URL],
-                    use_ssl=True,
-                    verify_cert=True,
-                    ca_certs=config.CA_CERT,
-                    connection_class=RequestsHttpConnection,
-                    http_auth=HTTPSPNEGOAuth(mutual_authentication=OPTIONAL),
-                )
-            else:
-                self.es = OpenSearch(
-                    hosts=[config.DATABASE_URL],
-                    use_ssl=True,
-                    verify_cert=True,
-                    ca_certs=config.CA_CERT,
-                )
-        else:
-            self.es = Elasticsearch(config.DATABASE_URL)
+        self.search_engine = search_engine
+        self.es = self.search_engine.client
 
     def search(self, query, index, page_size=__PAGE_SIZE, max_results=-1):
         results = []
@@ -63,17 +44,25 @@ class InitConnection(object):
         return results
 
     def get_source(self, index: str, id: str, doc_type: str = None):
-        if config.OPENSEARCH:
+        if self.search_engine.engine_instance_of(SearchEngine.OPENSEARCH):
             # This client does not support the legacy doc_type option
             return self.es.get_source(index=index, id=id)
-        else:
+        elif self.search_engine.engine_instance_of(SearchEngine.ELASTICSEARCH):
             # Elasticsearch 6.x supports it
             return self.es.get_source(index=index, id=id, doc_type=doc_type)
 
+        raise NotImplementedError(
+            "Operation not implemented for the current search engine"
+        )
+
     def mget(self, index: str, body: dict, doc_type: str = None):
-        if config.OPENSEARCH:
+        if self.search_engine.engine_instance_of(SearchEngine.OPENSEARCH):
             # This client does not support the legacy doc_type option
             return self.es.mget(index=index, body=body)
-        else:
+        elif self.search_engine.engine_instance_of(SearchEngine.ELASTICSEARCH):
             # Elasticsearch 6.x supports it
             return self.es.mget(index=index, body=body, doc_type=doc_type)
+
+        raise NotImplementedError(
+            "Operation not implemented for the current search engine"
+        )
