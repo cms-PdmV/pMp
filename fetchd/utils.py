@@ -3,7 +3,6 @@ import os
 import re
 import logging
 import time
-from fetchd.search_engine import search_engine, SearchEngine
 from configparser import ConfigParser
 from datetime import datetime
 
@@ -11,6 +10,14 @@ from datetime import datetime
 import requests
 from requests.exceptions import HTTPError
 from requests_gssapi import HTTPSPNEGOAuth, OPTIONAL
+
+# Import SearchEngine module
+# If the application is running as a web server, it will be available into the fetchd package
+# If it is running as a batch job, it is not required to make reference to the package
+try:
+    from fetchd.search_engine import search_engine, SearchEngine
+except ModuleNotFoundError:
+    from search_engine import search_engine, SearchEngine
 
 
 class Config(object):
