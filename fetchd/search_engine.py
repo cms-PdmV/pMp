@@ -71,7 +71,7 @@ class SearchEngine:
             logging.Logger to log all the events related to the SearchEngine class
         """
         logger_format: logging.Formatter = logging.Formatter(
-            "[%(levelname)s][%(className)s][%(asctime)s]: %(message)s"
+            "[%(levelname)s][%(asctime)s]: %(message)s"
         )
         logger = logging.getLogger("SearchEngine")
         logger_handler = logging.StreamHandler()
