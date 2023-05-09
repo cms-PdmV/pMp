@@ -16,6 +16,7 @@ from requests_gssapi import HTTPSPNEGOAuth, OPTIONAL
 class Config(object):
     """
     Load cofiguration from file
+    Be aware that search engine url must have a trailing slash
     """
 
     def __init__(self, index):
@@ -33,10 +34,10 @@ class Config(object):
         self.source_db_changes = parser.get(index, "source_db_changes")
         self.fetch_fields = re.split(", ", parser.get(index, "fetch_fields"))
         self.mapping = parser.get(index, "mapping")
-        self.db = parser.get("pmp", "db")
-        self.pmp_index = parser.get("pmp", "db") + parser.get(index, "pmp_index")
+        self.db = search_engine.url
+        self.pmp_index = self.db + parser.get(index, "pmp_index")
         self.pmp_type = self.pmp_index + parser.get(index, "pmp_type")
-        self.last_seq = parser.get("pmp", "last_seq") + index
+        self.last_seq = self.db + "last_sequences/last_seq" + "/" + index
 
 
 class Utils(object):
