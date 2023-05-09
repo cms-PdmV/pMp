@@ -24,6 +24,8 @@ class SearchEngine:
     __AVAILABLE_ENGINES = {OPENSEARCH: OpenSearch, ELASTICSEARCH: Elasticsearch}
 
     def __init__(self):
+        self.__ca_cert: str = None
+        self.__requires_kerberos: bool = None
         self.__logger = self.__get_logger()
         (
             self.__requested_engine,
@@ -38,11 +40,11 @@ class SearchEngine:
 
     @property
     def ca_cert(self):
-        return self.__get_ca_cert_path()
+        return self.__ca_cert
 
     @property
     def kerberos(self):
-        return self.__require_kerberos_authentication()
+        return self.__requires_kerberos
 
     @property
     def url(self):
@@ -71,7 +73,7 @@ class SearchEngine:
             logging.Logger to log all the events related to the SearchEngine class
         """
         logger_format: logging.Formatter = logging.Formatter(
-            "[%(levelname)s][%(asctime)s]: %(message)s"
+            "[%(levelname)s][%(name)s][%(asctime)s]: %(message)s"
         )
         logger = logging.getLogger("SearchEngine")
         logger_handler = logging.StreamHandler()
@@ -272,13 +274,13 @@ class SearchEngine:
         """
         # Instantiate a OpenSearch client
         if self.engine_instance_of(engine_name=SearchEngine.OPENSEARCH):
-            ca_cert: str = self.__get_ca_cert_path()
-            kerberos_auth: bool = self.__require_kerberos_authentication()
+            self.__ca_cert: str = self.__get_ca_cert_path()
+            self.__requires_kerberos: bool = self.__require_kerberos_authentication()
 
             return self.__create_opensearch_client(
                 database_url=self.__database_url,
-                ca_cert=ca_cert,
-                kerberos_auth=kerberos_auth,
+                ca_cert=self.__ca_cert,
+                kerberos_auth=self.__requires_kerberos,
             )
         # Instantiate a Elasticsearch client
         elif self.engine_instance_of(engine_name=SearchEngine.ELASTICSEARCH):
