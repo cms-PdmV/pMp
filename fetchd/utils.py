@@ -27,6 +27,7 @@ class Config(object):
     """
 
     def __init__(self, index):
+        self.index_name = index
         self.dir = os.path.dirname(os.path.realpath(__file__))
         parser = ConfigParser()
         parser.read(self.dir + "/default.conf")
@@ -43,8 +44,8 @@ class Config(object):
         self.mapping = parser.get(index, "mapping")
         self.db = search_engine.url
         self.pmp_index = self.db + parser.get(index, "pmp_index")
-        self.pmp_type = self.pmp_index + parser.get(index, "pmp_type")
-        self.last_seq = self.db + "last_sequences/last_seq" + "/" + index
+        self.pmp_type = self.pmp_index + "_doc" + "/"
+        self.last_seq = self.db + "last_sequences/_doc" + "/" + self.index_name
 
 
 class Utils(object):
@@ -76,6 +77,7 @@ class Utils(object):
         ca_cert = None
         using_opensearch = search_engine.engine_instance_of(SearchEngine.OPENSEARCH)
         using_kerberos = search_engine.kerberos
+        headers = {"Content-Type": "application/json"}
 
         if using_opensearch:
             ca_cert = search_engine.ca_cert
@@ -83,7 +85,12 @@ class Utils(object):
                 auth = HTTPSPNEGOAuth(mutual_authentication=OPTIONAL)
         try:
             response = requests.request(
-                method=method, url=url, data=data, verify=ca_cert, auth=auth
+                method=method,
+                url=url,
+                json=data,
+                headers=headers,
+                verify=ca_cert,
+                auth=auth,
             )
             body = response.json() if parse_json else response.text
             status_code = response.status_code

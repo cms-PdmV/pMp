@@ -159,14 +159,17 @@ def create_index(cfg):
     if index_url[-1:] == "/":
         index_url = index_url[:-1]
 
-    _, code = Utils.curl("PUT", index_url, {})
+    _, code = Utils.curl("PUT", index_url, {}, return_error=True)
     if code == 200:
         logging.info("Index created %s" % (index_url))
     else:
         logging.error("Index not created for %s. Code %s" % (index_url, code))
 
     _, code = Utils.curl(
-        "PUT", index_url + "/_settings", {"index": {"max_result_window": 1000000}}
+        "PUT",
+        index_url + "/_settings",
+        {"index": {"max_result_window": 1000000}},
+        return_error=True,
     )
     if code == 200:
         logging.info("Result window increased for %s" % (index_url + "/_settings"))
@@ -183,7 +186,7 @@ def create_index_and_mapping_if_needed(cfg):
     if index_url[-1:] == "/":
         index_url = index_url[:-1]
 
-    _, code = Utils.curl("GET", index_url)
+    _, code = Utils.curl("GET", index_url, return_error=True)
     if code != 200:
         create_index(cfg)
         create_mapping(cfg)
@@ -192,7 +195,7 @@ def create_index_and_mapping_if_needed(cfg):
 def create_mapping(cfg):
     """Create mapping"""
     response, code = Utils.curl(
-        "PUT", cfg.pmp_type + "_mapping", json.loads(cfg.mapping)
+        "PUT", cfg.pmp_type + "_mapping", json.loads(cfg.mapping), return_error=True
     )
     if code == 200:
         logging.info("Pushed mapping for %s" % (cfg.pmp_type))
@@ -208,7 +211,7 @@ def create_last_change_index():
 
 def get_last_sequence(cfg):
     last_seq = 0
-    res, code = Utils.curl("GET", cfg.last_seq)
+    res, code = Utils.curl("GET", cfg.last_seq, return_error=True)
     if code == 200:
         last_seq = res["_source"]["val"]
         logging.info("Found last sequence: %s for %s" % (last_seq, cfg.last_seq))
@@ -230,12 +233,14 @@ def get_changed_object_ids(cfg):
     if last_seq is None:
         last_seq = 0
 
-    results, code = Utils.curl("GET", "%s=%s" % (cfg.source_db_changes, last_seq))
+    results, code = Utils.curl(
+        "GET", "%s=%s" % (cfg.source_db_changes, last_seq), return_error=True
+    )
     # logging.info('%s %s' % (results, code))
     last_seq = results["last_seq"]
     results = results["results"]
 
-    _, index_http_code = Utils.curl("GET", cfg.pmp_index)
+    _, index_http_code = Utils.curl("GET", cfg.pmp_index, return_error=True)
     if index_http_code != 200:
         logging.info("Index %s returned %s" % (cfg.pmp_index, index_http_code))
         create_index(cfg)
@@ -258,6 +263,7 @@ def get_changed_object_ids(cfg):
             "PUT",
             cfg.last_seq,
             {"val": str(last_seq), "time": int(round(time.time() * 1000))},
+            return_error=True,
         )
 
         if code not in [200, 201]:
@@ -273,7 +279,9 @@ def get_changed_object_ids(cfg):
 
 def save(object_id, data, cfg):
     try:
-        response, status = Utils.curl("POST", "%s%s" % (cfg.pmp_type, object_id), data)
+        response, status = Utils.curl(
+            "POST", "%s%s" % (cfg.pmp_type, object_id), data, return_error=True
+        )
         if status in [200, 201]:
             logging.info("Saved %s (%s)" % (object_id, cfg.pmp_type.split("/")[-2]))
         else:
@@ -428,7 +436,9 @@ def delete_workflow_from_request(cfg, workflow_name):
             if len(request["reqmgr_name"]) == 0:
                 logging.info("Deleting %s" % (prepid))
                 # Delete it normally
-                _, status = Utils.curl("DELETE", "%s%s" % (cfg.pmp_type, prepid))
+                _, status = Utils.curl(
+                    "DELETE", "%s%s" % (cfg.pmp_type, prepid), return_error=True
+                )
                 if status == 200:
                     logging.info("Deleted %s (%s)" % (prepid, index))
                 elif status != 404:
@@ -530,7 +540,7 @@ if __name__ == "__main__":
 
     done = 0
     for object_id, deleted in get_changed_object_ids(cfg):
-        time.sleep(0.005)
+        time.sleep(0.2)
         done += 1
         if index == "workflows" and object_id.startswith("_design/"):
             continue
@@ -563,7 +573,9 @@ if __name__ == "__main__":
                     delete_workflow_from_request(relval_cfg, object_id)
 
                 # Delete it normally
-                _, status = Utils.curl("DELETE", "%s%s" % (cfg.pmp_type, object_id))
+                _, status = Utils.curl(
+                    "DELETE", "%s%s" % (cfg.pmp_type, object_id), return_error=True
+                )
                 if status == 200:
                     logging.info("Deleted %s (%s)" % (object_id, index))
                 elif status != 404:
