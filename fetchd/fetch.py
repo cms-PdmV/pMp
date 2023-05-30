@@ -11,6 +11,9 @@ from search_engine import search_engine
 
 changed_during_update = []
 
+# Use persistent HTTP connections
+http: Utils = Utils()
+
 
 def rename_attributes(index, data, config):
     """
@@ -159,13 +162,13 @@ def create_index(cfg):
     if index_url[-1:] == "/":
         index_url = index_url[:-1]
 
-    _, code = Utils.curl("PUT", index_url, {}, return_error=True)
+    _, code = http.curl("PUT", index_url, {}, return_error=True)
     if code == 200:
         logging.info("Index created %s" % (index_url))
     else:
         logging.error("Index not created for %s. Code %s" % (index_url, code))
 
-    _, code = Utils.curl(
+    _, code = http.curl(
         "PUT",
         index_url + "/_settings",
         {"index": {"max_result_window": 1000000}},
@@ -186,7 +189,7 @@ def create_index_and_mapping_if_needed(cfg):
     if index_url[-1:] == "/":
         index_url = index_url[:-1]
 
-    _, code = Utils.curl("GET", index_url, return_error=True)
+    _, code = http.curl("GET", index_url, return_error=True)
     if code != 200:
         create_index(cfg)
         create_mapping(cfg)
@@ -194,7 +197,7 @@ def create_index_and_mapping_if_needed(cfg):
 
 def create_mapping(cfg):
     """Create mapping"""
-    response, code = Utils.curl(
+    response, code = http.curl(
         "PUT", cfg.pmp_type + "_mapping", json.loads(cfg.mapping), return_error=True
     )
     if code == 200:
@@ -211,7 +214,7 @@ def create_last_change_index():
 
 def get_last_sequence(cfg):
     last_seq = 0
-    res, code = Utils.curl("GET", cfg.last_seq, return_error=True)
+    res, code = http.curl("GET", cfg.last_seq, return_error=True)
     if code == 200:
         last_seq = res["_source"]["val"]
         logging.info("Found last sequence: %s for %s" % (last_seq, cfg.last_seq))
@@ -233,14 +236,14 @@ def get_changed_object_ids(cfg):
     if last_seq is None:
         last_seq = 0
 
-    results, code = Utils.curl(
+    results, code = http.curl(
         "GET", "%s=%s" % (cfg.source_db_changes, last_seq), return_error=True
     )
     # logging.info('%s %s' % (results, code))
     last_seq = results["last_seq"]
     results = results["results"]
 
-    _, index_http_code = Utils.curl("GET", cfg.pmp_index, return_error=True)
+    _, index_http_code = http.curl("GET", cfg.pmp_index, return_error=True)
     if index_http_code != 200:
         logging.info("Index %s returned %s" % (cfg.pmp_index, index_http_code))
         create_index(cfg)
@@ -259,7 +262,7 @@ def get_changed_object_ids(cfg):
         else:
             logging.info("No changes since last update")
 
-        r, code = Utils.curl(
+        r, code = http.curl(
             "PUT",
             cfg.last_seq,
             {"val": str(last_seq), "time": int(round(time.time() * 1000))},
@@ -279,7 +282,7 @@ def get_changed_object_ids(cfg):
 
 def save(object_id, data, cfg):
     try:
-        response, status = Utils.curl(
+        response, status = http.curl(
             "POST", "%s%s" % (cfg.pmp_type, object_id), data, return_error=True
         )
         if status in [200, 201]:
@@ -296,7 +299,7 @@ def create_fake_request(stats_doc, cfg):
     """
     prepid = stats_doc["PrepID"]
     workflow_name = stats_doc["RequestName"]
-    fake_request, _ = Utils.curl("GET", cfg.pmp_type + prepid)
+    fake_request, _ = http.curl("GET", cfg.pmp_type + prepid)
     fake_request = fake_request.get("_source")
     if not fake_request:
         logging.info("Creating new request %s" % (prepid))
@@ -422,7 +425,7 @@ def delete_workflow_from_request(cfg, workflow_name):
     ]["hits"]
     prepids = [s["_source"]["prepid"] for s in search_results]
     for prepid in prepids:
-        request, _ = Utils.curl("GET", cfg.pmp_type + prepid)
+        request, _ = http.curl("GET", cfg.pmp_type + prepid)
         request = request.get("_source")
         if request:
             request["reqmgr_name"] = [
@@ -436,7 +439,7 @@ def delete_workflow_from_request(cfg, workflow_name):
             if len(request["reqmgr_name"]) == 0:
                 logging.info("Deleting %s" % (prepid))
                 # Delete it normally
-                _, status = Utils.curl(
+                _, status = http.curl(
                     "DELETE", "%s%s" % (cfg.pmp_type, prepid), return_error=True
                 )
                 if status == 200:
@@ -540,7 +543,8 @@ if __name__ == "__main__":
 
     done = 0
     for object_id, deleted in get_changed_object_ids(cfg):
-        time.sleep(0.2)
+        # Sleep for 1 milisecond
+        time.sleep(0.001)
         done += 1
         if index == "workflows" and object_id.startswith("_design/"):
             continue
@@ -553,7 +557,7 @@ if __name__ == "__main__":
             if not deleted:
                 # If it's not deleted, fetch it
                 thing_url = str(cfg.source_db + object_id)
-                data, status = Utils.curl("GET", thing_url, return_error=True)
+                data, status = http.curl("GET", thing_url, return_error=True)
 
             if not deleted and index == "workflows":
                 # Check maybe it was rejected or aborted. If yes, delete it
@@ -573,7 +577,7 @@ if __name__ == "__main__":
                     delete_workflow_from_request(relval_cfg, object_id)
 
                 # Delete it normally
-                _, status = Utils.curl(
+                _, status = http.curl(
                     "DELETE", "%s%s" % (cfg.pmp_type, object_id), return_error=True
                 )
                 if status == 200:

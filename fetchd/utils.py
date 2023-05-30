@@ -3,6 +3,7 @@ import os
 import re
 import logging
 import time
+from urllib.parse import urlparse
 from configparser import ConfigParser
 from datetime import datetime
 
@@ -48,8 +49,46 @@ class Config(object):
         self.last_seq = self.db + "last_sequences/_doc" + "/" + self.index_name
 
 
-class Utils(object):
+class Utils:
     """Utils for pMp scripts"""
+
+    def __init__(self):
+        # Persists HTTP connections to improve performance
+        # and not overload the DNS
+        self.__session_pool: dict[str, requests.Session] = {}
+        self.curl = self.__curl
+
+    def __curl(
+        self,
+        method,
+        url,
+        data=None,
+        return_error=False,
+        parse_json=True,
+        retry_on_failure=True,
+    ):
+        """
+        Enable curl method with persistent HTTP connection
+        """
+        # Retrieve the domain name
+        parsed_url = urlparse(url)
+        domain: str = str(parsed_url.netloc)
+
+        # Retrieve a session from the session pool for the domain
+        session: requests.Session = self.__session_pool.get(domain)
+        if not session:
+            session: requests.Session = requests.Session()
+            self.__session_pool[domain] = session
+
+        return Utils.curl(
+            method,
+            url,
+            data=data,
+            return_error=return_error,
+            parse_json=parse_json,
+            retry_on_failure=retry_on_failure,
+            session=session,
+        )
 
     @staticmethod
     def get_time():
@@ -69,10 +108,13 @@ class Utils(object):
         return_error=False,
         parse_json=True,
         retry_on_failure=True,
+        session: requests.Session = None,
     ):
         """
         Perform an HTTP request
         """
+        # Using a persisting HTTP connection
+        http = session if session else requests
         auth = None
         ca_cert = None
         using_opensearch = search_engine.engine_instance_of(SearchEngine.OPENSEARCH)
@@ -84,7 +126,7 @@ class Utils(object):
             if using_kerberos:
                 auth = HTTPSPNEGOAuth(mutual_authentication=OPTIONAL)
         try:
-            response = requests.request(
+            response: requests.Response = http.request(
                 method=method,
                 url=url,
                 json=data,

@@ -21,7 +21,7 @@ class SearchEngine:
 
     OPENSEARCH = "OPENSEARCH"
     ELASTICSEARCH = "ELASTICSEARCH"
-    __AVAILABLE_ENGINES = {OPENSEARCH: OpenSearch, ELASTICSEARCH: Elasticsearch}
+    __AVAILABLE_ENGINES = {OPENSEARCH: OpenSearch}
 
     def __init__(self):
         self.__ca_cert: str = None
@@ -109,10 +109,12 @@ class SearchEngine:
            error will be raise if the requested search engine is not listed as available.
            A ValueError will be raised if the environment variable is empty.
         """
-        search_engine: str = os.getenv("SEARCH_ENGINE")
+        # Use Opensearch as default search engine
+        # But allow in the future the possibility to switch to Elasticsearch 8.X or higher
+        search_engine: str = os.getenv("SEARCH_ENGINE", "OPENSEARCH")
         if not search_engine:
             raise ValueError(
-                f"No search engine specified. Please set an available engine. Available search engines: {SearchEngine.__AVAILABLE_ENGINES}"
+                f"No search engine specified. Please set an available engine via SEARCH_ENGINE environment variable. Available search engines: {SearchEngine.__AVAILABLE_ENGINES}"
             )
         search_engine_client = SearchEngine.__AVAILABLE_ENGINES.get(search_engine)
         if not search_engine_client:
