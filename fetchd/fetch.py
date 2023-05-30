@@ -300,6 +300,7 @@ def create_fake_request(stats_doc, cfg):
     prepid = stats_doc["PrepID"]
     workflow_name = stats_doc["RequestName"]
     fake_request, _ = http.curl("GET", cfg.pmp_type + prepid, return_error=True)
+    fake_request = {} if not fake_request else fake_request
     fake_request = fake_request.get("_source")
     if not fake_request:
         logging.info("Creating new request %s" % (prepid))
