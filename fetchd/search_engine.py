@@ -166,19 +166,6 @@ class SearchEngine:
             raise ValueError(
                 "No username was provided to perform basic authentication. Please provide the username via environment variable: BASIC_AUTH_USERNAME"
             )
-        return basic_auth_username
-
-    def __get_basic_auth_username(self) -> str:
-        """
-        Returns the username to perform basic authentication.
-        This value must be provided via the environment variable: BASIC_AUTH_USERNAME
-        If the environment variable is not provided, a ValueError will be raised
-        """
-        basic_auth_username: str = os.getenv("BASIC_AUTH_USERNAME")
-        if not basic_auth_username:
-            raise ValueError(
-                "No username was provided to perform basic authentication. Please provide the username via environment variable: BASIC_AUTH_USERNAME"
-            )
         self.__logger.info("Basic authentication username set")
         return basic_auth_username
 
