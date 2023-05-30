@@ -2,8 +2,7 @@
 Builder to instantiate a connector to the Search Engine
 This class supports Opensearch connectors
 """
-from opensearchpy import OpenSearch, RequestsHttpConnection
-from requests_gssapi import HTTPSPNEGOAuth, OPTIONAL
+from opensearchpy import OpenSearch
 import os
 import logging
 import re
