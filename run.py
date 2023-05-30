@@ -3,6 +3,7 @@ pMp production run script
 Configuration file in config.py
 """
 from flask import Flask, make_response, redirect, request, render_template, jsonify
+from flask_compress import Compress
 from pmp.api.historical import HistoricalAPI
 from pmp.api.performance import PerformanceAPI
 from pmp.api.present import PresentAPI
@@ -25,9 +26,13 @@ app = Flask(
     __name__,
     template_folder="./pmp/templates",
     static_folder="./pmp",
-    static_url_path=""
+    static_url_path="",
 )
 app.url_map.strict_slashes = False
+
+# Include gzip compression for responses
+Compress(app=app)
+
 
 @app.errorhandler(404)
 def page_not_found(error):
