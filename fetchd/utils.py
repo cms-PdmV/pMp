@@ -10,7 +10,6 @@ from datetime import datetime
 # Requests package
 import requests
 from requests.exceptions import HTTPError
-from requests_gssapi import HTTPSPNEGOAuth, OPTIONAL
 
 # Import SearchEngine module
 # If the application is running as a web server, it will be available into the fetchd package
@@ -115,16 +114,12 @@ class Utils:
         """
         # Using a persisting HTTP connection
         http = session if session else requests
-        auth = None
         ca_cert = None
         using_opensearch = search_engine.engine_instance_of(SearchEngine.OPENSEARCH)
-        using_kerberos = search_engine.kerberos
         headers = {"Content-Type": "application/json"}
 
         if using_opensearch:
             ca_cert = search_engine.ca_cert
-            if using_kerberos:
-                auth = HTTPSPNEGOAuth(mutual_authentication=OPTIONAL)
         try:
             response: requests.Response = http.request(
                 method=method,
@@ -132,7 +127,6 @@ class Utils:
                 json=data,
                 headers=headers,
                 verify=ca_cert,
-                auth=auth,
             )
             body = response.json() if parse_json else response.text
             status_code = response.status_code

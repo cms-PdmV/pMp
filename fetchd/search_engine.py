@@ -1,10 +1,9 @@
 """
 Builder to instantiate a connector to the Search Engine
-This class supports Opensearch and Elasticsearch connectors
+This class supports Opensearch connectors
 """
 from opensearchpy import OpenSearch, RequestsHttpConnection
 from requests_gssapi import HTTPSPNEGOAuth, OPTIONAL
-from elasticsearch import Elasticsearch
 import os
 import logging
 import re
@@ -12,27 +11,25 @@ import re
 
 class SearchEngine:
     """
-    This module provides a wrapper for creating a Search Engine client: Opensearch or Elasticsearch
+    This module provides a wrapper for creating a Search Engine client: Opensearch
     as required
 
     Attributes:
-        client (opensearchpy.OpenSearch | elasticsearch.Elasticsearch): Search engine client
+        client (opensearchpy.OpenSearch): Search engine client
     """
 
     OPENSEARCH = "OPENSEARCH"
-    ELASTICSEARCH = "ELASTICSEARCH"
     __AVAILABLE_ENGINES = {OPENSEARCH: OpenSearch}
 
     def __init__(self):
         self.__ca_cert: str = None
-        self.__requires_kerberos: bool = None
         self.__logger = self.__get_logger()
         (
             self.__requested_engine,
             self.__requested_engine_client,
         ) = self.__determine_search_engine()
         self.__database_url = self.__get_search_engine_url()
-        self.__engine: OpenSearch | Elasticsearch = self.__create_engine_client()
+        self.__engine: OpenSearch = self.__create_engine_client()
 
     @property
     def client(self):
@@ -41,10 +38,6 @@ class SearchEngine:
     @property
     def ca_cert(self):
         return self.__ca_cert
-
-    @property
-    def kerberos(self):
-        return self.__requires_kerberos
 
     @property
     def url(self):
@@ -99,13 +92,13 @@ class SearchEngine:
         basic_auth_url = f"{scheme}{username}:{password}@{host}"
         return basic_auth_url
 
-    def __determine_search_engine(self) -> tuple[str, OpenSearch | Elasticsearch]:
+    def __determine_search_engine(self) -> tuple[str, OpenSearch]:
         """
         Determine the client required to be instantiated using
         the configuration provided via the environment variable: SEARCH_ENGINE
 
         Returns:
-           The search engine client identifier and a Opensearch client or Elasticsearch client as requested. A NotImplemented
+           The search engine client identifier and a Opensearch client. A NotImplemented
            error will be raise if the requested search engine is not listed as available.
            A ValueError will be raised if the environment variable is empty.
         """
@@ -183,22 +176,10 @@ class SearchEngine:
         self.__logger.info("Basic authentication password set")
         return basic_auth_password
 
-    def __require_kerberos_authentication(self) -> bool:
-        """
-        Determines if Kerberos is required to instantiate the search client
-        To enable it, please set a value into the environment variable: REQUIRE_KERBEROS
-        Returns True if REQUIRE_KERBEROS is set, False otherwise
-        """
-        requires_kerberos = os.getenv("REQUIRE_KERBEROS")
-        using_kerberos = True if requires_kerberos else False
-        self.__logger.info("Using Kerberos for authentication: %s", using_kerberos)
-        return using_kerberos
-
     def __create_opensearch_client(
         self,
         database_url: str,
         ca_cert: str,
-        kerberos_auth: bool,
     ) -> OpenSearch:
         """
         Instantiates a client to connect to a Opensearch cluster
@@ -214,67 +195,39 @@ class SearchEngine:
         Returns:
             opensearchpy.Opensearch client to connect to Opensearch cluster
         """
-        if kerberos_auth:
-            self.__logger.info("Using Kerberos authentication for Opensearch client")
-            self.__logger.info("Make sure to have access to a granting ticket")
-            return OpenSearch(
-                hosts=[database_url],
-                use_ssl=True,
-                verify_cert=True,
-                ca_certs=ca_cert,
-                connection_class=RequestsHttpConnection,
-                http_auth=HTTPSPNEGOAuth(mutual_authentication=OPTIONAL),
-            )
-        else:
-            self.__logger.info("Creating OpenSearch client using Basic Authentication")
-            basic_auth_user = self.__get_basic_auth_username()
-            basic_auth_pass = self.__get_basic_auth_password()
+        self.__logger.info("Creating OpenSearch client using Basic Authentication")
+        basic_auth_user = self.__get_basic_auth_username()
+        basic_auth_pass = self.__get_basic_auth_password()
 
-            database_url_basic_auth: str = self.__build_basic_auth_url(
-                database_url=database_url,
-                username=basic_auth_user,
-                password=basic_auth_pass,
-            )
-            self.__logger.info(
-                "Overwriting Search Engine connection URL with Basic Authentication credentials"
-            )
-            self.__database_url = database_url_basic_auth
+        database_url_basic_auth: str = self.__build_basic_auth_url(
+            database_url=database_url,
+            username=basic_auth_user,
+            password=basic_auth_pass,
+        )
+        self.__logger.info(
+            "Overwriting Search Engine connection URL with Basic Authentication credentials"
+        )
+        self.__database_url = database_url_basic_auth
 
-            return OpenSearch(
-                hosts=[self.__database_url],
-                use_ssl=True,
-                verify_cert=True,
-                ca_certs=ca_cert,
-            )
+        return OpenSearch(
+            hosts=[self.__database_url],
+            use_ssl=True,
+            verify_cert=True,
+            ca_certs=ca_cert,
+        )
 
-    def __create_elasticsearch_client(self, database_url):
-        """
-        Instantiates a Elasticsearch client
-        For this client, we do not require any type of authentication
-
-        Args:
-            database_url: Connection URL to the search engine
-        """
-        return Elasticsearch(hosts=[database_url])
-
-    def __create_engine_client(self) -> OpenSearch | Elasticsearch:
+    def __create_engine_client(self) -> OpenSearch:
         """
         Instantiates the requested search client engine
         """
         # Instantiate a OpenSearch client
         if self.engine_instance_of(engine_name=SearchEngine.OPENSEARCH):
             self.__ca_cert: str = self.__get_ca_cert_path()
-            self.__requires_kerberos: bool = self.__require_kerberos_authentication()
 
             return self.__create_opensearch_client(
                 database_url=self.__database_url,
                 ca_cert=self.__ca_cert,
-                kerberos_auth=self.__requires_kerberos,
             )
-        # Instantiate a Elasticsearch client
-        elif self.engine_instance_of(engine_name=SearchEngine.ELASTICSEARCH):
-            return self.__create_elasticsearch_client(database_url=self.__database_url)
-
         # Not available engine
         raise NotImplementedError("Search Engine client not available")
 

@@ -690,7 +690,7 @@ if __name__ == "__main__":
                     # Trim fields we don't want
                     data = pick_attributes(data, cfg.fetch_fields)
                     data = rename_attributes(index, data, cfg)
-                    # Save to local Elasticsearch index
+                    # Save to local index
                     save(object_id, data, cfg)
                 else:
                     logging.error(

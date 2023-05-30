@@ -1,11 +1,11 @@
-"""Module crating ElasticSearch object"""
+"""Module creating OpenSearch object"""
 import config
 from fetchd.search_engine import search_engine, SearchEngine
 
 
 class InitConnection(object):
     """
-    This class initiates connection to the ElasticSearch and results overflow
+    This class initiates connection to the OpenSearch cluster and results overflow
     """
 
     __PAGE_SIZE = 25000
@@ -47,10 +47,6 @@ class InitConnection(object):
         if self.search_engine.engine_instance_of(SearchEngine.OPENSEARCH):
             # This client does not support the legacy doc_type option
             return self.es.get_source(index=index, id=id)
-        elif self.search_engine.engine_instance_of(SearchEngine.ELASTICSEARCH):
-            # Elasticsearch 6.x supports it
-            return self.es.get_source(index=index, id=id, doc_type=doc_type)
-
         raise NotImplementedError(
             "Operation not implemented for the current search engine"
         )
@@ -59,10 +55,6 @@ class InitConnection(object):
         if self.search_engine.engine_instance_of(SearchEngine.OPENSEARCH):
             # This client does not support the legacy doc_type option
             return self.es.mget(index=index, body=body)
-        elif self.search_engine.engine_instance_of(SearchEngine.ELASTICSEARCH):
-            # Elasticsearch 6.x supports it
-            return self.es.mget(index=index, body=body, doc_type=doc_type)
-
         raise NotImplementedError(
             "Operation not implemented for the current search engine"
         )

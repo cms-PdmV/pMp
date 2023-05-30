@@ -1,5 +1,5 @@
 # Set the following environment variables
-# ENGINE_ENDPOINT: Elasticsearch or Opensearch endpoint: 'http://localhost:9200', without trailing slash :)
+# ENGINE_ENDPOINT: Opensearch endpoint: 'http://localhost:9200', without trailing slash :)
 # KERBEROS: Set this if you attempt to authenticate via Kerberos, it would be required for Opensearch
 SPACE="=======\n\n"
 INDICES=(

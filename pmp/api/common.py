@@ -10,13 +10,12 @@ from fetchd.utils import Utils
 from fetchd.search_engine import search_engine
 import pmp.api.esadapter as esadapter
 from cachelib.simple import SimpleCache
-from elasticsearch import NotFoundError as ElasticNotFoundError
 from opensearchpy import NotFoundError as OpensearchNotFoundError
 
 
 class SuggestionsAPI(esadapter.InitConnection):
     """
-    Used to search in elastic index for similar PrepIDs as given
+    Used to search in Opensearch index for similar PrepIDs as given
     """
 
     __cache = SimpleCache(
@@ -306,7 +305,7 @@ class APIBase(esadapter.InitConnection):
         """
         try:
             self.get_source(index=index, doc_type=doc_type, id=prepid)
-        except (ElasticNotFoundError, OpensearchNotFoundError):
+        except OpensearchNotFoundError:
             return False
 
         return True
