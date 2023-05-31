@@ -37,9 +37,12 @@ WORKDIR /usr/app
 
 COPY --chown=python:python . .
 COPY --chown=python:python --from=frontend /usr/app/static/build/ ./pmp/static/build/
+COPY --chown=python:python --from=frontend /usr/app/node_modules/ ./pmp/node_modules/
 COPY --chown=python:python --from=build /usr/app/venv ./venv
 
-RUN mkdir -p ./pmp/static/tmp/ && chown python:python ./pmp/static/tmp/
+RUN mkdir -p ./pmp/static/tmp/ \
+    && chown python:python ./pmp/static/tmp/ \
+    && chmod -R 707 ./pmp/static/tmp/
 
 USER 999
 

@@ -11,3 +11,5 @@ pmp/static/build/*
 pmp/static/bower_components/*
 pmp/node_modules/*
 *.pid
+*.env
+pmp.yaml

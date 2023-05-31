@@ -15,3 +15,9 @@ pmp/node_modules/
 
 # Ignore package-lock.json
 pmp/package-lock.json
+
+# Ignore .env files
+*.env
+
+# Ignore Docker Compose test file
+pmp.yaml
