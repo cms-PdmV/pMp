@@ -24,6 +24,7 @@ def rename_attributes(index, data, config):
                         'RequestName': 'request_name',
                         'RequestTransition': 'request_transition',
                         'RequestType': 'request_type',
+                        'TotalInputLumis': 'total_input_lumis',
                         'TotalEvents': 'total_events'}
     else:
         return data
@@ -57,8 +58,10 @@ def parse_workflows_history(history):
             dataset_events['time'] = entry_time
             dataset_events['events'] = dataset_events['Events']
             dataset_events['type'] = dataset_events['Type']
+            dataset_events['lumis'] = dataset_events.get('Lumis', 0)
             del dataset_events['Events']
             del dataset_events['Type']
+            dataset_events.pop('Lumis', '')
             if dataset_name not in parsed:
                 parsed[dataset_name] = []
 
@@ -287,7 +290,14 @@ def create_fake_request(stats_doc, cfg):
 
     if workflow_name == fake_request['reqmgr_name'][-1]:
         # If this is the newest workflow, update things
+        logging.info(
+            'Workflow %s is the newest for the request, updating it. Stats2 type: %s',
+            workflow_name,
+            stats_doc.get('RequestType', '<unknown>')
+        )
         fake_request['total_events'] = stats_doc['TotalEvents']
+        # If the Stats2 record has the lumis data, include, otherwise set zero
+        fake_request['total_input_lumis'] = stats_doc.get('TotalInputLumis', 0)
         fake_request['priority'] = stats_doc['RequestPriority']
         if len(stats_doc['Campaigns']) > 0:
             campaign = stats_doc['Campaigns'][0]
