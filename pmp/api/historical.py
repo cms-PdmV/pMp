@@ -167,9 +167,12 @@ class HistoricalAPI(APIBase):
                 found_something = True
                 # create an array of requests to be processed
                 response = {'data': [{'produced': 0,
+                                      'produced_lumis': 0,
                                       'done': 0,
+                                      'done_lumis': 0,
                                       'invalid': 0,
                                       'expected': int(mcm_document['expected']),
+                                      'expected_lumis': int(mcm_document.get('total_input_lumis', 0)),
                                       'time': int(mcm_document['submitted_time'])}]}
 
                 response['request'] = mcm_document['prepid']
@@ -216,9 +219,12 @@ class HistoricalAPI(APIBase):
                             for entry in history:
                                 data_point = {
                                     'produced': 0,
+                                    'produced_lumis': 0,
                                     'done': 0,
+                                    'done_lumis': 0,
                                     'invalid': 0,
                                     'expected': mcm_document.get('expected', 0),
+                                    'expected_lumis': mcm_document.get('total_input_lumis', 0),
                                     'time': entry['time'],
                                     'expected_events': True
                                 }
@@ -229,12 +235,15 @@ class HistoricalAPI(APIBase):
                                     data_point['expected_events'] = False
 
                                 events = entry.get('events', 0)
+                                lumis = entry.get('lumis', 0)
                                 if entry['type'] in types_for_done_events:
                                     data_point['done'] = events
+                                    data_point['done_lumis'] = lumis
                                 elif entry['type'] in types_for_invalid_events:
                                     data_point['invalid'] = events
                                 else:
                                     data_point['produced'] = events
+                                    data_point['produced_lumis'] = lumis
 
                                 response['data'].append(data_point)
 
@@ -321,7 +330,7 @@ class HistoricalAPI(APIBase):
 
             data_points = sorted(request.get('data', []), key=lambda k: k['time'])
             if not data_points:
-                data_points = [{'done': 0, 'produced': 0}]
+                data_points = [{'done': 0, 'done_lumis': 0, 'produced': 0, 'produced_lumis': 0}]
 
             workflow_name = ''
             if len(request.get('reqmgr_name', [])) > 0:
@@ -333,7 +342,9 @@ class HistoricalAPI(APIBase):
                              'output_dataset_status': request['output_dataset_status'],
                              'dataset': request['dataset'],
                              'expected': data_points[-1]['expected'],
+                             'expected_lumis': data_points[-1]['expected_lumis'],
                              'done': max(data_points[-1]['done'], data_points[-1]['produced'], data_points[-1]['invalid']),
+                             'done_lumis': max(data_points[-1]['done_lumis'], data_points[-1]['produced_lumis']),
                              'force_completed': request['force_completed'],
                              'estimate_from': request.get('estimate_from', None),
                              'workflow': workflow_name,
