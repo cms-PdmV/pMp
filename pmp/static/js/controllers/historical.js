@@ -215,6 +215,7 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
                     data.data.results.submitted_requests.forEach(function(entry) {
                         entry.url = $scope.getUrlForPrepid(entry.prepid, entry.workflow);
                         entry.percentage = entry.done / entry.expected * 100;
+                        entry.percentageLumis = (entry.done_lumis / Math.max(entry.expected_lumis, 1)) * 100;
                         entry.statusTimestamp = now - entry.status_timestamp;
                         entry.statusTimestampDate = dateFormat(entry.status_timestamp, "yyyy-mm-dd HH:MM");
                         entry.statusTimestampDiff = $scope.secondsToDiff(now - entry.status_timestamp);
@@ -226,6 +227,7 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
                     data.data.results.done_requests.forEach(function(entry) {
                         entry.url = $scope.getUrlForPrepid(entry.prepid, entry.workflow);
                         entry.percentage = entry.done / entry.expected * 100;
+                        entry.percentageLumis = (entry.done_lumis / Math.max(entry.expected_lumis, 1)) * 100;
                         entry.statusTimestamp = now - entry.status_timestamp;
                         entry.statusTimestampDate = dateFormat(entry.status_timestamp, "yyyy-mm-dd HH:MM");
                         entry.statusTimestampDiff = $scope.secondsToDiff(now - entry.status_timestamp);
