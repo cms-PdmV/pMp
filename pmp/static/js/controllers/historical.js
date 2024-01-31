@@ -32,6 +32,7 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
             sortSubmittedOrder: 1, // Sort ascending (1) or descending (-1)
             sortDoneOn: 'prepid', // Field to sort done list on
             sortDoneOrder: 1, // Sort ascending (1) or descending (-1)
+            display: '', // Two options only 'events' or 'lumis' for lumisections.
         };
 
         /**
@@ -69,6 +70,18 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
             $scope.sortDoneOn = urlParameters.sortDoneOn;
 
             $scope.sortDoneOrder = parseInt(urlParameters.sortDoneOrder, 10) === -1 ? -1 : 1;
+
+            // Display either 'events' or 'lumis'
+            if (urlParameters.display === 'lumis') {
+                $scope.display = 'lumis';
+                $scope.displayTitle = 'Lumisections';
+                $scope.counterTitle = 'events';
+            }
+            else {
+                $scope.display = 'events';
+                $scope.displayTitle = 'Events';
+                $scope.counterTitle = 'lumisections';
+            }
 
             // initialise filters
             if (urlParameters.priority !== undefined) {
@@ -214,26 +227,50 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
                     let now = parseInt(Date.now() / 1000);
                     data.data.results.submitted_requests.forEach(function(entry) {
                         entry.url = $scope.getUrlForPrepid(entry.prepid, entry.workflow);
-                        entry.percentage = entry.done / entry.expected * 100;
-                        entry.percentageLumis = (entry.done_lumis / Math.max(entry.expected_lumis, 1)) * 100;
                         entry.statusTimestamp = now - entry.status_timestamp;
                         entry.statusTimestampDate = dateFormat(entry.status_timestamp, "yyyy-mm-dd HH:MM");
                         entry.statusTimestampDiff = $scope.secondsToDiff(now - entry.status_timestamp);
                         entry.workflowStatus = entry.workflow_status;
                         entry.workflowTimestamp = now - entry.workflow_status_timestamp;
                         entry.workflowTimestampDiff = $scope.secondsToDiff(entry.workflow_timestamp <= 0 ? 0 : entry.workflowTimestamp);
+
+                        // Set the events or lumisections following the option chosen.
+                        if ($scope.display === 'lumis') {
+                            // Use lumisections
+                            entry.displayDone = entry.done_lumis;
+                            entry.displayExpected = entry.expected_lumis;
+                        }
+                        else {
+                            // Use events
+                            entry.displayDone = entry.done;
+                            entry.displayExpected = entry.expected;
+                        }
+                        // Set the progress percentage
+                        entry.displayPercentage = (entry.displayDone / Math.max(entry.displayExpected, 1)) * 100;
                     });
                     $scope.listSubmitted = data.data.results.submitted_requests.sort($scope.compareSubmitted);
                     data.data.results.done_requests.forEach(function(entry) {
                         entry.url = $scope.getUrlForPrepid(entry.prepid, entry.workflow);
-                        entry.percentage = entry.done / entry.expected * 100;
-                        entry.percentageLumis = (entry.done_lumis / Math.max(entry.expected_lumis, 1)) * 100;
                         entry.statusTimestamp = now - entry.status_timestamp;
                         entry.statusTimestampDate = dateFormat(entry.status_timestamp, "yyyy-mm-dd HH:MM");
                         entry.statusTimestampDiff = $scope.secondsToDiff(now - entry.status_timestamp);
                         entry.workflowStatus = entry.workflow_status;
                         entry.workflowTimestamp = now - entry.workflow_status_timestamp;
                         entry.workflowTimestampDiff = $scope.secondsToDiff(entry.workflow_timestamp <= 0 ? 0 : entry.workflowTimestamp);
+
+                        // Set the events or lumisections following the option chosen.
+                        if ($scope.display === 'lumis') {
+                            // Use lumisections
+                            entry.displayDone = entry.done_lumis;
+                            entry.displayExpected = entry.expected_lumis;
+                        }
+                        else {
+                            // Use events
+                            entry.displayDone = entry.done;
+                            entry.displayExpected = entry.expected;
+                        }
+                        // Set the progress percentage
+                        entry.displayPercentage = (entry.displayDone / Math.max(entry.displayExpected, 1)) * 100;
                     });
                     $scope.listDone = data.data.results.done_requests.sort($scope.compareDone);
                     $scope.data = Data.getLoadedData();
@@ -319,6 +356,17 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
             }
             $scope.listDone = $scope.listDone.sort($scope.compareDone);
             $scope.setURL($scope, Data);
+        }
+
+        $scope.displayEventsLumis = function() {
+            if ($scope.display === 'lumis') {
+                $scope.display = 'events';
+            }
+            else {
+                $scope.display = 'lumis';
+            }
+            $scope.setURL($scope, Data);
+            $scope.init();
         }
 
         $scope.$on('onChangeNotification:InputTags', function () {
