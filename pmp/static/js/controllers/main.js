@@ -208,7 +208,7 @@ angular.module('pmpApp').controller('MainController', ['$http', '$location',
             $location.search(params).replace();
             $scope.$broadcast('onChangeNotification:URL');
             var urlQuery = ''
-            var keys = ['r', 'pwg', 'interested_pwg', 'status', 'priority', 'display']
+            var keys = ['r', 'pwg', 'interested_pwg', 'status', 'priority']
             keys.forEach(function (param) {
                 if (param in params) {
                     if (urlQuery.length == 0) {

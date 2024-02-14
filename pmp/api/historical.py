@@ -292,8 +292,11 @@ class HistoricalAPI(APIBase):
         prev = {'produced': -1, 'expected': -1}
         for data_point in arr:
             if (data_point['produced'] != prev['produced'] or
+                data_point.get('produced_lumis') != prev.get('produced_lumis') or
                 data_point['expected'] != prev['expected'] or
+                data_point.get('expected_lumis') != prev.get('expected_lumis') or
                 data_point['done'] != prev['done'] or
+                data_point.get('done_lumis') != prev.get('done_lumis') or
                 data_point['invalid'] != prev['invalid']):
                 compressed.append(data_point)
                 prev = data_point

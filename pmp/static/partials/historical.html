@@ -5,23 +5,19 @@
                      human-readable-numbers="humanReadable"
                      big-number-formatter="formatBigNumber"
                      class="spacing"><div class="historical-drilldown" id="historical-drilldown"></div></linear-lifetime>
-    <button type="button" class="btn btn-primary" ng-click="displayEventsLumis()">Switch to {{counterTitle}}</button>
     <div ng-if="listSubmitted.length != 0">
       <p class="mt-4">
         List of requests (<b>{{listSubmitted.length}}</b>) in status <b>submitted</b>
       </p>
       <div class="row small-padding">
-        <!-- Top bar buttons -->
         <div class="col-sm-5">
           <button type="button" class="btn btn-sort m-2" ng-click="changeSubmittedSort('prepid')">
-            <!-- Request prepid -->
             <i ng-if="sortSubmittedOn != 'prepid'" class="fa fa-sort-amount-asc spacing-r" title="Click to sort ascending by prepid"></i>
             <i ng-if="sortSubmittedOn == 'prepid' && sortSubmittedOrder == 1" class="fa fa-sort-amount-asc spacing-r sort-selected" title="Click to sort descending by prepid"></i>
             <i ng-if="sortSubmittedOn == 'prepid' && sortSubmittedOrder == -1" class="fa fa-sort-amount-desc spacing-r sort-selected" title="Click to sort ascending by prepid"></i>
           </button>
         </div>
         <div class="col-sm-2">
-          <!-- Events or lumisections -->
           <button type="button" class="btn btn-sort m-2" ng-click="changeSubmittedSort('displayDone')">
             <i ng-if="sortSubmittedOn != 'displayDone'" class="fa fa-sort-numeric-asc spacing-r" title="Click to sort ascending by done events/lumisections"></i>
             <i ng-if="sortSubmittedOn == 'displayDone' && sortSubmittedOrder == 1" class="fa fa-sort-numeric-asc spacing-r sort-selected" title="Click to sort descending by done events/lumisections"></i>
@@ -35,7 +31,6 @@
           </button>
         </div>
         <div class="col-sm-1">
-          <!-- Progress bar -->
           <button type="button" class="btn btn-sort m-2" ng-click="changeSubmittedSort('displayPercentage')">
             <i ng-if="sortSubmittedOn != 'displayPercentage'" class="fa fa-sort-numeric-asc spacing-r" title="Click to sort ascending by progress"></i>
             <i ng-if="sortSubmittedOn == 'displayPercentage' && sortSubmittedOrder == 1" class="fa fa-sort-numeric-asc spacing-r sort-selected" title="Click to sort descending by progress"></i>
@@ -43,7 +38,6 @@
           </button>
         </div>
         <div class="col-sm-2">
-          <!-- ReqMgr2 status -->
           <button type="button" class="btn btn-sort m-2" ng-click="changeSubmittedSort('workflowTimestamp')">
             <i ng-if="sortSubmittedOn != 'workflowTimestamp'" class="fa fa-sort-numeric-asc spacing-r" title="Click to sort ascending by time in current workflow status"></i>
             <i ng-if="sortSubmittedOn == 'workflowTimestamp' && sortSubmittedOrder == 1" class="fa fa-sort-numeric-asc spacing-r sort-selected" title="Click to sort descending by time in current workflow status"></i>
@@ -51,7 +45,6 @@
           </button>
         </div>
         <div class="col-sm-1">
-          <!-- Priority -->
           <button type="button" class="btn btn-sort m-2" ng-click="changeSubmittedSort('priority')">
             <i ng-if="sortSubmittedOn != 'priority'" class="fa fa-sort-numeric-asc spacing-r" title="Click to sort ascending by priority"></i>
             <i ng-if="sortSubmittedOn == 'priority' && sortSubmittedOrder == 1" class="fa fa-sort-numeric-asc spacing-r sort-selected" title="Click to sort descending by priority"></i>
@@ -66,13 +59,11 @@
           <small title="Number of events estimated from {{submitted.estimate_from}}" style="color:red" ng-if="submitted.estimate_from"><br>(Estimate from {{submitted.estimate_from}})</small>
         </div>
         <div class="col-sm-2">
-          <small>{{displayTitle}}:</small><br>
-          <div ng-show="submitted.displayExpected > 0">
-            <b title="{{submitted.displayDone}}">{{humanReadable ? (submitted.displayDone | readableNumbers) : submitted.displayDone}}</b>
-            <small title="Force completed" style="color:red" ng-if="submitted.force_completed">(FC)</small>
-            /
-            <b title="{{submitted.displayExpected}}">{{humanReadable ? (submitted.displayExpected | readableNumbers) : submitted.displayExpected}}</b>
-          </div>
+          <small>{{submitted.display}}:</small><br>
+          <b title="{{submitted.displayDone}}">{{humanReadable ? (submitted.displayDone | readableNumbers) : submitted.displayDone}}</b>
+          <small title="Force completed" style="color:red" ng-if="submitted.force_completed">(FC)</small>
+          /
+          <b title="{{submitted.displayExpected}}">{{humanReadable ? (submitted.displayExpected | readableNumbers) : submitted.displayExpected}}</b>
         </div>
         <div class="col-sm-1">
           <small>Progress:</small><br>
@@ -124,23 +115,23 @@
           </button>
         </div>
         <div class="col-sm-2">
-          <button type="button" class="btn btn-sort m-2" ng-click="changeDoneSort('displayDone')">
-            <i ng-if="sortDoneOn != 'displayDone'" class="fa fa-sort-numeric-asc spacing-r" title="Click to sort ascending by done events/lumisections"></i>
-            <i ng-if="sortDoneOn == 'displayDone' && sortDoneOrder == 1" class="fa fa-sort-numeric-asc spacing-r sort-selected" title="Click to sort descending by done events/lumisections"></i>
-            <i ng-if="sortDoneOn == 'displayDone' && sortDoneOrder == -1" class="fa fa-sort-numeric-desc spacing-r sort-selected" title="Click to sort ascending by done events/lumisections"></i>
+          <button type="button" class="btn btn-sort m-2" ng-click="changeSubmittedSort('displayDone')">
+            <i ng-if="sortSubmittedOn != 'displayDone'" class="fa fa-sort-numeric-asc spacing-r" title="Click to sort ascending by done events/lumisections"></i>
+            <i ng-if="sortSubmittedOn == 'displayDone' && sortSubmittedOrder == 1" class="fa fa-sort-numeric-asc spacing-r sort-selected" title="Click to sort descending by done events/lumisections"></i>
+            <i ng-if="sortSubmittedOn == 'displayDone' && sortSubmittedOrder == -1" class="fa fa-sort-numeric-desc spacing-r sort-selected" title="Click to sort ascending by done events/lumisections"></i>
           </button>
           /
-          <button type="button" class="btn btn-sort m-2" ng-click="changeDoneSort('displayExpected')">
-            <i ng-if="sortDoneOn != 'displayExpected'" class="fa fa-sort-numeric-asc spacing-r" title="Click to sort ascending by expected events/lumisections"></i>
-            <i ng-if="sortDoneOn == 'displayExpected' && sortDoneOrder == 1" class="fa fa-sort-numeric-asc spacing-r sort-selected" title="Click to sort descending by expected events/lumisections"></i>
-            <i ng-if="sortDoneOn == 'displayExpected' && sortDoneOrder == -1" class="fa fa-sort-numeric-desc spacing-r sort-selected" title="Click to sort ascending by expected events/lumisections"></i>
+          <button type="button" class="btn btn-sort m-2" ng-click="changeSubmittedSort('displayExpected')">
+            <i ng-if="sortSubmittedOn != 'displayExpected'" class="fa fa-sort-numeric-asc spacing-r" title="Click to sort ascending by expected events/lumisections"></i>
+            <i ng-if="sortSubmittedOn == 'displayExpected' && sortSubmittedOrder == 1" class="fa fa-sort-numeric-asc spacing-r sort-selected" title="Click to sort descending by expected events/lumisections"></i>
+            <i ng-if="sortSubmittedOn == 'displayExpected' && sortSubmittedOrder == -1" class="fa fa-sort-numeric-desc spacing-r sort-selected" title="Click to sort ascending by expected events/lumisections"></i>
           </button>
         </div>
         <div class="col-sm-1">
-          <button type="button" class="btn btn-sort m-2" ng-click="changeDoneSort('displayPercentage')">
-            <i ng-if="sortDoneOn != 'displayPercentage'" class="fa fa-sort-numeric-asc spacing-r" title="Click to sort ascending by progress"></i>
-            <i ng-if="sortDoneOn == 'displayPercentage' && sortDoneOrder == 1" class="fa fa-sort-numeric-asc spacing-r sort-selected" title="Click to sort descending by progress"></i>
-            <i ng-if="sortDoneOn == 'displayPercentage' && sortDoneOrder == -1" class="fa fa-sort-numeric-desc spacing-r sort-selected" title="Click to sort ascending by progress"></i>
+          <button type="button" class="btn btn-sort m-2" ng-click="changeSubmittedSort('displayPercentage')">
+            <i ng-if="sortSubmittedOn != 'displayPercentage'" class="fa fa-sort-numeric-asc spacing-r" title="Click to sort ascending by progress"></i>
+            <i ng-if="sortSubmittedOn == 'displayPercentage' && sortSubmittedOrder == 1" class="fa fa-sort-numeric-asc spacing-r sort-selected" title="Click to sort descending by progress"></i>
+            <i ng-if="sortSubmittedOn == 'displayPercentage' && sortSubmittedOrder == -1" class="fa fa-sort-numeric-desc spacing-r sort-selected" title="Click to sort ascending by progress"></i>
           </button>
         </div>
         <div class="col-sm-2">
@@ -165,13 +156,11 @@
           <small title="Number of events estimated from {{done.estimate_from}}" style="color:red" ng-if="done.estimate_from"><br>(Estimate from {{done.estimate_from}})</small>
         </div>
         <div class="col-sm-2">
-          <small>{{displayTitle}}:</small><br>
-          <div ng-show="done.displayExpected > 0">
-            <b title="{{done.displayDone}}">{{humanReadable ? (done.displayDone | readableNumbers) : done.displayDone}}</b>
-            <small title="Force completed" style="color:red" ng-if="done.force_completed">(FC)</small>
-            /
-            <b title="{{done.displayExpected}}">{{humanReadable ? (done.displayExpected | readableNumbers) : done.displayExpected}}</b>
-          </div>
+          <small>{{done.display}}:</small><br>
+          <b title="{{done.displayDone}}">{{humanReadable ? (done.displayDone | readableNumbers) : done.displayDone}}</b>
+          <small title="Force completed" style="color:red" ng-if="done.force_completed">(FC)</small>
+          /
+          <b title="{{done.displayExpected}}">{{humanReadable ? (done.displayExpected | readableNumbers) : done.displayExpected}}</b>
         </div>
         <div class="col-sm-1">
           <small>Progress:</small><br>

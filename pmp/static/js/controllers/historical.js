@@ -32,7 +32,6 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
             sortSubmittedOrder: 1, // Sort ascending (1) or descending (-1)
             sortDoneOn: 'prepid', // Field to sort done list on
             sortDoneOrder: 1, // Sort ascending (1) or descending (-1)
-            display: '', // Two options only 'events' or 'lumis' for lumisections.
         };
 
         /**
@@ -70,18 +69,6 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
             $scope.sortDoneOn = urlParameters.sortDoneOn;
 
             $scope.sortDoneOrder = parseInt(urlParameters.sortDoneOrder, 10) === -1 ? -1 : 1;
-
-            // Display either 'events' or 'lumis'
-            if (urlParameters.display === 'lumis') {
-                $scope.display = 'lumis';
-                $scope.displayTitle = 'Lumisections';
-                $scope.counterTitle = 'events';
-            }
-            else {
-                $scope.display = 'events';
-                $scope.displayTitle = 'Events';
-                $scope.counterTitle = 'lumisections';
-            }
 
             // initialise filters
             if (urlParameters.priority !== undefined) {
@@ -225,6 +212,24 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
                     Data.setValidTags(data.data.results.valid_tags);
                     $scope.loadTaskChain = false;
                     let now = parseInt(Date.now() / 1000);
+                    let includeDisplayPercentage = function(entry) {
+                        // Set lumis
+                        // The following value exists and it is not zero
+                        if (entry.expected_lumis) {
+                            entry.displayDone = entry.done_lumis;
+                            entry.displayExpected = entry.expected_lumis;
+                            entry.display = 'Lumisections';
+                        }
+                        else {
+                            // Use events
+                            entry.displayDone = entry.done;
+                            entry.displayExpected = entry.expected;
+                            entry.display = 'Events';
+                        }
+                        
+                        // Set the progress percentage
+                        entry.displayPercentage = (entry.displayDone / Math.max(entry.displayExpected, 1)) * 100;
+                    };
                     data.data.results.submitted_requests.forEach(function(entry) {
                         entry.url = $scope.getUrlForPrepid(entry.prepid, entry.workflow);
                         entry.statusTimestamp = now - entry.status_timestamp;
@@ -233,20 +238,7 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
                         entry.workflowStatus = entry.workflow_status;
                         entry.workflowTimestamp = now - entry.workflow_status_timestamp;
                         entry.workflowTimestampDiff = $scope.secondsToDiff(entry.workflow_timestamp <= 0 ? 0 : entry.workflowTimestamp);
-
-                        // Set the events or lumisections following the option chosen.
-                        if ($scope.display === 'lumis') {
-                            // Use lumisections
-                            entry.displayDone = entry.done_lumis;
-                            entry.displayExpected = entry.expected_lumis;
-                        }
-                        else {
-                            // Use events
-                            entry.displayDone = entry.done;
-                            entry.displayExpected = entry.expected;
-                        }
-                        // Set the progress percentage
-                        entry.displayPercentage = (entry.displayDone / Math.max(entry.displayExpected, 1)) * 100;
+                        includeDisplayPercentage(entry);
                     });
                     $scope.listSubmitted = data.data.results.submitted_requests.sort($scope.compareSubmitted);
                     data.data.results.done_requests.forEach(function(entry) {
@@ -257,20 +249,7 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
                         entry.workflowStatus = entry.workflow_status;
                         entry.workflowTimestamp = now - entry.workflow_status_timestamp;
                         entry.workflowTimestampDiff = $scope.secondsToDiff(entry.workflow_timestamp <= 0 ? 0 : entry.workflowTimestamp);
-
-                        // Set the events or lumisections following the option chosen.
-                        if ($scope.display === 'lumis') {
-                            // Use lumisections
-                            entry.displayDone = entry.done_lumis;
-                            entry.displayExpected = entry.expected_lumis;
-                        }
-                        else {
-                            // Use events
-                            entry.displayDone = entry.done;
-                            entry.displayExpected = entry.expected;
-                        }
-                        // Set the progress percentage
-                        entry.displayPercentage = (entry.displayDone / Math.max(entry.displayExpected, 1)) * 100;
+                        includeDisplayPercentage(entry);
                     });
                     $scope.listDone = data.data.results.done_requests.sort($scope.compareDone);
                     $scope.data = Data.getLoadedData();
@@ -356,17 +335,6 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
             }
             $scope.listDone = $scope.listDone.sort($scope.compareDone);
             $scope.setURL($scope, Data);
-        }
-
-        $scope.displayEventsLumis = function() {
-            if ($scope.display === 'lumis') {
-                $scope.display = 'events';
-            }
-            else {
-                $scope.display = 'lumis';
-            }
-            $scope.setURL($scope, Data);
-            $scope.init();
         }
 
         $scope.$on('onChangeNotification:InputTags', function () {

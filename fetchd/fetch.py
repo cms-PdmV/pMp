@@ -58,10 +58,15 @@ def parse_workflows_history(history):
             dataset_events['time'] = entry_time
             dataset_events['events'] = dataset_events['Events']
             dataset_events['type'] = dataset_events['Type']
-            dataset_events['lumis'] = dataset_events.get('Lumis', 0)
             del dataset_events['Events']
             del dataset_events['Type']
-            dataset_events.pop('Lumis', '')
+
+            # Lumisections
+            lumis_available = dataset_events.get('Lumis')
+            if lumis_available:
+                dataset_events['lumis'] = lumis_available
+                dataset_events.pop('Lumis', '')    
+
             if dataset_name not in parsed:
                 parsed[dataset_name] = []
 
@@ -296,8 +301,12 @@ def create_fake_request(stats_doc, cfg):
             stats_doc.get('RequestType', '<unknown>')
         )
         fake_request['total_events'] = stats_doc['TotalEvents']
+
         # If the Stats2 record has the lumis data, include, otherwise set zero
-        fake_request['total_input_lumis'] = stats_doc.get('TotalInputLumis', 0)
+        total_input_lumis = stats_doc.get('TotalInputLumis')
+        if total_input_lumis:
+            fake_request['total_input_lumis'] = total_input_lumis
+
         fake_request['priority'] = stats_doc['RequestPriority']
         if len(stats_doc['Campaigns']) > 0:
             campaign = stats_doc['Campaigns'][0]
