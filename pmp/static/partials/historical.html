@@ -18,23 +18,23 @@
           </button>
         </div>
         <div class="col-sm-2">
-          <button type="button" class="btn btn-sort m-2" ng-click="changeSubmittedSort('done')">
-            <i ng-if="sortSubmittedOn != 'done'" class="fa fa-sort-numeric-asc spacing-r" title="Click to sort ascending by done events"></i>
-            <i ng-if="sortSubmittedOn == 'done' && sortSubmittedOrder == 1" class="fa fa-sort-numeric-asc spacing-r sort-selected" title="Click to sort descending by done events"></i>
-            <i ng-if="sortSubmittedOn == 'done' && sortSubmittedOrder == -1" class="fa fa-sort-numeric-desc spacing-r sort-selected" title="Click to sort ascending by done events"></i>
+          <button type="button" class="btn btn-sort m-2" ng-click="changeSubmittedSort('displayDone')">
+            <i ng-if="sortSubmittedOn != 'displayDone'" class="fa fa-sort-numeric-asc spacing-r" title="Click to sort ascending by done events/lumisections"></i>
+            <i ng-if="sortSubmittedOn == 'displayDone' && sortSubmittedOrder == 1" class="fa fa-sort-numeric-asc spacing-r sort-selected" title="Click to sort descending by done events/lumisections"></i>
+            <i ng-if="sortSubmittedOn == 'displayDone' && sortSubmittedOrder == -1" class="fa fa-sort-numeric-desc spacing-r sort-selected" title="Click to sort ascending by done events/lumisections"></i>
           </button>
           /
-          <button type="button" class="btn btn-sort m-2" ng-click="changeSubmittedSort('expected')">
-            <i ng-if="sortSubmittedOn != 'expected'" class="fa fa-sort-numeric-asc spacing-r" title="Click to sort ascending by expected events"></i>
-            <i ng-if="sortSubmittedOn == 'expected' && sortSubmittedOrder == 1" class="fa fa-sort-numeric-asc spacing-r sort-selected" title="Click to sort descending by expected events"></i>
-            <i ng-if="sortSubmittedOn == 'expected' && sortSubmittedOrder == -1" class="fa fa-sort-numeric-desc spacing-r sort-selected" title="Click to sort ascending by expected events"></i>
+          <button type="button" class="btn btn-sort m-2" ng-click="changeSubmittedSort('displayExpected')">
+            <i ng-if="sortSubmittedOn != 'displayExpected'" class="fa fa-sort-numeric-asc spacing-r" title="Click to sort ascending by expected events/lumisections"></i>
+            <i ng-if="sortSubmittedOn == 'displayExpected' && sortSubmittedOrder == 1" class="fa fa-sort-numeric-asc spacing-r sort-selected" title="Click to sort descending by expected events/lumisections"></i>
+            <i ng-if="sortSubmittedOn == 'displayExpected' && sortSubmittedOrder == -1" class="fa fa-sort-numeric-desc spacing-r sort-selected" title="Click to sort ascending by expected events/lumisections"></i>
           </button>
         </div>
         <div class="col-sm-1">
-          <button type="button" class="btn btn-sort m-2" ng-click="changeSubmittedSort('percentage')">
-            <i ng-if="sortSubmittedOn != 'percentage'" class="fa fa-sort-numeric-asc spacing-r" title="Click to sort ascending by progress"></i>
-            <i ng-if="sortSubmittedOn == 'percentage' && sortSubmittedOrder == 1" class="fa fa-sort-numeric-asc spacing-r sort-selected" title="Click to sort descending by progress"></i>
-            <i ng-if="sortSubmittedOn == 'percentage' && sortSubmittedOrder == -1" class="fa fa-sort-numeric-desc spacing-r sort-selected" title="Click to sort ascending by progress"></i>
+          <button type="button" class="btn btn-sort m-2" ng-click="changeSubmittedSort('displayPercentage')">
+            <i ng-if="sortSubmittedOn != 'displayPercentage'" class="fa fa-sort-numeric-asc spacing-r" title="Click to sort ascending by progress"></i>
+            <i ng-if="sortSubmittedOn == 'displayPercentage' && sortSubmittedOrder == 1" class="fa fa-sort-numeric-asc spacing-r sort-selected" title="Click to sort descending by progress"></i>
+            <i ng-if="sortSubmittedOn == 'displayPercentage' && sortSubmittedOrder == -1" class="fa fa-sort-numeric-desc spacing-r sort-selected" title="Click to sort ascending by progress"></i>
           </button>
         </div>
         <div class="col-sm-2">
@@ -59,15 +59,15 @@
           <small title="Number of events estimated from {{submitted.estimate_from}}" style="color:red" ng-if="submitted.estimate_from"><br>(Estimate from {{submitted.estimate_from}})</small>
         </div>
         <div class="col-sm-2">
-          <small>Events:</small><br>
-          <b title="{{submitted.done}}">{{humanReadable ? (submitted.done | readableNumbers) : submitted.done}}</b>
+          <small>{{submitted.display}}:</small><br>
+          <b title="{{submitted.displayDone}}">{{humanReadable ? (submitted.displayDone | readableNumbers) : submitted.displayDone}}</b>
           <small title="Force completed" style="color:red" ng-if="submitted.force_completed">(FC)</small>
           /
-          <b title="{{submitted.expected}}">{{humanReadable ? (submitted.expected | readableNumbers) : submitted.expected}}</b>
+          <b title="{{submitted.displayExpected}}">{{humanReadable ? (submitted.displayExpected | readableNumbers) : submitted.displayExpected}}</b>
         </div>
         <div class="col-sm-1">
           <small>Progress:</small><br>
-          <div class="progress total-bar" ng-show="submitted.expected > 0">
+          <div class="progress total-bar" ng-show="submitted.displayExpected > 0">
             <div class="font-shadow progress-bar pmp-orange"
                  ng-class="{'pmp-red': submitted.output_dataset_status == 'INVALID' || submitted.output_dataset_status == 'DELETED',
                             'pmp-blue': submitted.output_dataset_status == 'VALID',
@@ -75,11 +75,11 @@
                  role="progressbar"
                  aria-valuemin="0"
                  aria-valuemax="100"
-                 title="{{submitted.output_dataset}} is {{submitted.output_dataset_status}} at {{submitted.percentage | readableNumbers}}%"
+                 title="{{submitted.output_dataset}} is {{submitted.output_dataset_status}} at {{submitted.displayPercentage | readableNumbers}}%"
                  style="color: black;
                         max-width: 100%;
-                        width:{{submitted.percentage}}%;">
-              {{submitted.percentage | readableNumbers}}%
+                        width:{{submitted.displayPercentage}}%;">
+              {{submitted.displayPercentage | readableNumbers}}%
             </div>
           </div>
         </div>
@@ -115,23 +115,23 @@
           </button>
         </div>
         <div class="col-sm-2">
-          <button type="button" class="btn btn-sort m-2" ng-click="changeDoneSort('done')">
-            <i ng-if="sortDoneOn != 'done'" class="fa fa-sort-numeric-asc spacing-r" title="Click to sort ascending by done events"></i>
-            <i ng-if="sortDoneOn == 'done' && sortDoneOrder == 1" class="fa fa-sort-numeric-asc spacing-r sort-selected" title="Click to sort descending by done events"></i>
-            <i ng-if="sortDoneOn == 'done' && sortDoneOrder == -1" class="fa fa-sort-numeric-desc spacing-r sort-selected" title="Click to sort ascending by done events"></i>
+          <button type="button" class="btn btn-sort m-2" ng-click="changeSubmittedSort('displayDone')">
+            <i ng-if="sortSubmittedOn != 'displayDone'" class="fa fa-sort-numeric-asc spacing-r" title="Click to sort ascending by done events/lumisections"></i>
+            <i ng-if="sortSubmittedOn == 'displayDone' && sortSubmittedOrder == 1" class="fa fa-sort-numeric-asc spacing-r sort-selected" title="Click to sort descending by done events/lumisections"></i>
+            <i ng-if="sortSubmittedOn == 'displayDone' && sortSubmittedOrder == -1" class="fa fa-sort-numeric-desc spacing-r sort-selected" title="Click to sort ascending by done events/lumisections"></i>
           </button>
           /
-          <button type="button" class="btn btn-sort m-2" ng-click="changeDoneSort('expected')">
-            <i ng-if="sortDoneOn != 'expected'" class="fa fa-sort-numeric-asc spacing-r" title="Click to sort ascending by expected events"></i>
-            <i ng-if="sortDoneOn == 'expected' && sortDoneOrder == 1" class="fa fa-sort-numeric-asc spacing-r sort-selected" title="Click to sort descending by expected events"></i>
-            <i ng-if="sortDoneOn == 'expected' && sortDoneOrder == -1" class="fa fa-sort-numeric-desc spacing-r sort-selected" title="Click to sort ascending by expected events"></i>
+          <button type="button" class="btn btn-sort m-2" ng-click="changeSubmittedSort('displayExpected')">
+            <i ng-if="sortSubmittedOn != 'displayExpected'" class="fa fa-sort-numeric-asc spacing-r" title="Click to sort ascending by expected events/lumisections"></i>
+            <i ng-if="sortSubmittedOn == 'displayExpected' && sortSubmittedOrder == 1" class="fa fa-sort-numeric-asc spacing-r sort-selected" title="Click to sort descending by expected events/lumisections"></i>
+            <i ng-if="sortSubmittedOn == 'displayExpected' && sortSubmittedOrder == -1" class="fa fa-sort-numeric-desc spacing-r sort-selected" title="Click to sort ascending by expected events/lumisections"></i>
           </button>
         </div>
         <div class="col-sm-1">
-          <button type="button" class="btn btn-sort m-2" ng-click="changeDoneSort('percentage')">
-            <i ng-if="sortDoneOn != 'percentage'" class="fa fa-sort-numeric-asc spacing-r" title="Click to sort ascending by progress"></i>
-            <i ng-if="sortDoneOn == 'percentage' && sortDoneOrder == 1" class="fa fa-sort-numeric-asc spacing-r sort-selected" title="Click to sort descending by progress"></i>
-            <i ng-if="sortDoneOn == 'percentage' && sortDoneOrder == -1" class="fa fa-sort-numeric-desc spacing-r sort-selected" title="Click to sort ascending by progress"></i>
+          <button type="button" class="btn btn-sort m-2" ng-click="changeSubmittedSort('displayPercentage')">
+            <i ng-if="sortSubmittedOn != 'displayPercentage'" class="fa fa-sort-numeric-asc spacing-r" title="Click to sort ascending by progress"></i>
+            <i ng-if="sortSubmittedOn == 'displayPercentage' && sortSubmittedOrder == 1" class="fa fa-sort-numeric-asc spacing-r sort-selected" title="Click to sort descending by progress"></i>
+            <i ng-if="sortSubmittedOn == 'displayPercentage' && sortSubmittedOrder == -1" class="fa fa-sort-numeric-desc spacing-r sort-selected" title="Click to sort ascending by progress"></i>
           </button>
         </div>
         <div class="col-sm-2">
@@ -156,15 +156,15 @@
           <small title="Number of events estimated from {{done.estimate_from}}" style="color:red" ng-if="done.estimate_from"><br>(Estimate from {{done.estimate_from}})</small>
         </div>
         <div class="col-sm-2">
-          <small>Events:</small><br>
-          <b title="{{done.done}}">{{humanReadable ? (done.done | readableNumbers) : done.done}}</b>
+          <small>{{done.display}}:</small><br>
+          <b title="{{done.displayDone}}">{{humanReadable ? (done.displayDone | readableNumbers) : done.displayDone}}</b>
           <small title="Force completed" style="color:red" ng-if="done.force_completed">(FC)</small>
           /
-          <b title="{{done.expected}}">{{humanReadable ? (done.expected | readableNumbers) : done.expected}}</b>
+          <b title="{{done.displayExpected}}">{{humanReadable ? (done.displayExpected | readableNumbers) : done.displayExpected}}</b>
         </div>
         <div class="col-sm-1">
           <small>Progress:</small><br>
-          <div class="progress total-bar" ng-show="done.expected > 0">
+          <div class="progress total-bar" ng-show="done.displayExpected > 0">
             <div class="font-shadow progress-bar pmp-blue"
                  ng-class="{'pmp-red': done.output_dataset_status == 'INVALID' || done.output_dataset_status == 'DELETED',
                             'pmp-blue': done.output_dataset_status == 'VALID',
@@ -172,11 +172,11 @@
                  role="progressbar"
                  aria-valuemin="0"
                  aria-valuemax="100"
-                 title="{{done.output_dataset}} is {{done.output_dataset_status}} at {{done.percentage | readableNumbers}}%"
+                 title="{{done.output_dataset}} is {{done.output_dataset_status}} at {{done.displayPercentage | readableNumbers}}%"
                  style="color: black;
                         max-width: 100%;
-                        width:{{done.percentage}}%;">
-              {{done.percentage | readableNumbers}}%
+                        width:{{done.displayPercentage}}%;">
+              {{done.displayPercentage | readableNumbers}}%
             </div>
           </div>
         </div>
