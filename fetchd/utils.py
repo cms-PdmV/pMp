@@ -114,12 +114,13 @@ class Utils:
         """
         # Using a persisting HTTP connection
         http = session if session else requests
-        ca_cert = None
+        ca_cert: str | bool = True
         using_opensearch = search_engine.engine_instance_of(SearchEngine.OPENSEARCH)
         headers = {"Content-Type": "application/json"}
 
         if using_opensearch:
-            ca_cert = search_engine.ca_cert
+            retrieved_ca_cert = search_engine.ca_cert
+            ca_cert = retrieved_ca_cert if retrieved_ca_cert else False
         try:
             response: requests.Response = http.request(
                 method=method,

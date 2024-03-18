@@ -2,6 +2,7 @@
 Builder to instantiate a connector to the Search Engine
 This class supports Opensearch connectors
 """
+
 from opensearchpy import OpenSearch
 import os
 import logging
@@ -133,17 +134,23 @@ class SearchEngine:
         self.__logger.info("Search engine URL: %s", database_url)
         return database_url
 
-    def __get_ca_cert_path(self) -> str:
+    def __get_ca_cert_path(self) -> str | None:
         """
         Returns CA certification location required to instantiate the Opensearch client.
         This path must be provided via the environment variable: CA_CERT
-        If the environment variable is not provided, a ValueError will be raised
+        If the environment variable is not provided, the OpenSearch client will
+        disable the host certificate verification.
+
+        Returns:
+            str | None: CA certificate to validate the connection.
         """
         ca_cert: str = os.getenv("CA_CERT")
         if not ca_cert:
-            raise ValueError(
-                "CERN CA certificate location was provided via environment variable: CA_CERT"
+            self.__logger.warning(
+                "CERN CA certificate was not provided, disabling host verification"
             )
+            return None
+
         self.__logger.info("CERN CA certificate location: %s", ca_cert)
         return ca_cert
 
@@ -178,7 +185,7 @@ class SearchEngine:
     def __create_opensearch_client(
         self,
         database_url: str,
-        ca_cert: str,
+        ca_cert: str | None,
     ) -> OpenSearch:
         """
         Instantiates a client to connect to a Opensearch cluster
@@ -208,12 +215,18 @@ class SearchEngine:
         )
         self.__database_url = database_url_basic_auth
 
-        return OpenSearch(
-            hosts=[self.__database_url],
-            use_ssl=True,
-            verify_cert=True,
-            ca_certs=ca_cert,
-        )
+        if ca_cert:
+            return OpenSearch(
+                hosts=[self.__database_url],
+                use_ssl=True,
+                verify_certs=True,
+                ca_certs=ca_cert,
+            )
+        else:
+            return OpenSearch(
+                hosts=[self.__database_url],
+                verify_certs=False,
+            )
 
     def __create_engine_client(self) -> OpenSearch:
         """
@@ -221,8 +234,7 @@ class SearchEngine:
         """
         # Instantiate a OpenSearch client
         if self.engine_instance_of(engine_name=SearchEngine.OPENSEARCH):
-            self.__ca_cert: str = self.__get_ca_cert_path()
-
+            self.__ca_cert: str | None = self.__get_ca_cert_path()
             return self.__create_opensearch_client(
                 database_url=self.__database_url,
                 ca_cert=self.__ca_cert,
