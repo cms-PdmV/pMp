@@ -215,7 +215,7 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
                     let includeDisplayPercentage = function(entry) {
                         // Set lumis
                         // The following value exists and it is not zero
-                        if (entry.expected_lumis) {
+                        if (entry.expected_lumis && entry.done_lumis) {
                             entry.displayDone = entry.done_lumis;
                             entry.displayExpected = entry.expected_lumis;
                             entry.display = 'Lumisections';
