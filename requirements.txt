@@ -5,4 +5,4 @@ Flask==2.3.2
 Flask-Compress==1.13
 cachelib==0.10.2  
 gunicorn==20.1.0 
-requests==2.28.2
+requests==2.31.0
