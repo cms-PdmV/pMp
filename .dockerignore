@@ -1,0 +1,23 @@
+# Ignore all Python cache folders
+__pycache__/
+
+# Ignore .pid files
+*.pid
+
+# Ignore Grunt build
+pmp/static/build/
+
+# Ignore venv
+venv/
+
+# Ignore node_modules
+pmp/node_modules/
+
+# Ignore package-lock.json
+pmp/package-lock.json
+
+# Ignore .env files
+*.env
+
+# Ignore Docker Compose test file
+pmp.yaml

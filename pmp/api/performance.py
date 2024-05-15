@@ -2,7 +2,7 @@
 from pmp.api.common import APIBase
 import json
 import logging
-from werkzeug.contrib.cache import SimpleCache
+from cachelib.simple import SimpleCache
 import config
 import time
 

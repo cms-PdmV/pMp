@@ -1,16 +1,57 @@
-curl -XPUT "http://localhost:9200/workflows/_settings" -d '{ "index" : { "max_result_window" : 1000000 } }' -H 'Content-Type: application/json'
-curl -XPUT "http://localhost:9200/rereco_requests/_settings" -d '{ "index" : { "max_result_window" : 1000000 } }' -H 'Content-Type: application/json'
-curl -XPUT "http://localhost:9200/rereco_campaigns/_settings" -d '{ "index" : { "max_result_window" : 1000000 } }' -H 'Content-Type: application/json'
-curl -XPUT "http://localhost:9200/relval_requests/_settings" -d '{ "index" : { "max_result_window" : 1000000 } }' -H 'Content-Type: application/json'
-curl -XPUT "http://localhost:9200/relval_campaigns/_settings" -d '{ "index" : { "max_result_window" : 1000000 } }' -H 'Content-Type: application/json'
-curl -XPUT "http://localhost:9200/relval_cmssw_versions/_settings" -d '{ "index" : { "max_result_window" : 1000000 } }' -H 'Content-Type: application/json'
-curl -XPUT "http://localhost:9200/requests/_settings" -d '{ "index" : { "max_result_window" : 1000000 } }' -H 'Content-Type: application/json'
-curl -XPUT "http://localhost:9200/chained_requests/_settings" -d '{ "index" : { "max_result_window" : 1000000 } }' -H 'Content-Type: application/json'
-curl -XPUT "http://localhost:9200/campaigns/_settings" -d '{ "index" : { "max_result_window" : 1000000 } }' -H 'Content-Type: application/json'
-curl -XPUT "http://localhost:9200/chained_campaigns/_settings" -d '{ "index" : { "max_result_window" : 1000000 } }' -H 'Content-Type: application/json'
-curl -XPUT "http://localhost:9200/flows/_settings" -d '{ "index" : { "max_result_window" : 1000000 } }' -H 'Content-Type: application/json'
-curl -XPUT "http://localhost:9200/processing_strings/_settings" -d '{ "index" : { "max_result_window" : 1000000 } }' -H 'Content-Type: application/json'
-curl -XPUT "http://localhost:9200/tags/_settings" -d '{ "index" : { "max_result_window" : 1000000 } }' -H 'Content-Type: application/json'
-curl -XPUT "http://localhost:9200/ppd_tags/_settings" -d '{ "index" : { "max_result_window" : 1000000 } }' -H 'Content-Type: application/json'
-curl -XPUT "http://localhost:9200/mcm_dataset_names/_settings" -d '{ "index" : { "max_result_window" : 1000000 } }' -H 'Content-Type: application/json'
-curl -XPUT "http://localhost:9200/last_sequences/_settings" -d '{ "index" : { "max_result_window" : 1000000 } }' -H 'Content-Type: application/json'
+# Set the following environment variables
+# ENGINE_ENDPOINT: Opensearch endpoint: 'http://localhost:9200', without trailing slash :)
+# KERBEROS: Set this if you attempt to authenticate via Kerberos, it would be required for Opensearch
+SPACE="=======\n\n"
+INDICES=(
+    'campaigns'
+    'chained_campaigns' 
+    'chained_requests' 
+    'flows'
+    'last_sequences'
+    'mcm_dataset_names'
+    'mcm_datatiers'
+    'ppd_tags'
+    'processing_strings'
+    'relval_campaigns'
+    'relval_cmssw_versions'
+    'relval_requests'
+    'requests'
+    'rereco_campaigns'
+    'rereco_requests'
+    'tags'
+    'workflows'
+)
+TOTAL_INDICES=${#INDICES[@]}
+
+function update_result_window() {
+    local index=$1
+    local http_request="$ENGINE_ENDPOINT/$index/_settings"
+    local body='{"index": {"max_result_window": 1000000}}'
+    
+    echo "Request: $http_request - Body: $body"
+    if [ -z $KERBEROS ]; then
+        # Kerberos authentication is not set
+        curl -H 'Content-Type: application/json' \
+        -X PUT "$http_request" \
+        -d "$body"
+    else
+        echo "Using Kerberos authentication"
+        curl -H 'Content-Type: application/json' \
+        -X PUT "$http_request" \
+        -u : --negotiate \
+        -d "$body"
+    fi
+}
+
+# Execute the change
+for i in ${!INDICES[@]}; do
+    INDEX=$(($i+1))
+    CURRENT=${INDICES[$i]}
+    echo "Index $INDEX:$TOTAL_INDICES => $CURRENT"
+    echo "Starting at: $(date)"
+    printf $SPACE
+    update_result_window $CURRENT
+    printf "\n\n"
+    echo "Finished at: $(date)"
+    printf $SPACE
+done

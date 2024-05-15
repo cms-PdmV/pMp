@@ -30,7 +30,7 @@ Search bar in pMp can be found in all statistics pages. Next to it, there are tw
 * RelVal CMSSW versions
 * RelVal campaigns
 
-Suggestions in search are shown as prepids of objects in the list above. pMp has a partial and very limited wildcard (asterisk - *) search, so preferably queries must contain complete tags, campaigns, prepids, etc, i.e. search terms must be full identifiers of objects. If multiple objects in different indexes (of different types) have the same identifier, i.e. there is a PPD tag `TAG1` and a request tag `TAG1` then pMp fill treat `TAG1` as PPD tag and fetch only requests that have `TAG1` as a PPD tag because PPD tags are higher in the list above. Objects in pMp are stored in indexes - databases for each type. Once user enters a search term, pMp first needs to figure out which type of object is user searching for and then look into appropriate index in Elasticsearch. List above shows order in which indexes are checked for an object with given id to determine object type (whether it's a campaign, PPD tag, tag, CMSSW version or etc.). Search in pMp is case-sensitive. 
+Suggestions in search are shown as prepids of objects in the list above. pMp has a partial and very limited wildcard (asterisk - *) search, so preferably queries must contain complete tags, campaigns, prepids, etc, i.e. search terms must be full identifiers of objects. If multiple objects in different indexes (of different types) have the same identifier, i.e. there is a PPD tag `TAG1` and a request tag `TAG1` then pMp fill treat `TAG1` as PPD tag and fetch only requests that have `TAG1` as a PPD tag because PPD tags are higher in the list above. Objects in pMp are stored in indexes - databases for each type. Once user enters a search term, pMp first needs to figure out which type of object is user searching for and then look into appropriate index in Opensearch. List above shows order in which indexes are checked for an object with given id to determine object type (whether it's a campaign, PPD tag, tag, CMSSW version or etc.). Search in pMp is case-sensitive. 
 
 If multiple search terms are given then requests that fit any of these terms are shown, in other words, terms in search are joined with OR. For example if user searches by `TAG1` and `TAG2` then requests that have `TAG1` or `TAG2` (or both) are shown. If a request fits multiple terms in the search, it is still added to results only once.
 
@@ -153,9 +153,9 @@ Download an image button will convert currently shown plot to PDF, PNG or SVG an
 
 ## Database structure (for advanced users)
 
-All data is taken from McM and Stats service and stored in pMp's Elasticsearch index.
+All data is taken from McM and Stats service and stored in pMp's Opensearch index.
 
-Below is structure of objects kept in Elasticsearch. 
+Below is structure of objects kept in Opensearch. 
 
 ### Campaigns
 Index - `campaigns`.  
