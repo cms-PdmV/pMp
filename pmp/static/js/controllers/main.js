@@ -22,13 +22,13 @@ angular.module('pmpApp').controller('MainController', ['$http', '$location',
 
         $scope.getUrlForPrepid = function(prepid, workflow) {
             if (mcRegex.test(prepid)) {
-                return 'https://cms-pdmv.cern.ch/mcm/requests?prepid=' + prepid;
+                return 'https://cms-pdmv-prod.web.cern.ch/mcm/requests?prepid=' + prepid;
             }
             if (rerecoRegex.test(prepid)) {
-                return 'https://cms-pdmv.cern.ch/rereco/requests?prepid=' + prepid;
+                return 'https://cms-pdmv-prod.web.cern.ch/rereco/requests?prepid=' + prepid;
             }
             if (relvalRegex.test(prepid)) {
-                return 'https://cms-pdmv.cern.ch/relval/relvals?prepid=' + prepid;
+                return 'https://cms-pdmv-prod.web.cern.ch/relval/relvals?prepid=' + prepid;
             }
             return 'https://cmsweb.cern.ch/reqmgr2/fetch?rid=' + workflow;
         };
