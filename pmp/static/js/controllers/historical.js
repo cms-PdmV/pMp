@@ -417,7 +417,7 @@ angular.module('pmpApp').controller('HistoricalController', ['$http',
                          line['output_dataset_status'],
                          line['url']]
                 if (line['workflow'].length) {
-                    l.push('https://cms-pdmv.cern.ch/stats?workflow_name=' + line['workflow']);
+                    l.push('https://cms-pdmv-prod.web.cern.ch/stats?workflow_name=' + line['workflow']);
                 } else {
                     l.push('');
                 }

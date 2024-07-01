@@ -93,7 +93,7 @@
         </div>
         <div class="col-sm-1">
           <a ng-if="submitted.output_dataset" ng-href="https://cmsweb.cern.ch/das/request?view=list&limit=50&instance=prod/global&input=dataset={{submitted.output_dataset}}" target="_blank" title="Output dataset on DAS">DAS</a>
-          <a ng-if="submitted.workflow" ng-href="https://cms-pdmv.cern.ch/stats?workflow_name={{submitted.workflow}}" target="_blank" title="Workflow in Stats">Stats</a>
+          <a ng-if="submitted.workflow" ng-href="https://cms-pdmv-prod.web.cern.ch/stats?workflow_name={{submitted.workflow}}" target="_blank" title="Workflow in Stats">Stats</a>
           <a ng-href="/pmp/historical?r={{submitted.prepid}}" target="_blank" title="Historical plot of {{submitted.prepid}}">pMp</a>
         </div>
       </div>
@@ -190,7 +190,7 @@
         </div>
         <div class="col-sm-1">
           <a ng-if="done.output_dataset" ng-href="https://cmsweb.cern.ch/das/request?view=list&limit=50&instance=prod/global&input=dataset={{done.output_dataset}}" target="_blank" title="Output dataset on DAS">DAS</a>
-          <a ng-if="done.workflow" ng-href="https://cms-pdmv.cern.ch/stats?workflow_name={{done.workflow}}" target="_blank" title="Workflow in Stats">Stats</a>
+          <a ng-if="done.workflow" ng-href="https://cms-pdmv-prod.web.cern.ch/stats?workflow_name={{done.workflow}}" target="_blank" title="Workflow in Stats">Stats</a>
           <a ng-href="/pmp/historical?r={{done.prepid}}" target="_blank" title="Historical plot of {{done.prepid}}">pMp</a>
         </div>
       </div>
