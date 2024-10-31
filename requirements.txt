@@ -1,8 +1,8 @@
 # Opensearch 2.x
 opensearch-py>=2.2.0,<3.0.0
 
-Flask==2.3.2 
-Flask-Compress==1.13
-cachelib==0.10.2  
-gunicorn==22.0.0 
-requests==2.32.0
+Flask==3.0.3
+Flask-Compress==1.17
+cachelib==0.13.0
+gunicorn==23.0.0
+requests==2.32.3
