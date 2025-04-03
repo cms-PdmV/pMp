@@ -39,12 +39,17 @@ class HistoricalAPI(APIBase):
 
         return aggregated
 
-    def aggregate_data_points(self, data, timestamps):
+    def aggregate_data_points(self, data, timestamps, based_on_lumis=False):
         """
         Add points to response
         List of granularity timestamps. Put timestamps and iterate through all data.
         Add it or not according to which side of timestamp the time of a point is
         """
+        use_as_done = 'done' if not based_on_lumis else 'done_lumis'
+        use_as_produced = 'produced' if not based_on_lumis else 'produced_lumis'
+        use_as_expected = 'expected' if not based_on_lumis else 'expected_lumis'
+        use_as_invalid = 'invalid' if not based_on_lumis else 'invalid_lumis'
+        based_on = 'lumisections' if based_on_lumis else 'events'
         points = []
         for timestamp in timestamps:
             point = {
@@ -53,16 +58,17 @@ class HistoricalAPI(APIBase):
                 'expected': 0,
                 'invalid': 0,
                 'time': timestamp * 1000,
-                'expected_events': True
+                'expected_events': True,
+                'based_on': based_on
             }
             for key in data:
                 if data[key]['data'][0]['time'] <= timestamp:
                     for details in reversed(data[key]['data']):
                         if details['time'] <= timestamp:
-                            point['done'] += details['done']
-                            point['produced'] += details['produced']
-                            point['expected'] += details['expected']
-                            point['invalid'] += details['invalid']
+                            point['done'] += details[use_as_done]
+                            point['produced'] += details[use_as_produced]
+                            point['expected'] += details[use_as_expected]
+                            point['invalid'] += details[use_as_invalid]
                             point['expected_events'] = details.get('expected_events', True)
                             break
 
@@ -70,17 +76,21 @@ class HistoricalAPI(APIBase):
 
         return points
 
-    def adjust_for_force_complete(self, data):
+    def adjust_for_force_complete(self, data, based_on_lumis=False):
         """
         Iterate through requests and lower x (Expected) to d (Done in DAS) if request
         was force completed
         """
+        use_as_expected = 'expected' if not based_on_lumis else 'expected_lumis'
+        use_as_done = 'done' if not based_on_lumis else 'done_lumis'
+        use_as_produced = 'produced' if not based_on_lumis else 'produced_lumis'
+        use_as_invalid = 'invalid' if not based_on_lumis else 'invalid_lumis'
         for key in data:
             if data[key].get('force_completed', False) and len(data[key]['data']) > 0:
                 newest_details = data[key]['data'][-1]
-                new_value = max(newest_details['done'], newest_details['invalid'], newest_details['produced'])
+                new_value = max(newest_details[use_as_done], newest_details[use_as_produced], newest_details[use_as_invalid])
                 for details in data[key]['data']:
-                    details['expected'] = new_value
+                    details[use_as_expected] = new_value
 
         return data
 
@@ -93,6 +103,7 @@ class HistoricalAPI(APIBase):
                           'produced': data[-1]['produced'],
                           'expected': data[-1]['expected'],
                           'invalid': data[-1]['invalid'],
+                          'based_on': data[-1]['based_on'],
                           'time': int(round(time.time() * 1000))}
             data.append(duplicated)
 
@@ -171,6 +182,7 @@ class HistoricalAPI(APIBase):
                                       'done': 0,
                                       'done_lumis': 0,
                                       'invalid': 0,
+                                      'invalid_lumis': 0,
                                       'expected': int(mcm_document['expected']),
                                       'expected_lumis': int(mcm_document.get('total_input_lumis', 0)),
                                       'time': int(mcm_document['submitted_time'])}]}
@@ -223,6 +235,7 @@ class HistoricalAPI(APIBase):
                                     'done': 0,
                                     'done_lumis': 0,
                                     'invalid': 0,
+                                    'invalid_lumis': 0,
                                     'expected': mcm_document.get('expected', 0),
                                     'expected_lumis': mcm_document.get('total_input_lumis', 0),
                                     'time': entry['time'],
@@ -241,6 +254,7 @@ class HistoricalAPI(APIBase):
                                     data_point['done_lumis'] = lumis
                                 elif entry['type'] in types_for_invalid_events:
                                     data_point['invalid'] = events
+                                    data_point['invalid_lumis'] = lumis
                                 else:
                                     data_point['produced'] = events
                                     data_point['produced_lumis'] = lumis
@@ -297,7 +311,8 @@ class HistoricalAPI(APIBase):
                 data_point.get('expected_lumis') != prev.get('expected_lumis') or
                 data_point['done'] != prev['done'] or
                 data_point.get('done_lumis') != prev.get('done_lumis') or
-                data_point['invalid'] != prev['invalid']):
+                data_point['invalid'] != prev['invalid'] or
+                data_point.get('invalid_lumis') != prev.get('invalid_lumis')):
                 compressed.append(data_point)
                 prev = data_point
 
@@ -347,7 +362,7 @@ class HistoricalAPI(APIBase):
                              'expected': data_points[-1]['expected'],
                              'expected_lumis': data_points[-1]['expected_lumis'],
                              'done': max(data_points[-1]['done'], data_points[-1]['produced'], data_points[-1]['invalid']),
-                             'done_lumis': max(data_points[-1]['done_lumis'], data_points[-1]['produced_lumis']),
+                             'done_lumis': max(data_points[-1]['done_lumis'], data_points[-1]['produced_lumis'], data_points[-1]['invalid_lumis']),
                              'force_completed': request['force_completed'],
                              'estimate_from': request.get('estimate_from', None),
                              'workflow': workflow_name,
@@ -388,7 +403,8 @@ class HistoricalAPI(APIBase):
         # Get submitted and done requests separately
         submitted_requests = self.get_with_status(response, 'submitted')
         done_requests = self.get_with_status(response, 'done')
-
+        based_on_lumis = self._time_plot_using_lumis(response)
+        logging.info("Compute the time-progress plot using lumisections: %s", based_on_lumis)
         if not aggregate:
             grouped_requests = self.group_requests(response)
             data = {}
@@ -398,11 +414,11 @@ class HistoricalAPI(APIBase):
                     logging.info('Will aggregate requests of of %s of %s', block, pwg)
                     block_data = self.aggregate_requests(block_data)
                     logging.info('Will adjust for force complete of %s of %s', block, pwg)
-                    block_data = self.adjust_for_force_complete(block_data)
+                    block_data = self.adjust_for_force_complete(block_data, based_on_lumis=based_on_lumis)
                     logging.info('Will sort timestamps of %s of %s', block, pwg)
                     timestamps = self.sort_timestamps(block_data, data_point_count)
                     logging.info('Will adjust data points of %s of %s', block, pwg)
-                    data[pwg][block] = self.aggregate_data_points(block_data, timestamps)
+                    data[pwg][block] = self.aggregate_data_points(block_data, timestamps, based_on_lumis=based_on_lumis)
                     logging.info('Remove useless points for the last time of %s of %s', block, pwg)
                     data[pwg][block] = self.remove_useless_points(data[pwg][block])
                     logging.info('Will append last data point of %s of %s', block, pwg)
@@ -413,11 +429,11 @@ class HistoricalAPI(APIBase):
             logging.info('Will aggregate requests')
             response = self.aggregate_requests(response)
             logging.info('Will adjust for force complete')
-            response = self.adjust_for_force_complete(response)
+            response = self.adjust_for_force_complete(response, based_on_lumis=based_on_lumis)
             logging.info('Will sort timestamps')
             timestamps = self.sort_timestamps(response, data_point_count)
             logging.info('Will adjust data points')
-            data = self.aggregate_data_points(response, timestamps)
+            data = self.aggregate_data_points(response, timestamps, based_on_lumis=based_on_lumis)
             logging.info('Remove useless points for the last time')
             data = self.remove_useless_points(data)
             logging.info('Will append last data point')
@@ -435,3 +451,28 @@ class HistoricalAPI(APIBase):
         end_time = time.time()
         logging.info('Will return. Took %.4fs' % (end_time - start_time))
         return json.dumps({'results': res})
+
+    def _time_plot_using_lumis(self, response) -> bool:
+        """Check if the time plot must be computed based on lumisections."""
+        for r in response:
+            data = r["data"]
+            for record in data:
+                done_lumis = record.get("done_lumis")
+                expected_lumis = record.get("expected_lumis")
+                produced_lumis = record.get("produced_lumis")
+                if any(not isinstance(x, int) for x in (done_lumis, expected_lumis, produced_lumis)):
+                    # If some is not an integer
+                    return False
+
+        for r in response:
+            data = r["data"]
+            for record in data:
+                done_lumis = record.get("done_lumis")
+                expected_lumis = record.get("expected_lumis")
+                produced_lumis = record.get("produced_lumis")
+                if any(bool(x) for x in (done_lumis, expected_lumis, produced_lumis)):
+                    # If any of these records is greater than zero
+                    return True
+
+        # All of them are integer but zero, it means they are not related to lumisections!
+        return False

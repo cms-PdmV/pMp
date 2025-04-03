@@ -260,14 +260,40 @@
                     data[0] = dateFormat(data[0], "ddd, mmm dS, yyyy, HH:MM");
                     var html = ''
                     var width = (data[4] === 0 ? 25 : 20);
+                    var basedOn = data[5];
+
+                    // Headers to display
+                    var expectedHeader = "";
+                    var inDASHeader = "";
+                    var doneHeader = "";
+                    var invalidHeader = "";
+                    if (basedOn === "lumisections") {
+                        expectedHeader = "Expected lumisections:";
+                        inDASHeader = "Lumisections in DAS:";
+                        doneHeader = "Done lumisections in DAS:";
+                        invalidHeader = "Deleted/Invalid lumisections:";
+                    }
+                    else if (basedOn == "events") {
+                        expectedHeader = "Expected events:";
+                        inDASHeader = "Events in DAS:";
+                        doneHeader = "Done events in DAS:";
+                        invalidHeader = "Deleted/Invalid events:";
+                    }
+                    else {
+                        expectedHeader = "Expected unknown metric:";
+                        inDASHeader = "Unknown metric in DAS:";
+                        doneHeader = "Done unknown metric in DAS:";
+                        invalidHeader = "Deleted/Invalid for unknown metric:";
+                    }
+
                     html += '<div style="color: #90a4ae; width: ' + width + '%">Time: ' + data[0] + "</div>"
                     if (scope.plotExpectedEvents) {
-                        html += '<div style="color: #263238; width: ' + width + '%" title="' + data[1] + '">Expected events: ' + (scope.humanReadableNumbers && data[1] > 0 ? scope.bigNumberFormatter(data[1]) : data[1]) + "</div>"
+                        html += '<div style="color: #263238; width: ' + width + '%" title="' + data[1] + '">' + expectedHeader + ' ' + (scope.humanReadableNumbers && data[1] > 0 ? scope.bigNumberFormatter(data[1]) : data[1]) + "</div>"
                     }
-                    html += '<div style="color: #ff6f00; width: ' + width + '%" title="' + data[2] + '">Events in DAS: ' + (scope.humanReadableNumbers && data[2] > 0 ? scope.bigNumberFormatter(data[2]) : data[2]) + "</div>"
-                    html += '<div style="color: #01579b; width: ' + width + '%" title="' + data[3] + '">Done events in DAS: ' + (scope.humanReadableNumbers && data[3] > 0 ? scope.bigNumberFormatter(data[3]) : data[3]) + "</div>"
+                    html += '<div style="color: #ff6f00; width: ' + width + '%" title="' + data[2] + '">' + inDASHeader + ' ' + (scope.humanReadableNumbers && data[2] > 0 ? scope.bigNumberFormatter(data[2]) : data[2]) + "</div>"
+                    html += '<div style="color: #01579b; width: ' + width + '%" title="' + data[3] + '">' + doneHeader + ' ' + (scope.humanReadableNumbers && data[3] > 0 ? scope.bigNumberFormatter(data[3]) : data[3]) + "</div>"
                     if (data[4] !== 0) {
-                      html += '<div style="color: red; width: ' + width + '%" title="' + data[4] + '">Deleted/Invalid events: ' + (scope.humanReadableNumbers && data[4] > 0 ? scope.bigNumberFormatter(data[4]) : data[4]) + "</div>"
+                      html += '<div style="color: red; width: ' + width + '%" title="' + data[4] + '">' + invalidHeader + ' ' + (scope.humanReadableNumbers && data[4] > 0 ? scope.bigNumberFormatter(data[4]) : data[4]) + "</div>"
                     }
                     $("#historical-drilldown").html(html);
                 };
@@ -295,6 +321,7 @@
                     data[2] = local[closestIndex].produced + local[closestIndex].done + local[closestIndex].invalid;
                     data[3] = local[closestIndex].done;
                     data[4] = local[closestIndex].invalid;
+                    data[5] = local[closestIndex].based_on;
                     data[0] = new Date(data[0]);
                     tmp = (data[0] - min) / ((max - min) / width);
                     updateIndicatorPosition(tmp);
