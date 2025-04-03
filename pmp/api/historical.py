@@ -171,6 +171,7 @@ class HistoricalAPI(APIBase):
                                       'done': 0,
                                       'done_lumis': 0,
                                       'invalid': 0,
+                                      'invalid_lumis': 0,
                                       'expected': int(mcm_document['expected']),
                                       'expected_lumis': int(mcm_document.get('total_input_lumis', 0)),
                                       'time': int(mcm_document['submitted_time'])}]}
@@ -223,6 +224,7 @@ class HistoricalAPI(APIBase):
                                     'done': 0,
                                     'done_lumis': 0,
                                     'invalid': 0,
+                                    'invalid_lumis': 0,
                                     'expected': mcm_document.get('expected', 0),
                                     'expected_lumis': mcm_document.get('total_input_lumis', 0),
                                     'time': entry['time'],
@@ -241,6 +243,7 @@ class HistoricalAPI(APIBase):
                                     data_point['done_lumis'] = lumis
                                 elif entry['type'] in types_for_invalid_events:
                                     data_point['invalid'] = events
+                                    data_point['invalid_lumis'] = lumis
                                 else:
                                     data_point['produced'] = events
                                     data_point['produced_lumis'] = lumis
@@ -297,7 +300,8 @@ class HistoricalAPI(APIBase):
                 data_point.get('expected_lumis') != prev.get('expected_lumis') or
                 data_point['done'] != prev['done'] or
                 data_point.get('done_lumis') != prev.get('done_lumis') or
-                data_point['invalid'] != prev['invalid']):
+                data_point['invalid'] != prev['invalid'] or
+                data_point.get('invalid_lumis') != prev.get('invalid_lumis')):
                 compressed.append(data_point)
                 prev = data_point
 
@@ -347,7 +351,7 @@ class HistoricalAPI(APIBase):
                              'expected': data_points[-1]['expected'],
                              'expected_lumis': data_points[-1]['expected_lumis'],
                              'done': max(data_points[-1]['done'], data_points[-1]['produced'], data_points[-1]['invalid']),
-                             'done_lumis': max(data_points[-1]['done_lumis'], data_points[-1]['produced_lumis']),
+                             'done_lumis': max(data_points[-1]['done_lumis'], data_points[-1]['produced_lumis'], data_points[-1]['invalid_lumis']),
                              'force_completed': request['force_completed'],
                              'estimate_from': request.get('estimate_from', None),
                              'workflow': workflow_name,
