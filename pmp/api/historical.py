@@ -468,9 +468,8 @@ class HistoricalAPI(APIBase):
             data = r["data"]
             for record in data:
                 done_lumis = record.get("done_lumis")
-                expected_lumis = record.get("expected_lumis")
                 produced_lumis = record.get("produced_lumis")
-                if any(bool(x) for x in (done_lumis, expected_lumis, produced_lumis)):
+                if any(bool(x) for x in (done_lumis, produced_lumis)):
                     # If any of these records is greater than zero
                     return True
 
